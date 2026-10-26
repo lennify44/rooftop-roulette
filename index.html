@@ -200,6 +200,109 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 .pause-box { display: grid; justify-items: start; gap: 14px; width: 100%; max-width: 1020px; margin-inline: auto; }
 .pause-box h1 { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 72px; line-height: 0.9; text-transform: uppercase; }
 
+/* ---------- screen spam: in-game parody, every piece closes itself after a few seconds */
+.annoy { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.annoy > * { pointer-events: auto; touch-action: manipulation; }
+.annoy .out { opacity: 0 !important; transition: opacity 0.22s; }
+.annoy button { cursor: pointer; }
+.ad {
+  position: absolute; display: grid; border: 3px solid #110e22; background: #fffdf4; color: #110e22;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45); font-family: "Arial Black", "Arial Rounded MT Bold", Impact, var(--font-display);
+  animation: pop-in 0.25s cubic-bezier(.2, 1.6, .4, 1);
+}
+.ad-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 4px 3px 8px; background: var(--ac); font-size: 11px; letter-spacing: 0.1em; }
+.ad.x-left .ad-bar { flex-direction: row-reverse; }
+.ad-x { width: 28px; height: 24px; padding: 0; border: 2px solid #110e22; background: #fffdf4; color: #110e22; font-size: 13px; line-height: 1; font-family: inherit; }
+.ad-x.fake { width: 22px; height: 20px; font-size: 11px; }
+.ad-body { display: grid; gap: 4px; padding: 10px 12px 12px; text-align: center; }
+.ad-body b { font-size: 19px; line-height: 1.05; text-transform: uppercase; }
+.ad-body p { margin: 0; font-family: var(--font-body); font-weight: 600; font-size: 13px; line-height: 1.3; }
+.ad-cta { justify-self: center; margin-top: 4px; padding: 6px 14px; border: 0; background: #e5484d; color: #fff; font-family: inherit; font-size: 14px; letter-spacing: 0.06em; animation: blink 0.6s steps(2) infinite; }
+@keyframes blink { 50% { background: #110e22; } }
+@keyframes pop-in { from { opacity: 0; scale: 0.4; } }
+.notif {
+  position: absolute; left: 50%; width: min(92%, 380px); transform: translateX(-50%); display: grid; grid-template-columns: 34px 1fr; gap: 10px;
+  padding: 10px 12px; border: 0; border-radius: 16px; text-align: left; color: #f3eee5; background: rgba(40, 36, 56, 0.94);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); font-family: var(--font-body); animation: notif-in 0.3s ease-out;
+}
+.notif i { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--nc); color: #110e22; font-style: normal; font-family: var(--font-display); font-weight: 900; font-size: 18px; }
+.notif b { font-size: 14px; } .notif span { float: right; font-size: 11px; color: var(--haze); }
+.notif p { margin: 2px 0 0; font-size: 13px; line-height: 1.3; }
+@keyframes notif-in { from { translate: 0 -140%; } }
+.chat {
+  position: absolute; right: 0; bottom: 0; width: min(36%, 300px); height: 62%; display: grid; grid-template-rows: auto 1fr; pointer-events: none;
+  padding-block: 8px; padding-inline: 22px max(10px, env(safe-area-inset-right)); transition: opacity 0.4s; font-family: var(--font-body);
+  background: linear-gradient(90deg, rgba(14, 11, 28, 0) 0%, rgba(14, 11, 28, 0.78) 22%);
+}
+.chat-head { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: #ff6b5b; }
+.chat-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; overflow: hidden; font-size: 13px; line-height: 1.3; color: #f3eee5; }
+.chat-log li { animation: chat-in 0.2s ease-out; overflow-wrap: anywhere; }
+.chat-log b { color: var(--uc); margin-right: 4px; }
+@keyframes chat-in { from { translate: 0 8px; opacity: 0; } }
+.emote {
+  position: absolute; left: 0; top: var(--ey); pointer-events: none; white-space: nowrap; opacity: 0.85; color: var(--ec);
+  font-family: var(--font-display); font-weight: 900; font-size: clamp(48px, 12vw, 120px); text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+  animation: emote 2.4s linear forwards;
+}
+@keyframes emote { from { transform: translateX(-100%); } to { transform: translateX(110vw); } }
+.fly { position: absolute; left: 0; top: 0; width: 46px; height: 46px; padding: 0; border: 0; background: none; }
+.fly::before { content: ""; position: absolute; left: 17px; top: 13px; width: 12px; height: 20px; border-radius: 50%; background: #1b1726; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3); }
+.fly::after { content: ""; position: absolute; left: 11px; top: 15px; width: 24px; height: 10px; border-radius: 50%; background: rgba(220, 230, 255, 0.6); animation: wings 0.06s linear infinite alternate; }
+@keyframes wings { to { transform: scaleX(0.6); } }
+.splat { position: absolute; width: 36px; height: 36px; border-radius: 45% 55% 40% 60%; pointer-events: none; background: radial-gradient(circle, #3b2a1a 30%, rgba(59, 42, 26, 0.6) 55%, transparent 70%); }
+.sticker { position: absolute; display: grid; place-items: center; padding: 0; border: 0; color: #110e22; font-family: var(--font-display); font-weight: 900; animation: slap 0.18s ease-out; }
+@keyframes slap { from { scale: 1.7; opacity: 0; } }
+.s-wow { width: 124px; height: 124px; font-size: 30px; background: #ffd36b; clip-path: polygon(50% 0, 61% 30%, 95% 20%, 72% 48%, 100% 70%, 65% 70%, 60% 100%, 45% 74%, 12% 92%, 28% 62%, 0 40%, 32% 34%); }
+.s-nope { padding: 4px 14px; border: 4px solid #e5484d; color: #e5484d; background: rgba(255, 253, 244, 0.92); font-size: 42px; letter-spacing: 0.08em; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); }
+.s-ten { width: 94px; height: 94px; border-radius: 50%; background: #5fe0a8; font-size: 30px; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); }
+.s-emoji { width: 96px; height: 96px; border-radius: 50%; background: #fffdf4; font-size: 58px; line-height: 1; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); }
+.s-tape { height: 40px; overflow: hidden; white-space: nowrap; background: #f4c430; font-size: 20px; letter-spacing: 0.2em; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45); }
+.s-eyes { display: flex; gap: 4px; background: none; }
+.s-eyes .eye { position: relative; width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 3px solid #110e22; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35); }
+.s-eyes .eye i { position: absolute; left: 15px; top: 15px; width: 16px; height: 16px; border-radius: 50%; background: #110e22; }
+.dialog {
+  position: absolute; width: min(86%, 330px); transform: translate(-50%, -50%); display: grid; gap: 6px; padding: 16px 16px 12px;
+  text-align: center; color: #1b1726; background: #ecebf1; border-radius: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif; animation: pop-in 0.2s ease-out;
+}
+.dialog b { font-size: 16px; }
+.dialog p { margin: 0; font-size: 13px; line-height: 1.35; color: #3b3550; }
+.dialog .row { display: flex; gap: 8px; margin-top: 6px; }
+.dialog .row button { flex: 1; padding: 9px 6px; border: 0; border-radius: 9px; background: #d9d7e2; color: #2a5bd7; font: 600 14px -apple-system, system-ui, sans-serif; }
+.dialog .row button.main { background: #2a5bd7; color: #fff; }
+.dialog .bar { height: 6px; border-radius: 3px; overflow: hidden; background: #d0cede; }
+.dialog .bar i { display: block; height: 100%; width: 60%; background: #2a5bd7; }
+.cap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px; }
+.cap-grid button { aspect-ratio: 1; padding: 0; border: 3px solid transparent; background: #c9c6d6; font-size: 26px; }
+.cap-grid button.on { border-color: #2a5bd7; background: #b8c7f0; }
+.cookie {
+  position: absolute; left: 0; right: 0; bottom: 0; display: grid; gap: 8px; color: #110e22; background: #fffdf4; font-family: var(--font-body); font-size: 14px;
+  padding-block: 14px; padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4); animation: cookie-in 0.3s ease-out;
+}
+.cookie p { margin: 0; max-width: 70ch; }
+.cookie .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cookie button { padding: 9px 16px; border: 2px solid #110e22; background: #fffdf4; color: #110e22; font: 700 14px var(--font-body); }
+.cookie button.main { background: #110e22; color: #fffdf4; }
+@keyframes cookie-in { from { translate: 0 100%; } }
+.dvd {
+  position: absolute; left: 0; top: 0; width: 130px; height: 56px; display: grid; place-content: center; pointer-events: none;
+  border: 3px solid currentColor; border-radius: 50% / 40%; color: #5fe0a8; text-align: center;
+  font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 0.06em; line-height: 0.9;
+}
+.dvd small { display: block; font-size: 11px; letter-spacing: 0.4em; }
+.buffering { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 8px; pointer-events: none; color: #f3eee5; font-family: var(--font-mono); font-size: 12px; }
+.buffering i { width: 54px; height: 54px; border-radius: 50%; border: 5px solid rgba(243, 238, 229, 0.25); border-top-color: #f3eee5; animation: spin 0.8s linear infinite; }
+.crack { position: absolute; inset: 0; pointer-events: none; }
+.crack svg { display: block; }
+.annoy-pop {
+  position: absolute; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap; color: #5fe0a8;
+  font-family: var(--font-display); font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5); animation: rise 0.9s ease-out forwards;
+}
+@keyframes rise { to { translate: 0 -40px; opacity: 0; } }
+.chip.spam { background: transparent; color: var(--c); box-shadow: none; border: 1.5px dashed var(--c); padding: 1px 6px; }
+@media (prefers-reduced-motion: reduce) { .ad-cta, .fly::after, .emote, .buffering i, .ad, .sticker, .dialog { animation: none; } }
+
 /* phones held sideways: keep the menu on one screen */
 @media (max-height: 520px) {
   .screen { padding-block: 12px; }
@@ -218,6 +321,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 <body>
 <div id="stage">
   <canvas id="game" aria-label="Rooftop Roulette game"></canvas>
+  <div class="annoy" id="annoy"></div>
 
   <div class="hud" id="hud" hidden>
     <div class="hud-stats">
@@ -276,6 +380,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         <dl class="pairs">
           <div><dt>Run start</dt><dd><b>City</b> wheel picks the weather and the skyline.</dd></div>
           <div><dt>Every 150 m</dt><dd><b>Rule</b> and <b>Pest</b> wheels change the city and send someone after you.</dd></div>
+          <div><dt>Every 150 m</dt><dd><b>Spam</b> wheel fills your screen: ads, chat, flies, stickers, fake errors.</dd></div>
           <div><dt>Every 15 chips</dt><dd><b>Bonus</b> wheel: shield, magnet, double jump … or bankrupt.</dd></div>
           <div><dt>? boxes</dt><dd><b>Slots</b>: 7-7-7 wins the jackpot, three skulls bust you.</dd></div>
           <div><dt>After a gate</dt><dd><b>Double or nothing</b> on the cash since the last gate.</dd></div>
@@ -287,6 +392,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
           <div class="wheel-lists">
             <div><h3>Rules</h3><ul class="rules" id="ruleList"></ul></div>
             <div><h3>Pests</h3><ul class="rules" id="pestList"></ul></div>
+            <div><h3>Spam</h3><ul class="rules" id="spamList"></ul></div>
             <div><h3>Bonus</h3><ul class="rules" id="bonusList"></ul></div>
             <div><h3>City</h3><ul class="rules" id="cityList"></ul></div>
           </div>
@@ -313,7 +419,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         </div>
       </div>
       <div class="side">
-        <h2 class="label">Rules and pests you ran through</h2>
+        <h2 class="label">Rules, pests and spam you ran through</h2>
         <ol class="history" id="overHistory"></ol>
         <p class="tip" id="overChance"></p>
         <p class="tip" id="overTip"></p>
@@ -407,6 +513,18 @@ const PESTS = {
 const PEST_WHEEL = ['pigeons', 'drone', 'guard', 'gull', 'double', 'paparazzi', 'rival', 'ghost'];
 const PEST_DOUBLE = { name: 'Pest Party', short: 'PARTY', color: '#ffd36b', desc: 'Two pests at once' };
 
+const SPAM = {
+  ads:      { name: 'Pop-up Ads',      short: 'ADS',      color: '#ffd36b', desc: 'Fake ads cover the screen. Find the real X' },
+  notifs:   { name: 'Notification Spam', short: 'NOTIFS', color: '#7fd1ff', desc: 'Your phone will not stop buzzing' },
+  chat:     { name: 'Stream Chat',     short: 'CHAT',     color: '#c08bff', desc: 'Chat floods the side of the screen' },
+  flies:    { name: 'Flies',           short: 'FLIES',    color: '#b9c2d3', desc: 'Flies crawl on your screen. Tap to swat' },
+  stickers: { name: 'Sticker Bomb',    short: 'STICKERS', color: '#ff9ad5', desc: 'Stickers and tape everywhere. Tap to peel' },
+  crash:    { name: 'Fake Errors',     short: 'ERRORS',   color: '#ff6b5b', desc: 'Not responding, cookies, captchas, updates' },
+  dvd:      { name: 'DVD Logos',       short: 'DVD',      color: '#5fe0a8', desc: 'Bouncing logos. Hit a corner for $500' },
+};
+const SPAM_WHEEL = ['ads', 'notifs', 'chat', 'flies', 'double', 'stickers', 'crash', 'dvd'];
+const SPAM_DOUBLE = { name: 'Spam Storm', short: 'STORM', color: '#ffa23e', desc: 'Two kinds of spam at once' };
+
 const BONUS = [
   { key: 'shield',   name: 'Shield',      short: 'SHIELD',   color: '#7fe3ff', desc: 'Blocks the next hit or catch' },
   { key: 'magnet',   name: 'Magnet',      short: 'MAGNET',   color: '#ff7b7b', desc: 'Pulls tokens in for 8 s' },
@@ -459,6 +577,7 @@ const THEME_KEYS = Object.keys(THEMES);
 
 const ruleInfo = (k) => (k === 'double' ? RULE_DOUBLE : RULES[k]);
 const pestInfo = (k) => (k === 'double' ? PEST_DOUBLE : PESTS[k]);
+const spamInfo = (k) => (k === 'double' ? SPAM_DOUBLE : SPAM[k]);
 function physicsFor(rules) {
   let g = G, j = JUMP, speed = 1, size = 1;
   if (rules.includes('moon')) { g *= 0.45; j *= 0.7; }
@@ -548,7 +667,10 @@ class City {
       const pestSlot = Math.floor(this.wheelRng() * PEST_WHEEL.length);
       const pestKey = PEST_WHEEL[pestSlot];
       const pests = pestKey === 'double' ? pickTwo(this.wheelRng, Object.keys(PESTS)) : [pestKey];
-      gate = { slot, key, rules, pestSlot, pestKey, pests, x: 0, roof: 0, passed: false, spun: false };
+      const spamSlot = Math.floor(this.wheelRng() * SPAM_WHEEL.length);
+      const spamKey = SPAM_WHEEL[spamSlot];
+      const spam = spamKey === 'double' ? pickTwo(this.wheelRng, Object.keys(SPAM)) : [spamKey];
+      gate = { slot, key, rules, pestSlot, pestKey, pests, spamSlot, spamKey, spam, x: 0, roof: 0, passed: false, spun: false };
       this.rules = rules;
       this.nextGate = x0 + GATE_EVERY;
     }
@@ -671,6 +793,13 @@ const Sound = {
   jackpot() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => this.tone(f, 0.22, 'square', 0.07, 0, i * 0.07)); },
   reelStop() { this.noise(0.05, 0.25, 1800); this.tone(660, 0.05, 'square', 0.05); },
   hype() { this.tone(523, 0.1, 'sawtooth', 0.07, 520); },
+  pop() { this.tone(900, 0.06, 'sine', 0.1, 300); },
+  notif() { this.tone(1320, 0.09, 'sine', 0.07); this.tone(1760, 0.12, 'sine', 0.06, 0, 0.1); },
+  error() { this.tone(330, 0.16, 'square', 0.05); this.tone(247, 0.24, 'square', 0.05, 0, 0.15); },
+  splat() { this.noise(0.12, 0.25, 900); },
+  buzz() { this.tone(210, 0.45, 'sawtooth', 0.02, 25); },
+  peel() { this.noise(0.14, 0.1, 3500); },
+  crack() { this.noise(0.18, 0.3, 5000); this.noise(0.1, 0.2, 2500, 0.05); },
   jump() { this.tone(380, 0.13, 'square', 0.08, 340); },
   land(impact) { this.noise(0.09, clamp(impact / 2400, 0.05, 0.3), 700); },
   token() { this.tone(1180, 0.07, 'triangle', 0.12); this.tone(1580, 0.1, 'triangle', 0.1, 0, 0.055); },
@@ -785,6 +914,7 @@ class Wheel {
 }
 const ruleWheel = new Wheel(RULE_WHEEL.map(ruleInfo));
 const pestWheel = new Wheel(PEST_WHEEL.map(pestInfo));
+const spamWheel = new Wheel(SPAM_WHEEL.map(spamInfo));
 const bonusWheel = new Wheel(BONUS);
 const chanceWheel = new Wheel(CHANCE);
 const cityWheel = new Wheel(THEME_KEYS.map((k) => THEMES[k]));
@@ -799,7 +929,11 @@ const game = {
   prng: Math.random, bonusRng: Math.random, weather: [], stormT: 6, chanceResult: '',
   combo: 0, comboT: 0, comboMult: 1, bestCombo: 1, jackpot: JACKPOT_START, gateScore: 0,
   bet: null, coin: null, slots: null, hype: null, jackpots: 0,
+  spam: [], spamCtl: [], dim: 0, gatesPassed: 0, rain: [], chaos: null,
 };
+const freshChaos = () => ({ t: 9, quake: 0, tilt: 0, tiltDir: 1, wobble: 0, disco: 0, gravity: 0, burst: 0, rain: 0, rainT: 0 });
+game.chaos = freshChaos();
+const chaosLevel = () => Math.min(5, 1 + Math.floor(game.gatesPassed / 2));
 const P = {};
 const input = { jumpHeld: false, jumpBuffer: 0, slideHeld: false, slidePressAt: -9 };
 let particles = [], popups = [], scarf = [];
@@ -836,7 +970,7 @@ const comboColor = (m) => (m >= 4 ? '#ff4fb8' : m >= 3 ? '#ff5a4e' : m >= 2 ? '#
 function addCombo(n) {
   game.combo += n; game.comboT = COMBO_TIME;
   const m = Math.min(5, 1 + Math.floor(game.combo / 6) * 0.5);
-  if (m > game.comboMult) { hype(COMBO_WORDS[m] || 'COMBO', comboColor(m)); if (m >= 3) confetti(14); }
+  if (m > game.comboMult) { hype(COMBO_WORDS[m] || 'COMBO', comboColor(m)); chatSay('hype'); if (m >= 3) confetti(14); }
   game.comboMult = m; game.bestCombo = Math.max(game.bestCombo, m);
 }
 function breakCombo() {
@@ -850,7 +984,7 @@ function confetti(n) {
   for (let i = 0; i < n; i++) particles.push({ x: P.x + (Math.random() - 0.3) * 120, y: P.y - 120 - Math.random() * 60, vx: (Math.random() - 0.5) * 260, vy: -Math.random() * 260, life: 1 + Math.random() * 0.6, t: 0, color: cols[i % cols.length], size: 3 + Math.random() * 3, g: 420 });
 }
 function trick(name, pts) {
-  addScore(pts); popup(`${name} +$${fmt(pts * curMult())}`, '#ffa23e'); addCombo(2);
+  addScore(pts); popup(`${name} +$${fmt(pts * curMult())}`, '#ffa23e'); addCombo(2); chatSay('win');
   for (const c of game.pestCtl) if (c.key === 'guard' && !c.leaving) c.d = Math.min(460, c.d + 30);
 }
 function puff(x, y, n, color, spread) {
@@ -923,7 +1057,8 @@ function land(b, ph) {
 }
 function stumble(text, strength) {
   P.stumble = Math.min(P.stumble, strength || 0.55); setState('stumble'); popup(text || 'Stumble', '#ff8a7a'); Sound.stumble();
-  breakCombo();
+  breakCombo(); chatSay('fail');
+  if (Math.random() < 0.35) crackScreen();
   if (!reduceMotion) game.shake = 0.25;
 }
 function startGrab(b) {
@@ -937,7 +1072,7 @@ function startGrab(b) {
 function die(cause) {
   if (P.dead) return;
   P.dead = true; game.cause = cause; game.deadT = 0; P.onGround = false; game.deathX = P.x;
-  Sound.die(); if (!reduceMotion) game.shake = 0.4;
+  Sound.die(); chatSay('dead'); if (!reduceMotion) game.shake = 0.4;
   if (cause === 'pipe') { P.vy = -420; P.deadVx = -70; } else if (cause === 'slam' || cause === 'guard') { P.vy = cause === 'guard' ? -200 : 0; P.deadVx = -90; } else P.deadVx = 0;
 }
 function underPipe() {
@@ -954,15 +1089,18 @@ function setPests(keys) {
 function activateGate(g) {
   g.passed = true;
   game.rules = g.rules.slice(); game.mult = multFor(game.rules);
-  game.history.push({ rules: g.rules.slice(), pests: g.pests.slice() });
+  game.history.push({ rules: g.rules.slice(), pests: g.pests.slice(), spam: g.spam.slice() });
+  game.gatesPassed++;
+  setSpam(g.spam);
   game.flash = reduceMotion ? 0.3 : 1; game.flashColor = RULES[g.rules[0]].color;
   game.mirrorTarget = game.rules.includes('mirror') ? -1 : 1;
   game.lightningT = 1.2;
   setPests(g.pests);
   const names = g.rules.map((k) => RULES[k].name).join(' + ');
   const pestNames = g.pests.map((k) => PESTS[k].name).join(' + ');
-  game.banner = { title: names, sub: `Score ${multText(game.mult)} · Pest: ${pestNames}`, color: RULES[g.rules[0]].color, t: 0 };
-  ruleWheel.sticky = false; pestWheel.sticky = false; ruleWheel.hold = 0; pestWheel.hold = 0;
+  const spamNames = g.spam.map((k) => SPAM[k].name).join(' + ');
+  game.banner = { title: names, sub: `${multText(game.mult)} · ${pestNames} · ${spamNames}`, color: RULES[g.rules[0]].color, t: 0 };
+  for (const w of [ruleWheel, pestWheel, spamWheel]) { w.sticky = false; w.hold = 0; }
   Sound.reveal(); addCombo(3);
   const stake = Math.floor(game.score - game.gateScore);
   game.gateScore = game.score;
@@ -973,6 +1111,7 @@ function startGateSpin(g) {
   game.gateRef = g;
   ruleWheel.spin(g.slot, 2.1, 4, 1.4); ruleWheel.sticky = true;
   pestWheel.spin(g.pestSlot, 2.6, 5, 1.4); pestWheel.sticky = true;
+  spamWheel.spin(g.spamSlot, 3.0, 6, 1.4); spamWheel.sticky = true;
 }
 function spinBonus() {
   const idx = Math.floor(game.bonusRng() * BONUS.length);
@@ -1029,7 +1168,7 @@ function applySlots(outcome) {
       const win = Math.floor(game.jackpot);
       addCash(win); game.jackpot = JACKPOT_START; game.jackpots++;
       game.banner = { title: 'Jackpot', sub: `+$${fmt(win)} straight into your pocket`, color: '#ffd36b', t: 0 };
-      confetti(60); Sound.jackpot(); game.flash = reduceMotion ? 0.3 : 1; game.flashColor = '#ffd36b'; addCombo(6);
+      confetti(60); Sound.jackpot(); chatSay('jackpot'); game.flash = reduceMotion ? 0.3 : 1; game.flashColor = '#ffd36b'; addCombo(6);
       break;
     }
     case 'bar': addCash(1000); confetti(20); Sound.jackpot(); addCombo(3); break;
@@ -1061,6 +1200,357 @@ function placeBet() {
   if (!game.bet || game.coin || game.state !== 'play') return;
   game.coin = { stake: game.bet.stake, t: 0, win: Math.random() < 0.5, done: false };
   hideBet(); Sound.coin();
+}
+
+// ---------- screen spam: DOM pieces over the canvas, each one closes itself after a few seconds
+const annoyLayer = $('annoy');
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+function mk(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  if (tag === 'button') e.type = 'button';
+  return e;
+}
+function onTap(el, fn) { if (el) el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); fn(e); }); }
+const Annoy = {
+  items: [],
+  add(el, life, extra) { annoyLayer.appendChild(el); const it = Object.assign({ el, t: 0, life, kind: '' }, extra); this.items.push(it); return it; },
+  remove(it) { if (it.dead) return; it.dead = true; it.el.classList.add('out'); setTimeout(() => it.el.remove(), 240); },
+  update(dt) {
+    for (const it of this.items) { if (it.dead) continue; it.t += dt; if (it.update) it.update(dt, it); if (it.t > it.life) this.remove(it); }
+    this.items = this.items.filter((it) => !it.dead);
+  },
+  count(kind) { let n = 0; for (const it of this.items) if (!it.dead && it.kind === kind) n++; return n; },
+  clear() { this.items = []; annoyLayer.innerHTML = ''; },
+};
+function tapPos(e) { const r = stage.getBoundingClientRect(); return e ? [e.clientX - r.left, e.clientY - r.top] : [W / 2, H / 2]; }
+function screenPop(text, x, y, color) {
+  const e = mk('div', 'annoy-pop', text);
+  e.style.left = `${x}px`; e.style.top = `${y}px`; if (color) e.style.color = color;
+  Annoy.add(e, 0.9, { kind: 'pop' });
+}
+function reward(amount, label, ev) { addCash(amount); Sound.pop(); const [x, y] = tapPos(ev); screenPop(`${label} +$${amount}`, x, y); }
+
+const ADS = [
+  ['AD', 'You won!!!', 'You are the 1 000 000th visitor on this roof. Claim your free breadcrumbs.', 'Claim now', '#ffd36b'],
+  ['AD', 'Download more RAM', 'Your phone is 87% slower than your neighbour’s. Fix it with one tap.', 'Download', '#7fd1ff'],
+  ['SPONSORED', 'Pigeons in your area', '3 pigeons want to meet you. They are right behind you.', 'Meet them', '#ff9ad5'],
+  ['AD', 'Rooftop insurance', 'Fell off a building? You may be entitled to compensation.', 'Get a quote', '#5fe0a8'],
+  ['AD', 'Free chips!!', 'Only 9 999 easy surveys away. No catch. Probably.', 'Start survey', '#ffa23e'],
+  ['AD', 'Learn parkour in 3 days', 'Doctors hate this one trick. Pigeons too.', 'Watch video', '#c08bff'],
+  ['WARNING', '3 viruses found', 'Just kidding. But you did miss that jump.', 'Scan now', '#ff6b5b'],
+  ['AD', 'Is your combo low?', 'Try Combo+ Extra Strength. Side effects may include stumbling.', 'Buy now', '#f4c430'],
+  ['AD', 'Hot new game!', 'It’s this one. You are already playing it. Keep going.', 'Play now', '#b9c6ff'],
+];
+const NOTIFS = [
+  ['Mom', 'Dinner is ready. Come down NOW.', '#5fe0a8'], ['Mom', 'Why are you on the roof??', '#5fe0a8'],
+  ['School', 'Reminder: homework due tomorrow 07:30', '#ffd36b'], ['Battery', '1% battery left. Probably.', '#ff6b5b'],
+  ['PigeonGram', 'A pigeon liked your photo', '#ff9ad5'], ['PigeonGram', 'The guard started following you', '#ff9ad5'],
+  ['Weather', 'Heavy pigeons expected this afternoon', '#7fd1ff'], ['Group chat', '47 new messages', '#c08bff'],
+  ['Bank', 'Your chip balance looks suspicious', '#f4c430'], ['Fitness', 'You ran 3 km on rooftops. Stairs exist.', '#ffa23e'],
+  ['Calendar', 'Touch grass · in 5 minutes', '#b9c6ff'], ['Unknown', 'It’s me, the rival. Watch your back.', '#46e0c8'],
+  ['Storage', 'Storage full: 4 000 screenshots of this game', '#a99fbe'], ['Dad', 'Has anyone seen my ladder?', '#5fe0a8'],
+];
+const CHAT_USERS = ['xXroofXx', 'pigeonfan', 'speedrun99', 'mod_bot', 'chipkid', 'guard_irl', 'gull_main', 'noob123', 'ratio_king', 'grandma', 'parkour_pro', 'lurker'];
+const CHAT_LINES = ['W', 'L', 'skill issue', 'bro is NOT making that jump', 'JUMP', 'SLIDE!!', 'first', 'chat is this real', 'ratio',
+  'the pigeons are winning', 'touch grass', 'nah', 'pog', 'clip that', 'insane', 'he’s cooked', 'go go go', 'why is he running',
+  'turn left', 'there is no left', 'lag', 'is this live?', 'GG', 'hi mom', 'what game is this', 'bet he falls', 'DOUBLE OR NOTHING', 'spin it'];
+const CHAT_REACT = { fail: ['L', 'skill issue', 'LMAO', 'he tripped', 'oof'], win: ['W', 'clean', 'CLIP IT', 'sheesh'], dead: ['F', 'press F', 'RIP', 'he’s gone'],
+  jackpot: ['JACKPOT???', 'RIGGED', 'W W W'], hype: ['HYPE', 'LETS GO', 'combo god', 'chaos!!'] };
+const CHAT_COLORS = ['#ffd36b', '#7fd1ff', '#ff9ad5', '#5fe0a8', '#ffa23e', '#c08bff'];
+const EMOTES = [['LMAO', '#ffd36b'], ['W W W', '#5fe0a8'], ['L', '#ff6b5b'], ['POG', '#c08bff'], ['OMG', '#7fd1ff'], ['GG', '#ff9ad5']];
+
+function spawnAd() {
+  if (Annoy.count('ad') >= 3) return;
+  const [tag, title, body, cta, color] = pick(ADS);
+  const fake = Math.random() < 0.4;
+  const xs = (fake ? '<button class="ad-x fake" type="button" aria-label="Close">✕</button> ' : '') + '<button class="ad-x real" type="button" aria-label="Close ad">✕</button>';
+  const e = mk('div', 'ad', `<div class="ad-bar"><span>${tag}</span><span>${xs}</span></div><div class="ad-body"><b>${title}</b><p>${body}</p><button class="ad-cta" type="button">${cta}</button></div>`);
+  const wPct = W < 600 ? 76 : 40;
+  e.style.setProperty('--ac', color);
+  e.style.width = `min(${wPct}%, 330px)`;
+  e.style.left = `${(Math.random() * (100 - wPct)).toFixed(1)}%`;
+  e.style.top = `${(5 + Math.random() * 48).toFixed(1)}%`;
+  e.style.transform = `rotate(${((Math.random() - 0.5) * 6).toFixed(1)}deg)`;
+  const it = Annoy.add(e, 7.5, { kind: 'ad' });
+  onTap(e.querySelector('.ad-x.real'), (ev) => {
+    if (!it.dodged && Math.random() < 0.3) { it.dodged = true; e.classList.toggle('x-left'); const [x, y] = tapPos(ev); screenPop('Nice try', x, y, '#ff6b5b'); Sound.error(); return; }
+    Annoy.remove(it); reward(10, 'Closed', ev);
+  });
+  onTap(e.querySelector('.ad-x.fake'), (ev) => { Sound.error(); const [x, y] = tapPos(ev); screenPop('Wrong X!', x, y, '#ff6b5b'); spawnAd(); spawnAd(); });
+  onTap(e.querySelector('.ad-cta'), (ev) => { Annoy.remove(it); Sound.error(); const [x, y] = tapPos(ev); screenPop('You clicked an ad', x, y, '#ff6b5b'); spawnAd(); spawnAd(); });
+  Sound.pop();
+}
+function spawnNotif() {
+  const live = Annoy.items.filter((it) => !it.dead && it.kind === 'notif');
+  if (live.length >= 3) return;
+  const slot = [0, 1, 2].find((s) => !live.some((it) => it.slot === s));
+  const [app, text, color] = pick(NOTIFS);
+  const e = mk('button', 'notif', `<i style="--nc:${color}">${app[0]}</i><div><span>now</span><b>${app}</b><p>${text}</p></div>`);
+  e.style.top = `${8 + slot * 76}px`;
+  const it = Annoy.add(e, 3.8, { kind: 'notif', slot });
+  onTap(e, (ev) => { Annoy.remove(it); reward(5, 'Swiped', ev); });
+  Sound.notif();
+}
+function chatAdd(panel, user, text) {
+  const log = panel.querySelector('.chat-log'); if (!log) return;
+  let h = 0; for (let i = 0; i < user.length; i++) h += user.charCodeAt(i);
+  log.appendChild(mk('li', '', `<b style="--uc:${CHAT_COLORS[h % CHAT_COLORS.length]}">${user}</b>${text}`));
+  while (log.children.length > 14) log.removeChild(log.firstChild);
+}
+function chatSay(kind) {
+  for (const c of game.spamCtl) {
+    if (c.key !== 'chat' || c.leaving) continue;
+    for (let i = 0; i < 2; i++) chatAdd(c.panel, pick(CHAT_USERS), pick(CHAT_REACT[kind]));
+  }
+}
+function emoteFlood() {
+  if (reduceMotion) return;
+  const [txt, col] = pick(EMOTES);
+  const e = mk('div', 'emote', txt);
+  e.style.setProperty('--ey', `${(8 + Math.random() * 62).toFixed(0)}%`); e.style.setProperty('--ec', col);
+  Annoy.add(e, 2.4, { kind: 'emote' });
+}
+function spawnFly() {
+  if (Annoy.count('fly') >= 4) return;
+  const e = mk('button', 'fly'); e.setAttribute('aria-label', 'Swat the fly');
+  const fromSide = Math.random() < 0.5;
+  const it = Annoy.add(e, 14, {
+    kind: 'fly', x: fromSide ? -20 : Math.random() * W, y: fromSide ? Math.random() * H : -20, a: Math.random() * TAU, v: 75, pause: 0,
+    update(dt, f) {
+      if (f.pause > 0) f.pause -= dt;
+      else {
+        f.a += (Math.random() - 0.5) * 7 * dt; f.x += Math.cos(f.a) * f.v * dt; f.y += Math.sin(f.a) * f.v * dt;
+        if (Math.random() < dt * 0.7) f.pause = 0.3 + Math.random() * 0.9;
+      }
+      if (f.t < 12) {
+        if (f.x < 10) f.a = (Math.random() - 0.5); else if (f.x > W - 10) f.a = Math.PI + (Math.random() - 0.5);
+        if (f.y < 10) f.a = Math.PI / 2 + (Math.random() - 0.5); else if (f.y > H - 10) f.a = -Math.PI / 2 + (Math.random() - 0.5);
+      }
+      f.el.style.transform = `translate(${(f.x - 23).toFixed(1)}px, ${(f.y - 23).toFixed(1)}px) rotate(${(f.a + Math.PI / 2).toFixed(2)}rad)`;
+    },
+  });
+  onTap(e, (ev) => {
+    Annoy.remove(it); reward(25, 'Swat', ev); Sound.splat();
+    const s = mk('div', 'splat'); s.style.left = `${(it.x - 18).toFixed(0)}px`; s.style.top = `${(it.y - 18).toFixed(0)}px`; Annoy.add(s, 3, { kind: 'splat' });
+  });
+  Sound.buzz();
+}
+const STICKERS = ['eyes', 'wow', 'nope', 'ten', 'tape', 'emoji', 'tape', 'emoji'];
+const EMOJI = ['😎', '🍌', '😺', '🤡', '🐸', '👀', '🍕', '🦆'];
+const TAPES = ['CAUTION · DO NOT CROSS · ', 'WET PAINT · ', 'UNDER CONSTRUCTION · ', 'NO PARKOUR · '];
+function lookAtRunner(dt, it) {
+  const r = it.el.getBoundingClientRect(), s = stage.getBoundingClientRect(), p = toScreen(P.x, P.y - 40);
+  const dx = p.x - (r.left - s.left + r.width / 2), dy = p.y - (r.top - s.top + r.height / 2), d = Math.hypot(dx, dy) || 1;
+  const off = `translate(${(dx / d * 9).toFixed(1)}px, ${(dy / d * 9).toFixed(1)}px)`;
+  it.el.querySelectorAll('i').forEach((i) => { i.style.transform = off; });
+}
+function spawnSticker() {
+  if (Annoy.count('sticker') >= 5) return;
+  const k = pick(STICKERS);
+  const html = { eyes: '<span class="eye"><i></i></span><span class="eye"><i></i></span>', wow: pick(['WOW', 'BAM!', 'OOF']), nope: pick(['NOPE', 'NO', 'LOL']),
+    ten: '10/10', tape: pick(TAPES).repeat(12), emoji: pick(EMOJI) }[k];
+  const e = mk('button', `sticker s-${k}`, html); e.setAttribute('aria-label', 'Peel off the sticker');
+  if (k === 'tape') { e.style.left = '-20%'; e.style.width = '140%'; e.style.top = `${(15 + Math.random() * 60).toFixed(0)}%`; }
+  else { e.style.left = `${(Math.random() * Math.max(1, W - 130)).toFixed(0)}px`; e.style.top = `${(Math.random() * Math.max(1, H - 130)).toFixed(0)}px`; }
+  e.style.transform = `rotate(${((Math.random() - 0.5) * (k === 'tape' ? 44 : 50)).toFixed(1)}deg)`;
+  const it = Annoy.add(e, 9, { kind: 'sticker', update: k === 'eyes' ? lookAtRunner : null });
+  onTap(e, (ev) => { Annoy.remove(it); reward(10, 'Peeled', ev); Sound.peel(); });
+  Sound.peel();
+}
+function capCell() { return Math.random() < 0.45 ? '🐦' : pick(['🏢', '🌆', '🚧', '📡']); }
+function spawnDialog() {
+  if (Annoy.count('dialog') >= 2) return;
+  const k = pick(['frozen', 'battery', 'cookie', 'captcha', 'update', 'frozen']);
+  if (k === 'cookie') { spawnCookie(); return; }
+  const html = {
+    frozen: '<b>“Rooftop Roulette” is not responding</b><p>You can wait for it to respond, or close it.</p><div class="row"><button type="button" data-a="ok">Wait</button><button type="button" data-a="nice" class="main">Close app</button></div>',
+    battery: '<b>1% Battery Remaining</b><p>Turn on Low Power Mode? (It’s part of the game. Your battery is fine.)</p><div class="row"><button type="button" data-a="ok">Continue</button><button type="button" data-a="dim" class="main">Low Power Mode</button></div>',
+    update: '<b>Update required</b><p>Rooftop Roulette 2.0 · 2.3 GB · Do not turn off your phone</p><div class="bar"><i></i></div><div class="row"><button type="button" data-a="ok">Later</button></div>',
+    captcha: `<b>Select all squares with pigeons</b><div class="cap-grid">${Array.from({ length: 9 }, () => `<button type="button" data-a="cell">${capCell()}</button>`).join('')}</div><div class="row"><button type="button" data-a="verify" class="main">Verify</button></div>`,
+  }[k];
+  const e = mk('div', 'dialog', html);
+  e.style.left = `${(50 + (Math.random() - 0.5) * 30).toFixed(0)}%`; e.style.top = `${(36 + Math.random() * 22).toFixed(0)}%`;
+  const it = Annoy.add(e, 8, {
+    kind: 'dialog', p: 0.6,
+    update: k === 'update' ? (dt, d) => { d.p = Math.max(0.02, d.p - dt * 0.07); const bar = d.el.querySelector('.bar i'); if (bar) bar.style.width = `${(d.p * 100).toFixed(1)}%`; } : null,
+  });
+  e.querySelectorAll('button').forEach((b) => onTap(b, (ev) => {
+    const a = b.getAttribute('data-a'), [x, y] = tapPos(ev);
+    if (a === 'cell') { b.classList.toggle('on'); return; }
+    if (a === 'verify' && Math.random() < 0.35) {
+      screenPop('Please try again', x, y, '#ff6b5b'); Sound.error();
+      e.querySelectorAll('.cap-grid button').forEach((c) => { c.classList.remove('on'); c.textContent = capCell(); });
+      return;
+    }
+    if (a === 'nice') screenPop('You can’t escape', x, y, '#ff6b5b');
+    if (a === 'dim') { game.dim = 5; screenPop('Low Power Mode', x, y, '#ffd36b'); }
+    Annoy.remove(it);
+    if (a === 'verify') reward(20, 'Human', ev); else Sound.pop();
+  }));
+  Sound.error();
+}
+function spawnCookie() {
+  if (Annoy.count('cookie')) return;
+  const e = mk('div', 'cookie', '<p><b>We use cookies 🍪</b> to track how often you fall off roofs. Our 847 partners would love to know too.</p><div class="row"><button class="main" type="button" data-a="ok">Accept all</button><button type="button" data-a="no">Reject</button><button type="button" data-a="no">Manage 847 partners</button></div>');
+  const it = Annoy.add(e, 9, { kind: 'cookie' });
+  e.querySelectorAll('button').forEach((b) => onTap(b, (ev) => {
+    Annoy.remove(it);
+    if (b.getAttribute('data-a') !== 'no') { reward(5, 'Accepted', ev); return; }
+    const d = mk('div', 'dialog', '<b>Are you sure?</b><p>Rejecting cookies makes the pigeons sad.</p><div class="row"><button class="main" type="button">Accept all</button></div>');
+    d.style.left = '50%'; d.style.top = '45%';
+    const di = Annoy.add(d, 6, { kind: 'dialog' });
+    onTap(d.querySelector('button'), (e2) => { Annoy.remove(di); reward(5, 'Accepted', e2); });
+    Sound.error();
+  }));
+  Sound.pop();
+}
+function spawnDvd() {
+  if (Annoy.count('dvd') >= 3) return;
+  const sp = reduceMotion ? 70 : 140;
+  Annoy.add(mk('div', 'dvd', 'ROULETTE<small>VIDEO</small>'), 9999, {
+    kind: 'dvd', x: Math.random() * Math.max(1, W - 130), y: Math.random() * Math.max(1, H - 56),
+    vx: (Math.random() < 0.5 ? -1 : 1) * sp, vy: (Math.random() < 0.5 ? -1 : 1) * sp * 0.75, hue: 150,
+    update(dt, d) {
+      d.x += d.vx * dt; d.y += d.vy * dt;
+      let hx = false, hy = false;
+      if (d.x <= 0) { d.x = 0; d.vx = Math.abs(d.vx); hx = true; } else if (d.x >= W - 130) { d.x = W - 130; d.vx = -Math.abs(d.vx); hx = true; }
+      if (d.y <= 0) { d.y = 0; d.vy = Math.abs(d.vy); hy = true; } else if (d.y >= H - 56) { d.y = H - 56; d.vy = -Math.abs(d.vy); hy = true; }
+      if (hx || hy) {
+        d.hue = (d.hue + 67) % 360; d.el.style.color = `hsl(${d.hue},90%,65%)`;
+        const nearX = d.x < 14 || d.x > W - 144, nearY = d.y < 12 || d.y > H - 68;
+        if ((hx && nearY) || (hy && nearX)) { addCash(500); hype('CORNER!!', '#5fe0a8'); confetti(30); Sound.jackpot(); chatSay('jackpot'); }
+      }
+      d.el.style.transform = `translate(${d.x.toFixed(1)}px, ${d.y.toFixed(1)}px)`;
+    },
+  });
+}
+function showBuffering() { if (!Annoy.count('buffer')) Annoy.add(mk('div', 'buffering', '<i></i><span>Buffering…</span>'), 1.6, { kind: 'buffer' }); }
+function crackScreen() {
+  if (Annoy.count('crack') >= 2) return;
+  const s = toScreen(P.x, P.y - 30), cx = clamp(s.x, 20, W - 20), cy = clamp(s.y, 20, H - 20);
+  const rays = 9 + Math.floor(Math.random() * 5), maxL = Math.max(W, H) * 0.7;
+  let d = '';
+  for (let i = 0; i < rays; i++) {
+    let a = (i / rays) * TAU + (Math.random() - 0.5) * 0.5, x = cx, y = cy;
+    d += `M${x.toFixed(0)} ${y.toFixed(0)}`;
+    const segs = 4 + Math.floor(Math.random() * 4), step = maxL * (0.4 + Math.random() * 0.6) / segs;
+    for (let k = 0; k < segs; k++) { a += (Math.random() - 0.5) * 0.6; x += Math.cos(a) * step; y += Math.sin(a) * step; d += `L${x.toFixed(0)} ${y.toFixed(0)}`; }
+  }
+  for (let ring = 1; ring <= 2; ring++) {
+    const r = 22 * ring + Math.random() * 10;
+    d += `M${(cx + r).toFixed(0)} ${cy.toFixed(0)}`;
+    for (let k = 1; k <= 10; k++) { const a = (k / 10) * TAU, rr = r * (0.85 + Math.random() * 0.3); d += `L${(cx + Math.cos(a) * rr).toFixed(0)} ${(cy + Math.sin(a) * rr).toFixed(0)}`; }
+  }
+  const w = Math.ceil(W), h = Math.ceil(H);
+  Annoy.add(mk('div', 'crack', `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="2.4" transform="translate(1 1)"/><path d="${d}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.3"/></svg>`), 9, { kind: 'crack' });
+  Sound.crack();
+}
+
+// one controller per active spam type; the chaos level makes all of them come faster
+const spamRate = () => 1 / (1 + 0.2 * (chaosLevel() - 1));
+function makeSpam(key) {
+  const c = { key, leaving: false, timer: 0.5, extra: 3, update() {}, onLeave() {} };
+  const every = (min, rnd, fn) => function (dt) {
+    if (this.leaving) return;
+    if ((this.timer -= dt) <= 0) { this.timer = (min + Math.random() * rnd) * spamRate(); fn(); }
+  };
+  switch (key) {
+    case 'ads': c.update = every(2.2, 1.6, spawnAd); break;
+    case 'notifs': c.update = every(1.1, 1.0, spawnNotif); break;
+    case 'flies': c.update = every(2.0, 1.4, spawnFly); break;
+    case 'stickers': c.update = every(1.4, 1.2, spawnSticker); break;
+    case 'crash': c.update = every(3.2, 2.0, spawnDialog); break;
+    case 'dvd':
+      c.update = function (dt) {
+        if (this.leaving) return;
+        if ((this.timer -= dt) <= 0) { this.timer = 6.5 * spamRate(); spawnDvd(); }
+        if ((this.extra -= dt) <= 0) { this.extra = 5 + Math.random() * 4; showBuffering(); }
+      };
+      c.onLeave = () => { for (const it of Annoy.items) if (it.kind === 'dvd') Annoy.remove(it); };
+      break;
+    case 'chat':
+      c.panel = mk('div', 'chat', '<div class="chat-head">● LIVE · <span class="chat-viewers">1 204</span> watching</div><ol class="chat-log"></ol>');
+      annoyLayer.appendChild(c.panel); c.viewers = 1204; c.emote = 3;
+      c.update = function (dt) {
+        if (this.leaving) return;
+        if ((this.timer -= dt) <= 0) { this.timer = (0.25 + Math.random() * 0.45) * spamRate(); chatAdd(this.panel, pick(CHAT_USERS), pick(CHAT_LINES)); }
+        if ((this.emote -= dt) <= 0) { this.emote = 3.5 + Math.random() * 2.5; emoteFlood(); }
+        if (Math.random() < dt * 3) {
+          this.viewers = Math.max(3, Math.round(this.viewers + (Math.random() - 0.4) * 60));
+          const v = this.panel.querySelector('.chat-viewers'); if (v) v.textContent = fmt(this.viewers);
+        }
+      };
+      c.onLeave = function () { const p = this.panel; p.classList.add('out'); setTimeout(() => p.remove(), 420); };
+      break;
+  }
+  return c;
+}
+function setSpam(keys) {
+  for (const c of game.spamCtl) if (!c.leaving) { c.leaving = true; c.onLeave(); }
+  game.spamCtl = [];
+  for (const k of keys) game.spamCtl.push(makeSpam(k));
+  game.spam = keys.slice();
+}
+
+// ---------- chaos events: something random every few seconds, more often at higher chaos levels
+const CHAOS = [
+  ['quake', 'EARTHQUAKE', '#ff6b5b'], ['tilt', 'TILT', '#c08bff'], ['wobble', 'WOBBLE', '#7fd1ff'], ['disco', 'DISCO', '#ff4fb8'],
+  ['rain', 'CHIP RAIN', '#ffd36b'], ['confetti', 'CONFETTI CANNON', '#5fe0a8'], ['gravity', 'GRAVITY GLITCH', '#b9c6ff'],
+  ['burst', 'SPEED BURST', '#ff5a4e'], ['spam', 'SPAM BURST', '#ffa23e'],
+];
+const MOTION_CHAOS = ['quake', 'tilt', 'wobble', 'disco'];
+function chaosEvent() {
+  const pool = reduceMotion ? CHAOS.filter(([k]) => !MOTION_CHAOS.includes(k)) : CHAOS;
+  const [k, name, color] = pick(pool);
+  const ch = game.chaos;
+  switch (k) {
+    case 'quake': ch.quake = 2.4; break;
+    case 'tilt': ch.tilt = 4; ch.tiltDir = Math.random() < 0.5 ? -1 : 1; break;
+    case 'wobble': ch.wobble = 4.5; break;
+    case 'disco': ch.disco = 5; break;
+    case 'rain': ch.rain = 3.5; break;
+    case 'confetti': confetti(90); Sound.jackpot(); break;
+    case 'gravity': ch.gravity = 3.5; break;
+    case 'burst': ch.burst = 2.2; break;
+    case 'spam': spawnAd(); spawnNotif(); spawnSticker(); spawnFly(); if (Math.random() < 0.5) spawnDialog(); break;
+  }
+  hype(name, color); chatSay('hype');
+}
+function updateChaos(real, dt) {
+  const ch = game.chaos;
+  if ((ch.t -= real) <= 0) { ch.t = Math.max(4.5, 12 - chaosLevel() * 1.4) + Math.random() * 4; if (game.time > 4) chaosEvent(); }
+  for (const k of ['quake', 'tilt', 'wobble', 'disco', 'gravity', 'burst', 'rain']) if (ch[k] > 0) ch[k] = Math.max(0, ch[k] - real);
+  if (ch.quake > 0) game.shake = Math.max(game.shake, 0.32);
+  if (ch.rain > 0 && (ch.rainT -= real) <= 0) {
+    ch.rainT = 0.07;
+    game.rain.push({ x: P.x - 60 + Math.random() * viewW * 0.75, y: -offY - 20, vy: 220 + Math.random() * 120, gold: Math.random() < 0.15, got: false });
+  }
+  const cy = P.y - playerH() / 2;
+  for (const c of game.rain) {
+    c.y += c.vy * dt;
+    const dx = c.x - P.x, dy = c.y - cy;
+    if (!c.got && !P.dead && dx * dx + dy * dy < 30 * 30) { c.got = true; addScore(c.gold ? 30 : 10); addCombo(1); Sound.token(); puff(c.x, c.y, 4, c.gold ? '#ffd36b' : '#e5484d', 120); }
+  }
+  game.rain = game.rain.filter((c) => !c.got && c.y < worldBottom + 40);
+}
+let lastCanvasTf = '', lastCanvasFilter = '';
+function applyCanvasFx(t) {
+  const ch = game.chaos, live = game.state === 'play';
+  let angle = 0, filter = '';
+  if (live) {
+    if (ch.tilt > 0) angle += ch.tiltDir * 7 * clamp(Math.min(ch.tilt, 4 - ch.tilt) / 0.5, 0, 1);
+    if (ch.wobble > 0) angle += Math.sin(t * 3.2) * 5 * clamp(Math.min(ch.wobble, 4.5 - ch.wobble) / 0.5, 0, 1);
+    if (ch.disco > 0) filter = `hue-rotate(${Math.floor(t * 120) % 360}deg) saturate(1.5)`;
+  }
+  const tf = angle ? `rotate(${angle.toFixed(2)}deg) scale(1.15)` : '';
+  if (tf !== lastCanvasTf) { canvas.style.transform = tf; lastCanvasTf = tf; }
+  if (filter !== lastCanvasFilter) { canvas.style.filter = filter; lastCanvasFilter = filter; }
+}
+function clearScreenSpam() {
+  Annoy.clear(); game.spamCtl = []; game.rain = []; game.dim = 0;
+  game.chaos = freshChaos(); applyCanvasFx(0);
 }
 
 // ---------- pests: nobody here can be beaten, they only leave at the next gate
@@ -1311,6 +1801,7 @@ function update(dt) {
   if (game.comboT > 0) { game.comboT -= real; if (game.comboT <= 0) { game.combo = 0; game.comboMult = 1; } }
   city.ensure(P.x + 2600);
   const ph = physicsFor(game.rules);
+  if (game.chaos.gravity > 0) ph.g *= 0.6;
   P.size = lerp(P.size, ph.size, approach(8, dt));
   input.jumpBuffer -= dt;
 
@@ -1321,6 +1812,7 @@ function update(dt) {
   for (const c of game.pestCtl) { if (c.leaving) c.leaveT += dt; c.update(dt); }
   game.pestCtl = game.pestCtl.filter((c) => !c.done());
   if (game.state !== 'play') return;
+  updateChaos(real, dt);
 
   if (P.dead) {
     game.deadT += dt;
@@ -1334,7 +1826,7 @@ function update(dt) {
 
   P.stateT += dt;
   P.stumble = Math.min(1, P.stumble + dt * 0.5);
-  const speed = baseSpeed(P.x) * ph.speed * P.stumble;
+  const speed = baseSpeed(P.x) * ph.speed * P.stumble * (game.chaos.burst > 0 ? 1.25 : 1);
   game.speed = speed;
 
   if (P.state === 'climb') {
@@ -1467,6 +1959,7 @@ function endOfLife() {
   game.chanceUsed = true; game.state = 'chance';
   game.chance = { phase: 'ready', t: 0, slot: null };
   Music.stop(); hideBet(); game.coin = null; game.slots = null; breakCombo();
+  Annoy.clear(); game.rain = []; game.dim = 0; game.chaos = freshChaos(); applyCanvasFx(0);
   chanceWheel.visible = true; chanceWheel.done = false; chanceWheel.spinning = false; chanceWheel.sticky = true;
   input.jumpHeld = false; input.slideHeld = false; pointers.clear();
 }
@@ -1504,6 +1997,7 @@ function revive(withShield) {
   for (const c of game.pestCtl) if (c.key === 'guard') c.d = 460;
   if (withShield) game.fx.shield = true;
   game.cause = 'fall'; game.chanceResult = 'revived'; scarf = []; game.state = 'play'; Music.start();
+  setSpam(game.spam.slice());
   game.camX = P.x - viewW * 0.3;
   game.banner = { title: 'Back in the run', sub: withShield ? 'With a shield on top' : 'This was your last chance', color: '#5fe0a8', t: 0 };
   updateChips();
@@ -1634,7 +2128,7 @@ function drawDeco(x0, x1, t) {
   }
 }
 
-function gateRevealed(g) { return g.passed || (game.gateRef === g && ruleWheel.done && pestWheel.done); }
+function gateRevealed(g) { return g.passed || (game.gateRef === g && ruleWheel.done && pestWheel.done && spamWheel.done); }
 function drawGates(x0, x1, t) {
   for (const g of game.city.gates) {
     if (g.x < x0 - 100 || g.x > x1 + 100) continue;
@@ -1660,17 +2154,20 @@ function drawTokens(x0, x1, t) {
     const k = city.tokens[i];
     if (k.x > x1) break;
     if (k.got || k.x < x0) continue;
-    // a casino chip, spinning on its edge
-    const sx = Math.max(0.15, Math.abs(Math.cos(t * 4 + k.x * 0.05))), r = k.gold ? 9 : 7.5;
-    ctx.fillStyle = k.gold ? 'rgba(255,211,107,0.22)' : 'rgba(229,72,77,0.2)';
-    ctx.beginPath(); ctx.arc(k.x, k.y, r * 1.8, 0, TAU); ctx.fill();
-    ctx.save(); ctx.translate(k.x, k.y); ctx.scale(sx, 1);
-    ctx.fillStyle = k.gold ? '#ffc23d' : '#e5484d'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#f3eee5';
-    for (let i = 0; i < 6; i++) { const a = i * TAU / 6; ctx.save(); ctx.rotate(a); ctx.fillRect(-1.3, -r, 2.6, r * 0.32); ctx.restore(); }
-    ctx.strokeStyle = 'rgba(243,238,229,0.8)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, TAU); ctx.stroke();
-    ctx.restore();
+    drawChip(k.x, k.y, k.gold, t);
   }
+}
+// a casino chip, spinning on its edge
+function drawChip(x, y, gold, t) {
+  const sx = Math.max(0.15, Math.abs(Math.cos(t * 4 + x * 0.05))), r = gold ? 9 : 7.5;
+  ctx.fillStyle = gold ? 'rgba(255,211,107,0.22)' : 'rgba(229,72,77,0.2)';
+  ctx.beginPath(); ctx.arc(x, y, r * 1.8, 0, TAU); ctx.fill();
+  ctx.save(); ctx.translate(x, y); ctx.scale(sx, 1);
+  ctx.fillStyle = gold ? '#ffc23d' : '#e5484d'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#f3eee5';
+  for (let i = 0; i < 6; i++) { ctx.save(); ctx.rotate(i * TAU / 6); ctx.fillRect(-1.3, -r, 2.6, r * 0.32); ctx.restore(); }
+  ctx.strokeStyle = 'rgba(243,238,229,0.8)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, TAU); ctx.stroke();
+  ctx.restore();
 }
 function drawBoxes(x0, x1, t) {
   const flip = game.mirror < 0 ? -1 : 1;
@@ -1914,6 +2411,8 @@ function drawGateLabels(x0, x1) {
     if (revealed) {
       ctx.font = `700 ${Math.max(11, 14 * scale)}px ${DISPLAY}`; ctx.fillStyle = PESTS[g.pests[0]].color;
       ctx.fillText('PEST: ' + g.pests.map((k) => PESTS[k].short).join(' + '), s.x, s.y + size * 0.85);
+      ctx.fillStyle = SPAM[g.spam[0]].color;
+      ctx.fillText('SPAM: ' + g.spam.map((k) => SPAM[k].short).join(' + '), s.x, s.y + size * 1.55);
     }
   }
 }
@@ -1955,15 +2454,21 @@ function pestLabel(w) {
   if (w.done && g) return [g.pests.map((k) => PESTS[k].short).join(' + '), PESTS[g.pests[0]].color];
   const s = w.current(); return [s.short, s.color];
 }
+function spamLabel(w) {
+  const g = game.gateRef;
+  if (w.done && g) return [g.spam.map((k) => SPAM[k].short).join(' + '), SPAM[g.spam[0]].color];
+  const s = w.current(); return [s.short, s.color];
+}
 function drawWheels(dt) {
-  for (const w of [ruleWheel, pestWheel, bonusWheel, cityWheel]) w.update(dt);
+  for (const w of [ruleWheel, pestWheel, spamWheel, bonusWheel, cityWheel]) w.update(dt);
   const R = clamp(Math.min(W, H) * 0.075, 22, 40);
   const top = W < 620 ? 150 : R + 16;
-  const gap = Math.max(R + 34, Math.min(130, W * 0.14));
-  const [rt, rc] = ruleLabel(ruleWheel), [pt, pc] = pestLabel(pestWheel);
-  const waiting = game.gateRef && !game.gateRef.passed && ruleWheel.done && pestWheel.done;
-  ruleWheel.draw(W / 2 - gap, top, R, waiting ? 'NEXT RULE' : 'RULE', rt, rc, gap * 1.8);
-  pestWheel.draw(W / 2 + gap, top, R, waiting ? 'NEXT PEST' : 'PEST', pt, pc, gap * 1.8);
+  const gap = Math.max(R * 2 + 8, Math.min(125, W * 0.13));
+  const [rt, rc] = ruleLabel(ruleWheel), [pt, pc] = pestLabel(pestWheel), [st, sc] = spamLabel(spamWheel);
+  const waiting = game.gateRef && !game.gateRef.passed && ruleWheel.done && pestWheel.done && spamWheel.done;
+  ruleWheel.draw(W / 2 - gap, top, R, waiting ? 'NEXT RULE' : 'RULE', rt, rc, gap * 0.95);
+  pestWheel.draw(W / 2, top, R, waiting ? 'NEXT PEST' : 'PEST', pt, pc, gap * 0.95);
+  spamWheel.draw(W / 2 + gap, top, R, waiting ? 'NEXT SPAM' : 'SPAM', st, sc, gap * 0.95);
   const bR = clamp(R * 0.8, 20, 32), bs = bonusWheel.current();
   bonusWheel.draw(W - bR - 20, 64 + bR, bR, 'BONUS', bonusWheel.done ? BONUS[bonusWheel.result].short : bs.short, bonusWheel.done ? BONUS[bonusWheel.result].color : bs.color, bR * 3.4);
   const cR = clamp(Math.min(W, H) * 0.12, 34, 62), cs = cityWheel.current();
@@ -2099,6 +2604,7 @@ function render(dt, t) {
   drawDeco(x0, x1, t);
   drawGates(x0, x1, t);
   drawTokens(x0, x1, t);
+  for (const c of game.rain) drawChip(c.x, c.y, c.gold, t);
   drawBoxes(x0, x1, t);
   drawObstacles(x0, x1);
   const playing = game.state !== 'menu';
@@ -2110,7 +2616,9 @@ function render(dt, t) {
   drawParticles(dt);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   drawWeather(dt, t);
+  applyCanvasFx(t);
   if (!playing) return;
+  if (game.dim > 0) { ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H); }
   drawGateLabels(x0, x1);
   drawPopups(dt);
   if ((game.rules.includes('turbo') || game.comboMult >= 3) && !reduceMotion) {
@@ -2187,11 +2695,14 @@ function updateHud() {
 }
 function chipHtml(k) { return `<span class="chip" style="--c:${RULES[k].color}">${RULES[k].short}</span>`; }
 function pestChipHtml(k) { return `<span class="chip pest" style="--c:${PESTS[k].color}">${PESTS[k].short}</span>`; }
+function spamChipHtml(k) { return `<span class="chip spam" style="--c:${SPAM[k].color}">${SPAM[k].short}</span>`; }
 function updateChips() {
   const fx = game.fx, parts = [];
   for (const k of game.rules) parts.push(chipHtml(k));
   if (game.mult !== 1 || fx.x2 > 0) parts.push(`<span class="chip mult">${multText(curMult())}</span>`);
   for (const k of game.pests) parts.push(pestChipHtml(k));
+  for (const k of game.spam) parts.push(spamChipHtml(k));
+  if (chaosLevel() > 1) parts.push(`<span class="chip" style="--c:#ff4fb8">CHAOS ${chaosLevel()}</span>`);
   if (game.swap) parts.push('<span class="chip" style="--c:#b48cff">SWAPPED</span>');
   if (fx.shield) parts.push('<span class="chip fx" style="--c:#7fe3ff">SHIELD</span>');
   if (fx.slotX3 > 0) parts.push(`<span class="chip fx" style="--c:#f4c430">CASH ×3 <b>${Math.ceil(fx.slotX3)}</b></span>`);
@@ -2219,6 +2730,7 @@ function listHtml(items) {
 }
 $('ruleList').innerHTML = listHtml(RULE_WHEEL.map((k) => { const r = ruleInfo(k); return { ...r, mx: k === 'double' ? 'stacks' : multText(r.mult) }; }));
 $('pestList').innerHTML = listHtml(PEST_WHEEL.map(pestInfo));
+$('spamList').innerHTML = listHtml(SPAM_WHEEL.map(spamInfo));
 $('bonusList').innerHTML = listHtml(BONUS);
 $('cityList').innerHTML = listHtml(THEME_KEYS.map((k) => THEMES[k]));
 
@@ -2237,10 +2749,11 @@ function startRun(seed) {
     chanceUsed: false, chance: null, swap: false, theme: 'dusk', timeScale: 1, flashBang: 0, gateRef: null, chanceResult: '',
     prng: mulberry32((game.seed ^ 0xA5A5A5A5) >>> 0), bonusRng: mulberry32((game.seed ^ 0xB0B0B0B0) >>> 0),
     combo: 0, comboT: 0, comboMult: 1, bestCombo: 1, jackpot: JACKPOT_START, gateScore: 0, coin: null, slots: null, hype: null, jackpots: 0,
+    spam: [], gatesPassed: 0,
   });
-  hideBet(); lastJack = lastCombo = -1;
+  hideBet(); clearScreenSpam(); lastJack = lastCombo = -1;
   Music.start();
-  for (const w of [ruleWheel, pestWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false, done: false, sticky: false, onStop: null });
+  for (const w of [ruleWheel, pestWheel, spamWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false, done: false, sticky: false, onStop: null });
   Object.assign(input, { jumpHeld: false, jumpBuffer: 0, slideHeld: false, slidePressAt: -9 });
   pointers.clear();
   particles = []; popups = []; scarf = [];
@@ -2266,7 +2779,7 @@ const CAUSES = {
   guard: ['Caught by the guard', 'Every stumble lets the guard gain. Clean runs and tricks push him back.'],
 };
 function gameOver() {
-  game.state = 'over'; releaseWake(); Music.stop(); hideBet();
+  game.state = 'over'; releaseWake(); Music.stop(); hideBet(); clearScreenSpam();
   const dist = Math.floor(Math.max(0, P.x) / UNITS_PER_M), score = Math.floor(game.score);
   const best = store.get(BEST_KEY, null);
   const isBest = !best || score > best.score;
@@ -2284,7 +2797,7 @@ function gameOver() {
   $('overCity').textContent = cityCode(game.seed);
   $('overTheme').textContent = THEMES[game.theme].name;
   $('overHistory').innerHTML = game.history.length
-    ? game.history.map((h) => `<li>${h.rules.map(chipHtml).join('')}${h.pests.map(pestChipHtml).join('')}</li>`).join('')
+    ? game.history.map((h) => `<li>${h.rules.map(chipHtml).join('')}${h.pests.map(pestChipHtml).join('')}${h.spam.map(spamChipHtml).join('')}</li>`).join('')
     : `<li class="none">No gate reached. The first one is at ${FIRST_GATE / UNITS_PER_M} m.</li>`;
   $('hud').hidden = true; $('zones').hidden = true;
   renderBest(); show('screenOver');
@@ -2303,9 +2816,10 @@ function resume() {
 }
 function quitToMenu() {
   releaseWake(); Music.stop(); hideBet(); game.state = 'menu'; $('hud').hidden = true; $('zones').hidden = true;
+  clearScreenSpam(); game.spam = []; game.gatesPassed = 0;
   game.city = new City(Math.floor(Math.random() * 456976)); game.camX = 0; game.rules = []; game.pests = []; game.pestCtl = [];
   game.mirror = game.mirrorTarget = 1; game.theme = 'dusk'; initWeather();
-  for (const w of [ruleWheel, pestWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false });
+  for (const w of [ruleWheel, pestWheel, spamWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false });
   renderBest(); show('screenStart');
 }
 
@@ -2401,6 +2915,9 @@ function frame(now) {
     if (!P.dead) game.camX = P.x - viewW * 0.3;
     game.city.prune(game.camX);
     if (game.bet && (game.bet.t -= dt) <= 0) hideBet();
+    Annoy.update(dt);
+    for (const c of game.spamCtl) c.update(dt);
+    if (game.dim > 0) game.dim -= dt;
     Music.tick();
     updateHud();
   } else if (game.state === 'chance') {

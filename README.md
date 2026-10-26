@@ -23,6 +23,11 @@ Hold the phone sideways to see further ahead.
 - **City wheel** at the start: Dusk, Midnight, Neon, Fog, Snow or Thunderstorm
 - **Rule wheel** at every gate (every 150 m): moon gravity, turbo, mirror city, blackout and more
 - **Pest wheel** at every gate: pigeons, net drone, rooftop guard, seagull thief, paparazzi, rival runner, poltergeist
+- **Spam wheel** at every gate fills the screen: pop-up ads (find the real X), notification spam, stream chat,
+  flies (tap to swat), sticker bombs and caution tape, fake error dialogs, bouncing DVD logos (corner = $500)
+- **Chaos events** every few seconds: earthquake, tilt, wobble, disco, chip rain, confetti cannon, gravity glitch,
+  speed burst, spam burst. The chaos level rises every two gates and makes everything come faster
+- Stumbling can **crack your screen**
 - **Bonus wheel** every 15 chips: shield, magnet, double jump, cash ×2, slow-mo, +$500, breather … or bankrupt
 - **Slots** in the golden **?** boxes: 7-7-7 wins the growing jackpot, three skulls bust you and send an extra pest
 - **Double or nothing** after every gate: bet the cash you made since the last gate on a coin flip
