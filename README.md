@@ -1,7 +1,8 @@
 # Rooftop Roulette
 
-A rooftop freerunning game for the phone browser. Five roulette wheels decide the city, the rules,
-the pests that hound you, your bonuses and whether you get a last chance.
+A rooftop freerunning game for the phone browser. Run, stack your combo and gamble with everything
+you earn: five roulette wheels, slot machines and double or nothing. Pests hound you and can't be beaten,
+only outrun.
 
 **Play:** https://lennify44.github.io/rooftop-roulette/
 
@@ -15,14 +16,18 @@ Hold the phone sideways to see further ahead.
 | Right side of the screen | Jump (hold for higher) |
 | Left side | Slide under pipes and birds. In the air: drop fast, keep holding to roll |
 | Run into a wall | Grab the ledge, tap jump to climb |
-| Keyboard | Space or ↑ jump, ↓ slide, P pause |
+| Keyboard | Space or ↑ jump, ↓ slide, B bet, P pause |
 
-## The five wheels
+## Wheels and gambles
 
-- **City** at the start: Dusk, Midnight, Neon, Fog, Snow or Thunderstorm
-- **Rule** at every gate (every 200 m): moon gravity, turbo, mirror city, blackout and more
-- **Pest** at every gate: pigeons, net drone, rooftop guard, seagull thief, paparazzi, rival runner, poltergeist. Pests can't be beaten, only survived
-- **Bonus** every 20 tokens: shield, magnet, double jump, score ×2, slow-mo, +500, breather … or bankrupt
-- **Last chance** when you crash: tap to spin, 3 in 8 slots bring you back
+- **City wheel** at the start: Dusk, Midnight, Neon, Fog, Snow or Thunderstorm
+- **Rule wheel** at every gate (every 150 m): moon gravity, turbo, mirror city, blackout and more
+- **Pest wheel** at every gate: pigeons, net drone, rooftop guard, seagull thief, paparazzi, rival runner, poltergeist
+- **Bonus wheel** every 15 chips: shield, magnet, double jump, cash ×2, slow-mo, +$500, breather … or bankrupt
+- **Slots** in the golden **?** boxes: 7-7-7 wins the growing jackpot, three skulls bust you and send an extra pest
+- **Double or nothing** after every gate: bet the cash you made since the last gate on a coin flip
+- **Combo** up to ×5 from chips, tricks, close calls and dodges. Any stumble breaks it
+- **Last chance wheel** when you crash: tap to spin, 3 in 8 slots bring you back
 
+All money in the game is pretend: there is nothing to buy and no real money involved.
 Everything is in one `index.html` with no libraries or build step.

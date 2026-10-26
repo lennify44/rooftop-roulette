@@ -78,6 +78,25 @@ body {
   justify-self: start; margin-top: 4px; padding: 2px 8px; font-family: var(--font-display); font-weight: 900; font-size: 15px;
   letter-spacing: 0.08em; color: var(--chalk); background: var(--danger); font-variant-numeric: tabular-nums;
 }
+.jack { margin-left: 8px; font-size: 12px; color: var(--hazard); }
+.combo { display: grid; gap: 3px; justify-items: start; margin-top: 4px; }
+.combo-text {
+  font-family: var(--font-display); font-weight: 900; font-size: 22px; line-height: 1; letter-spacing: 0.04em;
+  color: var(--cc, var(--sodium)); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4); font-variant-numeric: tabular-nums;
+}
+.combo-bar { display: block; width: 110px; height: 4px; background: rgba(243, 238, 229, 0.18); }
+.combo-bar i { display: block; height: 100%; width: 100%; background: var(--cc, var(--sodium)); transform-origin: left; }
+.bet {
+  position: absolute; left: 50%; top: 140px; transform: translateX(-50%) skewX(-10deg); z-index: 2;
+  display: grid; justify-items: center; gap: 2px; padding: 8px 18px 6px; border: 0; cursor: pointer;
+  color: var(--night); background: var(--hazard); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+  font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.bet > * { transform: skewX(10deg); }
+.bet small { font-family: var(--font-mono); font-weight: 600; font-size: 11px; letter-spacing: 0.08em; }
+.bet .bet-timer { display: block; width: 100%; height: 3px; background: rgba(17, 14, 34, 0.35); transform: none; }
+.bet .bet-timer i { display: block; height: 100%; background: var(--night); transform-origin: left; }
+.bet:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
 .hud-btns { display: flex; gap: 8px; pointer-events: auto; }
 .icon-btn {
   width: 42px; height: 42px; display: grid; place-items: center; padding: 0; border: 0; cursor: pointer;
@@ -203,7 +222,8 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
   <div class="hud" id="hud" hidden>
     <div class="hud-stats">
       <div class="hud-dist"><span id="hudDist">0</span><span class="unit">m</span></div>
-      <div class="hud-score"><b id="hudScore">0</b> pts</div>
+      <div class="hud-score">$<b id="hudScore">0</b><span class="jack">Jackpot $<span id="hudJack">1 000</span></span></div>
+      <div class="combo" id="combo" hidden><span class="combo-text" id="comboText">COMBO ×1.5</span><span class="combo-bar"><i id="comboBar"></i></span></div>
       <div class="hud-rules" id="hudRules"></div>
       <div class="guard" id="guardMeter" hidden>Guard <span id="guardDist">20</span> m</div>
     </div>
@@ -221,6 +241,12 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
     </div>
   </div>
 
+  <button class="bet" id="betBtn" type="button" hidden>
+    <span id="betLabel">Double or nothing</span>
+    <small id="betStake">Bet $0 · 50/50</small>
+    <span class="bet-timer"><i id="betTimer"></i></span>
+  </button>
+
   <div class="zones" id="zones" hidden>
     <div class="zone zone-left" id="zoneLeft">SLIDE<small>in the air: drop + roll</small></div>
     <div class="zone zone-right" id="zoneRight">JUMP<small>hold for height</small></div>
@@ -229,9 +255,9 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
   <section class="screen" id="screenStart" aria-label="Start">
     <div class="menu">
       <div>
-        <p class="eyebrow">Freerunning · five roulette wheels</p>
+        <p class="eyebrow">Freerunning · wheels, slots, double or nothing</p>
         <h1 class="logo" aria-label="Rooftop Roulette">Rooftop<br><span class="logo-r">R<span class="wheel-o"></span>ulette</span></h1>
-        <p class="lede">Run the rooftops while five wheels decide the weather, the rules, the pests that hound you, your bonuses and whether you get a second chance. Pests can't be beaten. You can only outrun them.</p>
+        <p class="lede">Run the rooftops, stack your combo and gamble with everything you earn: five wheels, slot machines and double or nothing. Pests can't be beaten. You can only outrun them.</p>
         <div class="cta-row">
           <button class="btn" id="btnStart" type="button"><span>Run</span></button>
           <p class="best" id="bestStart">No best run yet</p>
@@ -246,13 +272,15 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
           <div><dt>Into a wall</dt><dd>Grab the ledge, then tap jump to climb.</dd></div>
           <div><dt>Keyboard</dt><dd>Space or ↑ jump · ↓ slide · P pause</dd></div>
         </dl>
-        <h2 class="label">The five wheels</h2>
+        <h2 class="label">Wheels and gambles</h2>
         <dl class="pairs">
-          <div><dt>Run start</dt><dd><b>City</b> picks the weather and the look of the skyline.</dd></div>
-          <div><dt>Every 200 m</dt><dd><b>Rule</b> changes how the city works for the next stretch.</dd></div>
-          <div><dt>Every 200 m</dt><dd><b>Pest</b> sends someone to annoy you until the next gate.</dd></div>
-          <div><dt>Every 20 tokens</dt><dd><b>Bonus</b>: shield, magnet, double jump … or bankrupt.</dd></div>
-          <div><dt>When you crash</dt><dd><b>Last chance</b>: tap to spin, 3 in 8 to get back in. Once per run.</dd></div>
+          <div><dt>Run start</dt><dd><b>City</b> wheel picks the weather and the skyline.</dd></div>
+          <div><dt>Every 150 m</dt><dd><b>Rule</b> and <b>Pest</b> wheels change the city and send someone after you.</dd></div>
+          <div><dt>Every 15 chips</dt><dd><b>Bonus</b> wheel: shield, magnet, double jump … or bankrupt.</dd></div>
+          <div><dt>? boxes</dt><dd><b>Slots</b>: 7-7-7 wins the jackpot, three skulls bust you.</dd></div>
+          <div><dt>After a gate</dt><dd><b>Double or nothing</b> on the cash since the last gate.</dd></div>
+          <div><dt>Combo</dt><dd>Chips, tricks, close calls and dodges, up to <b>×5</b>. A stumble breaks it.</dd></div>
+          <div><dt>When you crash</dt><dd><b>Last chance</b> wheel: tap to spin, 3 in 8 get you back.</dd></div>
         </dl>
         <details>
           <summary>What's on the wheels</summary>
@@ -274,8 +302,9 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         <h1 class="cause" id="overCause">Fell between the buildings</h1>
         <dl class="stats">
           <div><dt>Distance</dt><dd id="overDist">0 m</dd></div>
-          <div><dt>Score</dt><dd id="overScore">0</dd></div>
-          <div><dt>Best</dt><dd id="overBest">0</dd></div>
+          <div><dt>Cash</dt><dd id="overScore">$0</dd></div>
+          <div><dt>Best combo</dt><dd id="overCombo">×1</dd></div>
+          <div><dt>Best</dt><dd id="overBest">$0</dd></div>
         </dl>
         <p class="newbest" id="overNew" hidden>New best run</p>
         <div class="cta-row">
@@ -348,7 +377,8 @@ const PLAYER_W = 22, PLAYER_H = 56, SLIDE_H = 26;
 const ROOF_MIN = 190, ROOF_MAX = 330, DEATH_Y = 520;
 const LEDGE_ASSIST = 12, GRAB_REACH = 140, GRAB_HANG = 70;
 const PIPE_TOP = 66, PIPE_BOTTOM = 42;
-const GATE_EVERY = 4000, FIRST_GATE = 1800, BONUS_EVERY = 20;
+const GATE_EVERY = 3000, FIRST_GATE = 1400, BONUS_EVERY = 15;
+const COMBO_TIME = 2.6, JACKPOT_START = 1000;
 const BEST_KEY = 'rooftop-roulette-best', MUTE_KEY = 'rooftop-roulette-muted';
 
 // ---------- what the five wheels can land on
@@ -381,10 +411,10 @@ const BONUS = [
   { key: 'shield',   name: 'Shield',      short: 'SHIELD',   color: '#7fe3ff', desc: 'Blocks the next hit or catch' },
   { key: 'magnet',   name: 'Magnet',      short: 'MAGNET',   color: '#ff7b7b', desc: 'Pulls tokens in for 8 s' },
   { key: 'dbl',      name: 'Double Jump', short: '2× JUMP',  color: '#9dff8a', desc: 'One extra jump in the air, 10 s' },
-  { key: 'x2',       name: 'Score ×2',    short: 'SCORE ×2', color: '#ffd36b', desc: 'Double points for 10 s' },
-  { key: 'bankrupt', name: 'Bankrupt',    short: 'BANKRUPT', color: '#4a3d63', desc: 'Lose 300 points' },
+  { key: 'x2',       name: 'Cash ×2',     short: 'CASH ×2',  color: '#ffd36b', desc: 'Double cash for 10 s' },
+  { key: 'bankrupt', name: 'Bankrupt',    short: 'BANKRUPT', color: '#4a3d63', desc: 'Lose $300' },
   { key: 'slow',     name: 'Slow Motion', short: 'SLOW-MO',  color: '#c6b3ff', desc: 'Everything slows down for 6 s' },
-  { key: 'cash',     name: '+500',        short: '+500',     color: '#ffa23e', desc: '500 points, right now' },
+  { key: 'cash',     name: '+$500',       short: '+$500',    color: '#ffa23e', desc: '$500, right now' },
   { key: 'breather', name: 'Breather',    short: 'BREATHER', color: '#8ff0c0', desc: 'Pests take an 8 s break' },
 ];
 const CHANCE = [
@@ -452,7 +482,7 @@ class City {
     this.rng = mulberry32(seed);
     this.wheelRng = mulberry32((seed ^ 0x9E3779B9) >>> 0);
     this.themeIdx = Math.floor(mulberry32((seed ^ 0x51ED270B) >>> 0)() * THEME_KEYS.length);
-    this.buildings = []; this.tokens = []; this.gates = [];
+    this.buildings = []; this.tokens = []; this.gates = []; this.boxes = [];
     this.rules = []; this.nextGate = FIRST_GATE; this.first = 0; this.firstToken = 0;
     this.addBuilding(-500, 1500, 280, 650, []);
   }
@@ -547,6 +577,11 @@ class City {
     }
     const nb = this.addBuilding(x0 + gap, w, roof, gate ? x0 + gap + 420 : 0, this.rules);
     if (gate) { gate.x = nb.x + 140; gate.roof = nb.roof; this.gates.push(gate); }
+    // a "?" box with a slot machine inside, floating at chest height in a clear spot
+    if (!gate && x0 > 900 && r() < 0.24 && nb.w > 260) {
+      const bx = nb.x + 90 + r() * (nb.w - 220);
+      if (!nb.obs.some((o) => Math.abs(o.x + o.w / 2 - bx) < 90)) this.boxes.push({ x: bx, y: nb.roof - 40, got: false });
+    }
   }
   prune(camX) {
     while (this.first < this.buildings.length - 1 && this.buildings[this.first].x + this.buildings[this.first].w < camX - 700) this.first++;
@@ -616,14 +651,26 @@ const Sound = {
     g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
     o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
   },
-  noise(dur, vol, freq, delay = 0) {
+  noise(dur, vol, freq, delay = 0, type = 'lowpass', at = null) {
     if (!this.ctx || this.muted) return;
-    const t0 = this.ctx.currentTime + delay;
+    const t0 = at === null ? this.ctx.currentTime + delay : at;
     const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain();
-    s.buffer = this.noiseBuf; f.type = 'lowpass'; f.frequency.value = freq;
+    s.buffer = this.noiseBuf; f.type = type; f.frequency.value = freq;
     g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
     s.connect(f); f.connect(g); g.connect(this.master); s.start(t0); s.stop(t0 + dur + 0.02);
   },
+  toneAt(at, freq, dur, type, vol, slide) {
+    if (!this.ctx || this.muted) return;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, at);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), at + dur);
+    g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.0008, at + dur);
+    o.connect(g); g.connect(this.master); o.start(at); o.stop(at + dur + 0.02);
+  },
+  coin() { this.tone(988, 0.08, 'square', 0.07); this.tone(1319, 0.2, 'square', 0.07, 0, 0.07); },
+  jackpot() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => this.tone(f, 0.22, 'square', 0.07, 0, i * 0.07)); },
+  reelStop() { this.noise(0.05, 0.25, 1800); this.tone(660, 0.05, 'square', 0.05); },
+  hype() { this.tone(523, 0.1, 'sawtooth', 0.07, 520); },
   jump() { this.tone(380, 0.13, 'square', 0.08, 340); },
   land(impact) { this.noise(0.09, clamp(impact / 2400, 0.05, 0.3), 700); },
   token() { this.tone(1180, 0.07, 'triangle', 0.12); this.tone(1580, 0.1, 'triangle', 0.1, 0, 0.055); },
@@ -645,6 +692,32 @@ const Sound = {
   shield() { this.tone(600, 0.25, 'sine', 0.14, 600); },
   bad() { this.tone(300, 0.4, 'square', 0.08, -200); },
   hey() { this.tone(240, 0.12, 'sawtooth', 0.1, 60); },
+};
+
+// ---------- music: a 16-step beat that speeds up with the run and adds a lead line on a big combo
+const Music = {
+  on: false, next: 0, step: 0, bar: 0,
+  start() { if (!Sound.ctx) return; this.on = true; this.next = Sound.ctx.currentTime + 0.08; },
+  stop() { this.on = false; },
+  bpm() { return 116 + clamp((game.speed - 300) / 260, 0, 1) * 34 + (game.comboMult >= 3 ? 8 : 0); },
+  tick() {
+    if (!this.on || !Sound.ctx || Sound.muted) return;
+    const now = Sound.ctx.currentTime;
+    if (this.next < now - 0.2) this.next = now + 0.05;
+    while (this.next < now + 0.12) {
+      this.play(this.step % 16, this.next);
+      this.next += 60 / this.bpm() / 4;
+      if (++this.step % 16 === 0) this.bar++;
+    }
+  },
+  play(s, at) {
+    const root = [110, 110, 87.3, 98][this.bar % 4];
+    if (s % 4 === 0) Sound.toneAt(at, 130, 0.16, 'sine', 0.3, -90);
+    if (s % 4 === 2) Sound.noise(0.03, 0.06, 7000, 0, 'highpass', at);
+    if (s === 4 || s === 12) Sound.noise(0.12, 0.12, 1800, 0, 'bandpass', at);
+    if (s === 0 || s === 3 || s === 6 || s === 8 || s === 11 || s === 14) Sound.toneAt(at, root * (s === 14 ? 1.5 : 1), 0.14, 'triangle', 0.15);
+    if (game.comboMult >= 2.5 && s % 2 === 0) Sound.toneAt(at, root * [4, 3, 2, 3, 4, 6, 4, 3][(s / 2) % 8], 0.07, 'square', 0.03);
+  },
 };
 
 // ---------- wheels
@@ -724,11 +797,13 @@ const game = {
   speed: 300, deadT: 0, banner: null, pests: [], pestCtl: [], fx: null, tokenCount: 0, chanceUsed: false,
   chance: null, swap: false, theme: 'dusk', timeScale: 1, flashBang: 0, deathX: 0, gateRef: null,
   prng: Math.random, bonusRng: Math.random, weather: [], stormT: 6, chanceResult: '',
+  combo: 0, comboT: 0, comboMult: 1, bestCombo: 1, jackpot: JACKPOT_START, gateScore: 0,
+  bet: null, coin: null, slots: null, hype: null, jackpots: 0,
 };
 const P = {};
 const input = { jumpHeld: false, jumpBuffer: 0, slideHeld: false, slidePressAt: -9 };
 let particles = [], popups = [], scarf = [];
-const freshFx = () => ({ shield: false, magnet: 0, dbl: 0, x2: 0, slow: 0, breather: 0 });
+const freshFx = () => ({ shield: false, magnet: 0, dbl: 0, x2: 0, slow: 0, breather: 0, slotX3: 0 });
 game.fx = freshFx();
 
 function resetPlayer(y) {
@@ -741,7 +816,7 @@ function resetPlayer(y) {
 const hw = () => (PLAYER_W / 2) * P.size;
 const playerH = () => ((P.state === 'slide' || P.state === 'roll') ? SLIDE_H : PLAYER_H) * P.size;
 function setState(s) { P.state = s; P.stateT = 0; }
-const curMult = () => game.mult * (game.fx.x2 > 0 ? 2 : 1);
+const curMult = () => game.mult * (game.fx.x2 > 0 ? 2 : 1) * game.comboMult * (game.fx.slotX3 > 0 ? 3 : 1);
 const pestsPaused = () => game.fx.breather > 0;
 const playerMoving = () => !(P.state === 'grab' || P.state === 'climb' || P.noForward || P.dead);
 function hitsPlayer(x, y, w, h) {
@@ -753,9 +828,29 @@ function hitsPlayer(x, y, w, h) {
 // ---------- gameplay
 function popupAt(text, x, y, color) { popups.push({ text, x, y, t: 0, color: color || '#f3eee5' }); }
 function popup(text, color) { popupAt(text, P.x, P.y - 70 * P.size, color); }
-function addScore(pts) { game.score += pts * curMult(); }
+// every dollar earned also feeds the progressive slot jackpot
+function addScore(pts) { const v = pts * curMult(); game.score += v; game.jackpot += v * 0.05; }
+function addCash(v) { game.score = Math.max(0, game.score + v); }
+const COMBO_WORDS = { 1.5: 'NICE', 2: 'SICK', 2.5: 'HYPED', 3: 'INSANE', 3.5: 'UNREAL', 4: 'GODLIKE', 4.5: 'ABSURD', 5: 'MAX COMBO' };
+const comboColor = (m) => (m >= 4 ? '#ff4fb8' : m >= 3 ? '#ff5a4e' : m >= 2 ? '#ffd36b' : '#ffa23e');
+function addCombo(n) {
+  game.combo += n; game.comboT = COMBO_TIME;
+  const m = Math.min(5, 1 + Math.floor(game.combo / 6) * 0.5);
+  if (m > game.comboMult) { hype(COMBO_WORDS[m] || 'COMBO', comboColor(m)); if (m >= 3) confetti(14); }
+  game.comboMult = m; game.bestCombo = Math.max(game.bestCombo, m);
+}
+function breakCombo() {
+  if (game.comboMult >= 2) popup(`Combo lost ${multText(game.comboMult)}`, '#ff8a7a');
+  game.combo = 0; game.comboT = 0; game.comboMult = 1;
+}
+function hype(text, color) { game.hype = { text, color, t: 0, tilt: (Math.random() - 0.5) * 0.25 }; Sound.hype(); if (!reduceMotion) game.shake = Math.max(game.shake, 0.15); }
+function confetti(n) {
+  const cols = ['#ffd36b', '#ff4fb8', '#5fe0a8', '#7fd1ff', '#ff5a4e', '#f3eee5'];
+  if (reduceMotion) n = Math.ceil(n / 3);
+  for (let i = 0; i < n; i++) particles.push({ x: P.x + (Math.random() - 0.3) * 120, y: P.y - 120 - Math.random() * 60, vx: (Math.random() - 0.5) * 260, vy: -Math.random() * 260, life: 1 + Math.random() * 0.6, t: 0, color: cols[i % cols.length], size: 3 + Math.random() * 3, g: 420 });
+}
 function trick(name, pts) {
-  addScore(pts); popup(`${name} +${fmt(pts * curMult())}`, '#ffa23e');
+  addScore(pts); popup(`${name} +$${fmt(pts * curMult())}`, '#ffa23e'); addCombo(2);
   for (const c of game.pestCtl) if (c.key === 'guard' && !c.leaving) c.d = Math.min(460, c.d + 30);
 }
 function puff(x, y, n, color, spread) {
@@ -774,8 +869,9 @@ function useShield() {
 function pestHit(text) {
   if (useShield()) return;
   if (P.onGround) stumble(text, 0.8);
-  else { popup(text, '#ff8a7a'); Sound.stumble(); if (!reduceMotion) game.shake = 0.15; }
+  else { popup(text, '#ff8a7a'); Sound.stumble(); breakCombo(); if (!reduceMotion) game.shake = 0.15; }
 }
+function dodged() { addScore(15); addCombo(2); popup(`Dodged +$${fmt(15 * curMult())}`, '#5fe0a8'); }
 
 function tryJump(ph) {
   if (P.state === 'grab') { P.climbFromY = P.y; setState('climb'); Sound.climb(); return true; }
@@ -827,6 +923,7 @@ function land(b, ph) {
 }
 function stumble(text, strength) {
   P.stumble = Math.min(P.stumble, strength || 0.55); setState('stumble'); popup(text || 'Stumble', '#ff8a7a'); Sound.stumble();
+  breakCombo();
   if (!reduceMotion) game.shake = 0.25;
 }
 function startGrab(b) {
@@ -866,7 +963,11 @@ function activateGate(g) {
   const pestNames = g.pests.map((k) => PESTS[k].name).join(' + ');
   game.banner = { title: names, sub: `Score ${multText(game.mult)} · Pest: ${pestNames}`, color: RULES[g.rules[0]].color, t: 0 };
   ruleWheel.sticky = false; pestWheel.sticky = false; ruleWheel.hold = 0; pestWheel.hold = 0;
-  Sound.reveal(); updateChips();
+  Sound.reveal(); addCombo(3);
+  const stake = Math.floor(game.score - game.gateScore);
+  game.gateScore = game.score;
+  if (stake >= 100 && !game.coin) showBet(stake);
+  updateChips();
 }
 function startGateSpin(g) {
   game.gateRef = g;
@@ -890,8 +991,76 @@ function applyBonus(b) {
     case 'cash': game.score += 500; break;
     case 'bankrupt': game.score = Math.max(0, game.score - 300); Sound.bad(); break;
   }
-  popup(b.key === 'bankrupt' ? 'Bankrupt −300' : b.key === 'cash' ? '+500' : b.name + '!', b.key === 'bankrupt' ? '#ff8a7a' : b.color);
+  popup(b.key === 'bankrupt' ? 'Bankrupt −$300' : b.name + '!', b.key === 'bankrupt' ? '#ff8a7a' : b.color);
+  if (b.key !== 'bankrupt') { addCombo(2); Sound.coin(); }
   updateChips();
+}
+
+// ---------- slot machine ("?" boxes) and double or nothing (after each gate)
+const SYMBOLS = ['seven', 'bar', 'bell', 'diamond', 'cherry', 'skull'];
+const SLOT_ODDS = [['jackpot', 3], ['bar', 7], ['bell', 10], ['diamond', 10], ['cherry', 15], ['skull', 12], ['pair', 23], ['none', 20]];
+const SLOT_TRIPLE = { jackpot: 'seven', bar: 'bar', bell: 'bell', diamond: 'diamond', cherry: 'cherry', skull: 'skull' };
+const SLOT_TEXT = { jackpot: ['JACKPOT!', '#ffd36b'], bar: ['+$1 000', '#ffa23e'], bell: ['CASH ×3 · 8 s', '#f4c430'], diamond: ['SHIELD + MAGNET', '#7fe3ff'],
+  cherry: ['+$300', '#ff7b7b'], skull: ['BUSTED', '#ff6b5b'], pair: ['PAIR · +$75', '#f3eee5'], none: ['NOTHING', '#a99fbe'] };
+function rollSlots(rng) {
+  let r = rng() * 100, outcome = 'none';
+  for (const [k, w] of SLOT_ODDS) { if ((r -= w) < 0) { outcome = k; break; } }
+  let reels;
+  if (SLOT_TRIPLE[outcome]) reels = [SLOT_TRIPLE[outcome], SLOT_TRIPLE[outcome], SLOT_TRIPLE[outcome]];
+  else if (outcome === 'pair') {
+    const a = SYMBOLS[Math.floor(rng() * 5)];
+    let b = SYMBOLS[Math.floor(rng() * 6)]; if (b === a) b = 'skull';
+    reels = [a, a, b];
+    const k = Math.floor(rng() * 3); [reels[k], reels[2]] = [reels[2], reels[k]];
+  } else {
+    const pool = SYMBOLS.slice();
+    reels = [0, 1, 2].map(() => pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  }
+  return { outcome, reels };
+}
+function startSlots() {
+  game.slots = Object.assign(rollSlots(game.bonusRng), { t: 0, stops: [0.9, 1.25, 1.6], stopped: 0, done: false, hold: 0 });
+  Sound.coin(); popup('Slots!', '#ffd36b');
+}
+function applySlots(outcome) {
+  const fx = game.fx;
+  switch (outcome) {
+    case 'jackpot': {
+      const win = Math.floor(game.jackpot);
+      addCash(win); game.jackpot = JACKPOT_START; game.jackpots++;
+      game.banner = { title: 'Jackpot', sub: `+$${fmt(win)} straight into your pocket`, color: '#ffd36b', t: 0 };
+      confetti(60); Sound.jackpot(); game.flash = reduceMotion ? 0.3 : 1; game.flashColor = '#ffd36b'; addCombo(6);
+      break;
+    }
+    case 'bar': addCash(1000); confetti(20); Sound.jackpot(); addCombo(3); break;
+    case 'bell': fx.slotX3 = 8; Sound.coin(); addCombo(3); break;
+    case 'diamond': fx.shield = true; fx.magnet = 8; Sound.shield(); addCombo(3); break;
+    case 'cherry': addCash(300); Sound.coin(); addCombo(3); break;
+    case 'pair': addCash(75); Sound.coin(); addCombo(1); break;
+    case 'skull': {
+      addCash(-250); Sound.bad();
+      const extra = Object.keys(PESTS).filter((k) => !game.pests.includes(k));
+      const k = extra[Math.floor(game.prng() * extra.length)];
+      if (k) { game.pestCtl.push(makePest(k)); game.pests.push(k); popup(`Busted! ${PESTS[k].name} joins`, '#ff6b5b'); }
+      break;
+    }
+    default: break;
+  }
+  updateChips();
+}
+const betBtn = $('betBtn');
+function showBet(stake) {
+  game.bet = { stake, t: 4, total: 4 };
+  $('betStake').textContent = `Bet $${fmt(stake)} · 50/50`;
+  const R = clamp(Math.min(W, H) * 0.075, 22, 40), top = W < 620 ? 150 : R + 16;
+  betBtn.style.top = `${Math.round(top + R + 54)}px`;
+  betBtn.hidden = false;
+}
+function hideBet() { game.bet = null; betBtn.hidden = true; }
+function placeBet() {
+  if (!game.bet || game.coin || game.state !== 'play') return;
+  game.coin = { stake: game.bet.stake, t: 0, win: Math.random() < 0.5, done: false };
+  hideBet(); Sound.coin();
 }
 
 // ---------- pests: nobody here can be beaten, they only leave at the next gate
@@ -905,18 +1074,23 @@ function makePest(key) {
       update(dt) {
         this.timer -= dt;
         if (this.timer <= 0 && !this.leaving && !pestsPaused()) {
-          this.timer = 2.6 + rng() * 1.8;
+          this.timer = 2.1 + rng() * 1.5;
           const startX = P.x + viewW * 0.72 + 30, rel = game.speed + 150;
           const meetX = P.x + game.speed * ((startX - P.x) / rel);
           const y = groundAt(meetX, groundAt(P.x, P.y)) - 46;
-          const n = 3 + Math.floor(rng() * 3);
-          for (let i = 0; i < n; i++) this.birds.push({ x: startX + i * 24 + rng() * 10, y: y + (rng() - 0.5) * 6 - (i % 2) * 3, vx: -150 - rng() * 20, vy: 0, ph: rng() * 6, hit: false });
+          const n = 3 + Math.floor(rng() * 3), flock = { hit: false, dodged: false };
+          for (let i = 0; i < n; i++) this.birds.push({ x: startX + i * 24 + rng() * 10, y: y + (rng() - 0.5) * 6 - (i % 2) * 3, vx: -150 - rng() * 20, vy: 0, ph: rng() * 6, hit: false, flock });
           Sound.coo();
         }
         for (const b of this.birds) {
           b.ph += dt * 18; b.x += b.vx * dt; b.y += b.vy * dt;
           if (b.hit) { b.vy -= 500 * dt; continue; }
-          if (hitsPlayer(b.x - 8, b.y - 6, 16, 12)) { b.hit = true; b.vy = -140; b.vx = -40; pestHit('Pigeon!'); puff(b.x, b.y, 6, '#d8d2e6', 160); }
+          if (hitsPlayer(b.x - 8, b.y - 6, 16, 12)) { b.hit = true; b.flock.hit = true; b.vy = -140; b.vx = -40; pestHit('Pigeon!'); puff(b.x, b.y, 6, '#d8d2e6', 160); }
+          else if (!b.passed && b.x < P.x - 16) {
+            b.passed = true;
+            const near = b.y > P.y - PLAYER_H * P.size - 14 && b.y < P.y + 6;
+            if (near && !b.flock.hit && !b.flock.dodged && !P.dead) { b.flock.dodged = true; dodged(); }
+          }
         }
         this.birds = this.birds.filter((b) => b.x > game.camX - 100 && b.y > -300);
       },
@@ -935,7 +1109,7 @@ function makePest(key) {
             this.warn -= dt;
             if (this.warn <= 0) { this.nets.push({ x: this.tx, y: this.y + 8, vy: 40, b: this.tb }); Sound.whoosh(); }
           } else if ((this.timer -= dt) <= 0) {
-            this.timer = 2.3 + rng() * 1.2;
+            this.timer = 1.9 + rng() * 1.0;
             const tx = P.x + game.speed * 1.45, b = game.city.at(tx);
             if (b && tx > b.x + 50 && tx < b.x + b.w - 150) { this.tx = tx; this.tb = b; this.warn = 0.55; Sound.beep(); }
           }
@@ -1020,10 +1194,13 @@ function makePest(key) {
             this.hitDone = true;
             if (!useShield()) {
               const loss = Math.max(50, Math.floor(game.score * 0.08));
-              game.score = Math.max(0, game.score - loss); popup(`Snatched −${fmt(loss)}`, '#ff8a7a'); Sound.screech();
+              game.score = Math.max(0, game.score - loss); popup(`Snatched −$${fmt(loss)}`, '#ff8a7a'); Sound.screech(); breakCombo();
             }
           }
-          if (k >= 1) { this.mode = 'cruise'; this.timer = 4 + rng() * 2.5; }
+          if (k >= 1) {
+            if (!this.hitDone && !P.dead) dodged();
+            this.mode = 'cruise'; this.timer = 3.2 + rng() * 2;
+          }
         }
         this.x = P.x + this.ox; this.y = this.ground + this.oy;
       },
@@ -1049,7 +1226,7 @@ function makePest(key) {
             if (P.state === 'slide' || P.state === 'roll') { trick('Looked away', 20); game.flashBang = 0.25; }
             else if (!useShield()) { game.flashBang = 1; popup('Flash!', '#fff3a8'); }
           }
-        } else if ((this.timer -= dt) <= 0) { this.warn = 0.9; this.timer = 3 + rng() * 1.5; }
+        } else if ((this.timer -= dt) <= 0) { this.warn = 0.9; this.timer = 2.6 + rng() * 1.2; }
       },
       done() { return this.leaving && this.leaveT > 1.5; },
       drawFront(t) {
@@ -1069,7 +1246,7 @@ function makePest(key) {
         const x = P.x + this.ahead;
         if (!this.leaving && !pestsPaused()) {
           if ((this.timer -= dt) <= 0) {
-            this.timer = 2.4 + rng() * 1.2;
+            this.timer = 2.0 + rng() * 1.0;
             const lx = P.x + game.speed * 0.55 + 150, b = game.city.at(lx);
             if (b && lx > b.x + 50 && lx < b.x + b.w - 150) {
               const sy = game.city.terrain(x).y - 40;
@@ -1106,7 +1283,7 @@ function makePest(key) {
             game.swap = !game.swap; showZones(1.8);
             popup(game.swap ? 'Controls swapped!' : 'Controls back!', '#b48cff'); Sound.boo(); updateChips();
           }
-        } else if ((this.timer -= dt) <= 0) { this.warn = 0.9; this.timer = 4.5 + rng() * 2.5; }
+        } else if ((this.timer -= dt) <= 0) { this.warn = 0.9; this.timer = 3.8 + rng() * 2; }
       },
       onLeave() { if (game.swap) { game.swap = false; showZones(1.5); updateChips(); } },
       drawFront(t) { drawGhost(this.x, this.y, t, this.warn > 0, this.alpha); },
@@ -1129,8 +1306,9 @@ function update(dt) {
   const city = game.city;
   game.time += dt;
   const real = dt / game.timeScale;
-  for (const k of ['magnet', 'dbl', 'x2', 'slow', 'breather']) if (game.fx[k] > 0) game.fx[k] = Math.max(0, game.fx[k] - real);
+  for (const k of ['magnet', 'dbl', 'x2', 'slow', 'breather', 'slotX3']) if (game.fx[k] > 0) game.fx[k] = Math.max(0, game.fx[k] - real);
   P.invuln = Math.max(0, P.invuln - real);
+  if (game.comboT > 0) { game.comboT -= real; if (game.comboT <= 0) { game.combo = 0; game.comboMult = 1; } }
   city.ensure(P.x + 2600);
   const ph = physicsFor(game.rules);
   P.size = lerp(P.size, ph.size, approach(8, dt));
@@ -1232,6 +1410,11 @@ function update(dt) {
     for (const b of near) {
       if (!b) continue;
       for (const o of b.obs) {
+        if (!o.hit && !o.passed && o.x + o.w < l) {
+          o.passed = true;
+          if (o.minClear !== undefined && o.minClear <= 18) { addScore(15); addCombo(2); popup(`Close! +$${fmt(15 * curMult())}`, '#7fe3ff'); }
+          continue;
+        }
         if (o.hit || o.x > rgt || o.x + o.w < l) continue;
         const top = o.type === 'pipe' ? b.roof - PIPE_TOP : b.roof - o.h;
         const bottom = o.type === 'pipe' ? b.roof - PIPE_BOTTOM : b.roof;
@@ -1240,6 +1423,10 @@ function update(dt) {
           if (useShield()) continue;
           if (o.type === 'pipe') { die('pipe'); return; }
           stumble(o.type === 'net' ? 'Netted!' : o.type === 'bin' ? 'Bin!' : 'Stumble');
+        } else {
+          // how close did we come? feeds the "Close!" bonus once the obstacle is behind us
+          const cl = o.type === 'pipe' && P.y - h >= bottom ? (P.y - h) - bottom : top - P.y;
+          if (cl >= 0) o.minClear = o.minClear === undefined ? cl : Math.min(o.minClear, cl);
         }
       }
     }
@@ -1256,9 +1443,18 @@ function update(dt) {
     const dx = t.x - P.x, dy = t.y - cy;
     if (dx * dx + dy * dy < 26 * 26) {
       t.got = true;
-      addScore(t.gold ? 30 : 10); Sound.token();
-      puff(t.x, t.y, 6, t.gold ? '#ffd36b' : '#ffa23e', 160);
+      addScore(t.gold ? 30 : 10); Sound.token(); addCombo(1);
+      puff(t.x, t.y, 6, t.gold ? '#ffd36b' : '#e5484d', 160);
       if (++game.tokenCount >= BONUS_EVERY && !bonusWheel.spinning) { game.tokenCount = 0; spinBonus(); }
+    }
+  }
+
+  // "?" boxes start the slot machine
+  for (const bx of city.boxes) {
+    if (bx.got || bx.x < P.x - 40 || bx.x > P.x + 40) continue;
+    if (Math.abs(bx.x - P.x) < hw() + 12 && bx.y + 12 > P.y - playerH() && bx.y - 12 < P.y) {
+      bx.got = true; puff(bx.x, bx.y, 12, '#f4c430', 200);
+      if (game.slots) { addCash(100); popup('+$100', '#f4c430'); Sound.coin(); } else startSlots();
     }
   }
 
@@ -1270,6 +1466,7 @@ function endOfLife() {
   if (game.chanceUsed) { gameOver(); return; }
   game.chanceUsed = true; game.state = 'chance';
   game.chance = { phase: 'ready', t: 0, slot: null };
+  Music.stop(); hideBet(); game.coin = null; game.slots = null; breakCombo();
   chanceWheel.visible = true; chanceWheel.done = false; chanceWheel.spinning = false; chanceWheel.sticky = true;
   input.jumpHeld = false; input.slideHeld = false; pointers.clear();
 }
@@ -1306,7 +1503,7 @@ function revive(withShield) {
   b.obs = b.obs.filter((o) => o.x + o.w < px - 10 || o.x > px + 340);
   for (const c of game.pestCtl) if (c.key === 'guard') c.d = 460;
   if (withShield) game.fx.shield = true;
-  game.cause = 'fall'; game.chanceResult = 'revived'; scarf = []; game.state = 'play';
+  game.cause = 'fall'; game.chanceResult = 'revived'; scarf = []; game.state = 'play'; Music.start();
   game.camX = P.x - viewW * 0.3;
   game.banner = { title: 'Back in the run', sub: withShield ? 'With a shield on top' : 'This was your last chance', color: '#5fe0a8', t: 0 };
   updateChips();
@@ -1463,12 +1660,56 @@ function drawTokens(x0, x1, t) {
     const k = city.tokens[i];
     if (k.x > x1) break;
     if (k.got || k.x < x0) continue;
-    const sx = Math.cos(t * 4 + k.x * 0.05), r = k.gold ? 8.5 : 7;
-    ctx.fillStyle = k.gold ? 'rgba(255,211,107,0.22)' : 'rgba(255,162,62,0.2)';
-    ctx.beginPath(); ctx.arc(k.x, k.y, r * 1.9, 0, TAU); ctx.fill();
-    ctx.fillStyle = k.gold ? '#ffd36b' : '#ffa23e';
-    ctx.beginPath(); ctx.moveTo(k.x, k.y - r); ctx.lineTo(k.x + r * 0.7 * sx, k.y); ctx.lineTo(k.x, k.y + r); ctx.lineTo(k.x - r * 0.7 * sx, k.y); ctx.closePath(); ctx.fill();
+    // a casino chip, spinning on its edge
+    const sx = Math.max(0.15, Math.abs(Math.cos(t * 4 + k.x * 0.05))), r = k.gold ? 9 : 7.5;
+    ctx.fillStyle = k.gold ? 'rgba(255,211,107,0.22)' : 'rgba(229,72,77,0.2)';
+    ctx.beginPath(); ctx.arc(k.x, k.y, r * 1.8, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(k.x, k.y); ctx.scale(sx, 1);
+    ctx.fillStyle = k.gold ? '#ffc23d' : '#e5484d'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f3eee5';
+    for (let i = 0; i < 6; i++) { const a = i * TAU / 6; ctx.save(); ctx.rotate(a); ctx.fillRect(-1.3, -r, 2.6, r * 0.32); ctx.restore(); }
+    ctx.strokeStyle = 'rgba(243,238,229,0.8)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, r * 0.55, 0, TAU); ctx.stroke();
+    ctx.restore();
   }
+}
+function drawBoxes(x0, x1, t) {
+  const flip = game.mirror < 0 ? -1 : 1;
+  for (const bx of game.city.boxes) {
+    if (bx.got || bx.x < x0 - 30 || bx.x > x1 + 30) continue;
+    const y = bx.y + Math.sin(t * 3 + bx.x) * 3;
+    ctx.fillStyle = `rgba(244,196,48,${(0.18 + 0.12 * Math.sin(t * 6)).toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(bx.x, y, 22, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f4c430'; ctx.fillRect(bx.x - 12, y - 12, 24, 24);
+    ctx.fillStyle = '#c98f12'; ctx.fillRect(bx.x - 12, y + 8, 24, 4);
+    ctx.save(); ctx.translate(bx.x, y); ctx.scale(flip, 1);
+    ctx.fillStyle = '#110e22'; ctx.font = `900 20px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', 0, 0.5);
+    ctx.restore();
+  }
+}
+function drawSymbol(sym, x, y, s) {
+  ctx.save(); ctx.translate(x, y);
+  switch (sym) {
+    case 'seven': ctx.fillStyle = '#e5484d'; ctx.font = `900 ${s * 1.1}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('7', 0, s * 0.04); break;
+    case 'bar':
+      ctx.fillStyle = '#110e22'; ctx.fillRect(-s * 0.45, -s * 0.22, s * 0.9, s * 0.44);
+      ctx.fillStyle = '#f3eee5'; ctx.font = `900 ${s * 0.36}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('BAR', 0, s * 0.02); break;
+    case 'bell':
+      ctx.fillStyle = '#f4c430'; ctx.beginPath(); ctx.moveTo(-s * 0.4, s * 0.25); ctx.quadraticCurveTo(-s * 0.32, -s * 0.42, 0, -s * 0.42);
+      ctx.quadraticCurveTo(s * 0.32, -s * 0.42, s * 0.4, s * 0.25); ctx.closePath(); ctx.fill();
+      ctx.fillRect(-s * 0.45, s * 0.22, s * 0.9, s * 0.08); ctx.beginPath(); ctx.arc(0, s * 0.36, s * 0.08, 0, TAU); ctx.fill(); break;
+    case 'diamond':
+      ctx.fillStyle = '#4fc3ff'; ctx.beginPath(); ctx.moveTo(0, -s * 0.42); ctx.lineTo(s * 0.36, 0); ctx.lineTo(0, s * 0.42); ctx.lineTo(-s * 0.36, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.moveTo(0, -s * 0.42); ctx.lineTo(s * 0.12, 0); ctx.lineTo(0, s * 0.42); ctx.closePath(); ctx.fill(); break;
+    case 'cherry':
+      ctx.strokeStyle = '#3a9d4f'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      ctx.beginPath(); ctx.moveTo(-s * 0.18, s * 0.12); ctx.quadraticCurveTo(-s * 0.05, -s * 0.3, s * 0.1, -s * 0.38); ctx.moveTo(s * 0.2, s * 0.1); ctx.quadraticCurveTo(s * 0.15, -s * 0.2, s * 0.1, -s * 0.38); ctx.stroke();
+      ctx.fillStyle = '#e5484d'; ctx.beginPath(); ctx.arc(-s * 0.2, s * 0.2, s * 0.17, 0, TAU); ctx.arc(s * 0.2, s * 0.18, s * 0.17, 0, TAU); ctx.fill(); break;
+    default:
+      ctx.fillStyle = '#2a2140'; ctx.beginPath(); ctx.arc(0, -s * 0.06, s * 0.32, 0, TAU); ctx.fill(); ctx.fillRect(-s * 0.18, s * 0.12, s * 0.36, s * 0.2);
+      ctx.fillStyle = '#f3eee5'; ctx.beginPath(); ctx.arc(-s * 0.12, -s * 0.06, s * 0.08, 0, TAU); ctx.arc(s * 0.12, -s * 0.06, s * 0.08, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
 }
 
 function drawNet(x, y, w, h) {
@@ -1607,7 +1848,7 @@ function drawRunner(t) {
     if (scarf.length > 14) scarf.pop();
     for (const s of scarf) { s[0] -= 0.6; s[1] += Math.sin(t * 9 + s[0] * 0.05) * 0.5; }
   }
-  drawScarf(game.rules.length ? RULES[game.rules[0]].color : '#ffa23e');
+  drawScarf(game.comboMult >= 3 ? `hsl(${Math.floor(t * 360) % 360},90%,65%)` : game.rules.length ? RULES[game.rules[0]].color : '#ffa23e');
   ctx.save();
   if (P.invuln > 0 && Math.sin(t * 30) > 0) ctx.globalAlpha = 0.45;
   drawStick(P.x, P.y, pz, P.size, RUNNER_COLORS);
@@ -1742,6 +1983,77 @@ function drawChance() {
   chanceWheel.alpha = 1;
   chanceWheel.draw(cx, cy, R, '3 OF 8 SLOTS REVIVE', text, color, W - 40);
 }
+function drawSlots(dt) {
+  const s = game.slots; if (!s) return;
+  s.t += dt;
+  while (s.stopped < 3 && s.t >= s.stops[s.stopped]) { s.stopped++; Sound.reelStop(); }
+  if (s.stopped === 3 && !s.done) { s.done = true; applySlots(s.outcome); }
+  if (s.done && (s.hold += dt) > 1.8) { game.slots = null; return; }
+  const cell = clamp(Math.min(W, H) * 0.075, 22, 34), pad = 7;
+  const pw = cell * 3 + pad * 4, ph = cell + 34;
+  const x0 = game.mirror >= 0 ? 14 : W - 14 - pw, y0 = H * 0.5 - ph / 2;
+  ctx.fillStyle = 'rgba(17,14,34,0.88)'; ctx.fillRect(x0, y0, pw, ph);
+  ctx.strokeStyle = s.done ? SLOT_TEXT[s.outcome][1] : '#ffa23e'; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, y0 + 1, pw - 2, ph - 2);
+  ctx.font = `600 10px ${MONO}`; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = '#a99fbe';
+  ctx.fillText('SLOTS', x0 + pad, y0 + 5);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#f4c430'; ctx.fillText(`JACKPOT $${fmt(game.jackpot)}`, x0 + pw - pad, y0 + 5);
+  for (let i = 0; i < 3; i++) {
+    const cx = x0 + pad + i * (cell + pad), cy = y0 + 20;
+    ctx.fillStyle = '#f3eee5'; ctx.fillRect(cx, cy, cell, cell);
+    const stopped = i < s.stopped;
+    const sym = stopped ? s.reels[i] : SYMBOLS[Math.floor(s.t * 16 + i * 2.3) % SYMBOLS.length];
+    const bump = stopped ? Math.max(0, 1 - (s.t - s.stops[i]) * 6) * 4 : 0;
+    ctx.save(); ctx.beginPath(); ctx.rect(cx, cy, cell, cell); ctx.clip();
+    drawSymbol(sym, cx + cell / 2, cy + cell / 2 + bump, cell * 0.82);
+    if (!stopped) { ctx.fillStyle = 'rgba(243,238,229,0.35)'; ctx.fillRect(cx, cy, cell, cell * 0.25); ctx.fillRect(cx, cy + cell * 0.75, cell, cell * 0.25); }
+    ctx.restore();
+  }
+  if (s.done) {
+    const [txt, col] = SLOT_TEXT[s.outcome];
+    ctx.font = `900 ${Math.round(cell * 0.62)}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(17,14,34,0.75)'; ctx.fillText(txt, x0 + pw / 2 + 1.5, y0 + ph + 5.5);
+    ctx.fillStyle = col; ctx.fillText(txt, x0 + pw / 2, y0 + ph + 4);
+  }
+}
+function drawCoin(dt) {
+  const c = game.coin; if (!c) return;
+  c.t += dt;
+  if (c.t >= 1.3 && !c.done) {
+    c.done = true;
+    if (c.win) { addCash(c.stake); confetti(30); Sound.jackpot(); addCombo(3); hype('DOUBLED', '#5fe0a8'); }
+    else { addCash(-c.stake); Sound.bad(); if (!reduceMotion) game.shake = 0.3; hype('LOST IT', '#ff6b5b'); }
+  }
+  if (c.done && c.t > 2.8) { game.coin = null; return; }
+  const R = clamp(Math.min(W, H) * 0.075, 24, 42), cx = W / 2, base = H * 0.44;
+  const p = Math.min(1, c.t / 1.3), cy = base - Math.sin(Math.PI * p) * R * 1.8;
+  const face = c.done ? (c.win ? 1 : -1) : Math.cos(c.t * 26);
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(Math.max(0.08, Math.abs(face)), 1);
+  ctx.fillStyle = '#c98f12'; ctx.beginPath(); ctx.arc(0, 2, R, 0, TAU); ctx.fill();
+  ctx.fillStyle = face >= 0 ? '#ffd36b' : '#e8b84a'; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(17,14,34,0.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, R * 0.78, 0, TAU); ctx.stroke();
+  if (Math.abs(face) > 0.3) {
+    ctx.fillStyle = '#110e22'; ctx.font = `900 ${Math.round(R * 1.1)}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(face >= 0 ? '$' : '×', 0, R * 0.05);
+  }
+  ctx.restore();
+  ctx.font = `900 ${Math.round(R * 0.6)}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const label = !c.done ? `DOUBLE OR NOTHING · $${fmt(c.stake)}` : c.win ? `DOUBLED +$${fmt(c.stake)}` : `LOST −$${fmt(c.stake)}`;
+  ctx.fillStyle = 'rgba(17,14,34,0.7)'; ctx.fillText(label, cx + 1.5, base + R + 9.5);
+  ctx.fillStyle = !c.done ? '#f3eee5' : c.win ? '#5fe0a8' : '#ff6b5b'; ctx.fillText(label, cx, base + R + 8);
+}
+function drawHype(dt) {
+  const h = game.hype; if (!h) return;
+  h.t += dt;
+  if (h.t > 0.9) { game.hype = null; return; }
+  const pop = h.t < 0.12 ? 0.6 + h.t / 0.12 * 0.5 : 1.1 - Math.min(0.1, (h.t - 0.12) * 0.4);
+  const size = clamp(W * 0.085, 34, 78) * pop;
+  ctx.save(); ctx.globalAlpha = clamp((0.9 - h.t) / 0.25, 0, 1);
+  ctx.translate(W * 0.5, H * 0.3); ctx.rotate(h.tilt);
+  ctx.font = `900 ${Math.round(size)}px ${DISPLAY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(17,14,34,0.7)'; ctx.fillText(h.text, 4, 4);
+  ctx.fillStyle = h.color; ctx.fillText(h.text, 0, 0);
+  ctx.restore();
+}
 function drawWeather(dt, t) {
   const th = theme();
   if (th.weather === 'snow' || th.weather === 'rain') {
@@ -1787,6 +2099,7 @@ function render(dt, t) {
   drawDeco(x0, x1, t);
   drawGates(x0, x1, t);
   drawTokens(x0, x1, t);
+  drawBoxes(x0, x1, t);
   drawObstacles(x0, x1);
   const playing = game.state !== 'menu';
   if (playing) {
@@ -1800,8 +2113,8 @@ function render(dt, t) {
   if (!playing) return;
   drawGateLabels(x0, x1);
   drawPopups(dt);
-  if (game.rules.includes('turbo') && !reduceMotion) {
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  if ((game.rules.includes('turbo') || game.comboMult >= 3) && !reduceMotion) {
+    ctx.fillStyle = game.comboMult >= 3 ? 'rgba(255,211,107,0.16)' : 'rgba(255,255,255,0.12)';
     for (let i = 0; i < 9; i++) {
       const yy = hash2(i, 9) * H, len = 60 + hash2(i, 3) * 120;
       const xx = (((hash2(i, 5) * W - t * 1400 * (0.6 + hash2(i, 7))) % (W + len)) + W + len) % (W + len) - len;
@@ -1838,18 +2151,35 @@ function render(dt, t) {
     ctx.globalAlpha = game.flash * 0.3; ctx.fillStyle = game.flashColor; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
     game.flash = Math.max(0, game.flash - dt * 2.2);
   }
+  // a combo of ×2 or more makes the screen edge pulse with the beat
+  if (game.comboMult >= 2 && !reduceMotion) {
+    const beat = Math.pow(0.5 + 0.5 * Math.cos(t * TAU * Music.bpm() / 60), 3);
+    ctx.strokeStyle = comboColor(game.comboMult); ctx.globalAlpha = 0.25 + 0.45 * beat;
+    ctx.lineWidth = 3 + 5 * beat * (game.comboMult / 5); ctx.strokeRect(0, 0, W, H); ctx.globalAlpha = 1;
+  }
   drawBanner(dt);
   drawWheels(dt);
+  drawSlots(dt);
+  drawCoin(dt);
+  drawHype(dt);
   if (game.state === 'chance' && game.chance) drawChance();
 }
 
 // ---------- HUD and screens
 const hudDist = $('hudDist'), hudScore = $('hudScore'), hudRules = $('hudRules'), guardMeter = $('guardMeter'), guardDist = $('guardDist');
-let lastDist = -1, lastScore = -1, lastGuard = -1, lastChipKey = '';
+const hudJack = $('hudJack'), comboBox = $('combo'), comboText = $('comboText'), comboBar = $('comboBar');
+let lastDist = -1, lastScore = -1, lastGuard = -1, lastChipKey = '', lastJack = -1, lastCombo = -1;
 function updateHud() {
-  const d = Math.floor(Math.max(0, P.x) / UNITS_PER_M), s = Math.floor(game.score);
+  const d = Math.floor(Math.max(0, P.x) / UNITS_PER_M), s = Math.floor(game.score), j = Math.floor(game.jackpot / 10) * 10;
   if (d !== lastDist) { hudDist.textContent = fmt(d); lastDist = d; }
   if (s !== lastScore) { hudScore.textContent = fmt(s); lastScore = s; }
+  if (j !== lastJack) { hudJack.textContent = fmt(j); lastJack = j; }
+  if (game.comboMult !== lastCombo) {
+    lastCombo = game.comboMult; comboBox.hidden = game.comboMult < 1.5;
+    comboText.textContent = `COMBO ${multText(game.comboMult)}`; comboBox.style.setProperty('--cc', comboColor(game.comboMult));
+  }
+  if (!comboBox.hidden) comboBar.style.transform = `scaleX(${clamp(game.comboT / COMBO_TIME, 0, 1).toFixed(3)})`;
+  if (game.bet) $('betTimer').style.transform = `scaleX(${clamp(game.bet.t / game.bet.total, 0, 1).toFixed(3)})`;
   const guard = game.pestCtl.find((c) => c.key === 'guard' && !c.leaving);
   const gd = guard ? Math.max(0, Math.round(guard.d / UNITS_PER_M)) : -1;
   if (gd !== lastGuard) { guardMeter.hidden = gd < 0; if (gd >= 0) guardDist.textContent = gd; lastGuard = gd; }
@@ -1864,6 +2194,7 @@ function updateChips() {
   for (const k of game.pests) parts.push(pestChipHtml(k));
   if (game.swap) parts.push('<span class="chip" style="--c:#b48cff">SWAPPED</span>');
   if (fx.shield) parts.push('<span class="chip fx" style="--c:#7fe3ff">SHIELD</span>');
+  if (fx.slotX3 > 0) parts.push(`<span class="chip fx" style="--c:#f4c430">CASH ×3 <b>${Math.ceil(fx.slotX3)}</b></span>`);
   for (const b of BONUS) if (fx[b.key] > 0 && typeof fx[b.key] === 'number') parts.push(`<span class="chip fx" style="--c:${b.color}">${b.short} <b>${Math.ceil(fx[b.key])}</b></span>`);
   const html = parts.join('');
   if (html !== lastChipKey) { hudRules.innerHTML = html; lastChipKey = html; }
@@ -1881,7 +2212,7 @@ function showZones(seconds) {
 function cityCode(seed) { let s = ''; for (let i = 0; i < 4; i++) { s = String.fromCharCode(65 + (seed % 26)) + s; seed = Math.floor(seed / 26); } return s; }
 function renderBest() {
   const best = store.get(BEST_KEY, null);
-  $('bestStart').textContent = best ? `Best: ${fmt(best.score)} pts · ${fmt(best.dist)} m` : 'No best run yet';
+  $('bestStart').textContent = best ? `Best: $${fmt(best.score)} · ${fmt(best.dist)} m` : 'No best run yet';
 }
 function listHtml(items) {
   return items.map((it) => `<li style="--c:${it.color}"><span class="sw"></span><span class="nm">${it.name}</span><span class="mx">${it.mx || ''}</span><span class="ds">${it.desc}</span></li>`).join('');
@@ -1905,7 +2236,10 @@ function startRun(seed) {
     flash: 0, deadT: 0, banner: null, shake: 0, lightning: 0, pests: [], pestCtl: [], fx: freshFx(), tokenCount: 0,
     chanceUsed: false, chance: null, swap: false, theme: 'dusk', timeScale: 1, flashBang: 0, gateRef: null, chanceResult: '',
     prng: mulberry32((game.seed ^ 0xA5A5A5A5) >>> 0), bonusRng: mulberry32((game.seed ^ 0xB0B0B0B0) >>> 0),
+    combo: 0, comboT: 0, comboMult: 1, bestCombo: 1, jackpot: JACKPOT_START, gateScore: 0, coin: null, slots: null, hype: null, jackpots: 0,
   });
+  hideBet(); lastJack = lastCombo = -1;
+  Music.start();
   for (const w of [ruleWheel, pestWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false, done: false, sticky: false, onStop: null });
   Object.assign(input, { jumpHeld: false, jumpBuffer: 0, slideHeld: false, slidePressAt: -9 });
   pointers.clear();
@@ -1932,7 +2266,7 @@ const CAUSES = {
   guard: ['Caught by the guard', 'Every stumble lets the guard gain. Clean runs and tricks push him back.'],
 };
 function gameOver() {
-  game.state = 'over'; releaseWake();
+  game.state = 'over'; releaseWake(); Music.stop(); hideBet();
   const dist = Math.floor(Math.max(0, P.x) / UNITS_PER_M), score = Math.floor(game.score);
   const best = store.get(BEST_KEY, null);
   const isBest = !best || score > best.score;
@@ -1943,14 +2277,15 @@ function gameOver() {
   $('overChance').textContent = game.chanceResult === 'revived' ? 'The last-chance wheel saved you once this run.'
     : game.chanceResult === 'lost' ? 'The last-chance wheel said no.' : '';
   $('overDist').textContent = `${fmt(dist)} m`;
-  $('overScore').textContent = fmt(score);
-  $('overBest').textContent = fmt(isBest ? score : best.score);
+  $('overScore').textContent = `$${fmt(score)}`;
+  $('overCombo').textContent = multText(game.bestCombo);
+  $('overBest').textContent = `$${fmt(isBest ? score : best.score)}`;
   $('overNew').hidden = !(isBest && score > 0 && best);
   $('overCity').textContent = cityCode(game.seed);
   $('overTheme').textContent = THEMES[game.theme].name;
   $('overHistory').innerHTML = game.history.length
     ? game.history.map((h) => `<li>${h.rules.map(chipHtml).join('')}${h.pests.map(pestChipHtml).join('')}</li>`).join('')
-    : '<li class="none">No gate reached. The first one is at 90 m.</li>';
+    : `<li class="none">No gate reached. The first one is at ${FIRST_GATE / UNITS_PER_M} m.</li>`;
   $('hud').hidden = true; $('zones').hidden = true;
   renderBest(); show('screenOver');
   setTimeout(() => $('btnAgain').focus({ preventScroll: true }), 50);
@@ -1958,12 +2293,16 @@ function gameOver() {
 function pause() {
   if (game.state !== 'play') return;
   game.state = 'paused';
-  $('pauseInfo').textContent = `${fmt(Math.max(0, P.x) / UNITS_PER_M)} m · ${fmt(game.score)} pts`;
-  show('screenPause'); releaseWake();
+  $('pauseInfo').textContent = `${fmt(Math.max(0, P.x) / UNITS_PER_M)} m · $${fmt(game.score)}`;
+  show('screenPause'); releaseWake(); Music.stop(); betBtn.hidden = true;
 }
-function resume() { if (game.state !== 'paused') return; game.state = 'play'; show(null); Sound.init(); requestWake(); }
+function resume() {
+  if (game.state !== 'paused') return;
+  game.state = 'play'; show(null); Sound.init(); requestWake(); Music.start();
+  if (game.bet && !game.coin) betBtn.hidden = false;
+}
 function quitToMenu() {
-  releaseWake(); game.state = 'menu'; $('hud').hidden = true; $('zones').hidden = true;
+  releaseWake(); Music.stop(); hideBet(); game.state = 'menu'; $('hud').hidden = true; $('zones').hidden = true;
   game.city = new City(Math.floor(Math.random() * 456976)); game.camX = 0; game.rules = []; game.pests = []; game.pestCtl = [];
   game.mirror = game.mirrorTarget = 1; game.theme = 'dusk'; initWeather();
   for (const w of [ruleWheel, pestWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false });
@@ -2016,6 +2355,7 @@ window.addEventListener('keydown', (e) => {
       keyRoles[k] = role;
       if (role === 'jump') pressJump(); else pressSlide();
     } else if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); pause(); }
+    else if (k === 'b' || k === 'B') { e.preventDefault(); placeBet(); }
   } else if (game.state === 'paused') {
     if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); resume(); }
   } else if ((k === 'Enter' || k === ' ') && !(document.activeElement && document.activeElement.tagName === 'BUTTON')) {
@@ -2036,6 +2376,8 @@ $('btnReplay').addEventListener('click', () => startRun(game.seed));
 $('btnResume').addEventListener('click', resume);
 $('btnQuit').addEventListener('click', quitToMenu);
 $('btnPause').addEventListener('click', pause);
+betBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); placeBet(); });
+betBtn.addEventListener('click', (e) => { e.preventDefault(); placeBet(); });
 function renderMute() {
   $('icoWaves').hidden = Sound.muted; $('icoX').hidden = !Sound.muted;
   $('btnMute').setAttribute('aria-label', Sound.muted ? 'Turn sound on' : 'Mute sound');
@@ -2058,6 +2400,8 @@ function frame(now) {
     while (acc >= STEP) { update(STEP); acc -= STEP; if (game.state !== 'play') { acc = 0; break; } }
     if (!P.dead) game.camX = P.x - viewW * 0.3;
     game.city.prune(game.camX);
+    if (game.bet && (game.bet.t -= dt) <= 0) hideBet();
+    Music.tick();
     updateHud();
   } else if (game.state === 'chance') {
     updateChance(dt);
