@@ -449,6 +449,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
           <div><dt>Right side</dt><dd>Jump. Hold longer to jump higher.</dd></div>
           <div><dt>Left side</dt><dd>Slide under pipes and birds. In the air: drop fast, keep holding to roll.</dd></div>
           <div><dt>Walls</dt><dd>Grab the ledge, tap jump to climb. Hold jump when you hit it to wall-run.</dd></div>
+          <div><dt>Obstacles</dt><dd>Crash through vents, nets or bins: +20% speed each, up to +60%. Pipes still knock you out.</dd></div>
           <div><dt>Keyboard</dt><dd>Space or ↑ jump · ↓ slide · B bet · P pause</dd></div>
         </dl>
         <details>
@@ -969,6 +970,7 @@ const Sound = {
   peel() { this.noise(0.14, 0.1, 3500); },
   crack() { this.noise(0.18, 0.3, 5000); this.noise(0.1, 0.2, 2500, 0.05); },
   boss() { [196, 185, 175, 165].forEach((f, i) => this.tone(f, 0.35, 'sawtooth', 0.09, 0, i * 0.22)); },
+  boost() { this.noise(0.1, 0.25, 900); this.tone(300, 0.25, 'sawtooth', 0.08, 500); },
   jump() { this.tone(380, 0.13, 'square', 0.08, 340); },
   land(impact) { this.noise(0.09, clamp(impact / 2400, 0.05, 0.3), 700); },
   token() { this.tone(1180, 0.07, 'triangle', 0.12); this.tone(1580, 0.1, 'triangle', 0.1, 0, 0.055); },
@@ -1115,7 +1117,7 @@ function resetPlayer(y) {
   Object.assign(P, {
     x: 0, y, vy: 0, onGround: true, state: 'run', stateT: 0, coyote: 0, stumble: 1, runDist: 0,
     grabB: null, grabT: 0, climbFromY: 0, noForward: false, dead: false, rot: 0, deadVx: 0, size: 1,
-    jumping: false, diving: false, takeoff: null, invuln: 0, airJumps: 1,
+    jumping: false, diving: false, takeoff: null, invuln: 0, airJumps: 1, boost: 1, boostT: 0,
   });
 }
 const hw = () => (PLAYER_W / 2) * P.size;
@@ -1228,6 +1230,13 @@ function land(b, ph) {
   if (bouncy && impact > 420 && P.state !== 'roll') {
     P.vy = -Math.min(380, impact * 0.4); P.onGround = false; setState('air');
   }
+}
+const BOOST_STEP = 0.2, BOOST_MAX = 1.6, BOOST_HOLD = 2.5;
+function obstacleBoost(text) {
+  P.boost = Math.min(BOOST_MAX, P.boost + BOOST_STEP); P.boostT = BOOST_HOLD;
+  popup(`${text}! Speed +${Math.round((P.boost - 1) * 100)}%`, '#ffd36b');
+  Sound.boost(); puff(P.x + hw(), P.y - 20, 10, '#ffd36b', 220);
+  if (!reduceMotion) game.shake = Math.max(game.shake, 0.18);
 }
 function stumble(text, strength) {
   P.stumble = Math.min(P.stumble, strength || 0.55); setState('stumble'); popup(text || 'Stumble', '#ff8a7a'); Sound.stumble();
@@ -2318,7 +2327,10 @@ function update(dt) {
 
   P.stateT += dt;
   P.stumble = Math.min(1, P.stumble + dt * 0.5);
-  const speed = baseSpeed(P.x) * ph.speed * P.stumble * (game.chaos.burst > 0 ? 1.25 : 1) * (game.windT > 0 ? 0.9 : 1);
+  // crashing into obstacles makes you faster: the boost holds for a moment, then fades
+  if (P.boostT > 0) P.boostT -= dt / game.timeScale;
+  else if (P.boost > 1) P.boost = Math.max(1, P.boost - 0.2 * dt / game.timeScale);
+  const speed = baseSpeed(P.x) * ph.speed * P.stumble * P.boost * (game.chaos.burst > 0 ? 1.25 : 1) * (game.windT > 0 ? 0.9 : 1);
   game.speed = speed;
 
   // boss chase, new district, ghost recording
@@ -2421,9 +2433,8 @@ function update(dt) {
         const bottom = o.type === 'pipe' ? b.roof - PIPE_BOTTOM : b.roof;
         if (P.y > top && P.y - h < bottom) {
           o.hit = true;
-          if (useShield()) continue;
-          if (o.type === 'pipe') { die('pipe'); return; }
-          stumble({ net: 'Netted!', bin: 'Bin!', crate: 'Crate!', feather: 'Feathers!' }[o.type] || 'Stumble');
+          if (o.type === 'pipe') { if (useShield()) continue; die('pipe'); return; }
+          obstacleBoost({ net: 'Net', bin: 'Bin', crate: 'Crate', feather: 'Feathers' }[o.type] || 'Smash');
         } else {
           // how close did we come? feeds the "Close!" bonus once the obstacle is behind us
           const cl = o.type === 'pipe' && P.y - h >= bottom ? (P.y - h) - bottom : top - P.y;
@@ -2500,7 +2511,7 @@ function revive(withShield) {
   city.ensure(x + 3000);
   let b = city.at(x), px = x;
   if (!b || x > b.x + b.w - 200 || x < b.x + 10) { b = city.after(x); px = b.x + 30; }
-  Object.assign(P, { x: px, y: b.roof, vy: 0, onGround: true, dead: false, rot: 0, deadVx: 0, noForward: false, stumble: 1, diving: false, jumping: false, grabB: null, takeoff: null, invuln: 2.2, airJumps: 1 });
+  Object.assign(P, { x: px, y: b.roof, vy: 0, onGround: true, dead: false, rot: 0, deadVx: 0, noForward: false, stumble: 1, diving: false, jumping: false, grabB: null, takeoff: null, invuln: 2.2, airJumps: 1, boost: 1, boostT: 0 });
   setState('run');
   b.obs = b.obs.filter((o) => o.x + o.w < px - 10 || o.x > px + 340);
   for (const c of game.pestCtl) if (c.key === 'guard') c.d = 460;
@@ -3304,7 +3315,7 @@ function render(dt, t) {
     ctx.fillText(`BEST $${fmt(game.ghost.score)}`, s.x, s.y);
   }
   drawPopups(dt);
-  if ((game.rules.includes('turbo') || game.comboMult >= 3) && !reduceMotion) {
+  if ((game.rules.includes('turbo') || game.comboMult >= 3 || P.boost > 1.1) && !reduceMotion) {
     ctx.fillStyle = game.comboMult >= 3 ? 'rgba(255,211,107,0.16)' : 'rgba(255,255,255,0.12)';
     for (let i = 0; i < 9; i++) {
       const yy = hash2(i, 9) * H, len = 60 + hash2(i, 3) * 120;
@@ -3392,6 +3403,7 @@ function updateChips() {
   if (chaosLevel() > 1) parts.push(`<span class="chip" style="--c:#ff4fb8">CHAOS ${chaosLevel()}</span>`);
   if (game.swap) parts.push('<span class="chip" style="--c:#b48cff">SWAPPED</span>');
   if (fx.shield) parts.push('<span class="chip fx" style="--c:#7fe3ff">SHIELD</span>');
+  if (P.boost > 1.04) parts.push(`<span class="chip" style="--c:#ffd36b">SPEED +${Math.round((P.boost - 1) * 100)}%</span>`);
   if (fx.slotX3 > 0) parts.push(`<span class="chip fx" style="--c:#f4c430">CASH ×3 <b>${Math.ceil(fx.slotX3)}</b></span>`);
   for (const b of BONUS) if (fx[b.key] > 0 && typeof fx[b.key] === 'number') parts.push(`<span class="chip fx" style="--c:${b.color}">${b.short} <b>${Math.ceil(fx[b.key])}</b></span>`);
   const html = parts.join('');
