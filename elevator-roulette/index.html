@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="Ride up a tower, win a mini-game on every floor and cash out before the cable snaps.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Elevator">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Elevator Roulette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: the inside of an elevator; amber floor display on top, the doors in the middle hold each mini-game, buttons below */
+  --night: #110e22;
+  --steel: #2b2a38;
+  --steel-hi: #45445a;
+  --amber: #ffb02e;
+  --chalk: #f3eee5;
+  --haze: #a99fbe;
+  --good: #5fe0a8;
+  --bad: #ff6b5b;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#app {
+  position: relative; height: 100%; display: grid; grid-template-rows: auto 1fr auto; gap: 10px;
+  padding-block: 10px; padding-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
+  background: linear-gradient(90deg, #1c1b28 0%, #2a2938 50%, #1c1b28 100%);
+}
+.panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; padding: 8px 14px; background: #0c0b14; border: 2px solid var(--steel-hi); }
+.floor { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-mono); color: var(--amber); text-shadow: 0 0 10px rgba(255, 176, 46, 0.55); }
+.floor .arrow { font-size: 18px; }
+.floor b { font-size: 34px; font-weight: 600; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+.floor small { font-size: 11px; letter-spacing: 0.14em; color: rgba(255, 176, 46, 0.7); }
+.money { display: flex; gap: 18px; font-family: var(--font-mono); font-size: 13px; color: var(--haze); }
+.money b { display: block; font-family: var(--font-display); font-size: 24px; line-height: 1; color: var(--chalk); font-variant-numeric: tabular-nums; }
+.money .pot b { color: var(--amber); }
+.shaft { position: relative; min-height: 0; display: grid; overflow: hidden; border: 3px solid var(--steel-hi); background: radial-gradient(ellipse at 50% 30%, #3a3448 0%, #1a1726 70%); }
+.arena { position: relative; display: grid; place-items: center; align-content: center; gap: 12px; padding: 14px; text-align: center; overflow: hidden; touch-action: manipulation; }
+.title { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 6vw, 52px); line-height: 0.95; text-transform: uppercase; letter-spacing: 0.02em; text-wrap: balance; }
+.hint { margin: 0; color: var(--haze); font-size: 14px; }
+.doors { position: absolute; inset: 0; pointer-events: none; }
+.door {
+  position: absolute; top: 0; bottom: 0; width: 50%; transition: transform 0.55s cubic-bezier(.6, 0, .3, 1);
+  background: repeating-linear-gradient(90deg, #4a4960 0 2px, #3b3a4e 2px 7px); box-shadow: inset 0 0 0 2px #24232f;
+}
+.door.l { left: 0; border-right: 2px solid #15141d; } .door.r { right: 0; border-left: 2px solid #15141d; }
+.doors.open .door.l { transform: translateX(-101%); } .doors.open .door.r { transform: translateX(101%); }
+.reel {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); min-width: min(80%, 320px); padding: 10px 16px; text-align: center;
+  background: #0c0b14; border: 2px solid var(--amber); color: var(--amber); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.12em; transition: opacity 0.2s;
+}
+.reel b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 28px; letter-spacing: 0.04em; color: var(--chalk); }
+.doors.open .reel { opacity: 0; }
+.timer { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(243, 238, 229, 0.1); }
+.timer i { display: block; height: 100%; background: var(--amber); transform-origin: left; }
+.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; min-height: 52px; }
+.btn {
+  border: 0; cursor: pointer; padding: 0.4em 1.3em; color: var(--night); background: var(--amber); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+  font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 0.06em; text-transform: uppercase; transform: skewX(-10deg);
+}
+.btn > span { display: inline-block; transform: skewX(10deg); }
+.btn.ghost { background: var(--chalk); }
+.btn.good { background: var(--good); }
+.btn:focus-visible, .pad:focus-visible, .choice:focus-visible, .cell:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+/* mini-game pieces */
+.bar { position: relative; width: min(90%, 460px); height: 34px; background: #0c0b14; border: 2px solid var(--steel-hi); }
+.bar .zone { position: absolute; top: 0; bottom: 0; background: rgba(95, 224, 168, 0.55); border-inline: 2px solid var(--good); }
+.bar .marker { position: absolute; top: -6px; bottom: -6px; width: 4px; margin-left: -2px; background: var(--chalk); box-shadow: 0 0 8px var(--chalk); }
+.chip-btn { position: absolute; width: 48px; height: 48px; margin: -24px; padding: 0; border: 4px dashed #f3eee5; border-radius: 50%; background: #e5484d; cursor: pointer; }
+.chip-btn.gold { background: #ffc23d; }
+.pads { display: grid; grid-template-columns: repeat(2, minmax(70px, 110px)); gap: 10px; }
+.pad { aspect-ratio: 1; border: 0; cursor: pointer; opacity: 0.45; transition: opacity 0.08s, transform 0.08s; }
+.pad.lit { opacity: 1; transform: scale(1.06); }
+.react { width: min(90%, 420px); height: 46%; min-height: 120px; display: grid; place-items: center; border: 0; cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 40px; color: var(--night); background: var(--bad); }
+.react.go { background: var(--good); }
+.question { font-family: var(--font-display); font-weight: 900; font-size: clamp(40px, 9vw, 64px); line-height: 1; font-variant-numeric: tabular-nums; }
+.choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.choice { min-width: 76px; padding: 10px 16px; border: 2px solid var(--chalk); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 30px; font-variant-numeric: tabular-nums; }
+.grid { display: grid; gap: 6px; }
+.cell { width: clamp(40px, 9vmin, 58px); aspect-ratio: 1; padding: 0; border: 0; background: rgba(243, 238, 229, 0.08); cursor: pointer; font-size: clamp(24px, 6vmin, 34px); line-height: 1; }
+.meter { width: min(90%, 420px); height: 22px; background: #0c0b14; border: 2px solid var(--steel-hi); }
+.meter i { display: block; height: 100%; width: 0; background: var(--amber); }
+.mash { width: 140px; height: 140px; border-radius: 50%; border: 0; cursor: pointer; background: var(--bad); color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 30px; box-shadow: 0 6px 0 #a33a30; }
+.mash:active { transform: translateY(4px); box-shadow: 0 2px 0 #a33a30; }
+.verdict { font-family: var(--font-display); font-weight: 900; font-size: clamp(36px, 8vw, 64px); line-height: 0.95; text-transform: uppercase; }
+.verdict.good { color: var(--good); } .verdict.bad { color: var(--bad); }
+/* overlays */
+.screen {
+  position: absolute; inset: 0; z-index: 3; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y;
+  padding-block: 18px; padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+  background: linear-gradient(90deg, rgba(17, 14, 34, 0.96) 0%, rgba(17, 14, 34, 0.9) 60%, rgba(17, 14, 34, 0.8) 100%);
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(50px, 10.5vw, 100px); line-height: 0.86; text-wrap: balance; }
+.logo span { color: var(--amber); }
+.lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.9; }
+.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
+a.link-btn, .link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.pairs { margin: 0; display: grid; gap: 5px; }
+.pairs div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: baseline; }
+.pairs dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); }
+.pairs dd { margin: 0; font-size: 14px; }
+.side { display: grid; gap: 10px; }
+@media (max-height: 520px) { .logo { font-size: clamp(44px, 8vw, 64px); } .lede { font-size: 14px; } .floor b { font-size: 26px; } .btn { font-size: 20px; } .title { font-size: clamp(26px, 5vw, 40px); } }
+@media (prefers-reduced-motion: reduce) { .door, .pad, .reel { transition: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="panel">
+    <div class="floor"><span class="arrow" aria-hidden="true">▲</span><b id="floorNum">00</b><small id="floorTag">LOBBY</small></div>
+    <div class="money">
+      <div class="pot">Pot<b>$<span id="pot">0</span></b></div>
+      <div>Next<b id="nextMult">×1.5</b></div>
+      <div>Bank<b>$<span id="bank">0</span></b></div>
+    </div>
+  </header>
+  <main class="shaft">
+    <div class="arena" id="arena"></div>
+    <div class="doors" id="doors"><div class="door l"></div><div class="door r"></div><div class="reel" id="reel">NEXT FLOOR<b id="reelText">…</b></div></div>
+    <div class="timer"><i id="timerBar"></i></div>
+  </main>
+  <footer class="controls" id="controls"></footer>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">From the makers of Rooftop Roulette</p>
+        <h1 class="logo">Elevator<br><span>Roulette</span></h1>
+        <p class="lede">Every floor, the dial picks a mini-game. Win it and your pot multiplies. Then decide: ride up for more, or cash out before the cable snaps.</p>
+        <div class="cta-row">
+          <button class="btn" id="btnStart" type="button"><span>Ride up</span></button>
+          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
+          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/pigeon-revenge/" target="_blank" rel="noopener">Pigeon Revenge</a>
+        </div>
+        <dl class="stats">
+          <div><dt>Bank</dt><dd id="startBank">$0</dd></div>
+          <div><dt>Best cash-out</dt><dd id="startBest">$0</dd></div>
+          <div><dt>Highest floor</dt><dd id="startFloor">0</dd></div>
+        </dl>
+      </div>
+      <div class="side">
+        <h2 class="label">How it works</h2>
+        <dl class="pairs">
+          <div><dt>Start</dt><dd>Every ride starts with a $100 pot.</dd></div>
+          <div><dt>Each floor</dt><dd>Win the mini-game: the pot grows ×1.5, a bit more on every floor.</dd></div>
+          <div><dt>Every 5th floor</dt><dd>VIP floor: harder game, ×3.</dd></div>
+          <div><dt>After a win</dt><dd>Ride up or cash out into your bank.</dd></div>
+          <div><dt>Fail</dt><dd>The pot is gone. Your bank stays safe.</dd></div>
+        </dl>
+        <h2 class="label">Mini-games on the dial</h2>
+        <p class="hint" id="gameList"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenOver" aria-label="Ride over" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow" id="overEyebrow">Ride over</p>
+        <h1 class="logo" id="overTitle" style="font-size: clamp(40px, 8vw, 76px)">Cashed out</h1>
+        <p class="lede" id="overText"></p>
+        <div class="cta-row">
+          <button class="btn" id="btnAgain" type="button"><span>Ride again</span></button>
+          <button class="link-btn" id="btnMenu" type="button">Lobby</button>
+        </div>
+        <dl class="stats">
+          <div><dt>Floor</dt><dd id="overFloor">0</dd></div>
+          <div><dt>Bank</dt><dd id="overBank">$0</dd></div>
+          <div><dt>Best cash-out</dt><dd id="overBest">$0</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const arena = $('arena'), controls = $('controls'), doors = $('doors');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rint = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'elevator-roulette-profile';
+const profile = Object.assign({ bank: 0, best: 0, floor: 0 }, store.get(PROFILE_KEY, {}));
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+// tap or Enter/Space; returns a function that removes both listeners again
+function onTap(el, fn) {
+  const down = (e) => { e.preventDefault(); fn(e); };
+  const key = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(e); } };
+  el.addEventListener('pointerdown', down); el.addEventListener('keydown', key);
+  return () => { el.removeEventListener('pointerdown', down); el.removeEventListener('keydown', key); };
+}
+
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  tone(f, dur, type = 'sine', vol = 0.12, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  ding() { this.tone(1318, 0.9, 'sine', 0.14); this.tone(1046, 1.1, 'sine', 0.12, 0, 0.18); },
+  tick() { this.tone(1800, 0.02, 'square', 0.03); },
+  good() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.2, 'triangle', 0.1, 0, i * 0.06)); },
+  bad() { this.tone(220, 0.5, 'sawtooth', 0.1, -120); },
+  tap() { this.tone(660, 0.05, 'triangle', 0.08); },
+  cash() { [784, 988, 1175, 1568, 1976].forEach((f, i) => this.tone(f, 0.18, 'square', 0.06, 0, i * 0.06)); },
+  pad(i) { this.tone([330, 415, 494, 587][i], 0.3, 'triangle', 0.12); },
+};
+
+// ---------- ride state
+const ride = { floor: 0, pot: 0, active: false, game: null, cleanup: null, timerEnd: 0, timerTotal: 0, onTimeout: null };
+const multFor = (floor) => (floor % 5 === 0 ? 3 : Math.min(2.5, 1.5 + 0.1 * (floor - 1)));
+const levelFor = (floor) => Math.min(10, floor + (floor % 5 === 0 ? 2 : 0));
+
+function updatePanel() {
+  $('floorNum').textContent = String(ride.floor).padStart(2, '0');
+  $('floorTag').textContent = ride.floor === 0 ? 'LOBBY' : ride.floor % 5 === 0 ? 'VIP FLOOR' : 'FLOOR';
+  $('pot').textContent = fmt(ride.pot);
+  const m = multFor(ride.floor + 1);
+  $('nextMult').textContent = `×${m % 1 ? m.toFixed(1) : m}`;
+  $('bank').textContent = fmt(profile.bank);
+}
+function setControls(buttons) {
+  controls.innerHTML = '';
+  for (const [label, cls, fn] of buttons) { const b = mk('button', `btn ${cls || ''}`, `<span>${label}</span>`); b.addEventListener('click', fn); controls.appendChild(b); }
+}
+function timer(seconds, onTimeout) { ride.timerTotal = seconds; ride.timerEnd = performance.now() + seconds * 1000; ride.onTimeout = onTimeout; }
+function stopTimer() { ride.onTimeout = null; $('timerBar').style.transform = 'scaleX(0)'; }
+function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+// ---------- the mini-games: each sets up the arena and calls done(true|false) exactly once
+const GAMES = {
+  bar: {
+    name: 'Stop the bar', title: 'Stop it in the green',
+    play(lv, done) {
+      const zoneW = clamp(30 - lv * 2.2, 9, 30), zoneX = rnd(10, 90 - zoneW), speed = 55 + lv * 9;
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="bar"><span class="zone" style="left:${zoneX}%;width:${zoneW}%"></span><span class="marker" id="mk"></span></div><p class="hint">Tap anywhere</p>`;
+      const mkEl = $('mk'); let x = 0, dir = 1, last = performance.now(), live = true;
+      const step = (now) => { if (!live) return; const dt = (now - last) / 1000; last = now; x += dir * speed * dt; if (x > 100) { x = 100; dir = -1; } if (x < 0) { x = 0; dir = 1; } mkEl.style.left = `${x}%`; requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+      const stop = () => { if (!live) return; live = false; done(x >= zoneX && x <= zoneX + zoneW); };
+      const off = onTap(arena, stop); timer(6, () => { live = false; done(false); });
+      return () => { live = false; off(); };
+    },
+  },
+  chips: {
+    name: 'Catch the chips', title: 'Tap the falling chips',
+    play(lv, done) {
+      const need = 4 + Math.ceil(lv * 0.6); let got = 0, live = true;
+      arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="cnt">0 / ${need}</p>`;
+      const chips = [];
+      const spawn = () => {
+        if (!live) return;
+        const c = mk('button', `chip-btn${Math.random() < 0.15 ? ' gold' : ''}`); c.setAttribute('aria-label', 'Chip');
+        const ch = { el: c, x: rnd(10, 90), y: -8, v: 16 + lv * 2.4 + rnd(0, 8) };
+        c.style.left = `${ch.x}%`; arena.appendChild(c); chips.push(ch);
+        onTap(c, () => { if (!live || ch.dead) return; ch.dead = true; c.remove(); got += c.classList.contains('gold') ? 2 : 1; Sound.tap(); $('cnt').textContent = `${Math.min(got, need)} / ${need}`; if (got >= need) { live = false; done(true); } });
+        setTimeout(spawn, Math.max(260, 700 - lv * 45));
+      };
+      let last = performance.now();
+      const step = (now) => { if (!live) return; const dt = (now - last) / 1000; last = now; for (const ch of chips) { if (ch.dead) continue; ch.y += ch.v * dt; ch.el.style.top = `${ch.y}%`; if (ch.y > 108) { ch.dead = true; ch.el.remove(); } } requestAnimationFrame(step); };
+      spawn(); requestAnimationFrame(step);
+      timer(7, () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  memory: {
+    name: 'Memory', title: 'Repeat the pattern',
+    play(lv, done) {
+      const len = Math.min(8, 3 + Math.floor(lv / 2)), seq = Array.from({ length: len }, () => rint(0, 3)), colors = ['#ff5a4e', '#ffd36b', '#5fe0a8', '#4fa3ff'];
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="pads">${colors.map((c, i) => `<button type="button" class="pad" data-i="${i}" style="background:${c}" aria-label="Pad ${i + 1}"></button>`).join('')}</div><p class="hint" id="mh">Watch…</p>`;
+      const pads = [...arena.querySelectorAll('.pad')]; let live = true, input = false, pos = 0;
+      const flash = (i, ms) => { pads[i].classList.add('lit'); Sound.pad(i); setTimeout(() => pads[i].classList.remove('lit'), ms); };
+      (async () => {
+        await wait(500);
+        for (const i of seq) { if (!live) return; flash(i, 380); await wait(560 - Math.min(200, lv * 15)); }
+        if (!live) return; input = true; $('mh').textContent = 'Your turn'; timer(4 + len * 0.8, () => { live = false; done(false); });
+      })();
+      pads.forEach((p, i) => onTap(p, () => {
+        if (!live || !input) return; flash(i, 160);
+        if (i !== seq[pos]) { live = false; done(false); return; }
+        if (++pos >= seq.length) { live = false; done(true); }
+      }));
+      return () => { live = false; };
+    },
+  },
+  react: {
+    name: 'Reaction', title: 'Tap on green',
+    play(lv, done) {
+      const window_ = Math.max(0.3, 0.6 - lv * 0.03);
+      arena.innerHTML = `<p class="title">${this.title}</p><button type="button" class="react" id="rb">WAIT…</button><p class="hint">Too early = fail</p>`;
+      const rb = $('rb'); let live = true, goAt = 0;
+      const t = setTimeout(() => { if (!live) return; rb.classList.add('go'); rb.textContent = 'TAP!'; goAt = performance.now(); timer(window_, () => { live = false; done(false); }); }, rnd(1200, 3200));
+      onTap(rb, () => { if (!live) return; live = false; clearTimeout(t); done(goAt > 0 && performance.now() - goAt <= window_ * 1000); });
+      return () => { live = false; clearTimeout(t); };
+    },
+  },
+  math: {
+    name: 'Quick maths', title: 'Solve them fast',
+    play(lv, done) {
+      const need = lv < 4 ? 2 : lv < 8 ? 3 : 4; let solved = 0, live = true;
+      const next = () => {
+        let a, b, op, ans;
+        if (lv < 3) { a = rint(2, 12); b = rint(2, 12); op = '+'; ans = a + b; }
+        else if (lv < 6) { op = pick(['+', '−']); a = rint(8, 30); b = rint(2, a); ans = op === '+' ? a + b : a - b; }
+        else { op = pick(['×', '+', '−']); a = op === '×' ? rint(3, 12) : rint(20, 80); b = op === '×' ? rint(3, 9) : rint(5, 40); ans = op === '×' ? a * b : op === '+' ? a + b : a - b; }
+        const opts = new Set([ans]); while (opts.size < 3) opts.add(ans + pick([-10, -2, -1, 1, 2, 3, 10]) * (opts.size));
+        arena.innerHTML = `<p class="hint">${solved + 1} of ${need}</p><p class="question">${a} ${op} ${b}</p><div class="choices">${[...opts].sort(() => Math.random() - 0.5).map((o) => `<button type="button" class="choice" data-v="${o}">${o}</button>`).join('')}</div>`;
+        arena.querySelectorAll('.choice').forEach((c) => onTap(c, () => {
+          if (!live) return;
+          if (Number(c.getAttribute('data-v')) !== ans) { live = false; done(false); return; }
+          Sound.tap(); if (++solved >= need) { live = false; done(true); } else next();
+        }));
+      };
+      next(); timer(4 + need * 2.2 - Math.min(3, lv * 0.25), () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  odd: {
+    name: 'Odd one out', title: 'Find the different one',
+    play(lv, done) {
+      const pairs = [['🐦', '🐤'], ['🍎', '🍏'], ['😀', '😃'], ['🐶', '🐱'], ['🌕', '🌖'], ['🐟', '🐠'], ['⭐', '🌟'], ['🍩', '🍪']];
+      const [same, diff] = pick(pairs), n = lv < 4 ? 4 : lv < 8 ? 5 : 6, target = rint(0, n * n - 1);
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="grid" style="grid-template-columns:repeat(${n}, auto)">${Array.from({ length: n * n }, (_, i) => `<button type="button" class="cell" data-i="${i}" aria-label="Cell ${i + 1}">${i === target ? diff : same}</button>`).join('')}</div>`;
+      let live = true;
+      arena.querySelectorAll('.cell').forEach((c) => onTap(c, () => { if (!live) return; live = false; done(Number(c.getAttribute('data-i')) === target); }));
+      timer(Math.max(3.5, 7 - lv * 0.3), () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  mash: {
+    name: 'Button mash', title: 'Mash it!',
+    play(lv, done) {
+      const need = 14 + lv * 2; let taps = 0, live = true;
+      arena.innerHTML = `<p class="title">${this.title}</p><button type="button" class="mash" id="mb">TAP</button><div class="meter"><i id="mm"></i></div>`;
+      onTap($('mb'), () => { if (!live) return; taps++; Sound.tap(); $('mm').style.width = `${Math.min(100, (taps / need) * 100)}%`; if (taps >= need) { live = false; done(true); } });
+      timer(4.5, () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+};
+const GAME_KEYS = Object.keys(GAMES);
+$('gameList').textContent = GAME_KEYS.map((k) => GAMES[k].name).join(' · ');
+
+// ---------- the ride loop
+async function closeDoors() { doors.classList.remove('open'); await wait(reduceMotion ? 50 : 600); }
+async function openDoors() { doors.classList.add('open'); await wait(reduceMotion ? 50 : 600); }
+async function spinReel() {
+  const key = pick(GAME_KEYS), rt = $('reelText');
+  const steps = reduceMotion ? 3 : 14;
+  for (let i = 0; i < steps; i++) { rt.textContent = GAMES[GAME_KEYS[i % GAME_KEYS.length]].name; Sound.tick(); await wait(50 + i * 12); }
+  rt.textContent = GAMES[key].name; Sound.ding();
+  await wait(650);
+  return key;
+}
+async function nextFloor() {
+  setControls([]); arena.innerHTML = ''; stopTimer();
+  await closeDoors();
+  ride.floor++; updatePanel();
+  const key = await spinReel();
+  const g = GAMES[key];
+  arena.innerHTML = `<p class="hint">${ride.floor % 5 === 0 ? 'VIP floor · ' : ''}Floor ${ride.floor}</p><p class="title">${g.title}</p>`;
+  await openDoors();
+  await wait(700);
+  let finished = false;
+  ride.cleanup = g.play(levelFor(ride.floor), (win) => {
+    if (finished) return; finished = true;
+    stopTimer(); if (ride.cleanup) ride.cleanup(); ride.cleanup = null;
+    floorResult(win);
+  });
+}
+function floorResult(win) {
+  if (win) {
+    const m = multFor(ride.floor); ride.pot = Math.round(ride.pot * m);
+    Sound.good(); updatePanel();
+    arena.innerHTML = `<p class="verdict good">Floor ${ride.floor} cleared</p><p class="hint">Pot ×${m % 1 ? m.toFixed(1) : m} → <b>$${fmt(ride.pot)}</b></p><p class="hint">Next floor pays ×${multFor(ride.floor + 1).toFixed(1).replace('.0', '')}${(ride.floor + 1) % 5 === 0 ? ' (VIP)' : ''}</p>`;
+    setControls([['Ride up', '', () => nextFloor()], [`Cash out $${fmt(ride.pot)}`, 'good', () => endRide(true)]]);
+  } else {
+    Sound.bad();
+    arena.innerHTML = `<p class="verdict bad">${pick(['The cable snapped', 'Doors closed on you', 'Wrong floor', 'Elevator stuck'])}</p><p class="hint">The $${fmt(ride.pot)} pot is gone.</p>`;
+    setControls([]);
+    setTimeout(() => endRide(false), 1400);
+  }
+}
+function endRide(cashed) {
+  ride.active = false; stopTimer();
+  const floorReached = cashed ? ride.floor : ride.floor - 1;
+  profile.floor = Math.max(profile.floor, floorReached);
+  if (cashed) { profile.bank += ride.pot; profile.best = Math.max(profile.best, ride.pot); Sound.cash(); }
+  saveProfile();
+  $('overEyebrow').textContent = cashed ? 'Ride over · cashed out' : 'Ride over · lost the pot';
+  $('overTitle').textContent = cashed ? `+$${fmt(ride.pot)}` : 'Busted';
+  $('overText').textContent = cashed ? `You stepped out on floor ${ride.floor} with $${fmt(ride.pot)}. It’s in your bank now.` : `You made it to floor ${ride.floor}. Next time, cash out a floor earlier?`;
+  $('overFloor').textContent = ride.floor; $('overBank').textContent = `$${fmt(profile.bank)}`; $('overBest').textContent = `$${fmt(profile.best)}`;
+  updatePanel(); $('screenOver').hidden = false; setControls([]);
+}
+function startRide() {
+  Sound.init();
+  Object.assign(ride, { floor: 0, pot: 100, active: true });
+  $('screenStart').hidden = true; $('screenOver').hidden = true;
+  updatePanel(); nextFloor();
+}
+function renderLobby() {
+  $('startBank').textContent = `$${fmt(profile.bank)}`; $('startBest').textContent = `$${fmt(profile.best)}`; $('startFloor').textContent = profile.floor;
+  ride.floor = 0; ride.pot = 0; updatePanel();
+}
+$('btnStart').addEventListener('click', startRide);
+$('btnAgain').addEventListener('click', startRide);
+$('btnMenu').addEventListener('click', () => { $('screenOver').hidden = true; renderLobby(); $('screenStart').hidden = false; closeDoors(); });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// timer bar and timeouts
+(function tick() {
+  requestAnimationFrame(tick);
+  if (!ride.onTimeout) return;
+  const left = (ride.timerEnd - performance.now()) / 1000;
+  $('timerBar').style.transform = `scaleX(${clamp(left / ride.timerTotal, 0, 1).toFixed(3)})`;
+  if (left <= 0) { const f = ride.onTimeout; ride.onTimeout = null; f(); }
+})();
+renderLobby();
+})();
+</script>
+</body>
+</html>

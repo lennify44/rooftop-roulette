@@ -34,5 +34,17 @@ Hold the phone sideways to see further ahead.
 - **Combo** up to ×5 from chips, tricks, close calls and dodges. Any stumble breaks it
 - **Last chance wheel** when you crash: tap to spin, 3 in 8 slots bring you back
 
-All money in the game is pretend: there is nothing to buy and no real money involved.
+Between runs: a **shop** with hoodies, hats and scarves, **mystery crates**, three **missions** that pay into
+your bank, a **daily city** that is the same for everyone, and the **ghost** of your best run on replays.
+Every 500 m a new **district** (construction site, train yard, glass towers, casino strip) with a **roulette table**,
+every 1000 m a **boss chase** (giant pigeon or police helicopter). New moves: **wall run** and **kong vault**.
+
+## More games
+
+- **Pigeon Revenge**: https://lennify44.github.io/rooftop-roulette/pigeon-revenge/
+  Play a pigeon and snatch hats, fries, ice cream and phones from the runners below.
+- **Elevator Roulette**: https://lennify44.github.io/rooftop-roulette/elevator-roulette/
+  Ride up a tower, win a random mini-game on every floor, cash out before the cable snaps.
+
+All money in all three games is pretend: there is nothing to buy and no real money involved.
 Everything is in one `index.html` with no libraries or build step.
