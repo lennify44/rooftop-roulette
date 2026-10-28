@@ -199,6 +199,16 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 .btn-alt { background: var(--chalk); }
 .best { margin-top: 12px; }
 .sub-row { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 6px; }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1fr 1fr 1.4fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--sodium); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist .none { display: block; color: var(--haze); }
+.item.upgrade { justify-items: start; text-align: left; }
+.item.upgrade p { margin: 0; font-size: 13px; color: var(--haze); line-height: 1.35; }
+.pips { display: flex; gap: 4px; }
+.pips i { width: 18px; height: 6px; background: rgba(243, 238, 229, 0.18); }
+.pips i.on { background: var(--sodium); }
 .missions { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 7px; }
 .missions li { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; align-items: baseline; font-size: 14px; }
 .missions .rw { font-family: var(--font-mono); font-size: 12px; color: var(--hazard); font-variant-numeric: tabular-nums; }
@@ -442,6 +452,8 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         <p class="rotate-hint">Turn your phone sideways to see further ahead.</p>
       </div>
       <div class="side">
+        <h2 class="label">Your top runs · this device</h2>
+        <ol class="toplist" id="topList"></ol>
         <h2 class="label">Missions · they pay into your bank</h2>
         <ul class="missions" id="missionList"></ul>
         <h2 class="label">Controls</h2>
@@ -488,13 +500,14 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         <button class="link-btn" id="btnShopBack" type="button">Back</button>
       </div>
       <div class="tabs" role="tablist" id="shopTabs">
-        <button type="button" role="tab" data-tab="color" aria-selected="true">Hoodies</button>
+        <button type="button" role="tab" data-tab="upgrades" aria-selected="true">Upgrades</button>
+        <button type="button" role="tab" data-tab="color" aria-selected="false">Hoodies</button>
         <button type="button" role="tab" data-tab="hat" aria-selected="false">Hats</button>
         <button type="button" role="tab" data-tab="trail" aria-selected="false">Scarves</button>
         <button type="button" role="tab" data-tab="crate" aria-selected="false">Mystery crate</button>
       </div>
       <div class="shop-grid" id="shopGrid"></div>
-      <p class="tip">10% of the cash from every run goes into the bank. Missions pay extra. Everything here is pretend money.</p>
+      <p class="tip" id="shopTip">10% of the cash from every run goes into the bank. Missions pay extra. Everything here is pretend money.</p>
     </div>
     <div class="unbox" id="unbox" hidden>
       <p class="eyebrow">Mystery crate</p>
@@ -718,6 +731,25 @@ const COSMETICS = {
   ],
 };
 const cosmetic = (kind, id) => COSMETICS[kind].find((c) => c.id === id) || COSMETICS[kind][0];
+
+// permanent upgrades: what the bank money is for besides looks
+const UPGRADES = [
+  { id: 'rocket', name: 'Rocket start', desc: 'Start every run with +60% speed and 4 seconds untouchable.', prices: [1500] },
+  { id: 'shield', name: 'Starter shield', desc: 'Start every run with a shield.', prices: [2000] },
+  { id: 'combo', name: 'Combo keeper', desc: 'Your combo lasts 0.6 s longer before it drops, per level.', prices: [1200, 3000] },
+  { id: 'reach', name: 'Chip reach', desc: 'Grab chips from 30% further away, per level.', prices: [1000, 2500] },
+  { id: 'revive', name: 'Lucky last chance', desc: 'The last-chance wheel gets 4 revive slots instead of 3.', prices: [3000] },
+  { id: 'bank', name: 'Bigger bank cut', desc: '12%, then 15% of every run goes into the bank instead of 10%.', prices: [2500, 6000] },
+  { id: 'boss', name: 'Boss bounty', desc: 'Surviving a boss chase pays $2 000 instead of $1 000.', prices: [2000] },
+];
+const upg = (id) => (profile.upgrades && profile.upgrades[id]) || 0;
+const comboTime = () => COMBO_TIME + 0.6 * upg('combo');
+const bankRate = () => [0.1, 0.12, 0.15][upg('bank')];
+function chanceSlots() {
+  const slots = CHANCE.slice();
+  if (upg('revive')) slots[6] = { short: 'REVIVE', color: '#5fe0a8', revive: true };   // one NOPE becomes a revive
+  return slots;
+}
 
 // missions pay into the bank; "single" ones count the best single run
 const MISSION_POOL = [
@@ -1159,7 +1191,7 @@ function addCash(v) { game.score = Math.max(0, game.score + v); }
 const COMBO_WORDS = { 1.5: 'NICE', 2: 'SICK', 2.5: 'HYPED', 3: 'INSANE', 3.5: 'UNREAL', 4: 'GODLIKE', 4.5: 'ABSURD', 5: 'MAX COMBO' };
 const comboColor = (m) => (m >= 4 ? '#ff4fb8' : m >= 3 ? '#ff5a4e' : m >= 2 ? '#ffd36b' : '#ffa23e');
 function addCombo(n) {
-  game.combo += n; game.comboT = COMBO_TIME;
+  game.combo += n; game.comboT = comboTime();
   const m = Math.min(5, 1 + Math.floor(game.combo / 6) * 0.5);
   if (m > game.comboMult) { hype(COMBO_WORDS[m] || 'COMBO', comboColor(m)); chatSay('hype'); missionEvent('combo', m); if (m >= 3) confetti(14); }
   game.comboMult = m; game.bestCombo = Math.max(game.bestCombo, m);
@@ -1854,8 +1886,9 @@ function startBoss() {
   Sound.boss(); chatSay('hype');
 }
 function bossSurvived() {
-  addCash(1000); hype('BOSS SURVIVED', '#5fe0a8'); confetti(40); Sound.jackpot(); missionEvent('boss'); chatSay('win');
-  popup('+$1 000', '#5fe0a8');
+  const bounty = upg('boss') ? 2000 : 1000;
+  addCash(bounty); hype('BOSS SURVIVED', '#5fe0a8'); confetti(40); Sound.jackpot(); missionEvent('boss'); chatSay('win');
+  popup(`+$${fmt(bounty)}`, '#5fe0a8');
 }
 function dropTarget(lead) {
   const tx = P.x + game.speed * lead, b = game.city.at(tx);
@@ -2026,6 +2059,7 @@ function loadProfile() {
     equip: Object.assign({ color: 'sodium', hat: 'none', trail: 'default' }, p.equip || {}),
     missions: Array.isArray(p.missions) ? p.missions.filter((m) => MISSION_POOL.some((d) => d.type === m.type)) : [],
     done: p.done || 0, daily: p.daily || {}, ghostSeeds: Array.isArray(p.ghostSeeds) ? p.ghostSeeds : [],
+    upgrades: p.upgrades || {}, top: Array.isArray(p.top) ? p.top : [],
   };
 }
 const profile = loadProfile();
@@ -2073,12 +2107,30 @@ function dailySeed() {
 
 // ---------- shop and mystery crate
 const KIND_LABEL = { color: 'Hoodie', hat: 'Hat', trail: 'Scarf' };
-let shopTab = 'color', shopReturn = 'screenStart', unboxing = false;
+let shopTab = 'upgrades', shopReturn = 'screenStart', unboxing = false;
 function openShop(from) { shopReturn = from; renderShop(); show('screenShop'); }
 function renderShop() {
   $('shopBank').textContent = fmt(profile.bank);
+  $('shopTip').textContent = `${Math.round(bankRate() * 100)}% of the cash from every run goes into the bank. Missions pay extra. Everything here is pretend money.`;
   $('shopTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.getAttribute('data-tab') === shopTab)));
   const grid = $('shopGrid'); grid.innerHTML = '';
+  if (shopTab === 'upgrades') {
+    for (const u of UPGRADES) {
+      const lv = upg(u.id), max = u.prices.length, price = u.prices[lv];
+      const el = mk('div', 'item upgrade'); el.style.setProperty('--rc', lv >= max ? RARITY.legendary : 'rgba(243,238,229,0.2)');
+      el.innerHTML = `<span class="nm">${u.name}</span><span class="pips">${u.prices.map((_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span><p>${u.desc}</p>`;
+      const b = mk('button', '', lv >= max ? 'Maxed' : `${lv ? 'Level up' : 'Buy'} $${fmt(price)}`);
+      b.disabled = lv >= max || profile.bank < price;
+      b.addEventListener('click', () => {
+        const cur = upg(u.id);
+        if (cur >= max || profile.bank < u.prices[cur]) return;
+        profile.bank -= u.prices[cur]; profile.upgrades[u.id] = cur + 1;
+        Sound.init(); Sound.coin(); saveProfile(); renderShop();
+      });
+      el.appendChild(b); grid.appendChild(el);
+    }
+    return;
+  }
   if (shopTab === 'crate') {
     const el = mk('div', 'item crate');
     el.style.setProperty('--rc', RARITY.legendary);
@@ -2611,7 +2663,7 @@ function update(dt) {
   }
 
   // tokens (the magnet pulls the ones close by)
-  const tokens = city.tokens, magnet = game.fx.magnet > 0, reach = magnet ? 200 : 40;
+  const tokens = city.tokens, magnet = game.fx.magnet > 0, grab = 26 * (1 + 0.3 * upg('reach')), reach = magnet ? 200 : grab + 14;
   for (let i = city.firstToken; i < tokens.length; i++) {
     const t = tokens[i];
     if (t.x > P.x + reach) break;
@@ -2619,7 +2671,7 @@ function update(dt) {
     const cy = P.y - playerH() / 2;
     if (magnet) { const k = approach(9, dt); t.x = lerp(t.x, P.x, k); t.y = lerp(t.y, cy, k); }
     const dx = t.x - P.x, dy = t.y - cy;
-    if (dx * dx + dy * dy < 26 * 26) {
+    if (dx * dx + dy * dy < grab * grab) {
       t.got = true;
       addScore(t.gold ? 30 : 10); Sound.token(); addCombo(1); missionEvent('chips');
       puff(t.x, t.y, 6, t.gold ? '#ffd36b' : '#e5484d', 160);
@@ -2655,7 +2707,7 @@ function update(dt) {
 // ---------- last chance and revival
 function endOfLife() {
   if (game.chanceUsed) { gameOver(); return; }
-  game.chanceUsed = true; game.state = 'chance';
+  game.chanceUsed = true; game.state = 'chance'; chanceWheel.slots = chanceSlots();
   game.chance = { phase: 'ready', t: 0, slot: null };
   Music.stop(); hideBet(); hideTable(); game.coin = null; game.slots = null; game.table = null; game.fakeOver = 0; breakCombo();
   Annoy.clear(); game.rain = []; game.dim = 0; game.chaos = freshChaos(); applyCanvasFx(0);
@@ -2665,12 +2717,13 @@ function endOfLife() {
 function spinChance() {
   if (!game.chance || game.chance.phase !== 'ready') return;
   Sound.init();
-  const idx = Math.floor(Math.random() * CHANCE.length);
+  const idx = Math.floor(Math.random() * chanceWheel.slots.length);
   game.chance.phase = 'spinning';
   chanceWheel.spin(idx, 2.6, 5); chanceWheel.sticky = true;
   chanceWheel.onStop = (i) => {
-    game.chance.phase = 'result'; game.chance.t = 0; game.chance.slot = CHANCE[i];
-    if (CHANCE[i].revive) Sound.reveal(); else Sound.bad();
+    const slot = chanceWheel.slots[i];
+    game.chance.phase = 'result'; game.chance.t = 0; game.chance.slot = slot;
+    if (slot.revive) Sound.reveal(); else Sound.bad();
   };
 }
 function updateChance(dt) {
@@ -3450,7 +3503,7 @@ function drawChance() {
   if (c.phase === 'spinning') { const s = chanceWheel.current(); text = s.short; color = s.color === '#3a2f4f' || s.color === '#52436d' ? '#a99fbe' : s.color; }
   if (c.phase === 'result') { text = c.slot.revive ? c.slot.short + '!' : 'NO LUCK'; color = c.slot.revive ? c.slot.color : '#ff8a7a'; }
   chanceWheel.alpha = 1;
-  chanceWheel.draw(cx, cy, R, '3 OF 8 SLOTS REVIVE', text, color, W - 40);
+  chanceWheel.draw(cx, cy, R, `${chanceWheel.slots.filter((s) => s.revive).length} OF 8 SLOTS REVIVE`, text, color, W - 40);
 }
 function drawSlots(dt) {
   const s = game.slots; if (!s) return;
@@ -3674,7 +3727,7 @@ function updateHud() {
     lastCombo = game.comboMult; comboBox.hidden = game.comboMult < 1.5;
     comboText.textContent = `COMBO ${multText(game.comboMult)}`; comboBox.style.setProperty('--cc', comboColor(game.comboMult));
   }
-  if (!comboBox.hidden) comboBar.style.transform = `scaleX(${clamp(game.comboT / COMBO_TIME, 0, 1).toFixed(3)})`;
+  if (!comboBox.hidden) comboBar.style.transform = `scaleX(${clamp(game.comboT / comboTime(), 0, 1).toFixed(3)})`;
   if (game.bet) $('betTimer').style.transform = `scaleX(${clamp(game.bet.t / game.bet.total, 0, 1).toFixed(3)})`;
   const guard = game.pestCtl.find((c) => c.key === 'guard' && !c.leaving);
   const gd = guard ? Math.max(0, Math.round(guard.d / UNITS_PER_M)) : -1;
@@ -3716,6 +3769,9 @@ function renderMenu() {
   renderBest();
   $('bankStart').textContent = fmt(profile.bank);
   $('missionList').innerHTML = missionsHtml(profile.missions);
+  $('topList').innerHTML = profile.top.length
+    ? profile.top.slice(0, 5).map((r, i) => `<li><b>${i + 1}</b><span>$${fmt(r.score)}</span><span>${fmt(r.dist)} m</span><span>${r.daily ? 'daily ' : ''}${r.city} · ${r.date.slice(5).split('-').reverse().join('.')}</span></li>`).join('')
+    : '<li class="none">No runs yet. Your best five show up here.</li>';
 }
 function listHtml(items) {
   return items.map((it) => `<li style="--c:${it.color}"><span class="sw"></span><span class="nm">${it.name}</span><span class="mx">${it.mx || ''}</span><span class="ds">${it.desc}</span></li>`).join('');
@@ -3768,6 +3824,8 @@ function startRun(seed, daily) {
     game.banner = { title: THEMES[k].name, sub: THEMES[k].desc, color: THEMES[k].color, t: 0 };
     Sound.reveal();
   };
+  if (upg('shield')) game.fx.shield = true;
+  if (upg('rocket')) { P.boost = 1.6; P.boostT = 2; P.invuln = 4; popup('Rocket start!', '#ffd36b'); }
   updateChips(); updateHud(); requestWake();
 }
 const CAUSES = {
@@ -3793,7 +3851,7 @@ function gameOver() {
   const isBest = !best || score > best.score;
   if (isBest && score > 0) store.set(BEST_KEY, { score, dist });
   // 10% into the bank, daily best, ghost, and new missions for the ones that are done
-  const earned = Math.floor(score * BANK_RATE);
+  const earned = Math.floor(score * bankRate());
   profile.bank += earned;
   let dailyNote = '';
   if (game.daily) {
@@ -3802,10 +3860,17 @@ function gameOver() {
     for (const key of Object.keys(profile.daily).sort().slice(0, -7)) delete profile.daily[key];
   }
   const ghostNote = saveGhost(score) ? ' Your ghost will race you next time you play this city.' : '';
+  let rankNote = '';
+  if (score > 0) {
+    const entry = { score, dist, date: todayKey(), city: cityCode(game.seed), daily: game.daily };
+    profile.top = [...profile.top, entry].sort((a, b) => b.score - a.score).slice(0, 10);
+    const rank = profile.top.indexOf(entry) + 1;
+    rankNote = rank ? ` Rank #${rank} of your top 10.` : '';
+  }
   const doneNow = game.missionsDone.slice();
   profile.missions = profile.missions.filter((m) => m.p < m.n);
   ensureMissions(); saveProfile();
-  $('overBank').textContent = `+$${fmt(earned)} to your bank (10%) · bank $${fmt(profile.bank)}${dailyNote}.${ghostNote}`;
+  $('overBank').textContent = `+$${fmt(earned)} to your bank (${Math.round(bankRate() * 100)}%) · bank $${fmt(profile.bank)}${dailyNote}.${rankNote}${ghostNote}`;
   $('overMissions').innerHTML = missionsHtml([...doneNow, ...profile.missions.filter((m) => !doneNow.includes(m))]);
   const [cause, tip] = CAUSES[game.cause] || CAUSES.fall;
   $('overCause').textContent = cause;
