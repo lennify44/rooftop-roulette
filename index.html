@@ -618,7 +618,7 @@ const PESTS = {
   gull:      { name: 'Seagull Thief', short: 'GULL',    color: '#e8f1f5', desc: 'Steals tokens, dives for your points' },
   paparazzi: { name: 'Paparazzi',     short: 'FLASH',   color: '#fff3a8', desc: 'Blinding flashes. Slide to look away' },
   rival:     { name: 'Rival Runner',  short: 'RIVAL',   color: '#46e0c8', desc: 'Runs ahead and throws bins at you' },
-  ghost:     { name: 'Poltergeist',   short: 'GHOST',   color: '#b48cff', desc: 'Swaps your jump and slide sides' },
+  ghost:     { name: 'Poltergeist',   short: 'GHOST',   color: '#b48cff', desc: 'Shouts BOO and scares away your chips' },
 };
 const PEST_WHEEL = ['pigeons', 'drone', 'guard', 'gull', 'double', 'paparazzi', 'rival', 'ghost'];
 const PEST_DOUBLE = { name: 'Pest Party', short: 'PARTY', color: '#ffd36b', desc: 'Two pests at once' };
@@ -2362,15 +2362,27 @@ function makePest(key) {
         this.x = lerp(this.x, P.x - 55 + Math.sin(game.time * 1.4) * 14, approach(4, dt));
         this.y = lerp(this.y, ground - 115 + Math.sin(game.time * 2.6) * 8 - (this.leaving ? 160 : 0), approach(this.leaving ? 1 : 4, dt));
         this.alpha = lerp(this.alpha, this.leaving ? 0 : 0.8, approach(2, dt));
+        // chips it scared off keep floating away, even after it leaves
+        for (let i = game.city.firstToken; i < game.city.tokens.length; i++) {
+          const tk = game.city.tokens[i];
+          if (tk.x > P.x + 900) break;
+          if (tk.flee && !tk.got) { tk.y -= 260 * dt; tk.x += 40 * dt; if (tk.y < -offY - 60) tk.got = true; }
+        }
         if (this.leaving || pestsPaused()) return;
         if (this.warn > 0) {
           if ((this.warn -= dt) <= 0) {
-            game.swap = !game.swap; showZones(1.8);
-            popup(game.swap ? 'Controls swapped!' : 'Controls back!', '#b48cff'); Sound.boo(); updateChips();
+            // BOO: the chips ahead of you fly away; your controls are never touched
+            let scared = 0;
+            for (let i = game.city.firstToken; i < game.city.tokens.length; i++) {
+              const tk = game.city.tokens[i];
+              if (tk.x > P.x + 520) break;
+              if (!tk.got && !tk.flee && tk.x > P.x + 20) { tk.flee = true; scared++; }
+            }
+            hype('BOO!', '#b48cff'); Sound.boo(); if (!reduceMotion) game.shake = Math.max(game.shake, 0.2);
+            if (scared) popup(`${scared} chips scared away`, '#b48cff');
           }
         } else if ((this.timer -= dt) <= 0) { this.warn = 0.9; this.timer = 3.8 + rng() * 2; }
       },
-      onLeave() { if (game.swap) { game.swap = false; showZones(1.5); updateChips(); } },
       drawFront(t) { drawGhost(this.x, this.y, t, this.warn > 0, this.alpha); },
     });
   }
@@ -3679,7 +3691,6 @@ function updateChips() {
   for (const k of game.pests) parts.push(pestChipHtml(k));
   for (const k of game.spam) parts.push(spamChipHtml(k));
   if (chaosLevel() > 1) parts.push(`<span class="chip" style="--c:#ff4fb8">CHAOS ${chaosLevel()}</span>`);
-  if (game.swap) parts.push('<span class="chip" style="--c:#b48cff">SWAPPED</span>');
   if (fx.shield) parts.push('<span class="chip fx" style="--c:#7fe3ff">SHIELD</span>');
   if (P.boost > 1.04) parts.push(`<span class="chip" style="--c:#ffd36b">SPEED +${Math.round((P.boost - 1) * 100)}%</span>`);
   if (fx.slotX3 > 0) parts.push(`<span class="chip fx" style="--c:#f4c430">CASH ×3 <b>${Math.ceil(fx.slotX3)}</b></span>`);
@@ -3692,9 +3703,6 @@ function show(id) { for (const s of ['screenStart', 'screenOver', 'screenPause',
 let zonesTimer = 0;
 function showZones(seconds) {
   const z = $('zones');
-  $('zoneLeft').innerHTML = game.swap ? 'JUMP<small>swapped by the ghost</small>' : 'SLIDE<small>in the air: drop + roll</small>';
-  $('zoneRight').innerHTML = game.swap ? 'SLIDE<small>swapped by the ghost</small>' : 'JUMP<small>hold for height</small>';
-  z.classList.toggle('swapped', game.swap);
   z.hidden = false; z.classList.remove('fade');
   clearTimeout(zonesTimer); zonesTimer = setTimeout(() => z.classList.add('fade'), seconds * 1000);
 }
@@ -3845,7 +3853,7 @@ const pointers = new Map();
 function zoneOf(clientX) {
   const r = stage.getBoundingClientRect();
   const left = clientX - r.left < r.width * 0.38;
-  return (left !== game.swap) ? 'slide' : 'jump';
+  return left ? 'slide' : 'jump';
 }
 canvas.addEventListener('pointerdown', (e) => {
   if (game.state === 'chance') { e.preventDefault(); spinChance(); return; }
@@ -3882,7 +3890,7 @@ window.addEventListener('keydown', (e) => {
     if (isJump || isSlide) {
       e.preventDefault();
       if (e.repeat) return;
-      const role = (isJump !== game.swap) ? 'jump' : 'slide';
+      const role = isJump ? 'jump' : 'slide';
       keyRoles[k] = role;
       if (role === 'jump') pressJump(); else pressSlide();
     } else if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); pause(); }
