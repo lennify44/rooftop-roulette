@@ -449,7 +449,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
           <div><dt>Right side</dt><dd>Jump. Hold longer to jump higher.</dd></div>
           <div><dt>Left side</dt><dd>Slide under pipes and birds. In the air: drop fast, keep holding to roll.</dd></div>
           <div><dt>Walls</dt><dd>Grab the ledge, tap jump to climb. Hold jump when you hit it to wall-run.</dd></div>
-          <div><dt>Obstacles</dt><dd>Crash through vents, nets or bins: +20% speed each, up to +60%. Pipes still knock you out.</dd></div>
+          <div><dt>Obstacles</dt><dd>Crash through vents, nets or bins: +20% speed each, up to +60%. Pipes still knock you out. The faster you run, the more room between obstacles.</dd></div>
           <div><dt>Action</dt><dd>Red barrels blast you up and forward. Cracked roofs collapse. Jump up to grab zip lines. Jetpack: hold jump to fly.</dd></div>
           <div><dt>Keyboard</dt><dd>Space or ↑ jump · ↓ slide · B bet · P pause</dd></div>
         </dl>
@@ -782,10 +782,11 @@ class City {
     const b = { x, w, roof, obs: [], deco: [], tone: Math.floor(r() * 3), seed: Math.floor(r() * 1e9), district: districtAt(x).key };
     const speed = baseSpeed(x) * physicsFor(rules).speed;
     const diff = clamp(x / 30000, 0, 1);
+    const fast = clamp((speed - 300) / 400, 0, 1);   // the faster this stretch, the more room between obstacles
     const end = x + w - 130;
     let ox = Math.max(x + 110, safeUntil);
     while (ox < end) {
-      if (r() < 0.42 + diff * 0.28) {
+      if (r() < 0.42 + diff * 0.28 - fast * 0.15) {
         const pipe = x > 2400 && r() < 0.4;
         const barrel = !pipe && x > 4000 && r() < 0.3;   // explosive: crash into it for a blast jump
         const o = pipe ? { type: 'pipe', x: ox, w: 64, hit: false }
@@ -793,7 +794,7 @@ class City {
           : { type: 'vent', x: ox, w: 34 + r() * 16, h: 24 + r() * 10, hit: false };
         if (o.x + o.w > end + 40) break;
         b.obs.push(o);
-        ox += o.w + speed * (0.62 + r() * 0.5);
+        ox += o.w + speed * (0.62 + fast * 0.45 + r() * 0.5);
       } else ox += speed * 0.4;
     }
     const nDeco = b.district === 'trains' ? 0 : r() < 0.6 ? 1 + Math.floor(r() * 2) : 0;
@@ -1253,6 +1254,38 @@ function land(b, ph) {
   if (bouncy && impact > 420 && P.state !== 'roll') {
     P.vy = -Math.min(380, impact * 0.4); P.onGround = false; setState('air');
   }
+}
+// obstacles thin out at speed: just before one comes into view it is checked against your current speed and
+// removed if it would follow the previous obstacle faster than you can react, or sit right where you land or take off
+const REACT_T = 0.7, REACT_PIPE = 0.9;
+function thinObstacles(speed) {
+  const city = game.city, horizon = P.x + viewW * 0.75 + 160, items = [];
+  for (let i = city.first; i < city.buildings.length; i++) {
+    const b = city.buildings[i];
+    if (b.x > horizon) break;
+    for (const o of b.obs) if (o.x <= horizon) items.push({ o, b });
+  }
+  if (!items.some((it) => !it.o.checked)) return;
+  items.sort((p, q) => p.o.x - q.o.x);
+  const touched = new Set();
+  for (const { o, b } of items) {
+    if (o.checked) continue;
+    o.checked = true;
+    if (o.x + o.w < P.x - 40) continue;
+    const need = speed * (o.type === 'pipe' ? REACT_PIPE : REACT_T);
+    // too close to where you land: move it further in (it is not on screen yet), drop it only if there is no room
+    if (b.x > P.x && o.x - b.x < speed * 0.3) o.x = b.x + speed * 0.3;
+    // compare with the obstacles already settled on both sides (pests and bosses drop new ones in between)
+    let prevEnd = -Infinity, nextStart = Infinity;
+    for (const it of items) {
+      const q = it.o;
+      if (q === o || q.removed || !q.checked) continue;
+      if (q.x <= o.x) prevEnd = Math.max(prevEnd, q.x + q.w); else nextStart = Math.min(nextStart, q.x);
+    }
+    const beforeEdge = b.x + b.w - (o.x + o.w) < speed * 0.22;
+    if (o.x - prevEnd < need || nextStart - (o.x + o.w) < need || beforeEdge) { o.removed = true; touched.add(b); }
+  }
+  for (const b of touched) b.obs = b.obs.filter((o) => !o.removed);
 }
 const BOOST_STEP = 0.2, BOOST_MAX = 1.6, BOOST_HOLD = 2.5;
 const zipY = (z, x) => lerp(z.y1, z.y2, clamp((x - z.x1) / (z.x2 - z.x1), 0, 1));
@@ -2509,6 +2542,7 @@ function update(dt) {
   if (P.state === 'stumble' && P.stateT > 0.45) setState(P.onGround ? 'run' : 'air');
 
   // obstacles
+  thinObstacles(speed);
   if (P.invuln <= 0) {
     const h = playerH(), l = P.x - hw(), rgt = P.x + hw();
     const near = [city.at(l), city.at(rgt)];
@@ -3182,6 +3216,31 @@ function drawJets(x0, x1, t) {
     ctx.fillStyle = '#ffa23e'; ctx.beginPath(); ctx.moveTo(jp.x - 8, y + 8); ctx.lineTo(jp.x + 8, y + 8); ctx.lineTo(jp.x, y + 18 + Math.sin(t * 30) * 3); ctx.closePath(); ctx.fill();
   }
 }
+// in a blackout, roof edges and obstacles glow like reflector tape so you can still read the way ahead
+function drawReflectors() {
+  const city = game.city, x1 = P.x + viewW;
+  setWorld(1, 0, 0);
+  for (let i = city.first; i < city.buildings.length; i++) {
+    const b = city.buildings[i];
+    if (b.x > x1) break;
+    if (b.x + b.w < P.x - 100) continue;
+    const near = clamp(1 - (b.x - P.x) / (viewW * 0.9), 0.35, 1);
+    ctx.strokeStyle = `rgba(255,214,120,${(0.75 * near).toFixed(3)})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(b.x, b.roof + 1); ctx.lineTo(b.x + b.w, b.roof + 1); ctx.stroke();
+    ctx.fillStyle = `rgba(255,120,80,${(0.9 * near).toFixed(3)})`;
+    ctx.fillRect(b.x, b.roof - 1, 5, 8); ctx.fillRect(b.x + b.w - 5, b.roof - 1, 5, 8);
+    for (const o of b.obs) {
+      if (o.hit || o.exploded || o.x + o.w < P.x - 40 || o.x > x1) continue;
+      const top = o.type === 'pipe' ? b.roof - PIPE_TOP : b.roof - o.h, hgt = o.type === 'pipe' ? PIPE_TOP - PIPE_BOTTOM : o.h;
+      ctx.strokeStyle = o.type === 'pipe' ? 'rgba(244,196,48,0.95)' : o.type === 'barrel' ? 'rgba(255,90,70,0.95)' : 'rgba(127,227,255,0.9)';
+      ctx.lineWidth = 2; ctx.strokeRect(o.x, top, o.w, hgt);
+    }
+  }
+  for (const z of city.zips) if (z.x2 > P.x - 40 && z.x1 < x1) {
+    ctx.strokeStyle = 'rgba(127,209,255,0.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(z.x1, z.y1); ctx.lineTo(z.x2, z.y2); ctx.stroke();
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
 function drawBlasts(dt) {
   for (const bl of game.blasts) {
     bl.t += dt;
@@ -3516,14 +3575,16 @@ function render(dt, t) {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   if (game.rules.includes('blackout')) {
+    // a wide headlamp beam ahead, darkness that is never total, and frequent lightning
     game.lightningT -= dt;
-    if (game.lightningT <= 0) { game.lightning = 1; game.lightningT = 1.6 + Math.random() * 1.8; }
-    const s = toScreen(P.x + 80, P.y - 30);
-    const g = ctx.createRadialGradient(s.x, s.y, 30 * scale, s.x, s.y, 290 * scale);
-    g.addColorStop(0, 'rgba(6,5,14,0)'); g.addColorStop(0.5, 'rgba(6,5,14,0.62)'); g.addColorStop(1, 'rgba(6,5,14,0.97)');
+    if (game.lightningT <= 0) { game.lightning = 1; game.lightningT = 1.1 + Math.random() * 1.3; }
+    const s = toScreen(P.x + 170, P.y - 40);
+    const g = ctx.createRadialGradient(s.x, s.y, 70 * scale, s.x, s.y, 430 * scale);
+    g.addColorStop(0, 'rgba(6,5,14,0)'); g.addColorStop(0.55, 'rgba(6,5,14,0.5)'); g.addColorStop(1, 'rgba(6,5,14,0.86)');
     ctx.globalAlpha = 1 - game.lightning * 0.85;
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
+    drawReflectors();
   }
   if (game.lightning > 0) {
     game.lightning = Math.max(0, game.lightning - dt * 4);
