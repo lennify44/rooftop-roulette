@@ -199,6 +199,15 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 .btn-alt { background: var(--chalk); }
 .best { margin-top: 12px; }
 .sub-row { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 6px; }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { padding: 3px 10px; border: 1.5px solid rgba(243, 238, 229, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 2px; }
+.toplist li.me span:nth-child(2) { color: var(--sodium); font-weight: 600; }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 0 0 10px; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; padding: 6px 8px; border: 1.5px solid rgba(243, 238, 229, 0.4); background: rgba(17, 14, 34, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
 .toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
 .toplist li { display: grid; grid-template-columns: 22px 1fr 1fr 1.4fr; gap: 8px; align-items: baseline; font-size: 14px; }
 .toplist b { font-family: var(--font-display); font-size: 17px; color: var(--sodium); }
@@ -452,6 +461,9 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         <p class="rotate-hint">Turn your phone sideways to see further ahead.</p>
       </div>
       <div class="side">
+        <h2 class="label">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today's daily city</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
         <h2 class="label">Your top runs · this device</h2>
         <ol class="toplist" id="topList"></ol>
         <h2 class="label">Missions · they pay into your bank</h2>
@@ -530,6 +542,11 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         </dl>
         <p class="newbest" id="overNew" hidden>New best run</p>
         <p class="tip" id="overBank"></p>
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post score</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
         <div class="cta-row">
           <button class="btn" id="btnAgain" type="button"><span>New city</span></button>
           <button class="link-btn" id="btnReplay" type="button">Replay this city</button>
@@ -2060,6 +2077,7 @@ function loadProfile() {
     missions: Array.isArray(p.missions) ? p.missions.filter((m) => MISSION_POOL.some((d) => d.type === m.type)) : [],
     done: p.done || 0, daily: p.daily || {}, ghostSeeds: Array.isArray(p.ghostSeeds) ? p.ghostSeeds : [],
     upgrades: p.upgrades || {}, top: Array.isArray(p.top) ? p.top : [],
+    name: typeof p.name === 'string' ? p.name : '', deviceId: /^[a-z0-9]{8,32}$/.test(p.deviceId || '') ? p.deviceId : '',
   };
 }
 const profile = loadProfile();
@@ -2103,6 +2121,85 @@ function dailySeed() {
   let h = 2166136261;
   for (const c of 'daily-' + todayKey()) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
   return (h >>> 0) % 456976;
+}
+
+// ---------- world leaderboard (a small Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = '';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function deviceId() {
+  if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); }
+  return profile.deviceId;
+}
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores?date=${todayKey()}`);
+    if (!r.ok) return null;
+    LB.cache = await r.json(); LB.at = Date.now();
+    return LB.cache;
+  } catch (e) { return null; }
+}
+function lbNote(list, text, link) {
+  list.textContent = '';
+  const li = mk('li', 'none'); li.textContent = text;
+  if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); }
+  list.appendChild(li);
+}
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!LEADERBOARD_URL) { lbNote(list, 'The world leaderboard is being set up.'); return; }
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody has run today’s daily city yet.' : 'No scores yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => {
+    const li = mk('li', r.id === profile.deviceId ? 'me' : '');
+    const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank);
+    for (const text of [r.name, `$${fmt(r.score)}`, `${fmt(r.dist)} m`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); }
+    list.appendChild(li);
+  });
+}
+// after a run: post automatically once a name is known, otherwise ask for one
+let lbLast = null;
+function lbAfterRun(score, dist) {
+  const box = $('lbPost'), out = $('lbResult');
+  out.textContent = '';
+  box.hidden = true;
+  if (!lbReachable() || score <= 0) return;
+  lbLast = { score, dist, city: cityCode(game.seed), daily: game.daily, date: todayKey() };
+  $('lbName').value = profile.name;
+  box.hidden = false;
+  if (profile.name) lbSend();
+}
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16);
+  const out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post this run.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: deviceId(), name, ...lbLast }),
+    });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
+    else {
+      const rk = res.rank || {};
+      out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet')
+        + (lbLast.daily ? (rk.daily ? ` · daily city rank #${rk.daily}` : ' · not in today’s daily top 50') : '') + '.';
+      lbLast = null; LB.at = 0;
+    }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
 }
 
 // ---------- shop and mystery crate
@@ -3769,6 +3866,7 @@ function renderMenu() {
   renderBest();
   $('bankStart').textContent = fmt(profile.bank);
   $('missionList').innerHTML = missionsHtml(profile.missions);
+  renderLeaderboard();
   $('topList').innerHTML = profile.top.length
     ? profile.top.slice(0, 5).map((r, i) => `<li><b>${i + 1}</b><span>$${fmt(r.score)}</span><span>${fmt(r.dist)} m</span><span>${r.daily ? 'daily ' : ''}${r.city} · ${r.date.slice(5).split('-').reverse().join('.')}</span></li>`).join('')
     : '<li class="none">No runs yet. Your best five show up here.</li>';
@@ -3871,6 +3969,7 @@ function gameOver() {
   profile.missions = profile.missions.filter((m) => m.p < m.n);
   ensureMissions(); saveProfile();
   $('overBank').textContent = `+$${fmt(earned)} to your bank (${Math.round(bankRate() * 100)}%) · bank $${fmt(profile.bank)}${dailyNote}.${rankNote}${ghostNote}`;
+  lbAfterRun(score, dist);
   $('overMissions').innerHTML = missionsHtml([...doneNow, ...profile.missions.filter((m) => !doneNow.includes(m))]);
   const [cause, tip] = CAUSES[game.cause] || CAUSES.fall;
   $('overCause').textContent = cause;
@@ -3962,7 +4061,7 @@ window.addEventListener('keydown', (e) => {
     else if (k === 'b' || k === 'B') { e.preventDefault(); placeBet(); }
   } else if (game.state === 'paused') {
     if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); resume(); }
-  } else if ((k === 'Enter' || k === ' ') && $('screenShop').hidden && !(document.activeElement && document.activeElement.tagName === 'BUTTON')) {
+  } else if ((k === 'Enter' || k === ' ') && $('screenShop').hidden && !(document.activeElement && document.activeElement.tagName === 'INPUT') && !(document.activeElement && document.activeElement.tagName === 'BUTTON')) {
     e.preventDefault(); startRun();
   }
 });
@@ -3983,6 +4082,9 @@ $('btnOverShop').addEventListener('click', () => openShop('screenOver'));
 $('btnOverMenu').addEventListener('click', quitToMenu);
 $('btnShopBack').addEventListener('click', () => { if (shopReturn === 'screenStart') renderMenu(); show(shopReturn); });
 $('shopTabs').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { shopTab = b.getAttribute('data-tab'); renderShop(); }));
+$('lbTabs').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); }));
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
 $('btnUnboxOk').addEventListener('click', () => { $('unbox').hidden = true; renderShop(); });
 tableBox.querySelectorAll('[data-bet]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); placeTable(b.getAttribute('data-bet')); }));
 $('btnResume').addEventListener('click', resume);
