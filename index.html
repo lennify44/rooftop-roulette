@@ -2124,7 +2124,7 @@ function dailySeed() {
 }
 
 // ---------- world leaderboard (a small Cloudflare Worker; only the public GitHub version can reach it)
-const LEADERBOARD_URL = '';
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
 const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/';
 const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
 const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
