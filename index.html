@@ -286,7 +286,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 .notif p { margin: 2px 0 0; font-size: 13px; line-height: 1.3; }
 @keyframes notif-in { from { translate: 0 -140%; } }
 .chat {
-  position: absolute; right: 0; bottom: 0; width: min(36%, 300px); height: 62%; display: grid; grid-template-rows: auto 1fr; pointer-events: none;
+  position: absolute; right: 0; top: 16%; width: min(28%, 250px); height: 46%; display: grid; grid-template-rows: auto 1fr; pointer-events: none;
   padding-block: 8px; padding-inline: 22px max(10px, env(safe-area-inset-right)); transition: opacity 0.4s; font-family: var(--font-body);
   background: linear-gradient(90deg, rgba(14, 11, 28, 0) 0%, rgba(14, 11, 28, 0.78) 22%);
 }
@@ -312,7 +312,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 .s-nope { padding: 4px 14px; border: 4px solid #e5484d; color: #e5484d; background: rgba(255, 253, 244, 0.92); font-size: 42px; letter-spacing: 0.08em; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); }
 .s-ten { width: 94px; height: 94px; border-radius: 50%; background: #5fe0a8; font-size: 30px; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); }
 .s-emoji { width: 96px; height: 96px; border-radius: 50%; background: #fffdf4; font-size: 58px; line-height: 1; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); }
-.s-tape { height: 40px; overflow: hidden; white-space: nowrap; background: #f4c430; font-size: 20px; letter-spacing: 0.2em; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45); }
+.s-tape { opacity: 0.55; height: 40px; overflow: hidden; white-space: nowrap; background: #f4c430; font-size: 20px; letter-spacing: 0.2em; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45); }
 .s-eyes { display: flex; gap: 4px; background: none; }
 .s-eyes .eye { position: relative; width: 52px; height: 52px; border-radius: 50%; background: #fff; border: 3px solid #110e22; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35); }
 .s-eyes .eye i { position: absolute; left: 15px; top: 15px; width: 16px; height: 16px; border-radius: 50%; background: #110e22; }
@@ -342,14 +342,14 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 .cookie button.main { background: #110e22; color: #fffdf4; }
 @keyframes cookie-in { from { translate: 0 100%; } }
 .dvd {
-  position: absolute; left: 0; top: 0; width: 130px; height: 56px; display: grid; place-content: center; pointer-events: none;
+  position: absolute; left: 0; top: 0; width: 130px; height: 56px; display: grid; place-content: center; pointer-events: none; opacity: 0.6;
   border: 3px solid currentColor; border-radius: 50% / 40%; color: #5fe0a8; text-align: center;
   font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 0.06em; line-height: 0.9;
 }
 .dvd small { display: block; font-size: 11px; letter-spacing: 0.4em; }
 .buffering { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 8px; pointer-events: none; color: #f3eee5; font-family: var(--font-mono); font-size: 12px; }
 .buffering i { width: 54px; height: 54px; border-radius: 50%; border: 5px solid rgba(243, 238, 229, 0.25); border-top-color: #f3eee5; animation: spin 0.8s linear infinite; }
-.crack { position: absolute; inset: 0; pointer-events: none; }
+.crack { position: absolute; inset: 0; pointer-events: none; opacity: 0.6; }
 .crack svg { display: block; }
 .annoy-pop {
   position: absolute; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap; color: #5fe0a8;
@@ -1120,7 +1120,7 @@ const game = {
   spam: [], spamCtl: [], dim: 0, gatesPassed: 0, rain: [], chaos: null,
   daily: false, boss: null, nextBossX: BOSS_EVERY, bossCount: 0, district: null, table: null, tableOffer: null,
   fakeOver: 0, fakeCause: '', windT: 0, ghost: null, ghostRec: [], ghostT: 0, ghostPos: null, missionsDone: [],
-  blasts: [], hitstop: 0, bulletT: 0,
+  blasts: [], hitstop: 0, bulletT: 0, zoomF: 0,
 };
 const freshChaos = () => ({ t: 9, quake: 0, tilt: 0, tiltDir: 1, wobble: 0, disco: 0, gravity: 0, burst: 0, rain: 0, rainT: 0 });
 game.chaos = freshChaos();
@@ -1283,7 +1283,8 @@ function thinObstacles(speed) {
       if (q.x <= o.x) prevEnd = Math.max(prevEnd, q.x + q.w); else nextStart = Math.min(nextStart, q.x);
     }
     const beforeEdge = b.x + b.w - (o.x + o.w) < speed * 0.22;
-    if (o.x - prevEnd < need || nextStart - (o.x + o.w) < need || beforeEdge) { o.removed = true; touched.add(b); }
+    const inYourFace = o.x > P.x && o.x - (P.x + hw()) < need * 0.8;   // something dropped right in front of you
+    if (o.x - prevEnd < need || nextStart - (o.x + o.w) < need || beforeEdge || inYourFace) { o.removed = true; touched.add(b); }
   }
   for (const b of touched) b.obs = b.obs.filter((o) => !o.removed);
 }
@@ -1522,17 +1523,37 @@ const CHAT_REACT = { fail: ['L', 'skill issue', 'LMAO', 'he tripped', 'oof'], wi
 const CHAT_COLORS = ['#ffd36b', '#7fd1ff', '#ff9ad5', '#5fe0a8', '#ffa23e', '#c08bff'];
 const EMOTES = [['LMAO', '#ffd36b'], ['W W W', '#5fe0a8'], ['L', '#ff6b5b'], ['POG', '#c08bff'], ['OMG', '#7fd1ff'], ['GG', '#ff9ad5']];
 
+// visibility: never more than a few pieces of spam at once, and none placed in the lane right in front of the runner
+const SPAM_KINDS = ['ad', 'notif', 'sticker', 'dialog', 'cookie', 'dvd'], SPAM_CAP = 4;
+function spamRoom() {
+  let n = 0;
+  for (const it of Annoy.items) if (!it.dead && SPAM_KINDS.includes(it.kind)) n++;
+  return n < SPAM_CAP;
+}
+function laneRect() {
+  const a = toScreen(P.x - 20, P.y - 180), b = toScreen(P.x + viewW * 0.6, P.y + 30);
+  return { x1: Math.min(a.x, b.x), x2: Math.max(a.x, b.x), y1: a.y, y2: b.y };
+}
+function clearSpot(w, h) {
+  const L = laneRect();
+  for (let i = 0; i < 10; i++) {
+    const x = Math.random() * Math.max(1, W - w), y = Math.random() * Math.max(1, H - h);
+    if (x + w < L.x1 || x > L.x2 || y + h < L.y1 || y > L.y2) return { x, y };
+  }
+  return null;
+}
 function spawnAd() {
-  if (Annoy.count('ad') >= 3) return;
+  if (Annoy.count('ad') >= 2 || !spamRoom()) return;
+  const wPx = Math.min(W * (W < 600 ? 0.76 : 0.4), 330), spot = clearSpot(wPx, 175);
+  if (!spot) return;
   const [tag, title, body, cta, color] = pick(ADS);
   const fake = Math.random() < 0.4;
   const xs = (fake ? '<button class="ad-x fake" type="button" aria-label="Close">✕</button> ' : '') + '<button class="ad-x real" type="button" aria-label="Close ad">✕</button>';
   const e = mk('div', 'ad', `<div class="ad-bar"><span>${tag}</span><span>${xs}</span></div><div class="ad-body"><b>${title}</b><p>${body}</p><button class="ad-cta" type="button">${cta}</button></div>`);
-  const wPct = W < 600 ? 76 : 40;
   e.style.setProperty('--ac', color);
-  e.style.width = `min(${wPct}%, 330px)`;
-  e.style.left = `${(Math.random() * (100 - wPct)).toFixed(1)}%`;
-  e.style.top = `${(5 + Math.random() * 48).toFixed(1)}%`;
+  e.style.width = `${Math.round(wPx)}px`;
+  e.style.left = `${Math.round(spot.x)}px`;
+  e.style.top = `${Math.round(spot.y)}px`;
   e.style.transform = `rotate(${((Math.random() - 0.5) * 6).toFixed(1)}deg)`;
   const it = Annoy.add(e, 7.5, { kind: 'ad' });
   onTap(e.querySelector('.ad-x.real'), (ev) => {
@@ -1545,8 +1566,8 @@ function spawnAd() {
 }
 function spawnNotif() {
   const live = Annoy.items.filter((it) => !it.dead && it.kind === 'notif');
-  if (live.length >= 3) return;
-  const slot = [0, 1, 2].find((s) => !live.some((it) => it.slot === s));
+  if (live.length >= 2 || !spamRoom()) return;
+  const slot = [0, 1].find((s) => !live.some((it) => it.slot === s));
   const [app, text, color] = pick(NOTIFS);
   const e = mk('button', 'notif', `<i style="--nc:${color}">${app[0]}</i><div><span>now</span><b>${app}</b><p>${text}</p></div>`);
   e.style.top = `${8 + slot * 76}px`;
@@ -1598,7 +1619,7 @@ function spawnFly() {
   });
   Sound.buzz();
 }
-const STICKERS = ['eyes', 'wow', 'nope', 'ten', 'tape', 'emoji', 'tape', 'emoji'];
+const STICKERS = ['eyes', 'wow', 'nope', 'ten', 'tape', 'emoji', 'emoji'];
 const EMOJI = ['😎', '🍌', '😺', '🤡', '🐸', '👀', '🍕', '🦆'];
 const TAPES = ['CAUTION · DO NOT CROSS · ', 'WET PAINT · ', 'UNDER CONSTRUCTION · ', 'NO PARKOUR · '];
 function lookAtRunner(dt, it) {
@@ -1608,13 +1629,15 @@ function lookAtRunner(dt, it) {
   it.el.querySelectorAll('i').forEach((i) => { i.style.transform = off; });
 }
 function spawnSticker() {
-  if (Annoy.count('sticker') >= 5) return;
+  if (Annoy.count('sticker') >= 3 || !spamRoom()) return;
   const k = pick(STICKERS);
+  const spot = k === 'tape' ? null : clearSpot(130, 130);
+  if (k !== 'tape' && !spot) return;
   const html = { eyes: '<span class="eye"><i></i></span><span class="eye"><i></i></span>', wow: pick(['WOW', 'BAM!', 'OOF']), nope: pick(['NOPE', 'NO', 'LOL']),
     ten: '10/10', tape: pick(TAPES).repeat(12), emoji: pick(EMOJI) }[k];
   const e = mk('button', `sticker s-${k}`, html); e.setAttribute('aria-label', 'Peel off the sticker');
-  if (k === 'tape') { e.style.left = '-20%'; e.style.width = '140%'; e.style.top = `${(15 + Math.random() * 60).toFixed(0)}%`; }
-  else { e.style.left = `${(Math.random() * Math.max(1, W - 130)).toFixed(0)}px`; e.style.top = `${(Math.random() * Math.max(1, H - 130)).toFixed(0)}px`; }
+  if (k === 'tape') { e.style.left = '-20%'; e.style.width = '140%'; e.style.top = `${(8 + Math.random() * 22).toFixed(0)}%`; }
+  else { e.style.left = `${Math.round(spot.x)}px`; e.style.top = `${Math.round(spot.y)}px`; }
   e.style.transform = `rotate(${((Math.random() - 0.5) * (k === 'tape' ? 44 : 50)).toFixed(1)}deg)`;
   const it = Annoy.add(e, 9, { kind: 'sticker', update: k === 'eyes' ? lookAtRunner : null });
   onTap(e, (ev) => { Annoy.remove(it); reward(10, 'Peeled', ev); Sound.peel(); });
@@ -1622,9 +1645,11 @@ function spawnSticker() {
 }
 function capCell() { return Math.random() < 0.45 ? '🐦' : pick(['🏢', '🌆', '🚧', '📡']); }
 function spawnDialog() {
-  if (Annoy.count('dialog') >= 2) return;
+  if (Annoy.count('dialog') >= 1 || !spamRoom()) return;
   const k = pick(['frozen', 'battery', 'cookie', 'captcha', 'update', 'frozen']);
   if (k === 'cookie') { spawnCookie(); return; }
+  const dw = Math.min(W * 0.86, 330), dh = k === 'captcha' ? 330 : 175, spot = clearSpot(dw, dh);
+  if (!spot) return;
   const html = {
     frozen: '<b>“Rooftop Roulette” is not responding</b><p>You can wait for it to respond, or close it.</p><div class="row"><button type="button" data-a="ok">Wait</button><button type="button" data-a="nice" class="main">Close app</button></div>',
     battery: '<b>1% Battery Remaining</b><p>Turn on Low Power Mode? (It’s part of the game. Your battery is fine.)</p><div class="row"><button type="button" data-a="ok">Continue</button><button type="button" data-a="dim" class="main">Low Power Mode</button></div>',
@@ -1632,7 +1657,7 @@ function spawnDialog() {
     captcha: `<b>Select all squares with pigeons</b><div class="cap-grid">${Array.from({ length: 9 }, () => `<button type="button" data-a="cell">${capCell()}</button>`).join('')}</div><div class="row"><button type="button" data-a="verify" class="main">Verify</button></div>`,
   }[k];
   const e = mk('div', 'dialog', html);
-  e.style.left = `${(50 + (Math.random() - 0.5) * 30).toFixed(0)}%`; e.style.top = `${(36 + Math.random() * 22).toFixed(0)}%`;
+  e.style.left = `${Math.round(spot.x + dw / 2)}px`; e.style.top = `${Math.round(spot.y + dh / 2)}px`;
   const it = Annoy.add(e, 8, {
     kind: 'dialog', p: 0.6,
     update: k === 'update' ? (dt, d) => { d.p = Math.max(0.02, d.p - dt * 0.07); const bar = d.el.querySelector('.bar i'); if (bar) bar.style.width = `${(d.p * 100).toFixed(1)}%`; } : null,
@@ -1653,7 +1678,7 @@ function spawnDialog() {
   Sound.error();
 }
 function spawnCookie() {
-  if (Annoy.count('cookie')) return;
+  if (Annoy.count('cookie') || !spamRoom()) return;
   const e = mk('div', 'cookie', '<p><b>We use cookies 🍪</b> to track how often you fall off roofs. Our 847 partners would love to know too.</p><div class="row"><button class="main" type="button" data-a="ok">Accept all</button><button type="button" data-a="no">Reject</button><button type="button" data-a="no">Manage 847 partners</button></div>');
   const it = Annoy.add(e, 9, { kind: 'cookie' });
   e.querySelectorAll('button').forEach((b) => onTap(b, (ev) => {
@@ -1668,7 +1693,7 @@ function spawnCookie() {
   Sound.pop();
 }
 function spawnDvd() {
-  if (Annoy.count('dvd') >= 3) return;
+  if (Annoy.count('dvd') >= 2 || !spamRoom()) return;
   const sp = reduceMotion ? 70 : 140;
   Annoy.add(mk('div', 'dvd', 'ROULETTE<small>VIDEO</small>'), 9999, {
     kind: 'dvd', x: Math.random() * Math.max(1, W - 130), y: Math.random() * Math.max(1, H - 56),
@@ -1710,7 +1735,7 @@ function crackScreen() {
 }
 
 // one controller per active spam type; the chaos level makes all of them come faster
-const spamRate = () => 1 / (1 + 0.2 * (chaosLevel() - 1));
+const spamRate = () => 1 / (1 + 0.1 * (Math.min(3, chaosLevel()) - 1));   // spam stops speeding up after chaos level 3
 function makeSpam(key) {
   const c = { key, leaving: false, timer: 0.5, extra: 3, update() {}, onLeave() {} };
   const every = (min, rnd, fn) => function (dt) {
@@ -2660,7 +2685,7 @@ function revive(withShield) {
   if (withShield) game.fx.shield = true;
   game.cause = 'fall'; game.chanceResult = 'revived'; scarf = []; game.state = 'play'; Music.start();
   setSpam(game.spam.slice());
-  game.camX = P.x - viewW * 0.3;
+  game.camX = P.x - viewW * camLead();
   game.banner = { title: 'Back in the run', sub: withShield ? 'With a shield on top' : 'This was your last chance', color: '#5fe0a8', t: 0 };
   updateChips();
 }
@@ -2671,12 +2696,19 @@ function resize() {
   W = r.width; H = r.height;
   dpr = Math.min(2, window.devicePixelRatio || 1);
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-  scale = Math.min(H / BAND, W / 600);
+  baseScale = Math.min(H / BAND, W / 600);
+  applyZoom();
+  initWeather();
+}
+// the faster you run, the further the camera zooms out and looks ahead
+let baseScale = 1;
+function applyZoom() {
+  scale = baseScale * (1 - 0.22 * game.zoomF);
   viewW = W / scale; viewH = H / scale;
   offY = Math.max(0, (viewH - BAND) * 0.62);
   worldBottom = viewH - offY + 20;
-  initWeather();
 }
+const camLead = () => 0.3 - 0.08 * game.zoomF;
 function toScreen(x, y) {
   return { x: W / 2 + game.mirror * ((x - game.camX) * scale - W / 2), y: (y + offY) * scale };
 }
@@ -2986,7 +3018,7 @@ function drawObstacles(x0, x1) {
     for (const o of b.obs) {
       if (o.x + o.w < x0 || o.x > x1) continue;
       let a = 1;
-      if (phantom && !o.hit) a = clamp(1 - (o.x - P.x - 150) / 110, 0, 1);
+      if (phantom && !o.hit) a = clamp(1 - (o.x - P.x - Math.max(150, game.speed * 0.8)) / 110, 0, 1);
       if (a <= 0) continue;
       ctx.save(); ctx.globalAlpha = a;
       if (o.hit && o.type !== 'pipe' && o.type !== 'barrel') { ctx.translate(o.x + o.w, b.roof); ctx.rotate(0.45); ctx.translate(-(o.x + o.w), -b.roof); }
@@ -3497,7 +3529,7 @@ function drawWeather(dt, t) {
   } else if (th.weather === 'fog') {
     const ahead = game.mirror >= 0;
     const g = ctx.createLinearGradient(ahead ? W * 0.4 : W * 0.6, 0, ahead ? W : 0, 0);
-    g.addColorStop(0, 'rgba(150,158,176,0.05)'); g.addColorStop(1, 'rgba(150,158,176,0.62)');
+    g.addColorStop(0, 'rgba(150,158,176,0.04)'); g.addColorStop(1, 'rgba(150,158,176,0.38)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 }
@@ -3578,8 +3610,9 @@ function render(dt, t) {
     // a wide headlamp beam ahead, darkness that is never total, and frequent lightning
     game.lightningT -= dt;
     if (game.lightningT <= 0) { game.lightning = 1; game.lightningT = 1.1 + Math.random() * 1.3; }
-    const s = toScreen(P.x + 170, P.y - 40);
-    const g = ctx.createRadialGradient(s.x, s.y, 70 * scale, s.x, s.y, 430 * scale);
+    const reach = Math.max(430, game.speed * 0.95);
+    const s = toScreen(P.x + 170 + (reach - 430) * 0.5, P.y - 40);
+    const g = ctx.createRadialGradient(s.x, s.y, 70 * scale, s.x, s.y, reach * scale);
     g.addColorStop(0, 'rgba(6,5,14,0)'); g.addColorStop(0.55, 'rgba(6,5,14,0.5)'); g.addColorStop(1, 'rgba(6,5,14,0.86)');
     ctx.globalAlpha = 1 - game.lightning * 0.85;
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
@@ -3591,8 +3624,8 @@ function render(dt, t) {
     if (!reduceMotion) { ctx.fillStyle = `rgba(230,235,255,${(game.lightning * 0.18).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
   }
   if (game.flashBang > 0) {
-    ctx.fillStyle = `rgba(255,253,240,${(Math.min(reduceMotion ? 0.6 : 0.94, game.flashBang)).toFixed(3)})`; ctx.fillRect(0, 0, W, H);
-    game.flashBang = Math.max(0, game.flashBang - dt * 1.1);
+    ctx.fillStyle = `rgba(255,253,240,${(Math.min(reduceMotion ? 0.5 : 0.78, game.flashBang)).toFixed(3)})`; ctx.fillRect(0, 0, W, H);
+    game.flashBang = Math.max(0, game.flashBang - dt * 1.6);
   }
   if (game.flash > 0) {
     ctx.globalAlpha = game.flash * 0.3; ctx.fillStyle = game.flashColor; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
@@ -3695,7 +3728,7 @@ function startRun(seed, daily) {
   game.daily = !!daily;
   const ghost = store.get(GHOST_KEY + game.seed, null);
   game.ghost = ghost && Array.isArray(ghost.rec) && ghost.rec.length > 10 ? ghost : null;
-  Object.assign(game, { blasts: [], hitstop: 0, bulletT: 0 });
+  Object.assign(game, { blasts: [], hitstop: 0, bulletT: 0, zoomF: 0 }); applyZoom();
   Object.assign(game, { boss: null, nextBossX: BOSS_EVERY, bossCount: 0, district: null, table: null, fakeOver: 0, fakeCause: '', windT: 0, ghostRec: [], ghostT: 0, missionsDone: [] });
   hideTable(); Object.assign(tableWheel, { visible: false, alpha: 0, spinning: false, done: false, onStop: null });
   ensureMissions();
@@ -3717,7 +3750,7 @@ function startRun(seed, daily) {
   particles = []; popups = []; scarf = [];
   lastDist = lastScore = lastGuard = -1; lastChipKey = '';
   initWeather();
-  game.camX = P.x - viewW * 0.3;
+  game.camX = P.x - viewW * camLead();
   show(null); $('hud').hidden = false; guardMeter.hidden = true;
   showZones(4.5);
   cityWheel.spin(game.city.themeIdx, 1.7, 3, 0.9);
@@ -3802,7 +3835,7 @@ function quitToMenu() {
   game.boss = null; game.table = null; game.fakeOver = 0; game.ghost = null;
   clearScreenSpam(); game.spam = []; game.gatesPassed = 0;
   game.city = new City(Math.floor(Math.random() * 456976)); game.camX = 0; game.rules = []; game.pests = []; game.pestCtl = [];
-  game.mirror = game.mirrorTarget = 1; game.theme = 'dusk'; initWeather();
+  game.mirror = game.mirrorTarget = 1; game.theme = 'dusk'; game.zoomF = 0; applyZoom(); initWeather();
   for (const w of [ruleWheel, pestWheel, spamWheel, bonusWheel, chanceWheel, cityWheel]) Object.assign(w, { visible: false, alpha: 0, spinning: false });
   renderMenu(); show('screenStart');
 }
@@ -3912,7 +3945,12 @@ function frame(now) {
       acc += dt * game.timeScale;
       while (acc >= STEP) { update(STEP); acc -= STEP; if (game.state !== 'play') { acc = 0; break; } }
     }
-    if (!P.dead) game.camX = P.x - viewW * 0.3;
+    if (!P.dead) {
+      const fastness = clamp((game.speed - 330) / 380, 0, 1);
+      game.zoomF += (fastness - game.zoomF) * Math.min(1, dt * 1.2);
+      applyZoom();
+      game.camX = P.x - viewW * camLead();
+    }
     game.city.prune(game.camX);
     if (game.bet && (game.bet.t -= dt) <= 0) hideBet();
     if (game.tableOffer && (game.tableOffer.t -= dt) <= 0) hideTable();
