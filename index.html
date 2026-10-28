@@ -450,6 +450,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
           <div><dt>Left side</dt><dd>Slide under pipes and birds. In the air: drop fast, keep holding to roll.</dd></div>
           <div><dt>Walls</dt><dd>Grab the ledge, tap jump to climb. Hold jump when you hit it to wall-run.</dd></div>
           <div><dt>Obstacles</dt><dd>Crash through vents, nets or bins: +20% speed each, up to +60%. Pipes still knock you out.</dd></div>
+          <div><dt>Action</dt><dd>Red barrels blast you up and forward. Cracked roofs collapse. Jump up to grab zip lines. Jetpack: hold jump to fly.</dd></div>
           <div><dt>Keyboard</dt><dd>Space or ↑ jump · ↓ slide · B bet · P pause</dd></div>
         </dl>
         <details>
@@ -734,6 +735,8 @@ const MISSION_POOL = [
   { type: 'boss', text: () => 'Survive a boss chase', targets: [1], reward: [1500] },
   { type: 'close', text: (n) => `Get ${n} close calls`, targets: [10, 20], reward: [600, 1000] },
   { type: 'table', text: (n) => `Win ${n} bets at the roulette table`, targets: [2, 4], reward: [700, 1200] },
+  { type: 'barrel', text: (n) => `Blast through ${n} explosive barrels`, targets: [3, 6], reward: [700, 1100] },
+  { type: 'zip', text: (n) => `Ride ${n} zip lines`, targets: [2, 4], reward: [800, 1300] },
 ];
 
 // European roulette wheel order, for the table at every district
@@ -768,7 +771,7 @@ class City {
     this.rng = mulberry32(seed);
     this.wheelRng = mulberry32((seed ^ 0x9E3779B9) >>> 0);
     this.themeIdx = Math.floor(mulberry32((seed ^ 0x51ED270B) >>> 0)() * THEME_KEYS.length);
-    this.buildings = []; this.tokens = []; this.gates = []; this.boxes = [];
+    this.buildings = []; this.tokens = []; this.gates = []; this.boxes = []; this.zips = []; this.jets = [];
     this.rules = []; this.nextGate = FIRST_GATE; this.first = 0; this.firstToken = 0;
     this.addBuilding(-500, 1500, 280, 650, []);
   }
@@ -784,7 +787,10 @@ class City {
     while (ox < end) {
       if (r() < 0.42 + diff * 0.28) {
         const pipe = x > 2400 && r() < 0.4;
-        const o = pipe ? { type: 'pipe', x: ox, w: 64, hit: false } : { type: 'vent', x: ox, w: 34 + r() * 16, h: 24 + r() * 10, hit: false };
+        const barrel = !pipe && x > 4000 && r() < 0.3;   // explosive: crash into it for a blast jump
+        const o = pipe ? { type: 'pipe', x: ox, w: 64, hit: false }
+          : barrel ? { type: 'barrel', x: ox, w: 26, h: 34, hit: false }
+          : { type: 'vent', x: ox, w: 34 + r() * 16, h: 24 + r() * 10, hit: false };
         if (o.x + o.w > end + 40) break;
         b.obs.push(o);
         ox += o.w + speed * (0.62 + r() * 0.5);
@@ -873,6 +879,12 @@ class City {
       const bx = nb.x + 90 + r() * (nb.w - 220);
       if (!nb.obs.some((o) => Math.abs(o.x + o.w / 2 - bx) < 90)) this.boxes.push({ x: bx, y: nb.roof - 40, got: false });
     }
+    // action: roofs that collapse after you land, zip lines over wide gaps, jetpack pickups
+    if (!gate && !trains && x0 > 6000 && nb.w <= 520 && r() < 0.1) nb.crumble = { t: -1, vy: 0 };
+    if (!gate && x0 > 8000 && gap > 120 && r() < 0.18) {
+      this.zips.push({ x1: Math.max(prev.x + 20, x0 - 70), y1: prev.roof - 125, x2: nb.x + 90, y2: nb.roof - 62 });
+    }
+    if (!gate && x0 > 6000 && r() < 0.1) this.jets.push({ x: nb.x + nb.w * 0.5, y: nb.roof - 70, got: false });
   }
   prune(camX) {
     while (this.first < this.buildings.length - 1 && this.buildings[this.first].x + this.buildings[this.first].w < camX - 700) this.first++;
@@ -971,6 +983,10 @@ const Sound = {
   crack() { this.noise(0.18, 0.3, 5000); this.noise(0.1, 0.2, 2500, 0.05); },
   boss() { [196, 185, 175, 165].forEach((f, i) => this.tone(f, 0.35, 'sawtooth', 0.09, 0, i * 0.22)); },
   boost() { this.noise(0.1, 0.25, 900); this.tone(300, 0.25, 'sawtooth', 0.08, 500); },
+  explosion() { this.noise(0.6, 0.5, 380); this.tone(110, 0.5, 'sawtooth', 0.14, -70); this.noise(0.25, 0.3, 2500); },
+  rumble() { this.noise(0.9, 0.22, 180); },
+  zip() { this.noise(0.7, 0.07, 6000); this.tone(900, 0.5, 'sine', 0.04, 600); },
+  jet() { this.noise(0.3, 0.12, 1100); },
   jump() { this.tone(380, 0.13, 'square', 0.08, 340); },
   land(impact) { this.noise(0.09, clamp(impact / 2400, 0.05, 0.3), 700); },
   token() { this.tone(1180, 0.07, 'triangle', 0.12); this.tone(1580, 0.1, 'triangle', 0.1, 0, 0.055); },
@@ -1103,6 +1119,7 @@ const game = {
   spam: [], spamCtl: [], dim: 0, gatesPassed: 0, rain: [], chaos: null,
   daily: false, boss: null, nextBossX: BOSS_EVERY, bossCount: 0, district: null, table: null, tableOffer: null,
   fakeOver: 0, fakeCause: '', windT: 0, ghost: null, ghostRec: [], ghostT: 0, ghostPos: null, missionsDone: [],
+  blasts: [], hitstop: 0, bulletT: 0,
 };
 const freshChaos = () => ({ t: 9, quake: 0, tilt: 0, tiltDir: 1, wobble: 0, disco: 0, gravity: 0, burst: 0, rain: 0, rainT: 0 });
 game.chaos = freshChaos();
@@ -1110,7 +1127,7 @@ const chaosLevel = () => Math.min(5, 1 + Math.floor(game.gatesPassed / 2));
 const P = {};
 const input = { jumpHeld: false, jumpBuffer: 0, slideHeld: false, slidePressAt: -9 };
 let particles = [], popups = [], scarf = [];
-const freshFx = () => ({ shield: false, magnet: 0, dbl: 0, x2: 0, slow: 0, breather: 0, slotX3: 0 });
+const freshFx = () => ({ shield: false, magnet: 0, dbl: 0, x2: 0, slow: 0, breather: 0, slotX3: 0, jet: 0 });
 game.fx = freshFx();
 
 function resetPlayer(y) {
@@ -1188,6 +1205,11 @@ function tryJump(ph) {
     // a jump right in front of a vent becomes a kong vault once it is cleared
     P.kong = null;
     if (P.takeoff) for (const o of P.takeoff.obs) { const d = o.x - (P.x + hw()); if (o.type === 'vent' && !o.hit && d >= 0 && d < 75) { P.kong = o; break; } }
+    // a huge gap right ahead gets a moment of bullet time
+    const here = P.takeoff, next = here ? game.city.after(here.x + here.w - 1) : null;
+    if (here && next && next.x - (here.x + here.w) > 240 && here.x + here.w - P.x < 150 && game.bulletT <= 0) {
+      game.bulletT = 0.6; popup('BIG JUMP', '#f3eee5');
+    }
     P.vy = -ph.j; P.onGround = false; P.coyote = 0; P.jumping = true; P.diving = false;
     setState('air'); Sound.jump(); puff(P.x, P.y, 4);
     return true;
@@ -1203,6 +1225,7 @@ function pressJump() { input.jumpHeld = true; input.jumpBuffer = BUFFER; }
 function pressSlide() {
   input.slideHeld = true; input.slidePressAt = game.time;
   if (game.state !== 'play' || P.dead) return;
+  if (P.state === 'zip') { P.zipDrop = true; return; }
   if (P.onGround && (P.state === 'run' || P.state === 'stumble')) { setState('slide'); Sound.slide(); }
   else if (!P.onGround && P.state === 'air') {
     const ph = physicsFor(game.rules);
@@ -1211,7 +1234,7 @@ function pressSlide() {
 }
 function land(b, ph) {
   const impact = P.vy;
-  P.y = b.roof; P.vy = 0; P.onGround = true; P.jumping = false; P.coyote = 0; P.airJumps = 1;
+  P.y = b.roof; P.vy = 0; P.onGround = true; P.jumping = false; P.coyote = 0; P.airJumps = 1; P.lastGround = b;
   const wasDiving = P.diving; P.diving = false;
   Sound.land(impact);
   puff(P.x, P.y, impact > 700 ? 8 : 4);
@@ -1232,8 +1255,23 @@ function land(b, ph) {
   }
 }
 const BOOST_STEP = 0.2, BOOST_MAX = 1.6, BOOST_HOLD = 2.5;
+const zipY = (z, x) => lerp(z.y1, z.y2, clamp((x - z.x1) / (z.x2 - z.x1), 0, 1));
+// explosive barrel: launches you up and forward, with a short freeze frame for the impact
+function explode(o, b) {
+  o.exploded = true;
+  P.boost = Math.min(1.8, Math.max(P.boost, 1) + 0.4); P.boostT = BOOST_HOLD;
+  P.vy = -620 * Math.sqrt(physicsFor(game.rules).g / G);
+  P.onGround = false; P.jumping = false; P.diving = false; setState('air');
+  const cx = o.x + o.w / 2, cy = b.roof - o.h / 2;
+  game.blasts.push({ x: cx, y: cy, t: 0 });
+  for (const col of ['#ffd36b', '#ffa23e', '#ff5a3d', '#5a4a4a']) puff(cx, cy, 12, col, 320);
+  game.flash = reduceMotion ? 0.3 : 0.9; game.flashColor = '#ffb347';
+  if (!reduceMotion) game.shake = Math.max(game.shake, 0.5);
+  game.hitstop = 0.08;
+  Sound.explosion(); trick('Blast jump', 40); missionEvent('barrel'); chatSay('hype');
+}
 function obstacleBoost(text) {
-  P.boost = Math.min(BOOST_MAX, P.boost + BOOST_STEP); P.boostT = BOOST_HOLD;
+  P.boost = Math.max(P.boost, Math.min(BOOST_MAX, P.boost + BOOST_STEP)); P.boostT = BOOST_HOLD;
   popup(`${text}! Speed +${Math.round((P.boost - 1) * 100)}%`, '#ffd36b');
   Sound.boost(); puff(P.x + hw(), P.y - 20, 10, '#ffd36b', 220);
   if (!reduceMotion) game.shake = Math.max(game.shake, 0.18);
@@ -2295,7 +2333,7 @@ function update(dt) {
   const city = game.city;
   game.time += dt;
   const real = dt / game.timeScale;
-  for (const k of ['magnet', 'dbl', 'x2', 'slow', 'breather', 'slotX3']) if (game.fx[k] > 0) game.fx[k] = Math.max(0, game.fx[k] - real);
+  for (const k of ['magnet', 'dbl', 'x2', 'slow', 'breather', 'slotX3', 'jet']) if (game.fx[k] > 0) game.fx[k] = Math.max(0, game.fx[k] - real);
   P.invuln = Math.max(0, P.invuln - real);
   if (game.windT > 0) game.windT -= real;
   if (game.comboT > 0) { game.comboT -= real; if (game.comboT <= 0) { game.combo = 0; game.comboMult = 1; } }
@@ -2343,8 +2381,44 @@ function update(dt) {
   }
   if ((game.ghostT -= dt) <= 0) {
     game.ghostT += 0.1;
-    const code = { run: 0, air: 1, slide: 2, roll: 3, grab: 4, climb: 5, stumble: 6 }[P.state] || 0;
+    const code = { run: 0, air: 1, slide: 2, roll: 3, grab: 4, climb: 5, stumble: 6, zip: 4 }[P.state] || 0;
     game.ghostRec.push([Math.round(P.x), Math.round(P.y), code]);
+  }
+
+  // collapsing roofs: cracks when you land, a rumble, then the whole roof drops away
+  for (let i = city.first; i < city.buildings.length; i++) {
+    const b = city.buildings[i];
+    if (b.x > game.camX + viewW + 200) break;
+    const c = b.crumble;
+    if (!c) continue;
+    if (c.t < 0) {
+      if (P.onGround && city.at(P.x) === b) { c.t = 0; Sound.rumble(); popup('The roof is cracking!', '#ff8a7a'); }
+      continue;
+    }
+    if (b.roof > DEATH_Y + 400) continue;
+    c.t += dt;
+    if (c.t > 0.7 && c.t < 1.6) {
+      if (!reduceMotion) game.shake = Math.max(game.shake, 0.08);
+      if (Math.random() < dt * 25) puff(b.x + Math.random() * b.w, b.roof + 4, 1, 'rgba(200,190,170,0.7)', 60);
+    }
+    if (c.t > 1.6) {
+      c.vy += 320 * dt; b.roof += c.vy * dt;
+      if (P.onGround && city.at(P.x) === b) P.y = b.roof;
+    }
+  }
+
+  if (P.state === 'zip') {
+    // riding a zip line: fast, untouchable, a hop off at the end (tap slide to drop early)
+    const z = P.zip, zs = Math.max(speed, baseSpeed(P.x) * 1.45);
+    P.x += zs * dt; P.runDist += zs * dt; addScore((zs * dt) / UNITS_PER_M);
+    P.y = zipY(z, P.x) + 62 * P.size;
+    if (Math.random() < dt * 30) puff(P.x, zipY(z, P.x), 1, '#ffd36b', 80);
+    if (P.x >= z.x2 - 12 || P.zipDrop) {
+      const done = !P.zipDrop;
+      setState('air'); P.zip = null; P.vy = done ? -240 : 0; P.jumping = false; P.zipDrop = false;
+      if (done) { trick('Zip line', 30); missionEvent('zip'); }
+    }
+    return;
   }
 
   if (P.state === 'climb') {
@@ -2388,6 +2462,13 @@ function update(dt) {
       if (P.grabT > 0.75 || P.y - P.grabB.roof > GRAB_REACH) { setState('air'); P.noForward = true; game.cause = 'slip'; }
     }
   } else if (!P.onGround) {
+    if (game.fx.jet > 0 && input.jumpHeld) {
+      // jetpack thrust beats gravity up to a gentle climb; it hovers under a ceiling so you stay on screen
+      if (P.y > 90) P.vy = Math.max(-330, P.vy - 2700 * dt);
+      else P.vy = Math.min(P.vy, 0) * 0.5 - ph.g * dt;
+      P.jumping = false;
+      if (Math.random() < dt * 40) puff(P.x - 6, P.y - 14, 1, Math.random() < 0.5 ? '#ffd36b' : '#ff7a3d', 60);
+    }
     P.vy += ph.g * dt;
     const cut = CUT * (ph.j / JUMP);
     if (P.jumping && !input.jumpHeld && P.vy < -cut) P.vy = -cut;
@@ -2400,6 +2481,19 @@ function update(dt) {
         if (b && prevY <= b.roof + 1 && P.y >= b.roof) { land(b, ph); break; }
       }
     }
+    // grab a zip line when your hands reach the cable
+    if (!P.onGround && (P.state === 'air' || P.state === 'stumble')) {
+      for (const z of city.zips) {
+        if (P.x < z.x1 + 10 || P.x > z.x2 - 30) continue;
+        if (Math.abs(P.y - 62 * P.size - zipY(z, P.x)) < 12) {
+          setState('zip'); P.zip = z; P.vy = 0; P.zipDrop = false; P.diving = false;
+          Sound.zip(); popup('Zip line!', '#7fd1ff');
+          break;
+        }
+      }
+    }
+  } else if (game.fx.jet > 0 && input.jumpHeld) {
+    P.onGround = false; P.vy = -220; P.jumping = false; setState('air');
   } else {
     const b = city.at(P.x);
     if (!b || b.roof > P.y + 1) {
@@ -2434,6 +2528,7 @@ function update(dt) {
         if (P.y > top && P.y - h < bottom) {
           o.hit = true;
           if (o.type === 'pipe') { if (useShield()) continue; die('pipe'); return; }
+          if (o.type === 'barrel') { explode(o, b); continue; }
           obstacleBoost({ net: 'Net', bin: 'Bin', crate: 'Crate', feather: 'Feathers' }[o.type] || 'Smash');
         } else {
           // how close did we come? feeds the "Close!" bonus once the obstacle is behind us
@@ -2470,7 +2565,20 @@ function update(dt) {
     }
   }
 
-  if (P.y > DEATH_Y) die(game.cause === 'slip' || P.noForward ? 'slip' : 'fall');
+  // jetpack pickups
+  for (const jp of city.jets) {
+    if (jp.got || jp.x < P.x - 40 || jp.x > P.x + 40) continue;
+    if (Math.abs(jp.x - P.x) < hw() + 14 && jp.y + 16 > P.y - playerH() && jp.y - 16 < P.y) {
+      jp.got = true; game.fx.jet = 5; Sound.jet(); puff(jp.x, jp.y, 12, '#ffa23e', 200);
+      popup('Jetpack! Hold jump to fly', '#ffa23e'); updateChips();
+    }
+  }
+
+  if (P.y > DEATH_Y) {
+    const under = city.at(P.x), last = P.lastGround;
+    const collapsed = (under && under.crumble && under.crumble.t > 1.6) || (last && last.crumble && last.crumble.t > 1.6 && Math.abs(P.x - last.x) < last.w + 200);
+    die(collapsed ? 'collapse' : game.cause === 'slip' || P.noForward ? 'slip' : 'fall');
+  }
 }
 
 // ---------- last chance and revival
@@ -2847,7 +2955,7 @@ function drawObstacles(x0, x1) {
       if (phantom && !o.hit) a = clamp(1 - (o.x - P.x - 150) / 110, 0, 1);
       if (a <= 0) continue;
       ctx.save(); ctx.globalAlpha = a;
-      if (o.hit && o.type !== 'pipe') { ctx.translate(o.x + o.w, b.roof); ctx.rotate(0.45); ctx.translate(-(o.x + o.w), -b.roof); }
+      if (o.hit && o.type !== 'pipe' && o.type !== 'barrel') { ctx.translate(o.x + o.w, b.roof); ctx.rotate(0.45); ctx.translate(-(o.x + o.w), -b.roof); }
       if (o.type === 'vent' && b.district === 'construction') {
         // cement bags instead of an air vent
         ctx.fillStyle = '#b8ab92'; ctx.fillRect(o.x, b.roof - o.h, o.w, o.h);
@@ -2867,6 +2975,17 @@ function drawObstacles(x0, x1) {
         drawCrate(o.x, b.roof - o.h, o.w, o.h);
       } else if (o.type === 'feather') {
         drawFeatherPile(o.x, b.roof, o.w);
+      } else if (o.type === 'barrel') {
+        const top = b.roof - o.h;
+        if (o.exploded) {
+          ctx.fillStyle = 'rgba(20,14,12,0.7)'; ctx.beginPath(); ctx.ellipse(o.x + o.w / 2, b.roof - 1, o.w, 4, 0, 0, TAU); ctx.fill();
+        } else {
+          ctx.fillStyle = '#c4302b'; ctx.fillRect(o.x, top, o.w, o.h);
+          ctx.fillStyle = '#7a1a1e'; ctx.fillRect(o.x, top + o.h * 0.22, o.w, 3); ctx.fillRect(o.x, top + o.h * 0.72, o.w, 3);
+          ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(o.x + 4, top + 2, 4, o.h - 4);
+          ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.moveTo(o.x + o.w / 2, top + 9); ctx.lineTo(o.x + o.w / 2 + 6, top + 20); ctx.lineTo(o.x + o.w / 2 - 6, top + 20); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(255,200,140,0.65)'; ctx.fillRect(o.x, top, o.w, 1.4);
+        }
       } else if (o.type === 'bin') {
         drawBin(o.x, b.roof - o.h, o.w, o.h);
       } else {
@@ -2917,6 +3036,7 @@ function pose(t) {
     case 'slide': return { hipY: -11, lean: -1.15, legs: [[1.45, 1.55], [1.05, 2.3]], arms: [[-2.1, -1.5], [-1.6, -0.9]] };
     case 'roll': return { hipY: -16, lean: 1.2, legs: [[1.7, -0.5], [1.4, -0.8]], arms: [[1.3, 0.3], [1.6, 0.6]], rot: (P.stateT / 0.38) * TAU, pivot: -16 };
     case 'grab': return { hipY: -30, lean: 0.05, legs: [[0.55, -0.1], [0.85, 0.3]], arms: [[2.9, 3.0], [2.75, 2.95]] };
+    case 'zip': return { hipY: -30, lean: 0.12, legs: [[1.0, 0.5], [0.7, 0.25]], arms: [[3.0, 3.05], [2.85, 3.0]] };
     case 'climb': {
       const k = Math.min(1, P.stateT / 0.2);
       return { hipY: -30 + 10 * k, lean: 0.3 + 0.6 * k, legs: [[1.4, 0.2], [0.6, -0.4]], arms: [[2.6 - 2.2 * k, 2.4 - 1.6 * k], [2.4 - 2 * k, 2.2 - 1.4 * k]] };
@@ -3024,6 +3144,53 @@ function drawPreview(cv, kind, id) {
   drawStick(0, 0, pz, 1, col);
   ctx = saved;
 }
+// cracked roofs: faint hairlines warn you, they get wide once the roof starts to go
+function drawCracks(x0, x1) {
+  const city = game.city;
+  for (let i = city.first; i < city.buildings.length; i++) {
+    const b = city.buildings[i];
+    if (b.x > x1) break;
+    if (!b.crumble || b.x + b.w < x0) continue;
+    const c = b.crumble, strong = c.t >= 0;
+    ctx.strokeStyle = strong ? 'rgba(10,8,18,0.85)' : 'rgba(10,8,18,0.45)'; ctx.lineWidth = strong ? 2.2 : 1.2;
+    ctx.beginPath();
+    for (let k = 0; k < 4; k++) {
+      let x = b.x + (k + 0.5) * b.w / 4 + (hash2(b.seed, k) - 0.5) * 40, y = b.roof;
+      ctx.moveTo(x, y);
+      const segs = strong ? 6 : 3;
+      for (let s = 0; s < segs; s++) { x += (hash2(b.seed + k, s) - 0.5) * 26; y += 12 + hash2(b.seed, s + 9 * k) * 10; ctx.lineTo(x, y); }
+    }
+    ctx.stroke();
+  }
+}
+function drawZips(x0, x1, t) {
+  for (const z of game.city.zips) {
+    if (z.x2 < x0 - 40 || z.x1 > x1 + 40) continue;
+    ctx.fillStyle = '#3b3152';
+    ctx.fillRect(z.x1 - 2, z.y1 - 10, 4, 135); ctx.fillRect(z.x2 - 2, z.y2 - 10, 4, 72);
+    ctx.strokeStyle = '#1b1726'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(z.x1, z.y1); ctx.lineTo(z.x2, z.y2); ctx.stroke();
+    ctx.strokeStyle = `rgba(127,209,255,${(0.35 + 0.25 * Math.sin(t * 4)).toFixed(3)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(z.x1, z.y1 - 1); ctx.lineTo(z.x2, z.y2 - 1); ctx.stroke();
+    ctx.fillStyle = '#7fd1ff'; ctx.beginPath(); ctx.arc(z.x1 + 14, zipY(z, z.x1 + 14) + 3, 3.5, 0, TAU); ctx.fill();
+  }
+}
+function drawJets(x0, x1, t) {
+  for (const jp of game.city.jets) {
+    if (jp.got || jp.x < x0 - 30 || jp.x > x1 + 30) continue;
+    const y = jp.y + Math.sin(t * 3 + jp.x) * 4;
+    ctx.fillStyle = `rgba(255,162,62,${(0.2 + 0.12 * Math.sin(t * 6)).toFixed(3)})`; ctx.beginPath(); ctx.arc(jp.x, y, 22, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#8a8fa3'; ctx.fillRect(jp.x - 9, y - 12, 8, 20); ctx.fillRect(jp.x + 1, y - 12, 8, 20);
+    ctx.fillStyle = '#ffa23e'; ctx.beginPath(); ctx.moveTo(jp.x - 8, y + 8); ctx.lineTo(jp.x + 8, y + 8); ctx.lineTo(jp.x, y + 18 + Math.sin(t * 30) * 3); ctx.closePath(); ctx.fill();
+  }
+}
+function drawBlasts(dt) {
+  for (const bl of game.blasts) {
+    bl.t += dt;
+    const a = clamp(1 - bl.t / 0.45, 0, 1), r = 18 + bl.t * 340;
+    ctx.fillStyle = `rgba(255,170,60,${(a * 0.45).toFixed(3)})`; ctx.beginPath(); ctx.arc(bl.x, bl.y, r * 0.7, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(255,240,200,${a.toFixed(3)})`; ctx.lineWidth = 4 * a + 1; ctx.beginPath(); ctx.arc(bl.x, bl.y, r, 0, TAU); ctx.stroke();
+  }
+  game.blasts = game.blasts.filter((bl) => bl.t < 0.45);
+}
 function drawRunner(t) {
   const pz = pose(t), j = joints(pz);
   if (!P.dead && game.state === 'play') {
@@ -3035,6 +3202,14 @@ function drawRunner(t) {
   ctx.save();
   if (P.invuln > 0 && Math.sin(t * 30) > 0) ctx.globalAlpha = 0.45;
   drawStick(P.x, P.y, pz, P.size, runnerColors());
+  if (game.fx.jet > 0 && !P.dead) {
+    const bx = P.x - 9 * P.size, by = P.y - 46 * P.size;
+    ctx.fillStyle = '#8a8fa3'; ctx.fillRect(bx - 4 * P.size, by, 8 * P.size, 16 * P.size);
+    if (input.jumpHeld) {
+      ctx.fillStyle = Math.sin(t * 40) > 0 ? '#ffd36b' : '#ff7a3d';
+      ctx.beginPath(); ctx.moveTo(bx - 4 * P.size, by + 16 * P.size); ctx.lineTo(bx + 4 * P.size, by + 16 * P.size); ctx.lineTo(bx, by + (28 + Math.random() * 8) * P.size); ctx.closePath(); ctx.fill();
+    }
+  }
   ctx.restore();
   if (game.fx.shield) {
     ctx.strokeStyle = `rgba(127,227,255,${(0.5 + 0.25 * Math.sin(t * 6)).toFixed(3)})`; ctx.lineWidth = 2.5;
@@ -3287,9 +3462,12 @@ function render(dt, t) {
   const x0 = game.camX - 40, x1 = game.camX + viewW + 40;
   setWorld(1, sx, sy);
   drawBuildings(x0, x1, t);
+  drawCracks(x0, x1);
   drawDeco(x0, x1, t);
   drawGates(x0, x1, t);
   drawTokens(x0, x1, t);
+  drawZips(x0, x1, t);
+  drawJets(x0, x1, t);
   for (const c of game.rain) drawChip(c.x, c.y, c.gold, t);
   drawBoxes(x0, x1, t);
   drawObstacles(x0, x1);
@@ -3303,11 +3481,17 @@ function render(dt, t) {
     if (game.boss) game.boss.draw(t);
   }
   drawParticles(dt);
+  drawBlasts(dt);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   drawWeather(dt, t);
   applyCanvasFx(t);
   if (!playing) return;
   if (game.dim > 0) { ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H); }
+  if (game.bulletT > 0) {
+    // cinema bars during bullet time
+    const k = clamp(Math.min(game.bulletT, 0.6 - game.bulletT) / 0.12, 0, 1), bar = H * 0.075 * k;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bar); ctx.fillRect(0, H - bar, W, bar);
+  }
   drawGateLabels(x0, x1);
   if (game.ghostPos) {
     const s = toScreen(game.ghostPos.x, game.ghostPos.y - 72);
@@ -3405,6 +3589,7 @@ function updateChips() {
   if (fx.shield) parts.push('<span class="chip fx" style="--c:#7fe3ff">SHIELD</span>');
   if (P.boost > 1.04) parts.push(`<span class="chip" style="--c:#ffd36b">SPEED +${Math.round((P.boost - 1) * 100)}%</span>`);
   if (fx.slotX3 > 0) parts.push(`<span class="chip fx" style="--c:#f4c430">CASH ×3 <b>${Math.ceil(fx.slotX3)}</b></span>`);
+  if (fx.jet > 0) parts.push(`<span class="chip fx" style="--c:#ffa23e">JETPACK <b>${Math.ceil(fx.jet)}</b></span>`);
   for (const b of BONUS) if (fx[b.key] > 0 && typeof fx[b.key] === 'number') parts.push(`<span class="chip fx" style="--c:${b.color}">${b.short} <b>${Math.ceil(fx[b.key])}</b></span>`);
   const html = parts.join('');
   if (html !== lastChipKey) { hudRules.innerHTML = html; lastChipKey = html; }
@@ -3449,6 +3634,7 @@ function startRun(seed, daily) {
   game.daily = !!daily;
   const ghost = store.get(GHOST_KEY + game.seed, null);
   game.ghost = ghost && Array.isArray(ghost.rec) && ghost.rec.length > 10 ? ghost : null;
+  Object.assign(game, { blasts: [], hitstop: 0, bulletT: 0 });
   Object.assign(game, { boss: null, nextBossX: BOSS_EVERY, bossCount: 0, district: null, table: null, fakeOver: 0, fakeCause: '', windT: 0, ghostRec: [], ghostT: 0, missionsDone: [] });
   hideTable(); Object.assign(tableWheel, { visible: false, alpha: 0, spinning: false, done: false, onStop: null });
   ensureMissions();
@@ -3488,6 +3674,7 @@ const CAUSES = {
   slam: ['Hit the wall too low', 'Jump a little earlier at tall walls so your hands reach the ledge.'],
   slip: ['Lost the grip', 'Hanging on a ledge? Tap the <b>right side</b> quickly to climb up.'],
   guard: ['Caught by the guard', 'Every stumble lets the guard gain. Clean runs and tricks push him back.'],
+  collapse: ['The roof collapsed', 'Cracked roofs drop away about a second and a half after you land. Keep moving or jump off early.'],
 };
 function saveGhost(score) {
   if (score <= 0 || game.ghostRec.length < 20 || (game.ghost && score <= game.ghost.score)) return false;
@@ -3656,8 +3843,11 @@ function frame(now) {
     if (game.fakeOver > 0) {
       // the world freezes under the fake game-over screen
       if ((game.fakeOver -= dt) <= 0) { hype('JK!', '#5fe0a8'); chatSay('win'); }
+    } else if (game.hitstop > 0) {
+      game.hitstop -= dt;   // a few frames of freeze on big impacts
     } else {
-      game.timeScale = game.fx.slow > 0 ? 0.6 : 1;
+      if (game.bulletT > 0) game.bulletT -= dt;
+      game.timeScale = Math.min(game.fx.slow > 0 ? 0.6 : 1, game.bulletT > 0 ? 0.45 : 1);
       acc += dt * game.timeScale;
       while (acc >= STEP) { update(STEP); acc -= STEP; if (game.state !== 'play') { acc = 0; break; } }
     }
