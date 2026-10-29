@@ -33,6 +33,7 @@ img { max-width: 100%; }
   --haze: #a99fbe;
   --good: #5fe0a8;
   --bad: #ff6b5b;
+  --vip: #c08bff;
   --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
   --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -49,69 +50,135 @@ body {
   padding-block: 10px; padding-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
   background: linear-gradient(90deg, #1c1b28 0%, #2a2938 50%, #1c1b28 100%);
 }
-.panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; padding: 8px 14px; background: #0c0b14; border: 2px solid var(--steel-hi); }
+#app.shake { animation: shake 0.5s; }
+@keyframes shake { 0%, 100% { transform: none; } 20% { transform: translate(-8px, 4px) rotate(-1deg); } 40% { transform: translate(7px, -5px) rotate(1deg); } 60% { transform: translate(-5px, 6px); } 80% { transform: translate(4px, -2px); } }
+.panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; padding: 8px 12px; background: #0c0b14; border: 2px solid var(--steel-hi); }
 .floor { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-mono); color: var(--amber); text-shadow: 0 0 10px rgba(255, 176, 46, 0.55); }
 .floor .arrow { font-size: 18px; }
 .floor b { font-size: 34px; font-weight: 600; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
 .floor small { font-size: 11px; letter-spacing: 0.14em; color: rgba(255, 176, 46, 0.7); }
-.money { display: flex; gap: 18px; font-family: var(--font-mono); font-size: 13px; color: var(--haze); }
-.money b { display: block; font-family: var(--font-display); font-size: 24px; line-height: 1; color: var(--chalk); font-variant-numeric: tabular-nums; }
+.floor.vip, .floor.vip small { color: var(--vip); text-shadow: 0 0 10px rgba(192, 139, 255, 0.6); }
+.money { display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--haze); }
+.money b { display: block; font-family: var(--font-display); font-size: 23px; line-height: 1; color: var(--chalk); font-variant-numeric: tabular-nums; }
 .money .pot b { color: var(--amber); }
+.money .cable b { color: var(--good); }
+.money .cable.warn b { color: var(--amber); } .money .cable.hot b { color: var(--bad); }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 2px solid var(--steel-hi); border-radius: 50%; color: var(--chalk); background: transparent; cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
 .shaft { position: relative; min-height: 0; display: grid; overflow: hidden; border: 3px solid var(--steel-hi); background: radial-gradient(ellipse at 50% 30%, #3a3448 0%, #1a1726 70%); }
-.arena { position: relative; display: grid; place-items: center; align-content: center; gap: 12px; padding: 14px; text-align: center; overflow: hidden; touch-action: manipulation; }
-.title { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 6vw, 52px); line-height: 0.95; text-transform: uppercase; letter-spacing: 0.02em; text-wrap: balance; }
+.shaft.vip { border-color: var(--vip); }
+.arena { position: relative; display: grid; place-items: center; align-content: center; gap: 10px; padding: 12px; text-align: center; overflow: hidden; touch-action: manipulation; }
+.title { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(26px, 5.4vw, 46px); line-height: 0.95; text-transform: uppercase; letter-spacing: 0.02em; text-wrap: balance; }
 .hint { margin: 0; color: var(--haze); font-size: 14px; }
-.doors { position: absolute; inset: 0; pointer-events: none; }
+.hint b { color: var(--chalk); }
+.doors { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .door {
   position: absolute; top: 0; bottom: 0; width: 50%; transition: transform 0.55s cubic-bezier(.6, 0, .3, 1);
   background: repeating-linear-gradient(90deg, #4a4960 0 2px, #3b3a4e 2px 7px); box-shadow: inset 0 0 0 2px #24232f;
 }
 .door.l { left: 0; border-right: 2px solid #15141d; } .door.r { right: 0; border-left: 2px solid #15141d; }
 .doors.open .door.l { transform: translateX(-101%); } .doors.open .door.r { transform: translateX(101%); }
+.lights { position: absolute; left: 0; right: 0; top: -30%; height: 22%; opacity: 0; background: linear-gradient(180deg, transparent, rgba(255, 220, 160, 0.16), transparent); }
+.doors.moving .lights { opacity: 1; animation: lights 0.42s linear infinite; }
+.doors.express .lights { animation-duration: 0.14s; }
+@keyframes lights { from { transform: translateY(0); } to { transform: translateY(600%); } }
 .reel {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); min-width: min(80%, 320px); padding: 10px 16px; text-align: center;
-  background: #0c0b14; border: 2px solid var(--amber); color: var(--amber); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.12em; transition: opacity 0.2s;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(86%, 340px); padding: 10px 14px; text-align: center;
+  background: #0c0b14; border: 2px solid var(--amber); color: var(--amber); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; transition: opacity 0.2s;
 }
 .reel b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 28px; letter-spacing: 0.04em; color: var(--chalk); }
+.reel .mod { display: block; min-height: 1.4em; font-size: 13px; color: var(--vip); }
+.reel .quip { display: block; margin-top: 6px; font-family: var(--font-body); font-size: 13px; letter-spacing: 0; color: var(--haze); }
 .doors.open .reel { opacity: 0; }
 .timer { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(243, 238, 229, 0.1); }
-.timer i { display: block; height: 100%; background: var(--amber); transform-origin: left; }
-.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; min-height: 52px; }
+.timer i { display: block; height: 100%; background: var(--amber); transform-origin: left; transform: scaleX(0); }
+.flash { position: absolute; inset: 0; pointer-events: none; background: var(--bad); opacity: 0; transition: opacity 0.6s; }
+.flash.on { opacity: 0.55; transition: none; }
+.controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; min-height: 52px; }
 .btn {
-  border: 0; cursor: pointer; padding: 0.4em 1.3em; color: var(--night); background: var(--amber); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
-  font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 0.06em; text-transform: uppercase; transform: skewX(-10deg);
+  border: 0; cursor: pointer; padding: 0.35em 1.1em; color: var(--night); background: var(--amber); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+  font-family: var(--font-display); font-weight: 900; font-size: 23px; letter-spacing: 0.05em; text-transform: uppercase; transform: skewX(-10deg);
 }
 .btn > span { display: inline-block; transform: skewX(10deg); }
+.btn small { display: block; font-family: var(--font-mono); font-weight: 600; font-size: 10px; letter-spacing: 0.06em; line-height: 1.1; }
 .btn.ghost { background: var(--chalk); }
 .btn.good { background: var(--good); }
-.btn:focus-visible, .pad:focus-visible, .choice:focus-visible, .cell:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+.btn.vip { background: var(--vip); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn:focus-visible, .pad:focus-visible, .choice:focus-visible, .cell:focus-visible, .icon-btn:focus-visible, .key:focus-visible, .carx:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
 /* mini-game pieces */
 .bar { position: relative; width: min(90%, 460px); height: 34px; background: #0c0b14; border: 2px solid var(--steel-hi); }
 .bar .zone { position: absolute; top: 0; bottom: 0; background: rgba(95, 224, 168, 0.55); border-inline: 2px solid var(--good); }
 .bar .marker { position: absolute; top: -6px; bottom: -6px; width: 4px; margin-left: -2px; background: var(--chalk); box-shadow: 0 0 8px var(--chalk); }
 .chip-btn { position: absolute; width: 48px; height: 48px; margin: -24px; padding: 0; border: 4px dashed #f3eee5; border-radius: 50%; background: #e5484d; cursor: pointer; }
 .chip-btn.gold { background: #ffc23d; }
-.pads { display: grid; grid-template-columns: repeat(2, minmax(70px, 110px)); gap: 10px; }
+.pads { display: grid; grid-template-columns: repeat(2, minmax(60px, 100px)); gap: 10px; }
 .pad { aspect-ratio: 1; border: 0; cursor: pointer; opacity: 0.45; transition: opacity 0.08s, transform 0.08s; }
 .pad.lit { opacity: 1; transform: scale(1.06); }
-.react { width: min(90%, 420px); height: 46%; min-height: 120px; display: grid; place-items: center; border: 0; cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 40px; color: var(--night); background: var(--bad); }
+.react { width: min(90%, 420px); height: 46%; min-height: 110px; display: grid; place-items: center; border: 0; cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 40px; color: var(--night); background: var(--bad); }
 .react.go { background: var(--good); }
-.question { font-family: var(--font-display); font-weight: 900; font-size: clamp(40px, 9vw, 64px); line-height: 1; font-variant-numeric: tabular-nums; }
+.question { font-family: var(--font-display); font-weight: 900; font-size: clamp(38px, 8vw, 60px); line-height: 1; font-variant-numeric: tabular-nums; }
 .choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-.choice { min-width: 76px; padding: 10px 16px; border: 2px solid var(--chalk); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 30px; font-variant-numeric: tabular-nums; }
+.choice { min-width: 76px; padding: 8px 16px; border: 2px solid var(--chalk); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 28px; font-variant-numeric: tabular-nums; }
 .grid { display: grid; gap: 6px; }
-.cell { width: clamp(40px, 9vmin, 58px); aspect-ratio: 1; padding: 0; border: 0; background: rgba(243, 238, 229, 0.08); cursor: pointer; font-size: clamp(24px, 6vmin, 34px); line-height: 1; }
-.meter { width: min(90%, 420px); height: 22px; background: #0c0b14; border: 2px solid var(--steel-hi); }
+.cell { width: clamp(36px, 8.5vmin, 56px); aspect-ratio: 1; padding: 0; border: 0; background: rgba(243, 238, 229, 0.08); cursor: pointer; font-size: clamp(22px, 5.6vmin, 32px); line-height: 1; }
+.meter { width: min(90%, 420px); height: 18px; background: #0c0b14; border: 2px solid var(--steel-hi); }
 .meter i { display: block; height: 100%; width: 0; background: var(--amber); }
-.mash { width: 140px; height: 140px; border-radius: 50%; border: 0; cursor: pointer; background: var(--bad); color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 30px; box-shadow: 0 6px 0 #a33a30; }
+.mash { width: 130px; height: 130px; border-radius: 50%; border: 0; cursor: pointer; background: var(--bad); color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 30px; box-shadow: 0 6px 0 #a33a30; }
 .mash:active { transform: translateY(4px); box-shadow: 0 2px 0 #a33a30; }
-.verdict { font-family: var(--font-display); font-weight: 900; font-size: clamp(36px, 8vw, 64px); line-height: 0.95; text-transform: uppercase; }
-.verdict.good { color: var(--good); } .verdict.bad { color: var(--bad); }
+/* hold the doors */
+.hall { position: relative; width: min(94%, 470px); height: 70px; border-bottom: 3px solid var(--steel-hi); }
+.cabx { position: absolute; left: 0; bottom: 0; width: 17%; height: 100%; background: #0c0b14; border: 2px solid var(--amber); overflow: hidden; }
+.cabx i { position: absolute; top: 0; bottom: 0; width: 50%; background: repeating-linear-gradient(90deg, #4a4960 0 2px, #3b3a4e 2px 6px); transition: transform 0.15s; }
+.cabx i:first-child { left: 0; } .cabx i:last-child { right: 0; }
+.cabx.open i:first-child { transform: translateX(-100%); } .cabx.open i:last-child { transform: translateX(100%); }
+.who { position: absolute; bottom: 4px; font-size: 38px; line-height: 1; transform: translateX(-50%); }
+.who.bad { filter: drop-shadow(0 0 6px var(--bad)); }
+.hold { width: min(70%, 260px); height: 66px; border: 0; cursor: pointer; background: var(--amber); color: var(--night); font-family: var(--font-display); font-weight: 900; font-size: 30px; letter-spacing: 0.1em; box-shadow: 0 5px 0 #a8701a; touch-action: none; }
+.hold.on { transform: translateY(4px); box-shadow: 0 1px 0 #a8701a; background: var(--good); }
+/* up or down */
+.here { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.12em; color: var(--amber); text-transform: uppercase; }
+.here b { font-size: 26px; }
+.guest { display: flex; align-items: center; gap: 12px; font-size: 44px; line-height: 1; }
+.guest b { font-family: var(--font-display); font-weight: 900; font-size: 56px; font-variant-numeric: tabular-nums; }
+.guest small { font-family: var(--font-mono); font-size: 12px; color: var(--haze); }
+/* spirit level */
+.level { position: relative; width: min(88%, 420px); height: 48px; border-radius: 24px; background: linear-gradient(180deg, #2f6b55, #1e4a3b); border: 3px solid #0c0b14; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.level .mid { position: absolute; top: 0; bottom: 0; left: 37.5%; width: 25%; border-inline: 3px solid rgba(243, 238, 229, 0.8); }
+.level .bubble { position: absolute; top: 50%; width: 46px; height: 30px; margin: -15px 0 0 -23px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #d8fff0 45%, #9fe8c8); }
+.tiltcab { font-size: 46px; line-height: 1; transition: transform 0.05s; }
+/* count the crowd */
+.crowd { position: relative; width: min(94%, 470px); height: 84px; border-bottom: 3px solid var(--steel-hi); }
+.crowd .box { position: absolute; left: 40%; width: 20%; bottom: 0; height: 100%; background: #0c0b14; border: 2px solid var(--amber); display: grid; place-items: center; font-family: var(--font-mono); color: var(--amber); font-size: 12px; }
+.walker { position: absolute; bottom: 6px; font-size: 34px; line-height: 1; transform: translateX(-50%); transition-property: left, opacity; transition-timing-function: linear; }
+/* rhythm */
+.track { position: relative; width: min(94%, 470px); height: 64px; background: #0c0b14; border: 2px solid var(--steel-hi); overflow: hidden; }
+.track .line { position: absolute; top: 0; bottom: 0; left: 18%; width: 4px; margin-left: -2px; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.note { position: absolute; top: 50%; font-size: 34px; line-height: 1; transform: translate(-50%, -50%); color: var(--chalk); }
+.note.hit { color: var(--good); } .note.miss { color: var(--bad); opacity: 0.5; }
+.judge { min-height: 1.3em; font-family: var(--font-display); font-weight: 900; font-size: 22px; letter-spacing: 0.06em; }
+/* dodge */
+.pit { position: relative; width: min(72%, 280px); height: clamp(130px, 40vh, 260px); background: repeating-linear-gradient(90deg, rgba(243, 238, 229, 0.04) 0 2px, transparent 2px 100%); background-color: #0c0b14; border: 2px solid var(--steel-hi); overflow: hidden; }
+.pit span { position: absolute; font-size: 28px; line-height: 1; transform: translate(-50%, -50%); }
+.pit .me { top: auto; bottom: 2px; transform: translateX(-50%); font-size: 34px; transition: left 0.08s; }
+/* shell */
+.cars { position: relative; width: min(94%, 440px); height: 104px; }
+.carx { position: absolute; top: 0; height: 100%; padding: 0; border: 2px solid var(--amber); background: #0c0b14; cursor: pointer; overflow: hidden; transition-property: left; transition-timing-function: ease-in-out; font-size: 40px; }
+.carx i { position: absolute; top: 0; bottom: 0; width: 50%; background: repeating-linear-gradient(90deg, #4a4960 0 2px, #3b3a4e 2px 6px); transition: transform 0.25s; }
+.carx i:first-of-type { left: 0; } .carx i:last-of-type { right: 0; }
+.carx.open i:first-of-type { transform: translateX(-100%); } .carx.open i:last-of-type { transform: translateX(100%); }
+/* floor buttons */
+.call { padding: 6px 14px; background: var(--chalk); color: var(--night); font-weight: 600; font-size: 17px; border-radius: 14px; }
+.keypad { display: grid; gap: 8px; }
+.key { width: clamp(42px, 10vmin, 56px); aspect-ratio: 1; border-radius: 50%; border: 3px solid #8a8aa0; background: radial-gradient(circle at 40% 35%, #5a5970, #2b2a38); color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-weight: 600; font-size: clamp(15px, 3.6vmin, 19px); }
+.key.lit { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.verdict { font-family: var(--font-display); font-weight: 900; font-size: clamp(34px, 7.5vw, 60px); line-height: 0.95; text-transform: uppercase; text-wrap: balance; }
+.verdict.good { color: var(--good); } .verdict.bad { color: var(--bad); } .verdict.vip { color: var(--vip); }
 /* overlays */
 .screen {
   position: absolute; inset: 0; z-index: 3; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y;
   padding-block: 18px; padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
-  background: linear-gradient(90deg, rgba(17, 14, 34, 0.96) 0%, rgba(17, 14, 34, 0.9) 60%, rgba(17, 14, 34, 0.8) 100%);
+  background: linear-gradient(90deg, rgba(17, 14, 34, 0.97) 0%, rgba(17, 14, 34, 0.93) 60%, rgba(17, 14, 34, 0.86) 100%);
 }
 .menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
 .menu > * { min-width: 0; }
@@ -119,34 +186,70 @@ body {
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(50px, 10.5vw, 100px); line-height: 0.86; text-wrap: balance; }
 .logo span { color: var(--amber); }
 .lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.9; }
-.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
 a.link-btn, .link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
 .stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
 .stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
 .stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
-.pairs { margin: 0; display: grid; gap: 5px; }
-.pairs div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: baseline; }
+.pairs { margin: 8px 0; display: grid; gap: 5px; }
+.pairs div { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: baseline; }
 .pairs dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); }
 .pairs dd { margin: 0; font-size: 14px; }
-.side { display: grid; gap: 10px; }
-@media (max-height: 520px) { .logo { font-size: clamp(44px, 8vw, 64px); } .lede { font-size: 14px; } .floor b { font-size: 26px; } .btn { font-size: 20px; } .title { font-size: clamp(26px, 5vw, 40px); } }
-@media (prefers-reduced-motion: reduce) { .door, .pad, .reel { transition: none; } }
+.side { display: grid; gap: 8px; align-content: start; }
+details.how summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { padding: 3px 10px; border: 1.5px solid rgba(243, 238, 229, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 2px; }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1.2fr 1.3fr 0.8fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--amber); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist li.me span:nth-child(2) { color: var(--amber); font-weight: 600; }
+.toplist .none { display: block; color: var(--haze); }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 10px 0 0; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; padding: 6px 8px; border: 1.5px solid rgba(243, 238, 229, 0.4); background: rgba(17, 14, 34, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
+.tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+.items { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.item { display: grid; gap: 6px; align-content: start; padding: 12px 14px; background: #0c0b14; border: 2px solid var(--steel-hi); }
+.item .nm { font-family: var(--font-display); font-weight: 900; font-size: 24px; line-height: 1; text-transform: uppercase; }
+.item .nm small { margin-left: 6px; font-family: var(--font-mono); font-size: 12px; color: var(--amber); }
+.item p { margin: 0; font-size: 14px; color: var(--haze); }
+.item button { justify-self: start; padding: 6px 14px; border: 0; cursor: pointer; background: var(--amber); color: var(--night); font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.05em; text-transform: uppercase; }
+.item button:disabled { opacity: 0.4; cursor: default; }
+.item button:focus-visible { outline: 3px solid var(--chalk); outline-offset: 2px; }
+@media (max-height: 520px) {
+  #app { gap: 6px; padding-block: 6px; }
+  .logo { font-size: clamp(44px, 8vw, 64px); } .lede { font-size: 14px; } .floor b { font-size: 26px; } .money b { font-size: 19px; }
+  .btn { font-size: 19px; } .title { font-size: clamp(22px, 4.4vw, 34px); } .panel { padding: 4px 10px; } .controls { min-height: 44px; }
+  .hall, .crowd { height: 58px; } .who, .walker { font-size: 30px; } .guest b { font-size: 44px; } .cars { height: 80px; } .hold { height: 52px; }
+}
+@media (orientation: landscape) and (max-height: 520px) { .pads { grid-template-columns: repeat(4, minmax(52px, 80px)); } .mash { width: 100px; height: 100px; } .react { min-height: 90px; } }
+@media (prefers-reduced-motion: reduce) { .door, .pad, .reel, .carx, .walker { transition: none; } #app.shake { animation: none; } .doors.moving .lights { animation: none; } }
 </style>
 </head>
 <body>
 <div id="app">
   <header class="panel">
-    <div class="floor"><span class="arrow" aria-hidden="true">▲</span><b id="floorNum">00</b><small id="floorTag">LOBBY</small></div>
+    <div class="floor" id="floorBox"><span class="arrow" aria-hidden="true">▲</span><b id="floorNum">00</b><small id="floorTag">LOBBY</small></div>
     <div class="money">
       <div class="pot">Pot<b>$<span id="pot">0</span></b></div>
-      <div>Next<b id="nextMult">×1.5</b></div>
+      <div>Next<b id="nextMult">×1.4</b></div>
+      <div class="cable" id="cableBox">Snap risk<b id="snap">0%</b></div>
       <div>Bank<b>$<span id="bank">0</span></b></div>
     </div>
+    <button class="icon-btn" id="btnMute" type="button" aria-label="Sound" aria-pressed="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg>
+    </button>
   </header>
-  <main class="shaft">
+  <main class="shaft" id="shaft">
     <div class="arena" id="arena"></div>
-    <div class="doors" id="doors"><div class="door l"></div><div class="door r"></div><div class="reel" id="reel">NEXT FLOOR<b id="reelText">…</b></div></div>
+    <div class="doors" id="doors"><div class="door l"></div><div class="door r"></div><div class="lights"></div><div class="reel" id="reel">NEXT FLOOR<b id="reelText">…</b><span class="mod" id="reelMod"></span><span class="quip" id="quip"></span></div></div>
     <div class="timer"><i id="timerBar"></i></div>
+    <div class="flash" id="flash"></div>
   </main>
   <footer class="controls" id="controls"></footer>
 
@@ -155,30 +258,52 @@ a.link-btn, .link-btn { border: 0; background: none; padding: 6px 0; cursor: poi
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Elevator<br><span>Roulette</span></h1>
-        <p class="lede">Every floor, the dial picks a mini-game. Win it and your pot multiplies. Then decide: ride up for more, or cash out before the cable snaps.</p>
+        <p class="lede">Every floor, the dial picks a mini-game and a twist. Win and your pot multiplies. Then decide: ride up, take the express, or cash out before the cable snaps.</p>
         <div class="cta-row">
           <button class="btn" id="btnStart" type="button"><span>Ride up</span></button>
+          <button class="link-btn" id="btnShop" type="button">Toolbox · bank $<span id="shopLink">0</span></button>
+        </div>
+        <div class="sub-row">
           <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
           <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/pigeon-revenge/" target="_blank" rel="noopener">Pigeon Revenge</a>
+          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/volcano-bingo/" target="_blank" rel="noopener">Volcano Bingo</a>
+          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/room-404/" target="_blank" rel="noopener">Room 404</a>
         </div>
         <dl class="stats">
-          <div><dt>Bank</dt><dd id="startBank">$0</dd></div>
           <div><dt>Best cash-out</dt><dd id="startBest">$0</dd></div>
           <div><dt>Highest floor</dt><dd id="startFloor">0</dd></div>
+          <div><dt>Rides</dt><dd id="startRides">0</dd></div>
         </dl>
       </div>
       <div class="side">
-        <h2 class="label">How it works</h2>
-        <dl class="pairs">
-          <div><dt>Start</dt><dd>Every ride starts with a $100 pot.</dd></div>
-          <div><dt>Each floor</dt><dd>Win the mini-game: the pot grows ×1.5, a bit more on every floor.</dd></div>
-          <div><dt>Every 5th floor</dt><dd>VIP floor: harder game, ×3.</dd></div>
-          <div><dt>After a win</dt><dd>Ride up or cash out into your bank.</dd></div>
-          <div><dt>Fail</dt><dd>The pot is gone. Your bank stays safe.</dd></div>
-        </dl>
-        <h2 class="label">Mini-games on the dial</h2>
-        <p class="hint" id="gameList"></p>
+        <h2 class="label">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+        <details class="how">
+          <summary>How it works</summary>
+          <dl class="pairs">
+            <div><dt>Start</dt><dd>Every ride starts with a $100 pot.</dd></div>
+            <div><dt>Each floor</dt><dd>Win the mini-game and the pot grows (×1.4, a bit more on every floor). Every 5th floor is a VIP floor: harder, ×2.5.</dd></div>
+            <div><dt>Twists</dt><dd>The second dial can add Double pay, Hot seat, Tip jar, Slow-mo, Free pass or a rare Jackpot floor.</dd></div>
+            <div><dt>Snap risk</dt><dd>From floor 3 on, every ride up can snap the cable. The risk grows each floor and is shown on the button.</dd></div>
+            <div><dt>Express</dt><dd>Skip three floors without games, but the cable snaps one time in three (one in six with cable grease).</dd></div>
+            <div><dt>Bust</dt><dd>Lose a game or snap the cable and the pot is gone. Your bank stays safe.</dd></div>
+          </dl>
+          <p class="hint" id="gameList"></p>
+        </details>
       </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenShop" aria-label="Toolbox" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Toolbox · pretend money only</p>
+        <h1 class="logo" style="font-size: clamp(44px, 8vw, 80px)">Spend the <span>bank</span></h1>
+        <p class="lede">Bank: <b>$<span id="shopBank">0</span></b>. Items wait in the toolbox until a ride needs them.</p>
+        <button class="btn ghost" id="btnShopBack" type="button"><span>Back</span></button>
+      </div>
+      <div class="items" id="shopItems"></div>
     </div>
   </section>
 
@@ -191,12 +316,20 @@ a.link-btn, .link-btn { border: 0; background: none; padding: 6px 0; cursor: poi
         <div class="cta-row">
           <button class="btn" id="btnAgain" type="button"><span>Ride again</span></button>
           <button class="link-btn" id="btnMenu" type="button">Lobby</button>
+          <button class="link-btn" id="btnShop2" type="button">Toolbox</button>
         </div>
         <dl class="stats">
           <div><dt>Floor</dt><dd id="overFloor">0</dd></div>
           <div><dt>Bank</dt><dd id="overBank">$0</dd></div>
           <div><dt>Best cash-out</dt><dd id="overBest">$0</dd></div>
         </dl>
+      </div>
+      <div class="side">
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post score</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
       </div>
     </div>
   </section>
@@ -211,14 +344,21 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const rint = (a, b) => Math.floor(rnd(a, b + 1));
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
-const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const pct = (p) => `${Math.round(p * 100)}%`;
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// a phone on its side leaves little height for the doors: grids then go wide instead of tall
+const landscape = () => document.getElementById('arena').clientWidth > document.getElementById('arena').clientHeight * 1.5;
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
 };
 const PROFILE_KEY = 'elevator-roulette-profile';
-const profile = Object.assign({ bank: 0, best: 0, floor: 0 }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ bank: 0, best: 0, floor: 0, rides: 0, name: '', deviceId: '', kit: {}, muted: false }, store.get(PROFILE_KEY, {}));
+profile.kit = Object.assign({ time: 0, grease: 0, second: 0, insure: 0 }, profile.kit || {});
+// the same site hosts Rooftop Roulette: reuse the name already typed there
+if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
 // tap or Enter/Space; returns a function that removes both listeners again
@@ -228,58 +368,115 @@ function onTap(el, fn) {
   el.addEventListener('pointerdown', down); el.addEventListener('keydown', key);
   return () => { el.removeEventListener('pointerdown', down); el.removeEventListener('keydown', key); };
 }
+function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
-  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = profile.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; }
+  },
+  setMuted(m) { if (this.master) this.master.gain.value = m ? 0 : 0.5; },
   tone(f, dur, type = 'sine', vol = 0.12, slide = 0, delay = 0) {
     if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
     g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol = 0.2, delay = 0) {
+    if (!this.ctx) return; const n = Math.floor(this.ctx.sampleRate * dur), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = this.ctx.createBufferSource(), g = this.ctx.createGain(); s.buffer = buf; g.gain.value = vol; s.connect(g); g.connect(this.master); s.start(this.ctx.currentTime + delay);
   },
   ding() { this.tone(1318, 0.9, 'sine', 0.14); this.tone(1046, 1.1, 'sine', 0.12, 0, 0.18); },
   tick() { this.tone(1800, 0.02, 'square', 0.03); },
   good() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.2, 'triangle', 0.1, 0, i * 0.06)); },
   bad() { this.tone(220, 0.5, 'sawtooth', 0.1, -120); },
   tap() { this.tone(660, 0.05, 'triangle', 0.08); },
+  coin() { this.tone(988, 0.08, 'square', 0.06); this.tone(1319, 0.2, 'square', 0.06, 0, 0.07); },
   cash() { [784, 988, 1175, 1568, 1976].forEach((f, i) => this.tone(f, 0.18, 'square', 0.06, 0, i * 0.06)); },
-  pad(i) { this.tone([330, 415, 494, 587][i], 0.3, 'triangle', 0.12); },
+  pad(i) { this.tone([330, 415, 494, 587][i % 4], 0.3, 'triangle', 0.12); },
+  snap() { this.tone(1400, 0.08, 'square', 0.1); this.tone(900, 1.4, 'sawtooth', 0.09, -800, 0.08); this.noise(0.5, 0.35, 1.3); },
+  whoosh() { this.tone(200, 1.2, 'sawtooth', 0.05, 600); this.noise(1.0, 0.06); },
+  vip() { [392, 523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.25, 'triangle', 0.09, 0, i * 0.07)); },
 };
+function renderMute() {
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted));
+  $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
+}
+$('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
 
-// ---------- ride state
-const ride = { floor: 0, pot: 0, active: false, game: null, cleanup: null, timerEnd: 0, timerTotal: 0, onTimeout: null };
-const multFor = (floor) => (floor % 5 === 0 ? 3 : Math.min(2.5, 1.5 + 0.1 * (floor - 1)));
-const levelFor = (floor) => Math.min(10, floor + (floor % 5 === 0 ? 2 : 0));
+// ---------- ride state and the money rules
+const ride = { note: '', floor: 0, pot: 0, active: false, cleanup: null, timerEnd: 0, timerTotal: 0, onTimeout: null, timeMul: 1, modTime: 1, grease: false, mod: null, chances: 0 };
+const baseMult = (floor) => Math.min(2, 1.4 + 0.05 * (floor - 1));
+const multFor = (floor) => (floor % 5 === 0 ? 2.5 : baseMult(floor));
+const snapChance = (from) => { const p = from < 3 ? 0 : Math.min(0.2, (from - 2) * 0.015); return ride.grease ? p / 2 : p; };
+const expressSnap = () => (ride.grease ? 1 / 6 : 1 / 3);
+const xs = (m) => `×${m % 1 ? m.toFixed(2).replace(/0$/, '') : m}`;
+// twists on the second dial; w = weight
+const MODS = [
+  { id: 'none', w: 50, name: '' },
+  { id: 'double', w: 12, name: 'DOUBLE PAY', text: 'Win pays double. The game is harder.', lv: 2, gain: 2 },
+  { id: 'hot', w: 10, name: 'HOT SEAT', text: 'Less time, +50% pay.', time: 0.75, gain: 1.5 },
+  { id: 'tips', w: 12, name: 'TIP JAR', text: 'A tip on top if you win.' },
+  { id: 'slow', w: 8, name: 'SLOW-MO', text: 'More time this floor.', time: 1.35 },
+  { id: 'free', w: 6, name: 'FREE PASS', text: 'No game. Free win.' },
+  { id: 'jackpot', w: 2, name: 'JACKPOT FLOOR', text: 'Win pays ×5. Hardest game.', lv: 3 },
+];
+function rollMod() { let r = Math.random() * MODS.reduce((s, m) => s + m.w, 0); for (const m of MODS) { r -= m.w; if (r < 0) return m; } return MODS[0]; }
+const ITEMS = [
+  { id: 'time', name: 'Extra time', price: 250, desc: 'Every timer runs 30% longer for one whole ride. Used when the ride starts.' },
+  { id: 'grease', name: 'Cable grease', price: 400, desc: 'Halves the snap risk (and express risk) for one ride. Used when the ride starts.' },
+  { id: 'second', name: 'Second chance', price: 600, desc: 'Lost a floor? Play it again with a new game. Used only when you choose it.' },
+  { id: 'insure', name: 'Insurance', price: 900, desc: 'If you bust, half the pot still goes to your bank. Used only when you bust.' },
+];
+const QUIPS = [
+  'Is it supposed to creak like that?', 'I pressed every button. Sorry.', 'This elevator smells like popcorn.', 'I am only going one floor.',
+  'My cousin rode this once. Once.', 'Do you hear ticking?', 'The last guy cashed out too early.', 'I love this song. It is the only song.',
+  'Who installed a roulette wheel in an elevator?', 'Hold the door! No, the other door.', 'The cable is fine. Probably.', 'I am the elevator inspector. Kidding.',
+  'Going up? Me too. Forever.', 'Express? I like my bones unbroken.', 'Psst. Floor 13 does not exist.', 'My pot was huge. Was.',
+];
+const FACES = ['🧓', '👩‍💼', '🧑‍🔧', '👨‍🍳', '🕵️', '🧛', '🤠', '👵', '🧑‍🚀', '🐕'];
 
 function updatePanel() {
+  const vip = ride.floor > 0 && ride.floor % 5 === 0;
   $('floorNum').textContent = String(ride.floor).padStart(2, '0');
-  $('floorTag').textContent = ride.floor === 0 ? 'LOBBY' : ride.floor % 5 === 0 ? 'VIP FLOOR' : 'FLOOR';
+  $('floorTag').textContent = ride.floor === 0 ? 'LOBBY' : vip ? 'VIP FLOOR' : 'FLOOR';
+  $('floorBox').classList.toggle('vip', vip); $('shaft').classList.toggle('vip', vip);
   $('pot').textContent = fmt(ride.pot);
-  const m = multFor(ride.floor + 1);
-  $('nextMult').textContent = `×${m % 1 ? m.toFixed(1) : m}`;
+  $('nextMult').textContent = xs(multFor(ride.floor + 1));
+  const p = ride.active ? snapChance(ride.floor) : 0;
+  $('snap').textContent = pct(p);
+  $('cableBox').classList.toggle('warn', p >= 0.06 && p < 0.14); $('cableBox').classList.toggle('hot', p >= 0.14);
   $('bank').textContent = fmt(profile.bank);
 }
 function setControls(buttons) {
   controls.innerHTML = '';
-  for (const [label, cls, fn] of buttons) { const b = mk('button', `btn ${cls || ''}`, `<span>${label}</span>`); b.addEventListener('click', fn); controls.appendChild(b); }
+  for (const [label, cls, fn, sub] of buttons) {
+    const b = mk('button', `btn ${cls || ''}`, `<span>${label}${sub ? `<small>${sub}</small>` : ''}</span>`);
+    b.addEventListener('click', () => { Sound.init(); fn(); }); controls.appendChild(b);
+  }
 }
-function timer(seconds, onTimeout) { ride.timerTotal = seconds; ride.timerEnd = performance.now() + seconds * 1000; ride.onTimeout = onTimeout; }
+// fixed = the time is part of the game itself (reaction window, survive N seconds), so modifiers do not change it
+function timer(seconds, onTimeout, fixed) {
+  const s = fixed ? seconds : seconds * ride.timeMul * ride.modTime;
+  ride.timerTotal = s; ride.timerEnd = performance.now() + s * 1000; ride.onTimeout = onTimeout;
+}
 function stopTimer() { ride.onTimeout = null; $('timerBar').style.transform = 'scaleX(0)'; }
-function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-// ---------- the mini-games: each sets up the arena and calls done(true|false) exactly once
+// ---------- the mini-games: each sets up the arena and calls done(true|false) exactly once, returns a cleanup
 const GAMES = {
   bar: {
     name: 'Stop the bar', title: 'Stop it in the green',
     play(lv, done) {
-      const zoneW = clamp(30 - lv * 2.2, 9, 30), zoneX = rnd(10, 90 - zoneW), speed = 55 + lv * 9;
+      const zoneW = clamp(30 - lv * 2.2, 11, 30), zoneX = rnd(10, 90 - zoneW), speed = 55 + lv * 8;
       arena.innerHTML = `<p class="title">${this.title}</p><div class="bar"><span class="zone" style="left:${zoneX}%;width:${zoneW}%"></span><span class="marker" id="mk"></span></div><p class="hint">Tap anywhere</p>`;
       const mkEl = $('mk'); let x = 0, dir = 1, last = performance.now(), live = true;
-      const step = (now) => { if (!live) return; const dt = (now - last) / 1000; last = now; x += dir * speed * dt; if (x > 100) { x = 100; dir = -1; } if (x < 0) { x = 0; dir = 1; } mkEl.style.left = `${x}%`; requestAnimationFrame(step); };
+      const step = (now) => { if (!live) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; x += dir * speed * dt; if (x > 100) { x = 100; dir = -1; } if (x < 0) { x = 0; dir = 1; } mkEl.style.left = `${x}%`; requestAnimationFrame(step); };
       requestAnimationFrame(step);
-      const stop = () => { if (!live) return; live = false; done(x >= zoneX && x <= zoneX + zoneW); };
-      const off = onTap(arena, stop); timer(6, () => { live = false; done(false); });
+      const off = onTap(arena, () => { if (!live) return; live = false; done(x >= zoneX && x <= zoneX + zoneW); });
+      timer(6, () => { live = false; done(false); });
       return () => { live = false; off(); };
     },
   },
@@ -287,7 +484,7 @@ const GAMES = {
     name: 'Catch the chips', title: 'Tap the falling chips',
     play(lv, done) {
       const need = 4 + Math.ceil(lv * 0.6); let got = 0, live = true;
-      arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="cnt">0 / ${need}</p>`;
+      arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="cnt">0 / ${need} · gold counts double</p>`;
       const chips = [];
       const spawn = () => {
         if (!live) return;
@@ -298,7 +495,7 @@ const GAMES = {
         setTimeout(spawn, Math.max(260, 700 - lv * 45));
       };
       let last = performance.now();
-      const step = (now) => { if (!live) return; const dt = (now - last) / 1000; last = now; for (const ch of chips) { if (ch.dead) continue; ch.y += ch.v * dt; ch.el.style.top = `${ch.y}%`; if (ch.y > 108) { ch.dead = true; ch.el.remove(); } } requestAnimationFrame(step); };
+      const step = (now) => { if (!live) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; for (const ch of chips) { if (ch.dead) continue; ch.y += ch.v * dt; ch.el.style.top = `${ch.y}%`; if (ch.y > 108) { ch.dead = true; ch.el.remove(); } } requestAnimationFrame(step); };
       spawn(); requestAnimationFrame(step);
       timer(7, () => { live = false; done(false); });
       return () => { live = false; };
@@ -327,10 +524,10 @@ const GAMES = {
   react: {
     name: 'Reaction', title: 'Tap on green',
     play(lv, done) {
-      const window_ = Math.max(0.3, 0.6 - lv * 0.03);
+      const window_ = Math.max(0.32, 0.62 - lv * 0.03) * (ride.timeMul > 1 ? 1.2 : 1);
       arena.innerHTML = `<p class="title">${this.title}</p><button type="button" class="react" id="rb">WAIT…</button><p class="hint">Too early = fail</p>`;
       const rb = $('rb'); let live = true, goAt = 0;
-      const t = setTimeout(() => { if (!live) return; rb.classList.add('go'); rb.textContent = 'TAP!'; goAt = performance.now(); timer(window_, () => { live = false; done(false); }); }, rnd(1200, 3200));
+      const t = setTimeout(() => { if (!live) return; rb.classList.add('go'); rb.textContent = 'TAP!'; goAt = performance.now(); timer(window_, () => { live = false; done(false); }, true); }, rnd(1200, 3200));
       onTap(rb, () => { if (!live) return; live = false; clearTimeout(t); done(goAt > 0 && performance.now() - goAt <= window_ * 1000); });
       return () => { live = false; clearTimeout(t); };
     },
@@ -345,7 +542,7 @@ const GAMES = {
         else if (lv < 6) { op = pick(['+', '−']); a = rint(8, 30); b = rint(2, a); ans = op === '+' ? a + b : a - b; }
         else { op = pick(['×', '+', '−']); a = op === '×' ? rint(3, 12) : rint(20, 80); b = op === '×' ? rint(3, 9) : rint(5, 40); ans = op === '×' ? a * b : op === '+' ? a + b : a - b; }
         const opts = new Set([ans]); while (opts.size < 3) opts.add(ans + pick([-10, -2, -1, 1, 2, 3, 10]) * (opts.size));
-        arena.innerHTML = `<p class="hint">${solved + 1} of ${need}</p><p class="question">${a} ${op} ${b}</p><div class="choices">${[...opts].sort(() => Math.random() - 0.5).map((o) => `<button type="button" class="choice" data-v="${o}">${o}</button>`).join('')}</div>`;
+        arena.innerHTML = `<p class="hint">${solved + 1} of ${need}</p><p class="question">${a} ${op} ${b}</p><div class="choices">${shuffle([...opts]).map((o) => `<button type="button" class="choice" data-v="${o}">${o}</button>`).join('')}</div>`;
         arena.querySelectorAll('.choice').forEach((c) => onTap(c, () => {
           if (!live) return;
           if (Number(c.getAttribute('data-v')) !== ans) { live = false; done(false); return; }
@@ -360,8 +557,8 @@ const GAMES = {
     name: 'Odd one out', title: 'Find the different one',
     play(lv, done) {
       const pairs = [['🐦', '🐤'], ['🍎', '🍏'], ['😀', '😃'], ['🐶', '🐱'], ['🌕', '🌖'], ['🐟', '🐠'], ['⭐', '🌟'], ['🍩', '🍪']];
-      const [same, diff] = pick(pairs), n = lv < 4 ? 4 : lv < 8 ? 5 : 6, target = rint(0, n * n - 1);
-      arena.innerHTML = `<p class="title">${this.title}</p><div class="grid" style="grid-template-columns:repeat(${n}, auto)">${Array.from({ length: n * n }, (_, i) => `<button type="button" class="cell" data-i="${i}" aria-label="Cell ${i + 1}">${i === target ? diff : same}</button>`).join('')}</div>`;
+      const [same, diff] = pick(pairs), n = lv < 4 ? 4 : lv < 8 ? 5 : 6, wide = landscape(), cols = wide ? n + 2 : n, cells = wide ? cols * (n - 1) : n * n, target = rint(0, cells - 1);
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="grid" style="grid-template-columns:repeat(${cols}, auto)">${Array.from({ length: cells }, (_, i) => `<button type="button" class="cell" data-i="${i}" aria-label="Cell ${i + 1}">${i === target ? diff : same}</button>`).join('')}</div>`;
       let live = true;
       arena.querySelectorAll('.cell').forEach((c) => onTap(c, () => { if (!live) return; live = false; done(Number(c.getAttribute('data-i')) === target); }));
       timer(Math.max(3.5, 7 - lv * 0.3), () => { live = false; done(false); });
@@ -371,79 +568,520 @@ const GAMES = {
   mash: {
     name: 'Button mash', title: 'Mash it!',
     play(lv, done) {
-      const need = 14 + lv * 2; let taps = 0, live = true;
+      const need = 12 + Math.round(lv * 1.6); let taps = 0, live = true;
       arena.innerHTML = `<p class="title">${this.title}</p><button type="button" class="mash" id="mb">TAP</button><div class="meter"><i id="mm"></i></div>`;
       onTap($('mb'), () => { if (!live) return; taps++; Sound.tap(); $('mm').style.width = `${Math.min(100, (taps / need) * 100)}%`; if (taps >= need) { live = false; done(true); } });
       timer(4.5, () => { live = false; done(false); });
       return () => { live = false; };
     },
   },
+  // ---- elevator games
+  doors: {
+    name: 'Hold the doors', title: 'Hold for guests, let go for monsters',
+    play(lv, done) {
+      const need = 4 + Math.floor(lv * 0.7), GUESTS = ['🧑', '👩', '👴', '👧', '🧔', '👩‍🦰', '🧑‍💼', '👨‍🍳', '🧕', '👨‍🦳'], MONSTERS = ['🦖', '🐝', '🤡', '🦈', '👻', '🐊'];
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="hall" id="hall"><div class="cabx" id="cabx"><i></i><i></i></div></div><button type="button" class="hold" id="hold">HOLD</button><p class="hint" id="dh">0 / ${need} inside</p>`;
+      const hall = $('hall'), cab = $('cabx'), btn = $('hold'), queue = [];
+      let holding = false, inside = 0, live = true, last = performance.now();
+      const speed = 1.7 + lv * 0.12;
+      const add = () => {
+        const prev = queue[queue.length - 1];
+        const bad = queue.length > 0 && !(prev && prev.bad) && Math.random() < 0.3 + lv * 0.025;
+        const el = mk('span', `who${bad ? ' bad' : ''}`); el.textContent = bad ? pick(MONSTERS) : pick(GUESTS);
+        hall.appendChild(el); queue.push({ el, bad, p: 0, wait: 0 });
+      };
+      for (let i = 0; i < 6; i++) add();
+      const set = (v) => { if (!live) return; holding = v; btn.classList.toggle('on', v); cab.classList.toggle('open', v); };
+      const down = (e) => { e.preventDefault(); set(true); }, up = () => set(false);
+      const kd = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); set(true); } }, ku = (e) => { if (e.key === ' ' || e.key === 'Enter') set(false); };
+      btn.addEventListener('pointerdown', down); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up); window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+      const step = (now) => {
+        if (!live) return;
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        const f = queue[0];
+        if (holding) {
+          f.p += (f.bad ? speed * 0.9 : speed) * dt;
+          if (f.p >= 1) {
+            if (f.bad) { live = false; f.el.style.left = '8%'; done(false); return; }
+            inside++; Sound.tap(); f.el.remove(); queue.shift(); add(); $('dh').textContent = `${inside} / ${need} inside`;
+            if (inside >= need) { live = false; done(true); return; }
+          }
+        } else if (f.bad) {
+          f.wait += dt;
+          if (f.wait > 0.75) { f.el.style.opacity = '0'; const gone = queue.shift(); setTimeout(() => gone.el.remove(), 200); add(); }
+        }
+        queue.forEach((q, i) => { q.el.style.left = i === 0 ? `${25 - q.p * 16}%` : `${25 + i * 13.5}%`; });
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      timer(7 + need * 0.6, () => { live = false; done(false); });
+      return () => { live = false; btn.removeEventListener('pointerdown', down); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); };
+    },
+  },
+  updown: {
+    name: 'Up or down', title: 'Up or down?',
+    play(lv, done) {
+      const need = 4 + Math.floor(lv / 2.5); let n = 0, live = true, here = rint(10, 40), to = 0;
+      const next = () => {
+        if (lv >= 5) here = rint(8, 44);
+        const spread = lv >= 7 ? 4 : 20;
+        do { to = here + rint(-spread, spread); } while (to === here || to < 1 || to > 50);
+        arena.innerHTML = `<p class="hint">${n + 1} of ${need}</p><p class="here">You are on <b>${here}</b></p><div class="guest"><span>${pick(FACES)}</span><div><small>wants floor</small><br><b>${to}</b></div></div><div class="choices"><button type="button" class="choice" id="cu">▲ Up</button><button type="button" class="choice" id="cd">▼ Down</button></div>`;
+        const answer = (up) => { if (!live) return; if ((to > here) !== up) { live = false; done(false); return; } Sound.tap(); if (++n >= need) { live = false; done(true); } else next(); };
+        onTap($('cu'), () => answer(true)); onTap($('cd'), () => answer(false));
+      };
+      next(); timer(3 + need * Math.max(0.8, 1.3 - lv * 0.05), () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  level: {
+    name: 'Keep it level', title: 'Keep the bubble in the middle',
+    play(lv, done) {
+      const need = 4;
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="tiltcab" id="tc">🛗</div><div class="level"><span class="mid"></span><span class="bubble" id="bb"></span></div><div class="choices"><button type="button" class="choice" id="bl">◀</button><button type="button" class="choice" id="br">▶</button></div><div class="meter"><i id="lm"></i></div>`;
+      let x = rnd(-0.15, 0.15) || 0.05, v = 0, gust = 0, prog = 0, live = true, last = performance.now();
+      const k = 1.1 + lv * 0.14, imp = 0.55;
+      onTap($('bl'), () => { v -= imp; Sound.tap(); }); onTap($('br'), () => { v += imp; Sound.tap(); });
+      const step = (now) => {
+        if (!live) return;
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        gust += rnd(-1, 1) * (0.6 + lv * 0.1) * dt; gust *= 0.98;
+        v += (x * k + gust) * dt; v *= 0.995; x += v * dt;
+        if (Math.abs(x) < 0.125) prog += dt;
+        $('bb').style.left = `${50 + x * 50}%`; $('tc').style.transform = `rotate(${x * 18}deg)`; $('lm').style.width = `${Math.min(100, (prog / need) * 100)}%`;
+        if (Math.abs(x) >= 1) { live = false; done(false); return; }
+        if (prog >= need) { live = false; done(true); return; }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      timer(9, () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  crowd: {
+    name: 'Count the crowd', title: 'How many are inside?',
+    play(lv, done) {
+      let count = rint(1, 3), live = true;
+      const steps = 4 + Math.ceil(lv * 0.8), dur = Math.max(380, 760 - lv * 40);
+      arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="ch">${count} ${count === 1 ? 'person is' : 'people are'} inside. Keep counting.</p><div class="crowd" id="cr"><div class="box">CAR</div></div>`;
+      const cr = $('cr');
+      const walk = (into) => {
+        const el = mk('span', 'walker'); el.textContent = pick(['🧑', '👩', '👴', '👧', '🧔', '🧑‍💼', '👨‍🍳', '🧕']);
+        el.style.transitionDuration = `${dur}ms`; el.style.left = into ? '4%' : '50%'; el.style.opacity = into ? '1' : '0';
+        cr.appendChild(el);
+        requestAnimationFrame(() => requestAnimationFrame(() => { el.style.left = into ? '50%' : '96%'; el.style.opacity = into ? '0.15' : '1'; }));
+        setTimeout(() => el.remove(), dur + 60);
+      };
+      (async () => {
+        await wait(1000);
+        for (let i = 0; i < steps; i++) {
+          if (!live) return;
+          const both = lv >= 6 && Math.random() < 0.3;
+          const into = count === 0 || Math.random() < 0.55;
+          walk(into); count += into ? 1 : -1;
+          if (both && count > 0) { await wait(dur * 0.35); walk(false); count -= 1; }
+          await wait(dur * 0.9);
+        }
+        await wait(300);
+        if (!live) return;
+        const opts = new Set([count]); while (opts.size < 3) opts.add(Math.max(0, count + pick([-2, -1, 1, 2])));
+        arena.innerHTML = `<p class="title">How many now?</p><div class="choices">${shuffle([...opts]).map((o) => `<button type="button" class="choice" data-v="${o}">${o}</button>`).join('')}</div>`;
+        arena.querySelectorAll('.choice').forEach((c) => onTap(c, () => { if (!live) return; live = false; done(Number(c.getAttribute('data-v')) === count); }));
+        timer(4, () => { live = false; done(false); });
+      })();
+      return () => { live = false; };
+    },
+  },
+  rhythm: {
+    name: 'Muzak beat', title: 'Tap when the note hits the line',
+    play(lv, done) {
+      const total = 8, allowed = lv < 4 ? 2 : 1, travel = Math.max(1.1, 1.7 - lv * 0.06), gap = Math.max(0.38, 0.62 - lv * 0.024), win = 8;
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="track" id="tr"><span class="line"></span></div><p class="judge" id="jd"> </p><p class="hint" id="rh">Misses left: ${allowed}</p>`;
+      const tr = $('tr'), notes = []; let t = 0, live = true, last = performance.now(), misses = 0, hits = 0, spawned = 0, nextAt = 0.6, stray = 0;
+      const judge = (text, good) => { const j = $('jd'); j.textContent = text; j.style.color = good ? 'var(--good)' : 'var(--bad)'; };
+      const miss = () => { misses++; Sound.bad(); judge('MISS', false); $('rh').textContent = `Misses left: ${Math.max(0, allowed - misses)}`; if (misses > allowed) { live = false; done(false); return true; } return false; };
+      const check = () => { if (live && spawned === total && notes.every((n) => n.done)) { live = false; done(true); } };
+      const off = onTap(arena, () => {
+        if (!live) return;
+        // nearest open note: inside the window = hit; a bit off = that note is missed; nowhere near = a stray tap (every 3rd costs a miss)
+        const n = notes.filter((q) => !q.done).sort((a, b) => Math.abs(a.x - 18) - Math.abs(b.x - 18))[0];
+        const dx = n ? Math.abs(n.x - 18) : Infinity;
+        if (dx <= win) { n.done = true; n.el.classList.add('hit'); hits++; Sound.pad(hits); judge(dx < 3 ? 'PERFECT' : 'GOOD', true); check(); }
+        else if (dx <= win * 2) { n.done = true; n.el.classList.add('miss'); if (!miss()) check(); }
+        else if (++stray % 3 === 0) miss();
+      });
+      const step = (now) => {
+        if (!live) return;
+        const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+        if (spawned < total && t >= nextAt) {
+          const el = mk('span', 'note'); el.textContent = pick(['♪', '♫', '♬']); tr.appendChild(el);
+          notes.push({ el, x: 104, done: false }); spawned++; nextAt = t + gap * (Math.random() < 0.25 ? 0.6 : 1);
+        }
+        for (const n of notes) {
+          n.x -= (86 / travel) * dt; n.el.style.left = `${n.x}%`;
+          if (!n.done && n.x < 18 - win) { n.done = true; n.el.classList.add('miss'); if (miss()) return; }
+        }
+        check();
+        if (live) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      return () => { live = false; off(); };
+    },
+  },
+  dodge: {
+    name: 'Dodge the bolts', title: 'Dodge the bolts · tap left or right',
+    play(lv, done) {
+      const lanes = lv < 6 ? 3 : 4, dur = 5, fall = 60 + lv * 6, every = Math.max(0.34, 0.62 - lv * 0.025);
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="pit" id="pit"><span class="me" id="me">🛗</span></div><p class="hint">Survive ${dur} seconds</p>`;
+      const pit = $('pit'), me = $('me'), bolts = []; let lane = Math.floor(lanes / 2), live = true, last = performance.now(), t = 0, nextAt = 0.3, lastLane = -1;
+      const laneX = (i) => `${((i + 0.5) / lanes) * 100}%`;
+      me.style.left = laneX(lane);
+      const off = onTap(arena, (e) => {
+        if (!live) return;
+        const r = arena.getBoundingClientRect(), x = e.clientX !== undefined && e.clientX !== 0 ? e.clientX : r.left + r.width / 2 + (e.key === 'ArrowLeft' ? -1 : 1);
+        lane = clamp(lane + (x < r.left + r.width / 2 ? -1 : 1), 0, lanes - 1); me.style.left = laneX(lane); Sound.tap();
+      });
+      const key = (e) => { if (!live) return; if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { lane = clamp(lane + (e.key === 'ArrowLeft' ? -1 : 1), 0, lanes - 1); me.style.left = laneX(lane); } };
+      window.addEventListener('keydown', key);
+      const step = (now) => {
+        if (!live) return;
+        const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+        if (t >= nextAt && t < dur - 0.6) {
+          // never close every lane: lanes with a bolt still near the top count as taken
+          const taken = new Set(bolts.filter((b) => !b.gone && b.y < 32).map((b) => b.lane));
+          let l, tries = 0; do { l = rint(0, lanes - 1); tries++; } while (tries < 20 && ((l === lastLane && Math.random() < 0.6) || (!taken.has(l) && taken.size >= lanes - 1)));
+          lastLane = l; const el = mk('span'); el.textContent = pick(['🔩', '🔧', '🪛', '⚙️']); el.style.left = laneX(l); pit.appendChild(el);
+          bolts.push({ el, lane: l, y: -8 }); nextAt = t + every * rnd(0.8, 1.2);
+        }
+        for (const b of bolts) {
+          if (b.gone) continue;
+          b.y += fall * dt; b.el.style.top = `${b.y}%`;
+          if (b.lane === lane && b.y > 80 && b.y < 96) { live = false; done(false); return; }
+          if (b.y > 110) { b.gone = true; b.el.remove(); }
+        }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      timer(dur, () => { live = false; done(true); }, true);
+      return () => { live = false; off(); window.removeEventListener('keydown', key); };
+    },
+  },
+  shell: {
+    name: 'Find the VIP', title: 'Watch the VIP’s car',
+    play(lv, done) {
+      const n = lv < 6 ? 3 : 4, swaps = 3 + lv, ms = Math.max(200, 460 - lv * 26), vip = rint(0, n - 1);
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="cars" id="cars"></div><p class="hint" id="sh">The VIP gets in…</p>`;
+      const box = $('cars'), w = 100 / n, slots = [];
+      for (let i = 0; i < n; i++) {
+        const c = mk('button', 'carx open'); c.setAttribute('aria-label', `Car ${i + 1}`);
+        c.innerHTML = `<span>${i === vip ? '🕴️' : ''}</span><i></i><i></i>`;
+        c.style.left = `${i * w + 2}%`; c.style.width = `${w - 4}%`; c.style.transitionDuration = `${ms}ms`;
+        box.appendChild(c); slots.push(c);
+      }
+      let live = true, ready = false;
+      (async () => {
+        await wait(1100); if (!live) return;
+        slots.forEach((c) => c.classList.remove('open')); await wait(450);
+        for (let s = 0; s < swaps; s++) {
+          if (!live) return;
+          const a = rint(0, n - 1); let b = rint(0, n - 2); if (b >= a) b++;
+          [slots[a], slots[b]] = [slots[b], slots[a]];
+          slots[a].style.left = `${a * w + 2}%`; slots[b].style.left = `${b * w + 2}%`; Sound.tick();
+          await wait(ms + 40);
+        }
+        if (!live) return; ready = true; $('sh').textContent = 'Which car?';
+        timer(4, () => { live = false; done(false); });
+      })();
+      box.querySelectorAll('.carx').forEach((c) => onTap(c, () => {
+        if (!live || !ready) return; live = false;
+        box.querySelectorAll('.carx').forEach((x) => x.classList.add('open'));
+        const won = c.querySelector('span').textContent !== '';
+        setTimeout(() => done(won), 450);
+      }));
+      return () => { live = false; };
+    },
+  },
+  panel: {
+    name: 'Press the floor', title: 'Press the floors they call',
+    play(lv, done) {
+      const keys = lv < 4 ? 9 : lv < 8 ? 12 : 16, cols = landscape() ? Math.ceil(keys / 2) : keys === 9 ? 3 : 4, need = 3 + Math.floor(lv / 3);
+      const nums = shuffle(Array.from({ length: 60 }, (_, i) => i + 1)).slice(0, keys);
+      let n = 0, live = true, want = 0;
+      const render = () => {
+        if (lv >= 5 && n > 0) shuffle(nums);
+        want = pick(nums);
+        arena.innerHTML = `<p class="hint">${n + 1} of ${need}</p><p class="call">${pick(FACES)} “Floor ${want}, please!”</p><div class="keypad" style="grid-template-columns:repeat(${cols}, auto)">${nums.map((k) => `<button type="button" class="key" data-v="${k}">${k}</button>`).join('')}</div>`;
+        arena.querySelectorAll('.key').forEach((b) => onTap(b, () => {
+          if (!live) return;
+          if (Number(b.getAttribute('data-v')) !== want) { live = false; done(false); return; }
+          b.classList.add('lit'); Sound.pad(n); if (++n >= need) { live = false; done(true); } else setTimeout(() => { if (live) render(); }, 160);
+        }));
+      };
+      render(); timer(1.2 + need * Math.max(1.4, 2.4 - lv * 0.08), () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
 };
 const GAME_KEYS = Object.keys(GAMES);
-$('gameList').textContent = GAME_KEYS.map((k) => GAMES[k].name).join(' · ');
+$('gameList').textContent = `${GAME_KEYS.length} mini-games: ` + GAME_KEYS.map((k) => GAMES[k].name).join(' · ');
 
 // ---------- the ride loop
 async function closeDoors() { doors.classList.remove('open'); await wait(reduceMotion ? 50 : 600); }
-async function openDoors() { doors.classList.add('open'); await wait(reduceMotion ? 50 : 600); }
-async function spinReel() {
-  const key = pick(GAME_KEYS), rt = $('reelText');
+async function openDoors() { doors.classList.add('open'); doors.classList.remove('moving', 'express'); await wait(reduceMotion ? 50 : 600); }
+async function spinReel(skipLast) {
+  let key = pick(GAME_KEYS);
+  while (key === skipLast) key = pick(GAME_KEYS);
+  const mod = ride.floor >= 2 ? rollMod() : MODS[0];
+  const rt = $('reelText'), rm = $('reelMod'), q = $('quip');
+  rm.textContent = ''; q.textContent = ride.note || (Math.random() < 0.65 ? `${pick(FACES)} “${pick(QUIPS)}”` : ''); ride.note = '';
   const steps = reduceMotion ? 3 : 14;
-  for (let i = 0; i < steps; i++) { rt.textContent = GAMES[GAME_KEYS[i % GAME_KEYS.length]].name; Sound.tick(); await wait(50 + i * 12); }
+  for (let i = 0; i < steps; i++) { rt.textContent = GAMES[GAME_KEYS[(i * 5) % GAME_KEYS.length]].name; Sound.tick(); await wait(50 + i * 12); }
   rt.textContent = GAMES[key].name; Sound.ding();
-  await wait(650);
-  return key;
+  await wait(380);
+  if (mod.id !== 'none') {
+    for (let i = 0; i < (reduceMotion ? 1 : 8); i++) { rm.textContent = MODS[1 + (i % (MODS.length - 1))].name; Sound.tick(); await wait(60 + i * 14); }
+    rm.textContent = `${mod.name} · ${mod.text}`; Sound.coin(); await wait(900);
+  } else await wait(250);
+  return { key, mod };
 }
-async function nextFloor() {
+let lastGame = '';
+async function rideUp() {
+  const p = snapChance(ride.floor);
   setControls([]); arena.innerHTML = ''; stopTimer();
+  $('reelText').textContent = '…'; $('reelMod').textContent = ''; $('quip').textContent = '';
+  doors.classList.add('moving');
   await closeDoors();
+  if (Math.random() < p) { await wait(500); return snap(`The cable snapped between floor ${ride.floor} and ${ride.floor + 1}.`); }
   ride.floor++; updatePanel();
-  const key = await spinReel();
+  if (ride.floor % 5 === 0) Sound.vip();
+  playFloor();
+}
+async function playFloor() {
+  const { key, mod } = await spinReel(lastGame);
+  lastGame = key; ride.mod = mod; ride.modTime = mod.time || 1;
   const g = GAMES[key];
-  arena.innerHTML = `<p class="hint">${ride.floor % 5 === 0 ? 'VIP floor · ' : ''}Floor ${ride.floor}</p><p class="title">${g.title}</p>`;
+  const vip = ride.floor % 5 === 0;
+  arena.innerHTML = `<p class="hint">${vip ? 'VIP floor · ' : ''}Floor ${ride.floor}${mod.name ? ` · <b>${mod.name}</b>` : ''}</p><p class="title">${mod.id === 'free' ? 'Free pass!' : g.title}</p>`;
   await openDoors();
-  await wait(700);
+  if (mod.id === 'free') { Sound.good(); await wait(900); floorResult(true); return; }
+  await wait(650);
   let finished = false;
-  ride.cleanup = g.play(levelFor(ride.floor), (win) => {
+  const lv = Math.min(10, ride.floor + (vip ? 2 : 0) + (mod.lv || 0));
+  ride.cleanup = g.play(lv, (win) => {
     if (finished) return; finished = true;
     stopTimer(); if (ride.cleanup) ride.cleanup(); ride.cleanup = null;
     floorResult(win);
   });
 }
+function rideButtons() {
+  const p = snapChance(ride.floor), ex = expressSnap(), next = ride.floor + 1;
+  const btns = [['Ride up', next % 5 === 0 ? 'vip' : '', rideUp, p ? `${pct(p)} snap risk` : 'no snap risk yet']];
+  if (ride.floor >= 2) btns.push(['Express +3', 'ghost', express, `${pct(ex)} snap risk`]);
+  btns.push([`Cash out $${fmt(ride.pot)}`, 'good', () => endRide(true)]);
+  setControls(btns);
+}
 function floorResult(win) {
+  const mod = ride.mod || MODS[0];
   if (win) {
-    const m = multFor(ride.floor); ride.pot = Math.round(ride.pot * m);
+    const before = ride.pot, m = mod.id === 'jackpot' ? 5 : multFor(ride.floor);
+    ride.pot = Math.round(before * (1 + (m - 1) * (mod.gain || 1)));
+    let tip = 0;
+    if (mod.id === 'tips') { tip = Math.max(25, Math.round(ride.pot * rnd(0.15, 0.35))); ride.pot += tip; }
     Sound.good(); updatePanel();
-    arena.innerHTML = `<p class="verdict good">Floor ${ride.floor} cleared</p><p class="hint">Pot ×${m % 1 ? m.toFixed(1) : m} → <b>$${fmt(ride.pot)}</b></p><p class="hint">Next floor pays ×${multFor(ride.floor + 1).toFixed(1).replace('.0', '')}${(ride.floor + 1) % 5 === 0 ? ' (VIP)' : ''}</p>`;
-    setControls([['Ride up', '', () => nextFloor()], [`Cash out $${fmt(ride.pot)}`, 'good', () => endRide(true)]]);
+    const vip = ride.floor % 5 === 0;
+    arena.innerHTML = `<p class="verdict ${vip || mod.id === 'jackpot' ? 'vip' : 'good'}">${mod.id === 'jackpot' ? 'Jackpot floor!' : `Floor ${ride.floor} cleared`}</p>`
+      + `<p class="hint">Pot $${fmt(before)} → <b>$${fmt(ride.pot)}</b>${mod.gain && mod.id !== 'jackpot' ? ` (${mod.name})` : ''}${tip ? ` · tip +$${fmt(tip)}` : ''}</p>`
+      + `<p class="hint">Next floor pays ${xs(multFor(ride.floor + 1))}${(ride.floor + 1) % 5 === 0 ? ' (VIP)' : ''}</p>`;
+    rideButtons();
   } else {
     Sound.bad();
-    arena.innerHTML = `<p class="verdict bad">${pick(['The cable snapped', 'Doors closed on you', 'Wrong floor', 'Elevator stuck'])}</p><p class="hint">The $${fmt(ride.pot)} pot is gone.</p>`;
-    setControls([]);
-    setTimeout(() => endRide(false), 1400);
+    arena.innerHTML = `<p class="verdict bad">${pick(['Wrong floor', 'Doors closed on you', 'Elevator stuck', 'Out of order', 'The muzak got you'])}</p><p class="hint">The $${fmt(ride.pot)} pot is on the line.</p>`;
+    if (profile.kit.second > 0) {
+      setControls([
+        ['Second chance', 'vip', () => { profile.kit.second--; ride.chances++; saveProfile(); setControls([]); retryFloor(); }, `${profile.kit.second} in toolbox`],
+        ['Give up', 'ghost', () => bust('You gave up the floor.')],
+      ]);
+    } else { setControls([]); setTimeout(() => bust(''), 1300); }
   }
 }
-function endRide(cashed) {
+async function retryFloor() {
+  arena.innerHTML = '';
+  await closeDoors();
+  playFloor();
+}
+async function express() {
+  setControls([]); arena.innerHTML = ''; stopTimer(); Sound.whoosh();
+  $('reelText').textContent = 'EXPRESS'; $('reelMod').textContent = 'skipping 3 floors'; $('quip').textContent = `${pick(FACES)} “${pick(['Hold on to something!', 'Wheee!', 'My ears just popped.', 'This is a bad idea.'])}”`;
+  doors.classList.add('moving', 'express');
+  await closeDoors();
+  const start = ride.floor, before = ride.pot;
+  for (let i = 1; i <= 3; i++) {
+    await wait(reduceMotion ? 120 : 650);
+    ride.floor = start + i; ride.pot = Math.round(ride.pot * baseMult(ride.floor)); Sound.tick(); updatePanel();
+    if (i === 2 && Math.random() < expressSnap()) { await wait(300); ride.pot = before; return snap('The express was too much for the cable.'); }
+  }
+  $('reelText').textContent = `FLOOR ${ride.floor}`;
+  await openDoors();
+  Sound.cash();
+  arena.innerHTML = `<p class="verdict vip">Express made it!</p><p class="hint">Floors ${start + 1}–${ride.floor} skipped · pot $${fmt(before)} → <b>$${fmt(ride.pot)}</b></p>`;
+  rideButtons();
+}
+async function snap(why) {
+  stopTimer(); setControls([]); Sound.snap();
+  const app = $('app'), fl = $('flash');
+  app.classList.remove('shake'); void app.offsetWidth; app.classList.add('shake');
+  fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 60);
+  doors.classList.remove('moving', 'express');
+  $('reelText').textContent = 'SNAP!'; $('reelMod').textContent = ''; $('quip').textContent = '';
+  await wait(900);
+  arena.innerHTML = `<p class="verdict bad">The cable snapped</p><p class="hint">${why}</p>`;
+  await openDoors();
+  await wait(1400);
+  bust(why);
+}
+function bust(why) {
+  let saved = 0;
+  if (profile.kit.insure > 0 && ride.pot > 100) { profile.kit.insure--; saved = Math.round(ride.pot / 2); profile.bank += saved; }
+  endRide(false, saved, why);
+}
+function endRide(cashed, saved = 0, why = '') {
+  if (!ride.active) return;
   ride.active = false; stopTimer();
-  const floorReached = cashed ? ride.floor : ride.floor - 1;
-  profile.floor = Math.max(profile.floor, floorReached);
+  if (ride.cleanup) { ride.cleanup(); ride.cleanup = null; }
+  const floorReached = cashed ? ride.floor : Math.max(0, ride.floor - 1);
+  profile.floor = Math.max(profile.floor, floorReached); profile.rides++;
   if (cashed) { profile.bank += ride.pot; profile.best = Math.max(profile.best, ride.pot); Sound.cash(); }
   saveProfile();
   $('overEyebrow').textContent = cashed ? 'Ride over · cashed out' : 'Ride over · lost the pot';
   $('overTitle').textContent = cashed ? `+$${fmt(ride.pot)}` : 'Busted';
-  $('overText').textContent = cashed ? `You stepped out on floor ${ride.floor} with $${fmt(ride.pot)}. It’s in your bank now.` : `You made it to floor ${ride.floor}. Next time, cash out a floor earlier?`;
+  $('overText').textContent = cashed
+    ? `You stepped out on floor ${ride.floor} with $${fmt(ride.pot)}. It is in your bank now.`
+    : `${why ? why + ' ' : ''}You made it to floor ${floorReached}.${saved ? ` Insurance paid $${fmt(saved)} into your bank.` : ' Next time, cash out a floor earlier?'}`;
   $('overFloor').textContent = ride.floor; $('overBank').textContent = `$${fmt(profile.bank)}`; $('overBest').textContent = `$${fmt(profile.best)}`;
   updatePanel(); $('screenOver').hidden = false; setControls([]);
+  lbAfterRide(cashed ? ride.pot : 0, ride.floor);
 }
 function startRide() {
   Sound.init();
-  Object.assign(ride, { floor: 0, pot: 100, active: true });
-  $('screenStart').hidden = true; $('screenOver').hidden = true;
-  updatePanel(); nextFloor();
+  Object.assign(ride, { floor: 0, pot: 100, active: true, timeMul: 1, modTime: 1, grease: false, mod: null, chances: 0 });
+  const packed = [];
+  if (profile.kit.time > 0) { profile.kit.time--; ride.timeMul = 1.3; packed.push('Extra time'); }
+  if (profile.kit.grease > 0) { profile.kit.grease--; ride.grease = true; packed.push('Cable grease'); }
+  saveProfile();
+  ['screenStart', 'screenOver', 'screenShop'].forEach((id) => { $(id).hidden = true; });
+  updatePanel();
+  lastGame = '';
+  ride.note = packed.length ? `🧰 From the toolbox: ${packed.join(' + ')}` : '';
+  rideUp();
 }
 function renderLobby() {
-  $('startBank').textContent = `$${fmt(profile.bank)}`; $('startBest').textContent = `$${fmt(profile.best)}`; $('startFloor').textContent = profile.floor;
-  ride.floor = 0; ride.pot = 0; updatePanel();
+  $('shopLink').textContent = fmt(profile.bank); $('startBest').textContent = `$${fmt(profile.best)}`; $('startFloor').textContent = profile.floor; $('startRides').textContent = profile.rides;
+  ride.floor = 0; ride.pot = 0; updatePanel(); renderLeaderboard();
 }
+
+// ---------- toolbox
+let shopReturn = 'screenStart';
+function openShop(from) { shopReturn = from; ['screenStart', 'screenOver'].forEach((id) => { $(id).hidden = true; }); renderShop(); $('screenShop').hidden = false; }
+function renderShop() {
+  $('shopBank').textContent = fmt(profile.bank);
+  const box = $('shopItems'); box.innerHTML = '';
+  for (const it of ITEMS) {
+    const have = profile.kit[it.id] || 0;
+    const el = mk('div', 'item', `<span class="nm">${it.name}<small>${have ? `${have} in toolbox` : ''}</small></span><p>${it.desc}</p>`);
+    const b = mk('button', '', have >= 5 ? 'Toolbox full' : `Buy $${fmt(it.price)}`);
+    b.disabled = have >= 5 || profile.bank < it.price;
+    b.addEventListener('click', () => {
+      if ((profile.kit[it.id] || 0) >= 5 || profile.bank < it.price) return;
+      profile.bank -= it.price; profile.kit[it.id] = (profile.kit[it.id] || 0) + 1;
+      Sound.init(); Sound.coin(); saveProfile(); renderShop(); updatePanel();
+    });
+    el.appendChild(b); box.appendChild(el);
+  }
+}
+$('btnShop').addEventListener('click', () => openShop('screenStart'));
+$('btnShop2').addEventListener('click', () => openShop('screenOver'));
+$('btnShopBack').addEventListener('click', () => {
+  $('screenShop').hidden = true;
+  if (shopReturn === 'screenOver') { $('overBank').textContent = `$${fmt(profile.bank)}`; $('screenOver').hidden = false; }
+  else { renderLobby(); $('screenStart').hidden = false; }
+});
+
+// ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/elevator-roulette/';
+const GAME_ID = 'elevator';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function deviceId() {
+  if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); }
+  return profile.deviceId;
+}
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}&date=${todayKey()}`);
+    if (!r.ok) return null;
+    LB.cache = await r.json(); LB.at = Date.now();
+    return LB.cache;
+  } catch (e) { return null; }
+}
+function lbNote(list, text, link) {
+  list.textContent = '';
+  const li = mk('li', 'none'); li.textContent = text;
+  if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); }
+  list.appendChild(li);
+}
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody has cashed out today yet.' : 'No cash-outs yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => {
+    const li = mk('li', r.id === profile.deviceId ? 'me' : '');
+    const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank);
+    for (const text of [r.name, `$${fmt(r.score)}`, `floor ${r.dist}`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); }
+    list.appendChild(li);
+  });
+}
+$('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
+let lbLast = null;
+function lbAfterRide(score, floor) {
+  const box = $('lbPost'), out = $('lbResult');
+  out.textContent = ''; box.hidden = true;
+  if (!lbReachable() || score <= 0) return;
+  lbLast = { game: GAME_ID, score, dist: floor, daily: true, date: todayKey() };
+  $('lbName').value = profile.name; box.hidden = false;
+  if (profile.name) lbSend();
+}
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16);
+  const out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post this cash-out.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
+    else {
+      const rk = res.rank || {};
+      out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.';
+      lbLast = null; LB.at = 0;
+    }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
+}
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
+
 $('btnStart').addEventListener('click', startRide);
 $('btnAgain').addEventListener('click', startRide);
 $('btnMenu').addEventListener('click', () => { $('screenOver').hidden = true; renderLobby(); $('screenStart').hidden = false; closeDoors(); });
@@ -457,6 +1095,7 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
   $('timerBar').style.transform = `scaleX(${clamp(left / ride.timerTotal, 0, 1).toFixed(3)})`;
   if (left <= 0) { const f = ride.onTimeout; ride.onTimeout = null; f(); }
 })();
+renderMute();
 renderLobby();
 })();
 </script>
