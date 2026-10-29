@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arcade">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Lennify Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: a night-time arcade shelf; a big sign on top, then one card per game (art, pitch, your best, world #1, play) */
+  --night: #110e22;
+  --card: #1a1630;
+  --chalk: #f3eee5;
+  --haze: #a99fbe;
+  --sodium: #ffa23e;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { box-sizing: border-box; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 20% 0%, #2a1f4a 0%, var(--night) 55%) fixed, var(--night); color: var(--chalk);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.45; -webkit-tap-highlight-color: transparent;
+}
+.wrap { max-width: 1120px; margin-inline: auto; padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+header { display: grid; gap: 6px; margin-bottom: 22px; }
+.eyebrow { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: clamp(54px, 12vw, 112px); line-height: 0.86; text-transform: uppercase; }
+h1 span { color: var(--sodium); text-shadow: 0 0 24px rgba(255, 162, 62, 0.45); }
+.lede { margin: 6px 0 0; max-width: 52ch; opacity: 0.92; }
+.lede small { display: block; margin-top: 4px; color: var(--haze); font-size: 13px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.game { position: relative; display: grid; grid-template-rows: auto 1fr; overflow: hidden; border-radius: 14px; background: var(--card); border: 2px solid rgba(243, 238, 229, 0.15); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.art { position: relative; display: block; aspect-ratio: 16 / 8; overflow: hidden; background: #000; }
+.art svg { display: block; width: 100%; height: 100%; }
+.badge { position: absolute; top: 10px; left: 10px; padding: 2px 8px; border-radius: 6px; background: var(--accent); color: #140f22; font-family: var(--font-mono); font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.body { display: grid; gap: 8px; align-content: start; padding: 14px 16px 16px; }
+.name { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 32px; line-height: 0.95; text-transform: uppercase; }
+.name span { color: var(--accent); }
+.pitch { margin: 0; color: var(--chalk); opacity: 0.9; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tags li { padding: 2px 8px; border: 1px solid rgba(243, 238, 229, 0.25); border-radius: 999px; font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.scores { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 0; }
+.scores div { min-width: 0; }
+.scores dt { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.scores dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: 900; font-size: 20px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.scores dd small { font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--haze); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 4px; }
+.play { display: inline-block; padding: 0.3em 1.3em; color: #140f22; background: var(--accent); font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
+.play > span { display: inline-block; transform: skewX(12deg); }
+.alt { color: var(--chalk); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.play:focus-visible, .alt:focus-visible, .art:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+.saved { color: var(--accent); font-family: var(--font-mono); font-size: 12px; }
+footer { margin-top: 26px; color: var(--haze); font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { .game { transition: transform 0.15s; } .game:hover { transform: translateY(-3px); } }
+</style>
+</head>
+<body>
+<div id="arcade" class="wrap">
+  <header>
+    <p class="eyebrow">Games by Lennify44 · free · made for phones</p>
+    <h1>Lennify<br><span>Arcade</span></h1>
+    <p class="lede">Every game in one place. Tap one to play; your best scores stay on this phone.<small>Tip: in Safari tap Share → “Add to Home Screen” to keep a game like an app.</small></p>
+  </header>
+  <main class="grid" id="grid" aria-label="Games"></main>
+  <footer>All money in these games is pretend. World leaderboards are kept on the public site.</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const BASE = 'https://lennify44.github.io/rooftop-roulette/';
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const onSite = location.hostname === 'lennify44.github.io';
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const read = (k) => { try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch (e) { return null; } };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// one simple drawing per game, in that game's colours (viewBox 320 x 160)
+const ART = {
+  rooftop: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1d52"/><stop offset="1" stop-color="#6b2f5a"/></linearGradient></defs><rect width="320" height="160" fill="url(#a1)"/>
+    <g transform="translate(250 42)">${Array.from({ length: 9 }, (_, i) => `<path d="M0 0 L${(Math.cos(i * 0.698) * 26).toFixed(1)} ${(Math.sin(i * 0.698) * 26).toFixed(1)} A26 26 0 0 1 ${(Math.cos((i + 1) * 0.698) * 26).toFixed(1)} ${(Math.sin((i + 1) * 0.698) * 26).toFixed(1)}Z" fill="${['#b9c6ff', '#ff5a4e', '#c08bff', '#ffe08a', '#f3eee5', '#5fe0a8', '#8fd8ff', '#ff9ad5', '#ffc23d'][i]}"/>`).join('')}<circle r="7" fill="#110e22"/><circle r="27" fill="none" stroke="#ffa23e" stroke-width="3"/></g>
+    <path d="M0 160 V100 H40 V80 H70 V110 H95 V70 H140 V105 H170 V88 H215 V112 H240 V92 H280 V118 H320 V160Z" fill="#110e22"/>
+    <g transform="translate(150 50) rotate(-12)" fill="#f3eee5"><circle cx="0" cy="0" r="6"/><path d="M-3 6 L4 6 L8 22 L2 22Z"/><path d="M4 10 L18 4 L19 8 L6 15Z"/><path d="M2 21 L-10 30 L-7 33 L6 25Z"/><path d="M6 21 L14 34 L18 32 L10 20Z"/></g></svg>`,
+  pigeon: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f08a4b"/><stop offset="1" stop-color="#4b2a55"/></linearGradient></defs><rect width="320" height="160" fill="url(#a2)"/>
+    <rect y="126" width="320" height="34" fill="#2a1d33"/><rect x="40" y="56" width="5" height="70" fill="#1a1222"/><circle cx="42" cy="54" r="8" fill="#ffd27a"/>
+    <g transform="translate(170 64)"><ellipse cx="0" cy="0" rx="30" ry="15" fill="#9fb0c8"/><circle cx="26" cy="-10" r="11" fill="#9fb0c8"/><path d="M35 -10 L46 -7 L35 -5Z" fill="#ffb02e"/><circle cx="29" cy="-12" r="2" fill="#111"/><path d="M-8 -6 Q-30 -40 -50 -22 Q-30 -18 -10 4Z" fill="#7d8ea6"/><rect x="18" y="-30" width="16" height="9" fill="#2a1d33"/><rect x="14" y="-22" width="24" height="3" fill="#2a1d33"/></g>
+    <g fill="#1a1222"><circle cx="250" cy="104" r="7"/><rect x="245" y="111" width="10" height="16"/><circle cx="90" cy="108" r="6"/><rect x="85" y="114" width="10" height="13"/></g></svg>`,
+  elevator: `<svg viewBox="0 0 320 160" aria-hidden="true"><rect width="320" height="160" fill="#22212e"/><rect x="70" y="14" width="180" height="26" fill="#0c0b14" stroke="#45445a" stroke-width="3"/><text x="160" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="18" fill="#ffb02e">▲ 07 · VIP</text>
+    <rect x="80" y="48" width="160" height="112" fill="#0c0b14"/><rect x="80" y="48" width="56" height="112" fill="#4a4960"/><rect x="184" y="48" width="56" height="112" fill="#4a4960"/>
+    <g transform="translate(160 104)"><circle r="22" fill="#e5484d" stroke="#f3eee5" stroke-width="4" stroke-dasharray="6 5"/><text y="7" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="20" fill="#fff">×2.5</text></g>
+    <circle cx="275" cy="80" r="9" fill="#ffb02e"/><circle cx="275" cy="104" r="9" fill="#45445a"/></svg>`,
+  volcano: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
+    <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
+    ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>`,
+  room404: `<svg viewBox="0 0 320 160" aria-hidden="true"><rect width="320" height="160" fill="#2c2235"/><rect y="128" width="320" height="32" fill="#4a2228"/>
+    <rect x="118" y="26" width="84" height="104" fill="#5d3f2a" stroke="#2a1a10" stroke-width="4"/><rect x="128" y="36" width="64" height="36" fill="none" stroke="#3e2a1b" stroke-width="3"/><rect x="128" y="80" width="64" height="40" fill="none" stroke="#3e2a1b" stroke-width="3"/><rect x="183" y="76" width="9" height="9" fill="#140d08"/>
+    <rect x="140" y="10" width="40" height="14" rx="3" fill="#d9a74a"/><text x="160" y="21" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="11" fill="#2a1a10">404</text>
+    <text x="252" y="58" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="22" fill="#ff5a4e">11:47</text><rect x="222" y="38" width="60" height="28" rx="4" fill="none" stroke="#3a3040" stroke-width="3"/>
+    <g transform="translate(58 96) rotate(-30)"><circle r="9" fill="none" stroke="#d9a74a" stroke-width="4"/><rect x="8" y="-2" width="26" height="4" fill="#d9a74a"/><rect x="26" y="0" width="4" height="8" fill="#d9a74a"/></g></svg>`,
+  rogue: `<svg viewBox="0 0 320 160" aria-hidden="true"><rect width="320" height="160" fill="#0f3d2a"/>
+    <g transform="translate(160 80)"><circle r="74" fill="#3b2414"/><circle r="64" fill="#8a5a32"/>${Array.from({ length: 25 }, (_, i) => { const a0 = (i * Math.PI * 2) / 25, a1 = ((i + 1) * Math.PI * 2) / 25; return `<path d="M${(Math.cos(a0) * 34).toFixed(1)} ${(Math.sin(a0) * 34).toFixed(1)} L${(Math.cos(a0) * 50).toFixed(1)} ${(Math.sin(a0) * 50).toFixed(1)} A50 50 0 0 1 ${(Math.cos(a1) * 50).toFixed(1)} ${(Math.sin(a1) * 50).toFixed(1)} L${(Math.cos(a1) * 34).toFixed(1)} ${(Math.sin(a1) * 34).toFixed(1)} A34 34 0 0 0 ${(Math.cos(a0) * 34).toFixed(1)} ${(Math.sin(a0) * 34).toFixed(1)}Z" fill="${i === 0 ? '#18925a' : i % 2 ? '#c8323a' : '#18181c'}"/>`; }).join('')}<circle r="33" fill="#7a4e22"/><circle r="6" fill="#e8c27a"/>
+    <g transform="translate(40 -36)"><circle r="11" fill="#f2f4f6"/><circle cx="-4" cy="-2" r="1.8" fill="#111"/><circle cx="4" cy="-2" r="1.8" fill="#111"/><path d="M-4 4 Q0 7 4 4" stroke="#111" stroke-width="1.5" fill="none"/></g></g>
+    <rect x="18" y="16" width="56" height="10" rx="5" fill="#000" opacity="0.5"/><rect x="18" y="16" width="38" height="10" rx="5" fill="#ff7a3d"/></svg>`,
+};
+
+// best scores live in each game's own storage (same site, so the arcade can read them)
+const GAMES = [
+  { id: 'rooftop', name: 'Rooftop <span>Roulette</span>', url: '', accent: '#ffa23e', board: '', tags: ['runner', 'gambling', 'shop'],
+    pitch: 'Freerun across the rooftops while roulette wheels change the rules. Pests and bosses can’t be beaten, only outrun.',
+    best: () => { const b = read('rooftop-roulette-best'); return b && b.score ? [`$${fmt(b.score)}`, `${fmt(b.dist)} m`] : null; },
+    world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
+  { id: 'rogue', name: 'Rogue <span>Ball</span>', url: 'rogue-ball/', accent: '#e8b64c', board: 'rogueball', badge: 'New', tags: ['timing', 'casino', 'one tap'],
+    pitch: 'You are the roulette ball. Drop into the called pocket, but win quietly or security throws you out.',
+    best: () => { const p = read('rogue-ball-profile'); return p && p.best ? [`◉ ${fmt(p.best)}`, 'peak stack'] : null; },
+    world: (e) => [`◉ ${fmt(e.score)}`, `${e.dist} spins`] },
+  { id: 'volcano', name: 'Volcano <span>Bingo</span>', url: 'volcano-bingo/', accent: '#ff6a2b', board: 'volcano', badge: 'New', tags: ['reflexes', 'bingo', 'tap'],
+    pitch: 'The volcano spits numbered lava rocks. Tap the ones on your card, defuse the bombs, pick hotter cards.',
+    best: () => { const p = read('volcano-bingo-profile'); return p && p.best ? [fmt(p.best), `${p.bestBingos || 0} bingos`] : null; },
+    world: (e) => [fmt(e.score), `${e.dist} bingos`] },
+  { id: 'room404', name: 'Room <span>404</span>', url: 'room-404/', accent: '#d9a74a', board: 'room404', badge: 'New · Deutsch', tags: ['escape room', 'puzzles', 'EN / DE'],
+    pitch: 'An escape room in a hotel room that doesn’t exist. Find the way out before checkout at noon.',
+    best: () => { const p = read('room-404-profile'); return p && p.best ? [mmss(p.best), 'left at the escape'] : null; },
+    saved: () => { const s = read('room-404-save'); return s && !s.done ? 'Game in progress' : ''; },
+    world: (e) => [mmss(e.score), `${e.dist} hint${e.dist === 1 ? '' : 's'}`],
+    alt: { label: 'Auf Deutsch', url: 'room-404/?lang=de' } },
+  { id: 'elevator', name: 'Elevator <span>Roulette</span>', url: 'elevator-roulette/', accent: '#ffb02e', board: 'elevator', tags: ['mini-games', 'push your luck'],
+    pitch: 'Fifteen mini-games, a twist dial and a cable that can snap. Ride up, take the express, or cash out.',
+    best: () => { const p = read('elevator-roulette-profile'); return p && p.best ? [`$${fmt(p.best)}`, `floor ${p.floor || 0}`] : null; },
+    world: (e) => [`$${fmt(e.score)}`, `floor ${e.dist}`] },
+  { id: 'pigeon', name: 'Pigeon <span>Revenge</span>', url: 'pigeon-revenge/', accent: '#9fb0c8', board: null, tags: ['flying', 'chaos'],
+    pitch: 'Play a pigeon and snatch hats, fries and phones from the people below.',
+    best: () => { const b = read('pigeon-revenge-best'); return b ? [`$${fmt(b)}`, 'best flight'] : null; } },
+];
+
+function link(a, url) {
+  a.href = BASE + url;
+  if (!onSite) { a.target = '_blank'; a.rel = 'noopener'; }   // same tab on the public site, a new tab inside previews
+}
+function card(g) {
+  const el = document.createElement('article');
+  el.className = 'game'; el.style.setProperty('--accent', g.accent); el.id = `g-${g.id}`;
+  const best = g.best(), saved = g.saved ? g.saved() : '';
+  const plain = g.name.replace(/<[^>]+>/g, '');
+  el.innerHTML = `<a class="art" aria-label="Play ${esc(plain)}">${ART[g.id]}${g.badge ? `<span class="badge">${esc(g.badge)}</span>` : ''}</a>
+    <div class="body">
+      <h2 class="name">${g.name}</h2>
+      <p class="pitch">${esc(g.pitch)}</p>
+      <ul class="tags">${g.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      <dl class="scores">
+        <div><dt>Your best</dt><dd>${best ? `${esc(best[0])} <small>${esc(best[1])}</small>` : '<small>not played yet</small>'}</dd></div>
+        <div><dt>World #1</dt><dd class="w1">${g.board === null ? '<small>no leaderboard</small>' : onSite ? '<small>…</small>' : '<small>on the public site</small>'}</dd></div>
+      </dl>
+      <div class="actions"><a class="play"><span>${saved ? 'Continue' : 'Play'}</span></a>${g.alt ? `<a class="alt">${esc(g.alt.label)}</a>` : ''}${saved ? `<span class="saved">${esc(saved)}</span>` : ''}</div>
+    </div>`;
+  link(el.querySelector('.art'), g.url); link(el.querySelector('.play'), g.url);
+  if (g.alt) link(el.querySelector('.alt'), g.alt.url);
+  return el;
+}
+const grid = $('grid');
+for (const g of GAMES) grid.appendChild(card(g));
+
+// world #1 per game from the shared leaderboard (it only answers the public site)
+if (onSite) {
+  for (const g of GAMES.filter((x) => x.board !== null)) {
+    fetch(`${LEADERBOARD_URL}/scores${g.board ? `?game=${g.board}` : ''}`).then((r) => (r.ok ? r.json() : null)).then((data) => {
+      const dd = document.querySelector(`#g-${g.id} .w1`); if (!dd) return;
+      const top = data && data.alltime && data.alltime[0];
+      if (!top) { dd.innerHTML = '<small>nobody yet: be first</small>'; return; }
+      const [main, sub] = g.world(top);
+      dd.innerHTML = `${esc(main)} <small>${esc(top.name)} · ${esc(sub)}</small>`;
+    }).catch(() => { const dd = document.querySelector(`#g-${g.id} .w1`); if (dd) dd.innerHTML = '<small>offline</small>'; });
+  }
+}
+})();
+</script>
+</body>
+</html>

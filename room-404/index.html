@@ -54,7 +54,8 @@ body {
 .clock small { font-size: 12px; color: var(--haze); }
 .clock.low b { animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0.35; } }
-.loc { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--brass); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.loc { flex: 1; min-width: 0; text-align: center; font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--brass); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clock small { white-space: nowrap; }
 .tools { display: flex; gap: 8px; }
 .tool { min-width: 40px; height: 40px; padding: 0 12px; display: grid; place-items: center; border: 1.5px solid rgba(243, 236, 224, 0.3); border-radius: 20px; background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 14px; }
 .tool svg { width: 18px; height: 18px; }
@@ -142,48 +143,46 @@ body {
 <body>
 <div id="app">
   <header class="bar">
-    <div class="clock" id="clockBox"><b id="clock">11:15</b><small id="left">45 min to checkout</small></div>
+    <div class="clock" id="clockBox"><b id="clock">11:15</b><small id="left"></small></div>
     <div class="loc" id="loc">Room 404</div>
     <div class="tools">
-      <button class="tool" id="btnHint" type="button">Hint</button>
+      <button class="tool" id="btnHint" type="button" data-i18n="hintBtn">Hint</button>
       <button class="tool" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
-      <button class="tool" id="btnMenu" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="tool" id="btnMenu" type="button" data-i18n-aria="menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </header>
   <main class="stage">
     <div class="scene" id="scene"><div id="sceneSvg" style="height:100%"></div>
-      <button class="nav l" id="navL" type="button" aria-label="Turn left">‹</button>
-      <button class="nav r" id="navR" type="button" aria-label="Turn right">›</button>
+      <button class="nav l" id="navL" type="button" data-i18n-aria="turnL" aria-label="Turn left">‹</button>
+      <button class="nav r" id="navR" type="button" data-i18n-aria="turnR" aria-label="Turn right">›</button>
     </div>
   </main>
   <p class="say" id="say" aria-live="polite"></p>
-  <footer class="inv" id="inv" aria-label="Inventory"></footer>
+  <footer class="inv" id="inv" data-i18n-aria="inventory" aria-label="Inventory"></footer>
 
-  <div class="modal" id="modal" hidden><div class="panel" role="dialog" aria-modal="true" aria-labelledby="mTitle"><h2 id="mTitle"></h2><div id="mBody" style="display:grid;gap:12px"></div><div class="row"><button class="btn ghost" id="mClose" type="button">Close</button></div></div></div>
+  <div class="modal" id="modal" hidden><div class="panel" role="dialog" aria-modal="true" aria-labelledby="mTitle"><h2 id="mTitle"></h2><div id="mBody" style="display:grid;gap:12px"></div><div class="row"><button class="btn ghost" id="mClose" type="button" data-i18n="close">Close</button></div></div></div>
 
   <section class="screen" id="screenStart" aria-label="Start">
     <div class="menu">
       <div>
-        <p class="eyebrow">An escape room in your pocket</p>
-        <h1 class="logo">Room <span>404</span></h1>
-        <p class="lede">You wake up in room 404 of the Grand Paradox Hotel. The hotel swears this room does not exist. The door has no handle, and a note on the pillow says: “Checkout is at 12:00. Late guests stay forever.”</p>
+        <p class="eyebrow" data-i18n="eyebrow">An escape room in your pocket</p>
+        <h1 class="logo" data-i18n="logo">Room <span>404</span></h1>
+        <p class="lede" data-i18n="lede"></p>
         <div class="cta-row">
-          <button class="btn" id="btnContinue" type="button" hidden>Continue</button>
+          <button class="btn" id="btnContinue" type="button" data-i18n="continue" hidden>Continue</button>
           <button class="btn" id="btnNew" type="button">Check in</button>
         </div>
         <div class="sub-row">
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/volcano-bingo/" target="_blank" rel="noopener">Volcano Bingo</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/elevator-roulette/" target="_blank" rel="noopener">Elevator Roulette</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/rogue-ball/" target="_blank" rel="noopener">Rogue Ball</a>
+          <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
+          <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener" data-i18n="allGames">All games</a>
         </div>
       </div>
       <div class="side">
-        <h2 class="label">How to play</h2>
-        <p class="tip">Tap things to look at them. Tap an item in your bag to hold it, then tap something in the room to use it there, or another item to combine them. The clock shows the hotel time; you have 45 real minutes. Stuck? Hints cost 2 minutes each. Your progress is saved.</p>
-        <h2 class="label" style="margin-top:8px">Fastest escapes <span id="lbWho"></span></h2>
-        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
-        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+        <h2 class="label" data-i18n="howTitle">How to play</h2>
+        <p class="tip" data-i18n="howText"></p>
+        <h2 class="label" style="margin-top:8px"><span data-i18n="lbTitle">Fastest escapes</span> <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true" data-i18n="allTime">All time</button><button type="button" data-lb="daily" aria-pressed="false" data-i18n="today">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">…</li></ol>
       </div>
     </div>
   </section>
@@ -191,16 +190,16 @@ body {
   <section class="screen" id="screenEnd" aria-label="The end" hidden>
     <div class="menu">
       <div>
-        <p class="eyebrow" id="endEyebrow">Checked out</p>
-        <h1 class="logo" id="endTitle" style="font-size: clamp(44px, 9vw, 90px)">You escaped</h1>
+        <p class="eyebrow" id="endEyebrow"></p>
+        <h1 class="logo" id="endTitle" style="font-size: clamp(44px, 9vw, 90px)"></h1>
         <p class="lede" id="endText"></p>
-        <div class="cta-row"><button class="btn" id="btnEndNew" type="button">Play again</button><button class="link-btn" id="btnOvertime" type="button" hidden>Keep searching (overtime)</button></div>
-        <dl class="stats"><div><dt>Time left</dt><dd id="endLeft">0:00</dd></div><div><dt>Hints</dt><dd id="endHints">0</dd></div><div><dt>Best</dt><dd id="endBest">–</dd></div></dl>
+        <div class="cta-row"><button class="btn" id="btnEndNew" type="button" data-i18n="playAgain">Play again</button><button class="link-btn" id="btnOvertime" type="button" data-i18n="overtimeBtn" hidden>Keep searching (overtime)</button></div>
+        <dl class="stats"><div><dt data-i18n="timeLeft">Time left</dt><dd id="endLeft">0:00</dd></div><div><dt data-i18n="hintsStat">Hints</dt><dd id="endHints">0</dd></div><div><dt data-i18n="bestStat">Best</dt><dd id="endBest">–</dd></div></dl>
       </div>
       <div class="side">
         <div class="lb-post" id="lbPost" hidden>
-          <label for="lbName">Your name on the leaderboard</label>
-          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post time</button></div>
+          <label for="lbName" data-i18n="lbName">Your name on the leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button" data-i18n="lbSend">Post time</button></div>
         </div>
         <p class="tip" id="lbResult"></p>
       </div>
@@ -219,13 +218,244 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '' }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const mmss = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, '0')}`;
 function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+
+// ---------- texts: English and German. A function entry takes arguments, an array entry is a random pick.
+const TXT = {
+  en: {
+    docTitle: 'Room 404', eyebrow: 'An escape room in your pocket', logo: 'Room <span>404</span>',
+    lede: 'You wake up in room 404 of the Grand Paradox Hotel. The hotel swears this room does not exist. The door has no handle, and a note on the pillow says: “Checkout is at 12:00. Late guests stay forever.”',
+    continue: 'Continue', checkIn: 'Check in', newGame: 'New game', confirmNew: 'Tap again to start over', allGames: 'All games', otherLang: 'Deutsch',
+    howTitle: 'How to play',
+    howText: 'Tap things to look at them. Tap an item in your bag to hold it, then tap something in the room to use it there, or another item to combine them. The clock shows the hotel time; you have 45 real minutes. Stuck? Hints cost 2 minutes each. Your progress is saved.',
+    lbTitle: 'Fastest escapes', allTime: 'All time', today: 'Today', hintBtn: 'Hint', close: 'Close', playAgain: 'Play again', overtimeBtn: 'Keep searching (overtime)',
+    timeLeft: 'Time left', hintsStat: 'Hints', bestStat: 'Best', lbName: 'Your name on the leaderboard', lbSend: 'Post time',
+    menu: 'Menu', turnL: 'Turn left', turnR: 'Turn right', inventory: 'Inventory', soundOn: 'Sound on', soundOff: 'Sound off',
+    empty: 'Your pockets are empty.', minLeft: (n) => `${n} min left`, overtime: 'OVERTIME', overtimeLeft: 'checkout was at 12:00',
+    views: { bed: 'Room 404 · bed', desk: 'Room 404 · desk', bath: 'Bathroom', hall: 'Hallway, 4th floor' },
+    svg: { tv: 'TV', guide: 'guide', bathroom: 'Bathroom', breakfast: 'BREAKFAST', back: '⟵ back to the room', exit: 'EXIT', exit404: 'EXIT 404', notFound: 'NOT FOUND', panel: 'panel', room404: '⟵ room 404', ch: 'CH' },
+    aria: { bedScene: 'Room 404, bed side', deskScene: 'Room 404, desk side', bathScene: 'The bathroom', hallScene: 'The hallway', door: 'Door', painting: 'Painting', bed: 'Bed', pillow: 'Pillow', pillow2: 'Second pillow', drawer: 'Nightstand drawer', clock: 'Clock radio', lamp: 'Lamp', tv: 'TV', guide: 'Channel guide', minibar: 'Minibar', desk: 'Desk drawers', wardrobe: 'Wardrobe', bathdoor: 'Bathroom door', shower: 'Shower', mirror: 'Mirror', sink: 'Sink', towels: 'Towels', toilet: 'Toilet', tub: 'Bathtub', duck: 'Rubber duck', back: 'Back to the room', end: 'End of the hallway', panel: 'Maintenance panel', d404: 'Back into room 404', doorN: (n) => `Door ${n}` },
+    items: {
+      remoteDead: ['Remote', 'no batteries', 'A TV remote. The battery compartment is empty.'],
+      batteries: ['Batteries', '', 'Two AA batteries, still warm from the duck.'],
+      remote: ['Remote', 'works', 'A working TV remote. It has number keys.'],
+      tray: ['Ice tray', '', 'One ice cube has something metal frozen inside it.'],
+      key: ['Brass key', '', 'A tiny brass key. Too small for a door.'],
+      uv: ['UV torch', '', 'A little ultraviolet torch. It makes fingerprints glow.'],
+      voucher: ['Spa voucher', '', '“Feeling lost? Just REFRESH. – Paradox Spa, key F5.”'],
+      handle: ['Door handle', '', 'A brass door handle with a square pin. It looks like it belongs to room 404.'],
+      chocolate: ['Chocolate', '', 'Minibar chocolate. Price: $19. Eat it to think faster?'],
+    },
+    start: 'You wake up on top of the covers in room 404. Your head hurts. The door has no handle. The clock radio says 11:15. Checkout is at 12:00.',
+    back: 'Back in room 404. Nothing has changed. Except the time.',
+    useWhere: '<i>Now tap where to use it.</i>',
+    combined: 'You click the batteries into the remote. A tiny red light blinks. It lives!',
+    chocCombine: 'Chocolate does not combine with that. It combines with your mouth, though.',
+    combineFail: ['Those two do not go together.', 'You try. Nothing happens, except mild embarrassment.', 'Combining those would be very creative, and very useless.'],
+    nothing: 'Nothing special.',
+    toHall: 'The hallway of the fourth floor. It is very long, very quiet and very carpeted.',
+    doorTitle: 'The door', doorBody: '<p>Solid wood, no handle. Where the handle should be there is just a <b>square hole</b>. Through the peephole you see a hallway, with another hallway behind it.</p>',
+    paintTitle: 'The painting', paintBody: 'A night sky. Someone painted four stars very carefully: each one is a different size and has a <b>different number of points</b>. A brass plate says “The faint ones speak first.”',
+    pillow: 'Under the pillow: a TV remote. You open the back. No batteries. Of course.', pillowAgain: 'Just a pillow. It smells faintly of regret.',
+    pillow2: 'Under this pillow: a mint and a note: “Checkout is at 12:00. Late guests stay forever.” You eat the mint. You feel no better.',
+    bed: 'The bed is made perfectly. Too perfectly. Nobody has ever slept in it, except you, apparently.',
+    drawerTitle: 'Nightstand drawer', drawerLocked: '<p>It will not open. There is no keyhole, just a sticker:</p><div class="note">Smart Drawer™. Opens when the alarm is set for <b>breakfast</b>.<br>— Grand Paradox Wake-up Service</div>',
+    drawerOpen: '<p>The drawer is open.</p>', guestbook: 'Guest book, last entry: “Room 404? Never heard of it.” — Room 405',
+    takeUv: '🔦 Take the UV torch', tookUv: 'A UV torch. In escape rooms, these always matter.', nothingElse: 'Nothing else in here.',
+    lampOff: 'Click. Darker. Creepier. You turn it back on in your mind.', lampOn: 'Click. Light. Much better.',
+    tvNoRemote: 'The TV is off. It has no buttons at all. Who designs these things?', tvDeadRemote: 'The TV is off and has no buttons. The remote would help, if it had batteries.', tvTryRemote: 'The TV is off and has no buttons. Try the remote on it.',
+    guideTitle: 'TV guide', guideBody: '<div class="note">Grand Paradox TV<br>1 · Welcome<br>7 · Weather<br>12 · Cooking<br>404 · <i>(not found)</i></div>',
+    desk: ['A pen that does not write, and hotel paper that says “Grand Paradox: you never really leave.”', 'The desk drawers hold a room service menu. Soup of the day: “yesterday’s soup”.'],
+    wardrobeLocked: 'The wardrobe is locked. It has a very small brass keyhole.',
+    toBath: 'The bathroom. Clean, white, and slightly echoey.',
+    showerOn: 'You turn the shower on, hot. Steam starts to fill the room.', showerOff: 'You turn the shower off.',
+    mirrorRead: (b) => `Letters appear in the steam on the mirror: <b>BREAKFAST ${b}</b>.`, mirrorFog: 'The mirror is starting to fog up…', mirror: 'Your reflection looks tired. And trapped. Mostly trapped.',
+    sink: 'Hot water runs over your hands. Very hot. Good to know.',
+    towels: 'Three fluffy towels, rolled like burritos. Nothing inside. You checked. Twice.',
+    toilet: 'You lift the tank lid. Just water and a very surprised spider. You put the lid back. Sorry, spider.',
+    tub: 'A bathtub. A rubber duck floats in it, looking smug.',
+    duck: 'Squeak! The duck has a little hatch underneath. Inside: two AA batteries. It was a light-up duck.', duckAgain: 'Squeak. The duck looks lighter without its batteries. And betrayed.',
+    endLocked: 'A sign at the end of the hallway: <b>EXIT 404 · NOT FOUND</b>. There is only wall where the exit should be.',
+    d404: 'Back in room 404. It still does not exist.',
+    doors: ['Locked. A sign: “Do not disturb. Already disturbed.”', 'Locked. Someone inside is practising the trombone, badly.', 'Locked. You hear the sea. On the fourth floor.', 'Locked. The number plate says 405, then 404, then 405 again.', 'Locked. A note: “Room 404 people, please stop knocking.”', 'Locked. Snoring. Very peaceful snoring.'],
+    tvOn: 'The TV flickers on. The remote has number keys for channels.', tvNeedsPower: 'Nothing. The remote needs batteries. Where would a hotel hide batteries?',
+    melt: 'You hold the tray under the hot water. The ice melts, and a tiny brass key drops into the sink.',
+    wardrobeOpened: 'The brass key fits! The wardrobe swings open: a bathrobe, and a small safe on the floor.',
+    doorOpened: 'The handle slides into the square hole. You turn it. Click. The door of room 404 opens.',
+    uvPainting: 'You shine the UV torch on the painting. Nothing glows. The stars are just stars.', uvMirror: 'Under UV light the mirror shows… a lot of old fingerprints. Gross, but useless.',
+    ateChoc: 'You eat the $19 chocolate. Your brain feels faster. (+1 minute)', voucherPanel: 'The voucher said: “Feeling lost? Just REFRESH.” Hmm.',
+    clockTitle: 'Clock radio', hourPlus: 'Hour +', minPlus: 'Minutes +15', alarmOn: 'Alarm: ON', alarmOff: 'Alarm: OFF', clockInfo: 'The clock shows the hotel time. Checkout is at 12:00.',
+    ring: 'BEEP BEEP BEEP… *click*. Something in the nightstand just unlocked.', ringSay: 'The alarm beeps, and the nightstand drawer pops open with a click.', alarmNothing: 'The alarm is on. Nothing happens.',
+    tvTitle: 'TV',
+    channels: { 1: 'WELCOME TO THE GRAND PARADOX<br><br>“Every room has a story. Some rooms do not even have a number.”', 7: 'WEATHER<br><br>Heavy fog expected in all bathrooms. Hot steam may reveal hidden messages.', 12: 'COOKING WITH CHEF PARADOX<br><br>Today: ice cubes! Fun fact: hot water melts them. Whatever is frozen inside, falls out.', 404: 'THE MANAGER<br><br>“Lost your way out? The safe knows. The stars know the code: count their points, from the <b>faintest</b> star to the <b>brightest</b>.”' },
+    noSignal: (ch) => `CH ${ch}<br><br>no signal`,
+    minibarTitle: 'Minibar', minibarBody: '<p>Cold air and tiny overpriced things.</p>',
+    soda: '🥤 Soda', chocolate: '🍫 Chocolate', iceTray: '🧊 Ice tray', peanuts: '🥜 Peanuts',
+    sodaSay: 'Sugar-free cola, $14. You put it back very carefully.', chocSay: 'You take the chocolate. $19. Put it on the room bill. Room 404’s bill.',
+    traySay: 'An ice cube tray. In one cube, something small and metal is frozen solid.', peanutSay: '“May contain nuts.” It is a bag of nuts.',
+    wardrobeTitle: 'Wardrobe', wardrobeBody: '<p>A fluffy bathrobe on a hanger, and a small safe with a keypad on the floor.</p>',
+    robe: '👘 Check the robe pockets', robeSay: 'In the robe pocket: a spa voucher. “Feeling lost? Just REFRESH. – Paradox Spa, key F5.”', robeEmpty: 'The robe pockets are empty now.',
+    safeBtn: '🔒 The safe', safeOpenBtn: '🔓 The safe (open)', uvSafeBtn: '🔦 Shine the UV torch on the safe',
+    safeTitle: 'Safe', safeIsOpen: '<p>The safe is open.</p>', takeHandle: '🔩 Take the door handle', tookHandle: 'A brass door handle with a square pin. Room 404’s door has a square hole…', safeEmpty: 'Empty. Just the smell of old money.',
+    safeUv: 'Under UV light, four keys glow with old fingerprints.', safeCode: 'A four-digit code.', safeOpened: 'Click-clunk. The safe opens!',
+    safeWrong: ['ERROR. The safe beeps rudely.', 'Wrong code. The safe sighs electronically.', 'Nope. The display shows a little frowning face.'],
+    panelTitle: 'Maintenance panel', panelBody: '<p>A dusty grey panel with old keyboard keys screwed onto it. A sticker: “STAFF ONLY. If guests get lost, the system needs a fresh start.”</p>',
+    f5: 'The whole hallway flickers like a reloading web page… and at the end, an EXIT door appears.', f5Say: 'You pressed F5. The hallway refreshes, and the exit is found at last. Go!',
+    fkeys: { F1: 'HELP: Help is not available on this floor.', F2: 'The lights flicker. Rename? Rename what?', F3: 'SEARCH: 1 result: “you, lost”.', F4: 'Nothing happens. Probably for the best.', F6: 'The hallway lights point at the ceiling. Very helpful.', F7: 'A faint carpet smell. Nothing else.', F8: 'The elevator music gets louder. There is no elevator.', F9: 'Something hums inside the wall, then stops.', F10: 'A menu appears in your mind. It is the soup menu again.', F11: 'Everything looks bigger for a second. Full screen hallway.', F12: 'Inspect element: the exit is set to display: none.' },
+    hintsTitle: 'Hints', hintsIntro: 'Each new hint puts <b>2 minutes</b> on the clock. Hints you have already seen are free.', hintFirst: 'Show a hint (−2 min)', hintMore: 'Another hint (−2 min)', hintLast: 'That was the last hint for this step.',
+    hints: {
+      remote: ['Hotels hide things in beds.', 'Look under the pillows.', 'Tap the left pillow on the bed: there is a remote under it.'],
+      batteries: ['The remote needs power. What in this room might run on batteries?', 'Something in the bathroom lights up… or used to.', 'Tap the rubber duck in the bathtub: the batteries are inside it.'],
+      combine: ['You have a remote and batteries.', 'Combine items: tap one item, then tap the other.', 'Tap the batteries, then tap the remote.'],
+      tv: ['Now the remote works. What does a remote control?', 'Hold the remote and tap the TV.', 'Tap the remote in your bag, then tap the TV on the desk side.'],
+      mirror: ['The TV weather report talks about fog in bathrooms.', 'Hot steam reveals messages on mirrors.', 'Turn on the shower, wait a few seconds, then tap the mirror.'],
+      drawer: ['The nightstand drawer opens “when the alarm is set for breakfast”.', 'The mirror told you when breakfast is. Set the clock radio alarm to that time.', 'Tap the clock radio, set the alarm to the time on the mirror with Hour + and Minutes +15, then switch the alarm ON.'],
+      uv: ['The drawer is open now.', 'There is something useful in the nightstand drawer.', 'Tap the drawer and take the UV torch.'],
+      tray: ['Have you looked inside the minibar?', 'Something frozen in the minibar.', 'Open the minibar and take the ice tray.'],
+      melt: ['Something metal is frozen in the ice. How do you melt ice?', 'The cooking channel (12) has a tip. And the sink has hot water.', 'Hold the ice tray and tap the bathroom sink.'],
+      wardrobe: ['A tiny brass key. What has a tiny keyhole?', 'The wardrobe on the desk side is locked.', 'Hold the brass key and tap the wardrobe.'],
+      safe: ['The safe needs four digits. Watch TV channel 404 and look at the painting.', 'Count the points of each star. The manager says: from the faintest (smallest) star to the brightest (biggest). The UV torch shows which keys are used.', (c) => `The code is ${c}.`],
+      handle: ['What was in the safe?', 'Take what is in the safe.', 'Open the safe again and take the door handle.'],
+      door: ['The door has a square hole.', 'The handle from the safe has a square pin.', 'Hold the door handle and tap the door on the bed side.'],
+      refresh: ['The exit is “not found”. Where have you seen “404 not found” before?', 'The spa voucher from the robe says: “Feeling lost? Just REFRESH.” The maintenance panel has keyboard keys.', 'Tap the maintenance panel in the hallway and press F5.'],
+      exit: ['The exit is there now.', 'Walk to the end of the hallway.', 'Tap the green EXIT door at the end of the hallway.'],
+    },
+    upEyebrow: '12:00 · checkout time', upTitle: 'You stay forever',
+    upText: 'The clock hits noon. Somewhere a bell rings, and room 404 quietly becomes your room. Forever. (Or keep searching in overtime, just not for the leaderboard.)',
+    winEyebrowOver: 'Escaped, in overtime', winEyebrow: (t) => `Checked out at ${t}`, winTitle: 'You escaped!',
+    winTextOver: 'You pushed the EXIT door and stepped out into daylight. A little late, but free.',
+    winText: (left, h) => `You pushed the EXIT door and stepped out of the Grand Paradox with ${left} to spare. Behind you, the door of room 404 fades into the wallpaper. ${h ? `Hints used: ${h}.` : 'No hints at all. Impressive.'}`,
+    overtimeSay: 'Overtime. The clock has stopped caring, and so have you. Find the way out.',
+    lbPublic: 'The leaderboard lives on the public version of the game.', lbOpen: ' Open it', lbFail: 'Could not reach the leaderboard right now.',
+    lbEmptyDaily: 'Nobody has escaped today yet.', lbEmpty: 'Nobody has escaped yet. Be the first.', lbLeft: (m) => `${m} left`, lbHints: (n) => `${n} hint${n === 1 ? '' : 's'}`,
+    lbWho: (n) => `· you are ${n}`, lbNeedName: 'Type a name (letters, numbers, spaces) to post your time.', lbPosting: 'Posting…', lbTooFast: 'Too fast, try again in a few seconds.',
+    lbRejected: 'The leaderboard did not take this time.', lbRank: (a, d) => (a ? `Rank #${a}` : 'Not in the top 50 yet') + (d ? ` · today #${d}` : '') + '.',
+  },
+  de: {
+    docTitle: 'Zimmer 404', eyebrow: 'Ein Escape Room für die Hosentasche', logo: 'Zimmer <span>404</span>',
+    lede: 'Du wachst in Zimmer 404 des Grand Paradox Hotels auf. Das Hotel schwört, dass es dieses Zimmer gar nicht gibt. Die Tür hat keine Klinke, und auf dem Kissen liegt ein Zettel: „Check-out ist um 12:00. Wer zu spät kommt, bleibt für immer.“',
+    continue: 'Weiterspielen', checkIn: 'Einchecken', newGame: 'Neues Spiel', confirmNew: 'Nochmal tippen zum Neustart', allGames: 'Alle Spiele', otherLang: 'English',
+    howTitle: 'So geht’s',
+    howText: 'Tippe Dinge an, um sie dir anzusehen. Tippe einen Gegenstand in deiner Tasche an, um ihn zu halten, und dann etwas im Raum, um ihn dort zu benutzen, oder einen anderen Gegenstand, um beide zu kombinieren. Die Uhr zeigt die Hotelzeit; du hast 45 echte Minuten. Du kommst nicht weiter? Jeder Tipp kostet 2 Minuten. Dein Spielstand wird gespeichert.',
+    lbTitle: 'Schnellste Fluchten', allTime: 'Gesamt', today: 'Heute', hintBtn: 'Tipp', close: 'Schließen', playAgain: 'Nochmal spielen', overtimeBtn: 'Weitersuchen (Nachspielzeit)',
+    timeLeft: 'Restzeit', hintsStat: 'Tipps', bestStat: 'Bestzeit', lbName: 'Dein Name in der Bestenliste', lbSend: 'Zeit eintragen',
+    menu: 'Menü', turnL: 'Nach links drehen', turnR: 'Nach rechts drehen', inventory: 'Inventar', soundOn: 'Ton an', soundOff: 'Ton aus',
+    empty: 'Deine Taschen sind leer.', minLeft: (n) => `noch ${n} Min.`, overtime: 'NACHSPIELZEIT', overtimeLeft: 'Check-out war um 12:00',
+    views: { bed: 'Zimmer 404 · Bett', desk: 'Zimmer 404 · Schreibtisch', bath: 'Badezimmer', hall: 'Flur, 4. Stock' },
+    svg: { tv: 'TV', guide: 'Programm', bathroom: 'Bad', breakfast: 'FRÜHSTÜCK', back: '⟵ zurück ins Zimmer', exit: 'AUSGANG', exit404: 'AUSGANG 404', notFound: 'NICHT GEFUNDEN', panel: 'Schalttafel', room404: '⟵ Zimmer 404', ch: 'KANAL' },
+    aria: { bedScene: 'Zimmer 404, Bettseite', deskScene: 'Zimmer 404, Schreibtischseite', bathScene: 'Das Badezimmer', hallScene: 'Der Flur', door: 'Tür', painting: 'Gemälde', bed: 'Bett', pillow: 'Kissen', pillow2: 'Zweites Kissen', drawer: 'Nachttisch-Schublade', clock: 'Radiowecker', lamp: 'Lampe', tv: 'Fernseher', guide: 'TV-Programm', minibar: 'Minibar', desk: 'Schreibtischschubladen', wardrobe: 'Kleiderschrank', bathdoor: 'Badezimmertür', shower: 'Dusche', mirror: 'Spiegel', sink: 'Waschbecken', towels: 'Handtücher', toilet: 'Toilette', tub: 'Badewanne', duck: 'Gummiente', back: 'Zurück ins Zimmer', end: 'Ende des Flurs', panel: 'Wartungstafel', d404: 'Zurück in Zimmer 404', doorN: (n) => `Tür ${n}` },
+    items: {
+      remoteDead: ['Fernbedienung', 'ohne Batterien', 'Eine TV-Fernbedienung. Das Batteriefach ist leer.'],
+      batteries: ['Batterien', '', 'Zwei AA-Batterien, noch warm von der Ente.'],
+      remote: ['Fernbedienung', 'geht', 'Eine funktionierende Fernbedienung mit Zifferntasten.'],
+      tray: ['Eiswürfelform', '', 'In einem Eiswürfel ist etwas aus Metall eingefroren.'],
+      key: ['Messingschlüssel', '', 'Ein winziger Messingschlüssel. Zu klein für eine Tür.'],
+      uv: ['UV-Lampe', '', 'Eine kleine UV-Taschenlampe. Damit leuchten Fingerabdrücke.'],
+      voucher: ['Spa-Gutschein', '', '„Verloren? Einfach NEU LADEN. – Paradox Spa, Taste F5.“'],
+      handle: ['Türklinke', '', 'Eine Messing-Türklinke mit Vierkantstift. Sieht aus, als gehöre sie zu Zimmer 404.'],
+      chocolate: ['Schokolade', '', 'Minibar-Schokolade. Preis: 19 €. Essen, um schneller zu denken?'],
+    },
+    start: 'Du wachst auf der Bettdecke in Zimmer 404 auf. Dein Kopf brummt. Die Tür hat keine Klinke. Der Radiowecker zeigt 11:15. Check-out ist um 12:00.',
+    back: 'Zurück in Zimmer 404. Nichts hat sich verändert. Außer der Uhrzeit.',
+    useWhere: '<i>Tippe jetzt an, wo du es benutzen willst.</i>',
+    combined: 'Du klickst die Batterien in die Fernbedienung. Ein winziges rotes Licht blinkt. Sie lebt!',
+    chocCombine: 'Schokolade lässt sich damit nicht kombinieren. Mit deinem Mund aber schon.',
+    combineFail: ['Die beiden passen nicht zusammen.', 'Du versuchst es. Nichts passiert, außer leichter Peinlichkeit.', 'Die zu kombinieren wäre sehr kreativ und sehr nutzlos.'],
+    nothing: 'Nichts Besonderes.',
+    toHall: 'Der Flur im vierten Stock. Sehr lang, sehr still und sehr viel Teppich.',
+    doorTitle: 'Die Tür', doorBody: '<p>Massives Holz, keine Klinke. Wo die Klinke sein sollte, ist nur ein <b>viereckiges Loch</b>. Durch den Spion siehst du einen Flur, und dahinter noch einen Flur.</p>',
+    paintTitle: 'Das Gemälde', paintBody: 'Ein Nachthimmel. Jemand hat vier Sterne sehr sorgfältig gemalt: Jeder ist unterschiedlich groß und hat eine <b>andere Anzahl an Zacken</b>. Auf einem Messingschild steht: „Die Schwachen sprechen zuerst.“',
+    pillow: 'Unter dem Kissen: eine Fernbedienung. Du öffnest hinten die Klappe. Keine Batterien. Natürlich.', pillowAgain: 'Nur ein Kissen. Es riecht leicht nach Reue.',
+    pillow2: 'Unter diesem Kissen: ein Pfefferminz und ein Zettel: „Check-out ist um 12:00. Wer zu spät kommt, bleibt für immer.“ Du isst das Pfefferminz. Es hilft nicht.',
+    bed: 'Das Bett ist perfekt gemacht. Zu perfekt. Niemand hat je darin geschlafen, außer dir, anscheinend.',
+    drawerTitle: 'Nachttisch-Schublade', drawerLocked: '<p>Sie geht nicht auf. Kein Schlüsselloch, nur ein Aufkleber:</p><div class="note">Smart-Schublade™. Öffnet sich, wenn der Wecker auf <b>Frühstück</b> gestellt ist.<br>— Weckdienst des Grand Paradox</div>',
+    drawerOpen: '<p>Die Schublade ist offen.</p>', guestbook: 'Gästebuch, letzter Eintrag: „Zimmer 404? Nie gehört.“ — Zimmer 405',
+    takeUv: '🔦 UV-Lampe nehmen', tookUv: 'Eine UV-Lampe. In Escape Rooms ist die immer wichtig.', nothingElse: 'Sonst ist hier nichts.',
+    lampOff: 'Klick. Dunkler. Gruseliger. In Gedanken machst du es wieder an.', lampOn: 'Klick. Licht. Viel besser.',
+    tvNoRemote: 'Der Fernseher ist aus. Er hat überhaupt keine Tasten. Wer denkt sich so was aus?', tvDeadRemote: 'Der Fernseher ist aus und hat keine Tasten. Die Fernbedienung würde helfen, wenn sie Batterien hätte.', tvTryRemote: 'Der Fernseher ist aus und hat keine Tasten. Probier die Fernbedienung daran aus.',
+    guideTitle: 'TV-Programm', guideBody: '<div class="note">Grand Paradox TV<br>1 · Willkommen<br>7 · Wetter<br>12 · Kochen<br>404 · <i>(nicht gefunden)</i></div>',
+    desk: ['Ein Stift, der nicht schreibt, und Hotelpapier mit dem Spruch „Grand Paradox: Man geht nie so richtig.“', 'In den Schreibtischschubladen liegt eine Zimmerservice-Karte. Suppe des Tages: „die Suppe von gestern“.'],
+    wardrobeLocked: 'Der Kleiderschrank ist abgeschlossen. Er hat ein sehr kleines Schlüsselloch aus Messing.',
+    toBath: 'Das Bad. Sauber, weiß und mit leichtem Echo.',
+    showerOn: 'Du drehst die Dusche auf, heiß. Dampf füllt langsam den Raum.', showerOff: 'Du drehst die Dusche ab.',
+    mirrorRead: (b) => `Im Dampf auf dem Spiegel erscheinen Buchstaben: <b>FRÜHSTÜCK ${b}</b>.`, mirrorFog: 'Der Spiegel beschlägt langsam…', mirror: 'Dein Spiegelbild sieht müde aus. Und gefangen. Vor allem gefangen.',
+    sink: 'Heißes Wasser läuft über deine Hände. Sehr heiß. Gut zu wissen.',
+    towels: 'Drei flauschige Handtücher, gerollt wie Burritos. Nichts drin. Du hast nachgesehen. Zweimal.',
+    toilet: 'Du hebst den Deckel vom Spülkasten. Nur Wasser und eine sehr überraschte Spinne. Du legst den Deckel zurück. Sorry, Spinne.',
+    tub: 'Eine Badewanne. Darin schwimmt eine Gummiente und guckt selbstzufrieden.',
+    duck: 'Quietsch! Die Ente hat unten eine kleine Klappe. Darin: zwei AA-Batterien. Es war eine Leuchtente.', duckAgain: 'Quietsch. Ohne Batterien wirkt die Ente leichter. Und verraten.',
+    endLocked: 'Ein Schild am Ende des Flurs: <b>AUSGANG 404 · NICHT GEFUNDEN</b>. Wo der Ausgang sein sollte, ist nur Wand.',
+    d404: 'Zurück in Zimmer 404. Es gibt es immer noch nicht.',
+    doors: ['Abgeschlossen. Ein Schild: „Bitte nicht stören. Bin schon gestört.“', 'Abgeschlossen. Drinnen übt jemand Posaune, schlecht.', 'Abgeschlossen. Du hörst das Meer. Im vierten Stock.', 'Abgeschlossen. Auf dem Schild steht 405, dann 404, dann wieder 405.', 'Abgeschlossen. Ein Zettel: „Leute aus 404, bitte hört auf zu klopfen.“', 'Abgeschlossen. Schnarchen. Sehr friedliches Schnarchen.'],
+    tvOn: 'Der Fernseher flackert an. Die Fernbedienung hat Zifferntasten für die Sender.', tvNeedsPower: 'Nichts. Die Fernbedienung braucht Batterien. Wo würde ein Hotel Batterien verstecken?',
+    melt: 'Du hältst die Form unter das heiße Wasser. Das Eis schmilzt, und ein winziger Messingschlüssel fällt ins Waschbecken.',
+    wardrobeOpened: 'Der Messingschlüssel passt! Der Schrank schwingt auf: ein Bademantel und unten ein kleiner Safe.',
+    doorOpened: 'Die Klinke rutscht in das viereckige Loch. Du drehst. Klick. Die Tür von Zimmer 404 geht auf.',
+    uvPainting: 'Du leuchtest mit der UV-Lampe auf das Gemälde. Nichts leuchtet. Die Sterne sind einfach Sterne.', uvMirror: 'Unter UV-Licht zeigt der Spiegel… jede Menge alte Fingerabdrücke. Eklig, aber nutzlos.',
+    ateChoc: 'Du isst die 19-€-Schokolade. Dein Gehirn fühlt sich schneller an. (+1 Minute)', voucherPanel: 'Auf dem Gutschein stand: „Verloren? Einfach NEU LADEN.“ Hmm.',
+    clockTitle: 'Radiowecker', hourPlus: 'Stunde +', minPlus: 'Minuten +15', alarmOn: 'Wecker: AN', alarmOff: 'Wecker: AUS', clockInfo: 'Die Uhr zeigt die Hotelzeit. Check-out ist um 12:00.',
+    ring: 'PIEP PIEP PIEP… *klick*. Im Nachttisch hat sich gerade etwas entriegelt.', ringSay: 'Der Wecker piept, und die Nachttisch-Schublade springt mit einem Klick auf.', alarmNothing: 'Der Wecker ist an. Nichts passiert.',
+    tvTitle: 'Fernseher',
+    channels: { 1: 'WILLKOMMEN IM GRAND PARADOX<br><br>„Jedes Zimmer hat eine Geschichte. Manche Zimmer haben nicht mal eine Nummer.“', 7: 'WETTER<br><br>In allen Badezimmern wird dichter Nebel erwartet. Heißer Dampf kann versteckte Botschaften sichtbar machen.', 12: 'KOCHEN MIT CHEF PARADOX<br><br>Heute: Eiswürfel! Wusstest du, dass heißes Wasser sie schmelzen lässt? Was darin eingefroren ist, fällt heraus.', 404: 'DER MANAGER<br><br>„Den Ausgang verloren? Der Safe weiß Bescheid. Die Sterne kennen den Code: Zähl ihre Zacken, vom <b>schwächsten</b> Stern bis zum <b>hellsten</b>.“' },
+    noSignal: (ch) => `KANAL ${ch}<br><br>kein Signal`,
+    minibarTitle: 'Minibar', minibarBody: '<p>Kalte Luft und winzige, überteuerte Sachen.</p>',
+    soda: '🥤 Limo', chocolate: '🍫 Schokolade', iceTray: '🧊 Eiswürfelform', peanuts: '🥜 Erdnüsse',
+    sodaSay: 'Zuckerfreie Cola, 14 €. Du stellst sie sehr vorsichtig zurück.', chocSay: 'Du nimmst die Schokolade. 19 €. Geht auf die Zimmerrechnung. Die Rechnung von Zimmer 404.',
+    traySay: 'Eine Eiswürfelform. In einem Würfel ist etwas Kleines aus Metall festgefroren.', peanutSay: '„Kann Spuren von Nüssen enthalten.“ Es ist eine Tüte Nüsse.',
+    wardrobeTitle: 'Kleiderschrank', wardrobeBody: '<p>Ein flauschiger Bademantel auf einem Bügel und unten ein kleiner Safe mit Tastenfeld.</p>',
+    robe: '👘 Bademanteltaschen durchsuchen', robeSay: 'In der Bademanteltasche: ein Spa-Gutschein. „Verloren? Einfach NEU LADEN. – Paradox Spa, Taste F5.“', robeEmpty: 'Die Bademanteltaschen sind jetzt leer.',
+    safeBtn: '🔒 Der Safe', safeOpenBtn: '🔓 Der Safe (offen)', uvSafeBtn: '🔦 Mit der UV-Lampe auf den Safe leuchten',
+    safeTitle: 'Safe', safeIsOpen: '<p>Der Safe ist offen.</p>', takeHandle: '🔩 Türklinke nehmen', tookHandle: 'Eine Messing-Türklinke mit Vierkantstift. Die Tür von Zimmer 404 hat ein viereckiges Loch…', safeEmpty: 'Leer. Nur der Geruch von altem Geld.',
+    safeUv: 'Unter UV-Licht leuchten vier Tasten mit alten Fingerabdrücken.', safeCode: 'Ein vierstelliger Code.', safeOpened: 'Klick-klonk. Der Safe geht auf!',
+    safeWrong: ['FEHLER. Der Safe piept unhöflich.', 'Falscher Code. Der Safe seufzt elektronisch.', 'Nö. Das Display zeigt ein kleines grummeliges Gesicht.'],
+    panelTitle: 'Wartungstafel', panelBody: '<p>Eine staubige graue Tafel, auf die alte Tastaturtasten geschraubt sind. Ein Aufkleber: „NUR PERSONAL. Wenn Gäste sich verirren, braucht das System einen frischen Start.“</p>',
+    f5: 'Der ganze Flur flackert wie eine Webseite, die neu lädt… und am Ende erscheint eine AUSGANG-Tür.', f5Say: 'Du hast F5 gedrückt. Der Flur lädt neu, und der Ausgang ist endlich gefunden. Los!',
+    fkeys: { F1: 'HILFE: Auf dieser Etage ist keine Hilfe verfügbar.', F2: 'Das Licht flackert. Umbenennen? Was denn umbenennen?', F3: 'SUCHE: 1 Treffer: „du, verirrt“.', F4: 'Nichts passiert. Wahrscheinlich besser so.', F6: 'Die Flurlampen zeigen an die Decke. Sehr hilfreich.', F7: 'Ein leichter Teppichgeruch. Sonst nichts.', F8: 'Die Fahrstuhlmusik wird lauter. Es gibt keinen Fahrstuhl.', F9: 'Etwas brummt in der Wand und hört dann auf.', F10: 'Vor deinem inneren Auge erscheint ein Menü. Es ist wieder die Suppenkarte.', F11: 'Für eine Sekunde wirkt alles größer. Vollbild-Flur.', F12: 'Element untersuchen: Der Ausgang steht auf display: none.' },
+    hintsTitle: 'Tipps', hintsIntro: 'Jeder neue Tipp kostet <b>2 Minuten</b>. Schon gesehene Tipps sind gratis.', hintFirst: 'Tipp zeigen (−2 Min.)', hintMore: 'Noch ein Tipp (−2 Min.)', hintLast: 'Das war der letzte Tipp für diesen Schritt.',
+    hints: {
+      remote: ['Hotels verstecken Dinge gern im Bett.', 'Schau unter die Kissen.', 'Tippe auf das linke Kissen im Bett: Darunter liegt eine Fernbedienung.'],
+      batteries: ['Die Fernbedienung braucht Strom. Was in diesem Zimmer läuft mit Batterien?', 'Im Bad leuchtet etwas… oder hat mal geleuchtet.', 'Tippe auf die Gummiente in der Badewanne: Darin sind die Batterien.'],
+      combine: ['Du hast eine Fernbedienung und Batterien.', 'Gegenstände kombinieren: Tippe einen an, dann den anderen.', 'Tippe die Batterien an, dann die Fernbedienung.'],
+      tv: ['Jetzt funktioniert die Fernbedienung. Was steuert man damit?', 'Halte die Fernbedienung und tippe auf den Fernseher.', 'Tippe die Fernbedienung in deiner Tasche an, dann den Fernseher auf der Schreibtischseite.'],
+      mirror: ['Der Wetterbericht im Fernsehen spricht von Nebel in Badezimmern.', 'Heißer Dampf macht Botschaften auf Spiegeln sichtbar.', 'Dreh die Dusche auf, warte ein paar Sekunden und tippe dann auf den Spiegel.'],
+      drawer: ['Die Nachttisch-Schublade öffnet sich, „wenn der Wecker auf Frühstück gestellt ist“.', 'Der Spiegel hat dir verraten, wann Frühstück ist. Stell den Radiowecker auf diese Zeit.', 'Tippe auf den Radiowecker, stell mit Stunde + und Minuten +15 die Zeit vom Spiegel ein und schalte den Wecker AN.'],
+      uv: ['Die Schublade ist jetzt offen.', 'In der Nachttisch-Schublade liegt etwas Nützliches.', 'Tippe auf die Schublade und nimm die UV-Lampe.'],
+      tray: ['Hast du schon in die Minibar geschaut?', 'In der Minibar ist etwas eingefroren.', 'Öffne die Minibar und nimm die Eiswürfelform.'],
+      melt: ['Etwas aus Metall ist im Eis eingefroren. Wie schmilzt man Eis?', 'Der Kochkanal (12) hat einen Tipp. Und das Waschbecken hat heißes Wasser.', 'Halte die Eiswürfelform und tippe auf das Waschbecken im Bad.'],
+      wardrobe: ['Ein winziger Messingschlüssel. Was hat ein winziges Schlüsselloch?', 'Der Kleiderschrank auf der Schreibtischseite ist abgeschlossen.', 'Halte den Messingschlüssel und tippe auf den Kleiderschrank.'],
+      safe: ['Der Safe braucht vier Ziffern. Schau Kanal 404 und sieh dir das Gemälde an.', 'Zähl die Zacken jedes Sterns. Der Manager sagt: vom schwächsten (kleinsten) bis zum hellsten (größten) Stern. Die UV-Lampe zeigt, welche Tasten benutzt werden.', (c) => `Der Code ist ${c}.`],
+      handle: ['Was war im Safe?', 'Nimm, was im Safe liegt.', 'Öffne den Safe nochmal und nimm die Türklinke.'],
+      door: ['Die Tür hat ein viereckiges Loch.', 'Die Klinke aus dem Safe hat einen Vierkantstift.', 'Halte die Türklinke und tippe auf die Tür auf der Bettseite.'],
+      refresh: ['Der Ausgang ist „nicht gefunden“. Wo hast du „404 Not Found“ schon mal gesehen?', 'Der Spa-Gutschein aus dem Bademantel sagt: „Verloren? Einfach NEU LADEN.“ Die Wartungstafel hat Tastaturtasten.', 'Tippe auf die Wartungstafel im Flur und drück F5.'],
+      exit: ['Jetzt ist der Ausgang da.', 'Geh ans Ende des Flurs.', 'Tippe auf die grüne AUSGANG-Tür am Ende des Flurs.'],
+    },
+    upEyebrow: '12:00 · Check-out', upTitle: 'Du bleibst für immer',
+    upText: 'Die Uhr schlägt zwölf. Irgendwo läutet eine Glocke, und Zimmer 404 wird still und leise dein Zimmer. Für immer. (Oder du suchst in der Nachspielzeit weiter, nur nicht für die Bestenliste.)',
+    winEyebrowOver: 'Entkommen, in der Nachspielzeit', winEyebrow: (t) => `Ausgecheckt um ${t}`, winTitle: 'Du bist entkommen!',
+    winTextOver: 'Du drückst die AUSGANG-Tür auf und trittst ins Tageslicht. Etwas spät, aber frei.',
+    winText: (left, h) => `Du drückst die AUSGANG-Tür auf und verlässt das Grand Paradox mit ${left} Restzeit. Hinter dir verschwindet die Tür von Zimmer 404 in der Tapete. ${h ? `Benutzte Tipps: ${h}.` : 'Ganz ohne Tipps. Respekt.'}`,
+    overtimeSay: 'Nachspielzeit. Der Uhr ist es jetzt egal, dir auch. Finde den Weg nach draußen.',
+    lbPublic: 'Die Bestenliste gibt es nur in der öffentlichen Version des Spiels.', lbOpen: ' Öffnen', lbFail: 'Die Bestenliste ist gerade nicht erreichbar.',
+    lbEmptyDaily: 'Heute ist noch niemand entkommen.', lbEmpty: 'Noch ist niemand entkommen. Mach den Anfang.', lbLeft: (m) => `${m} übrig`, lbHints: (n) => (n === 1 ? '1 Tipp' : `${n} Tipps`),
+    lbWho: (n) => `· du bist ${n}`, lbNeedName: 'Gib einen Namen ein (Buchstaben, Zahlen, Leerzeichen), um deine Zeit einzutragen.', lbPosting: 'Wird eingetragen…', lbTooFast: 'Zu schnell, versuch es in ein paar Sekunden nochmal.',
+    lbRejected: 'Die Bestenliste hat diese Zeit nicht angenommen.', lbRank: (a, d) => (a ? `Platz ${a}` : 'Noch nicht in den Top 50') + (d ? ` · heute Platz ${d}` : '') + '.',
+  },
+};
+// language: ?lang=de|en in the link, then the last choice, then the phone's language
+let lang = (() => {
+  const q = (/[?&]lang=(de|en)\b/.exec(location.search || '') || [])[1];
+  if (q) { profile.lang = q; saveProfile(); return q; }
+  if (profile.lang === 'de' || profile.lang === 'en') return profile.lang;
+  return /^de\b/i.test((navigator.language || '')) ? 'de' : 'en';
+})();
+const T = () => TXT[lang];
+const t = (k, ...a) => { const v = T()[k] !== undefined ? T()[k] : TXT.en[k]; return typeof v === 'function' ? v(...a) : Array.isArray(v) ? pick(v) : v; };
 
 // ---------- sound
 const Sound = {
@@ -260,23 +490,14 @@ const Sound = {
   lose() { [392, 349, 311, 262].forEach((f, i) => this.tone(f, 0.5, 'sawtooth', 0.05, 0, i * 0.25)); },
 };
 function renderMute() {
-  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? t('soundOff') : t('soundOn'));
   $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
 }
 $('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
 
-// ---------- items
-const ITEMS = {
-  remoteDead: { name: 'Remote', note: 'no batteries', icon: '📟', desc: 'A TV remote. The battery compartment is empty.' },
-  batteries: { name: 'Batteries', icon: '🔋', desc: 'Two AA batteries, still warm from the duck.' },
-  remote: { name: 'Remote', note: 'works', icon: '📟', desc: 'A working TV remote. It has number keys.' },
-  tray: { name: 'Ice tray', icon: '🧊', desc: 'One ice cube has something metal frozen inside it.' },
-  key: { name: 'Brass key', icon: '🗝️', desc: 'A tiny brass key. Too small for a door.' },
-  uv: { name: 'UV torch', icon: '🔦', desc: 'A little ultraviolet torch. It makes fingerprints glow.' },
-  voucher: { name: 'Spa voucher', icon: '🎫', desc: '“Feeling lost? Just REFRESH. – Paradox Spa, key F5.”' },
-  handle: { name: 'Door handle', icon: '🔩', desc: 'A brass door handle with a square pin. It looks like it belongs to room 404.' },
-  chocolate: { name: 'Chocolate', icon: '🍫', desc: 'Minibar chocolate. Price: $19. Eat it to think faster?' },
-};
+// ---------- items (names and texts come from TXT)
+const ICONS = { remoteDead: '📟', batteries: '🔋', remote: '📟', tray: '🧊', key: '🗝️', uv: '🔦', voucher: '🎫', handle: '🔩', chocolate: '🍫' };
+const item = (id) => { const [name, note, desc] = T().items[id]; return { name, note, desc, icon: ICONS[id] }; };
 
 // ---------- state
 let S = null;
@@ -291,13 +512,15 @@ const has = (id) => S.inv.includes(id);
 function give(id) { if (!has(id)) { S.inv.push(id); justGot = id; Sound.pickup(); } save(); renderInv(); }
 function take(id) { S.inv = S.inv.filter((x) => x !== id); if (S.sel === id) S.sel = null; save(); renderInv(); }
 let justGot = null;
-const code = () => S.points.map((p, i) => [p, i]).sort((a, b) => a[1] - b[1]).map(([p]) => p);   // order = star size index 0..3 (smallest first)
+const code = () => S.points.slice();   // star i has size rank i (0 = faintest), so the points in index order are the code
+const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart(2, '0')}`;
 
 function say(text) { $('say').innerHTML = text; }
-function hotel() { const t = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; }
+function hotel() { const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
-const VIEWS = { bed: 'Room 404 · bed', desk: 'Room 404 · desk', bath: 'Bathroom', hall: 'Hallway, 4th floor' };
+const A = (k) => esc(T().aria[k]);
+const W = (k) => esc(T().svg[k]);
 function starPath(cx, cy, r, n) { let d = ''; for (let i = 0; i < n * 2; i++) { const a = -Math.PI / 2 + i * Math.PI / n, rr = i % 2 ? r * 0.45 : r; d += `${i ? 'L' : 'M'}${(cx + Math.cos(a) * rr).toFixed(1)},${(cy + Math.sin(a) * rr).toFixed(1)}`; } return d + 'Z'; }
 const STAR_POS = [[95, 85], [400, 78], [250, 168], [405, 205]];
 const STAR_R = [22, 30, 38, 48];
@@ -308,103 +531,87 @@ function paintingSvg(w, h, big) {
   const stars = order.map((slot, i) => { const [x, y] = STAR_POS[slot]; return `<path d="${starPath(x, y, STAR_R[i] * (big ? 1 : 0.85), S.points[i])}" fill="#ffe9a8" fill-opacity="${STAR_GLOW[i]}" stroke="#fff6d8" stroke-opacity="${STAR_GLOW[i]}" stroke-width="2"/>`; }).join('');
   return `<svg viewBox="0 0 500 280" width="${w}" height="${h}" aria-hidden="true"><rect width="500" height="280" fill="#16213f"/><circle cx="70" cy="240" r="46" fill="#1f2c52"/>${Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 97) % 500}" cy="${(i * 53) % 280}" r="1.4" fill="#fff" opacity="0.5"/>`).join('')}${stars}<path d="M0 250 Q120 220 250 245 T500 240 V280 H0Z" fill="#0d1428"/></svg>`;
 }
+const hot = (id, inner) => `<g data-hot="${id}" tabindex="0" role="button" aria-label="${A(id)}">${inner}</g>`;
 function sceneBed() {
   const f = S.f;
-  return `<svg viewBox="0 0 1000 600" role="img" aria-label="The bed side of room 404">
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('bedScene')}">
   <defs><pattern id="wp" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#2c2235"/><path d="M20 4 l6 16 -6 16 -6 -16z" fill="#33283d"/></pattern>
   <radialGradient id="lampglow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd58a" stop-opacity="${f.lampOff ? 0 : 0.45}"/><stop offset="1" stop-color="#ffd58a" stop-opacity="0"/></radialGradient></defs>
   <rect width="1000" height="470" fill="url(#wp)"/><rect y="470" width="1000" height="130" fill="#4a2228"/><rect y="462" width="1000" height="10" fill="#2a1418"/>
   <circle cx="900" cy="300" r="260" fill="url(#lampglow)"/>
-  <g data-hot="door" tabindex="0" role="button" aria-label="Door">
-    <rect x="50" y="140" width="170" height="330" fill="#5d3f2a" stroke="#2a1a10" stroke-width="6"/>
+  ${hot('door', `<rect x="50" y="140" width="170" height="330" fill="#5d3f2a" stroke="#2a1a10" stroke-width="6"/>
     <rect x="72" y="165" width="126" height="120" fill="none" stroke="#3e2a1b" stroke-width="4"/><rect x="72" y="305" width="126" height="140" fill="none" stroke="#3e2a1b" stroke-width="4"/>
     ${f.doorOpen ? '<rect x="50" y="140" width="170" height="330" fill="#0b0910"/><path d="M50 140 L120 160 L120 452 L50 470Z" fill="#5d3f2a"/>' : '<rect x="182" y="300" width="18" height="18" fill="#140d08"/>'}
-    <rect x="104" y="112" width="62" height="24" rx="4" fill="#d9a74a"/><text x="135" y="130" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="18" fill="#2a1a10">404</text>
-  </g>
-  <g data-hot="painting" tabindex="0" role="button" aria-label="Painting" transform="rotate(${f.straight ? 0 : -5} 400 175)">
+    <rect x="104" y="112" width="62" height="24" rx="4" fill="#d9a74a"/><text x="135" y="130" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="18" fill="#2a1a10">404</text>`)}
+  <g data-hot="painting" tabindex="0" role="button" aria-label="${A('painting')}" transform="rotate(${f.straight ? 0 : -5} 400 175)">
     <rect x="300" y="105" width="200" height="140" fill="#d9a74a"/><g transform="translate(310 115) scale(0.36)">${paintingSvg(500, 280, false)}</g>
   </g>
-  <g data-hot="bed" tabindex="0" role="button" aria-label="Bed">
-    <rect x="520" y="240" width="330" height="110" rx="14" fill="#5a3a52"/>
-    <rect x="500" y="340" width="370" height="90" rx="10" fill="#efe6d2"/><rect x="500" y="370" width="370" height="100" rx="10" fill="#9b2f3c"/>
-  </g>
-  <g data-hot="pillow" tabindex="0" role="button" aria-label="Pillow"><rect x="545" y="305" width="135" height="52" rx="22" fill="#fbf6ec" stroke="#d8cfbd" stroke-width="3"/>${f.remote ? '' : '<rect x="640" y="342" width="40" height="10" rx="3" fill="#222"/>'}</g>
-  <g data-hot="pillow2" tabindex="0" role="button" aria-label="Second pillow"><rect x="695" y="305" width="135" height="52" rx="22" fill="#fbf6ec" stroke="#d8cfbd" stroke-width="3"/></g>
-  <g data-hot="drawer" tabindex="0" role="button" aria-label="Nightstand drawer">
-    <rect x="880" y="360" width="100" height="110" fill="#4b3324" stroke="#2a1a10" stroke-width="4"/>
+  ${hot('bed', `<rect x="520" y="240" width="330" height="110" rx="14" fill="#5a3a52"/>
+    <rect x="500" y="340" width="370" height="90" rx="10" fill="#efe6d2"/><rect x="500" y="370" width="370" height="100" rx="10" fill="#9b2f3c"/>`)}
+  ${hot('pillow', `<rect x="545" y="305" width="135" height="52" rx="22" fill="#fbf6ec" stroke="#d8cfbd" stroke-width="3"/>${f.remote ? '' : '<rect x="640" y="342" width="40" height="10" rx="3" fill="#222"/>'}`)}
+  ${hot('pillow2', '<rect x="695" y="305" width="135" height="52" rx="22" fill="#fbf6ec" stroke="#d8cfbd" stroke-width="3"/>')}
+  ${hot('drawer', `<rect x="880" y="360" width="100" height="110" fill="#4b3324" stroke="#2a1a10" stroke-width="4"/>
     <rect x="890" y="375" width="80" height="34" fill="${f.drawerOpen ? '#140d08' : '#5d3f2a'}" stroke="#2a1a10" stroke-width="3"/><circle cx="930" cy="392" r="4" fill="#d9a74a"/>
-    <rect x="895" y="418" width="70" height="14" fill="#efe6d2" opacity="0.8"/>
-  </g>
-  <g data-hot="clock" tabindex="0" role="button" aria-label="Clock radio">
-    <rect x="890" y="320" width="80" height="40" rx="6" fill="#18141c" stroke="#3a3040" stroke-width="3"/>
-    <text x="930" y="347" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="20" fill="#ff5a4e">${hotel()}</text>
-  </g>
-  <g data-hot="lamp" tabindex="0" role="button" aria-label="Lamp"><rect x="925" y="250" width="10" height="70" fill="#8a7a60"/><path d="M895 255 L965 255 L950 205 L910 205Z" fill="${f.lampOff ? '#6b604f' : '#ffe2a0'}"/></g>
-  <text x="530" y="460" font-family="Barlow, sans-serif" font-size="14" fill="#efe6d2" opacity="0.0">bed</text>
+    <rect x="895" y="418" width="70" height="14" fill="#efe6d2" opacity="0.8"/>`)}
+  ${hot('clock', `<rect x="890" y="320" width="80" height="40" rx="6" fill="#18141c" stroke="#3a3040" stroke-width="3"/>
+    <text x="930" y="347" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="20" fill="#ff5a4e">${hotel()}</text>`)}
+  ${hot('lamp', `<rect x="925" y="250" width="10" height="70" fill="#8a7a60"/><path d="M895 255 L965 255 L950 205 L910 205Z" fill="${f.lampOff ? '#6b604f' : '#ffe2a0'}"/>`)}
   </svg>`;
 }
 function sceneDesk() {
   const f = S.f;
-  const tv = f.tvOn ? `<rect x="330" y="150" width="260" height="150" fill="#0d1a14"/><text x="460" y="232" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#c9f7dd">CH ${esc(S.tvCh || '1')}</text>` : '<rect x="330" y="150" width="260" height="150" fill="#08080a"/>';
-  return `<svg viewBox="0 0 1000 600" role="img" aria-label="The desk side of room 404">
+  const tv = f.tvOn ? `<rect x="330" y="150" width="260" height="150" fill="#0d1a14"/><text x="460" y="232" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#c9f7dd">${W('ch')} ${esc(S.tvCh || '1')}</text>` : '<rect x="330" y="150" width="260" height="150" fill="#08080a"/>';
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('deskScene')}">
   <defs><pattern id="wp2" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#2c2235"/><path d="M20 4 l6 16 -6 16 -6 -16z" fill="#33283d"/></pattern></defs>
   <rect width="1000" height="470" fill="url(#wp2)"/><rect y="470" width="1000" height="130" fill="#4a2228"/><rect y="462" width="1000" height="10" fill="#2a1418"/>
-  <g data-hot="tv" tabindex="0" role="button" aria-label="TV"><rect x="310" y="135" width="300" height="180" rx="10" fill="#151318" stroke="#2c2832" stroke-width="6"/>${tv}<rect x="440" y="315" width="40" height="20" fill="#151318"/></g>
-  <g data-hot="guide" tabindex="0" role="button" aria-label="Channel guide"><rect x="630" y="250" width="80" height="85" fill="#efe6d2" transform="rotate(6 670 290)"/><text x="670" y="285" text-anchor="middle" font-family="Fraunces, serif" font-size="13" fill="#2a2030" transform="rotate(6 670 290)">TV</text><text x="670" y="303" text-anchor="middle" font-family="Barlow, sans-serif" font-size="11" fill="#2a2030" transform="rotate(6 670 290)">guide</text></g>
+  ${hot('tv', `<rect x="310" y="135" width="300" height="180" rx="10" fill="#151318" stroke="#2c2832" stroke-width="6"/>${tv}<rect x="440" y="315" width="40" height="20" fill="#151318"/>`)}
+  ${hot('guide', `<rect x="630" y="250" width="80" height="85" fill="#efe6d2" transform="rotate(6 670 290)"/><text x="670" y="285" text-anchor="middle" font-family="Fraunces, serif" font-size="13" fill="#2a2030" transform="rotate(6 670 290)">${W('tv')}</text><text x="670" y="303" text-anchor="middle" font-family="Barlow, sans-serif" font-size="11" fill="#2a2030" transform="rotate(6 670 290)">${W('guide')}</text>`)}
   <rect x="280" y="335" width="460" height="22" fill="#5d3f2a"/>
   <rect x="290" y="357" width="440" height="113" fill="#4b3324" stroke="#2a1a10" stroke-width="4"/>
-  <g data-hot="minibar" tabindex="0" role="button" aria-label="Minibar"><rect x="300" y="368" width="150" height="92" fill="#d8d8de" stroke="#8a8a96" stroke-width="3"/><rect x="430" y="390" width="8" height="40" rx="3" fill="#8a8a96"/><text x="375" y="420" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="14" fill="#4a4a56">MINIBAR</text></g>
-  <g data-hot="desk" tabindex="0" role="button" aria-label="Desk drawers"><rect x="470" y="368" width="250" height="40" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/><rect x="470" y="418" width="250" height="42" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/></g>
-  <g data-hot="wardrobe" tabindex="0" role="button" aria-label="Wardrobe">
-    <rect x="770" y="90" width="200" height="380" fill="#5d3f2a" stroke="#2a1a10" stroke-width="6"/>
-    ${f.wardrobeOpen ? '<rect x="776" y="96" width="188" height="368" fill="#140d08"/><rect x="800" y="120" width="70" height="200" rx="20" fill="#efe6d2"/><rect x="880" y="360" width="70" height="70" fill="#5a5a66" stroke="#2a2a30" stroke-width="4"/>' : '<line x1="870" y1="96" x2="870" y2="464" stroke="#2a1a10" stroke-width="4"/><circle cx="858" cy="280" r="5" fill="#d9a74a"/><circle cx="882" cy="280" r="5" fill="#d9a74a"/>'}
-  </g>
-  <g data-hot="bathdoor" tabindex="0" role="button" aria-label="Bathroom door"><rect x="40" y="140" width="170" height="330" fill="#0f0c14" stroke="#2a1a10" stroke-width="6"/><path d="M40 140 L95 156 L95 456 L40 470Z" fill="#5d3f2a"/><rect x="110" y="250" width="70" height="40" fill="#c8e6f5" opacity="0.25"/><text x="145" y="320" text-anchor="middle" font-family="Barlow, sans-serif" font-size="16" fill="#a99cb5">Bathroom</text></g>
+  ${hot('minibar', '<rect x="300" y="368" width="150" height="92" fill="#d8d8de" stroke="#8a8a96" stroke-width="3"/><rect x="430" y="390" width="8" height="40" rx="3" fill="#8a8a96"/><text x="375" y="420" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="14" fill="#4a4a56">MINIBAR</text>')}
+  ${hot('desk', '<rect x="470" y="368" width="250" height="40" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/><rect x="470" y="418" width="250" height="42" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/>')}
+  ${hot('wardrobe', `<rect x="770" y="90" width="200" height="380" fill="#5d3f2a" stroke="#2a1a10" stroke-width="6"/>
+    ${f.wardrobeOpen ? '<rect x="776" y="96" width="188" height="368" fill="#140d08"/><rect x="800" y="120" width="70" height="200" rx="20" fill="#efe6d2"/><rect x="880" y="360" width="70" height="70" fill="#5a5a66" stroke="#2a2a30" stroke-width="4"/>' : '<line x1="870" y1="96" x2="870" y2="464" stroke="#2a1a10" stroke-width="4"/><circle cx="858" cy="280" r="5" fill="#d9a74a"/><circle cx="882" cy="280" r="5" fill="#d9a74a"/>'}`)}
+  ${hot('bathdoor', `<rect x="40" y="140" width="170" height="330" fill="#0f0c14" stroke="#2a1a10" stroke-width="6"/><path d="M40 140 L95 156 L95 456 L40 470Z" fill="#5d3f2a"/><rect x="110" y="250" width="70" height="40" fill="#c8e6f5" opacity="0.25"/><text x="145" y="320" text-anchor="middle" font-family="Barlow, sans-serif" font-size="16" fill="#a99cb5">${W('bathroom')}</text>`)}
   </svg>`;
 }
 function sceneBath() {
-  const f = S.f, steam = S.steam;
-  return `<svg viewBox="0 0 1000 600" role="img" aria-label="The bathroom">
+  const f = S.f, steam = S.steam, o = ((steam - 0.6) * 2.5).toFixed(2);
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('bathScene')}">
   <defs><pattern id="tile" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="#cfd8dc"/><path d="M0 0H50V50" fill="none" stroke="#aab6bb" stroke-width="2"/></pattern></defs>
   <rect width="1000" height="470" fill="url(#tile)"/><rect y="470" width="1000" height="130" fill="#6d7d86"/>
-  <g data-hot="shower" tabindex="0" role="button" aria-label="Shower">
-    <rect x="30" y="60" width="250" height="410" fill="#b9c9d0" stroke="#7a8a92" stroke-width="5"/><rect x="40" y="70" width="230" height="390" fill="#e8f3f7" opacity="0.35"/>
+  ${hot('shower', `<rect x="30" y="60" width="250" height="410" fill="#b9c9d0" stroke="#7a8a92" stroke-width="5"/><rect x="40" y="70" width="230" height="390" fill="#e8f3f7" opacity="0.35"/>
     <path d="M200 90 L200 120 L150 120" fill="none" stroke="#7a8a92" stroke-width="8"/><ellipse cx="140" cy="126" rx="30" ry="9" fill="#7a8a92"/>
-    ${f.showerOn ? Array.from({ length: 12 }, (_, i) => `<line x1="${118 + i * 4}" y1="138" x2="${100 + i * 8}" y2="450" stroke="#6fb7e0" stroke-width="2" opacity="0.6"/>`).join('') : ''}
-  </g>
-  <g data-hot="mirror" tabindex="0" role="button" aria-label="Mirror">
-    <rect x="390" y="70" width="230" height="170" rx="10" fill="#9fb4bf" stroke="#7a8a92" stroke-width="6"/><rect x="398" y="78" width="214" height="154" rx="6" fill="#cfe1e8"/>
+    ${f.showerOn ? Array.from({ length: 12 }, (_, i) => `<line x1="${118 + i * 4}" y1="138" x2="${100 + i * 8}" y2="450" stroke="#6fb7e0" stroke-width="2" opacity="0.6"/>`).join('') : ''}`)}
+  ${hot('mirror', `<rect x="390" y="70" width="230" height="170" rx="10" fill="#9fb4bf" stroke="#7a8a92" stroke-width="6"/><rect x="398" y="78" width="214" height="154" rx="6" fill="#cfe1e8"/>
     <rect x="398" y="78" width="214" height="154" rx="6" fill="#ffffff" opacity="${(steam * 0.75).toFixed(2)}"/>
-    ${steam > 0.6 ? `<text x="505" y="150" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="22" fill="#5b6f7a" opacity="${((steam - 0.6) * 2.5).toFixed(2)}">BREAKFAST</text><text x="505" y="185" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="30" fill="#5b6f7a" opacity="${((steam - 0.6) * 2.5).toFixed(2)}">${S.breakfast[0]}:${String(S.breakfast[1]).padStart(2, '0')}</text>` : ''}
-  </g>
-  <g data-hot="sink" tabindex="0" role="button" aria-label="Sink"><path d="M400 270 H610 L590 330 H420Z" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="4"/><rect x="495" y="248" width="20" height="26" fill="#9fb4bf"/><rect x="470" y="244" width="70" height="10" rx="4" fill="#9fb4bf"/><rect x="480" y="330" width="50" height="140" fill="#e2eaee"/></g>
-  <g data-hot="towels" tabindex="0" role="button" aria-label="Towels"><rect x="650" y="110" width="120" height="8" fill="#9fb4bf"/><rect x="655" y="118" width="34" height="80" fill="#e9dcc9"/><rect x="693" y="118" width="34" height="90" fill="#e9dcc9"/><rect x="731" y="118" width="34" height="70" fill="#e9dcc9"/></g>
-  <g data-hot="toilet" tabindex="0" role="button" aria-label="Toilet"><rect x="660" y="300" width="80" height="70" rx="8" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="4"/><ellipse cx="700" cy="410" rx="55" ry="30" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="4"/><rect x="675" y="410" width="50" height="60" fill="#f4f8fa"/></g>
-  <g data-hot="tub" tabindex="0" role="button" aria-label="Bathtub"><rect x="790" y="330" width="200" height="140" rx="30" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="5"/><rect x="805" y="345" width="170" height="40" rx="16" fill="#cde6f2"/></g>
-  <g data-hot="duck" tabindex="0" role="button" aria-label="Rubber duck"><ellipse cx="880" cy="350" rx="32" ry="20" fill="#ffd23f"/><circle cx="900" cy="325" r="16" fill="#ffd23f"/><path d="M913 325 L930 330 L913 334Z" fill="#ff8a1f"/><circle cx="904" cy="321" r="3" fill="#222"/></g>
-  <g data-hot="back" tabindex="0" role="button" aria-label="Back to the room"><rect x="300" y="500" width="400" height="70" rx="12" fill="#3c4a52" opacity="0.6"/><text x="500" y="545" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">⟵ back to the room</text></g>
+    ${steam > 0.6 ? `<text x="505" y="150" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="22" fill="#5b6f7a" opacity="${o}">${W('breakfast')}</text><text x="505" y="185" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="30" fill="#5b6f7a" opacity="${o}">${breakfastText()}</text>` : ''}`)}
+  ${hot('sink', '<path d="M400 270 H610 L590 330 H420Z" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="4"/><rect x="495" y="248" width="20" height="26" fill="#9fb4bf"/><rect x="470" y="244" width="70" height="10" rx="4" fill="#9fb4bf"/><rect x="480" y="330" width="50" height="140" fill="#e2eaee"/>')}
+  ${hot('towels', '<rect x="650" y="110" width="120" height="8" fill="#9fb4bf"/><rect x="655" y="118" width="34" height="80" fill="#e9dcc9"/><rect x="693" y="118" width="34" height="90" fill="#e9dcc9"/><rect x="731" y="118" width="34" height="70" fill="#e9dcc9"/>')}
+  ${hot('toilet', '<rect x="660" y="300" width="80" height="70" rx="8" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="4"/><ellipse cx="700" cy="410" rx="55" ry="30" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="4"/><rect x="675" y="410" width="50" height="60" fill="#f4f8fa"/>')}
+  ${hot('tub', '<rect x="790" y="330" width="200" height="140" rx="30" fill="#f4f8fa" stroke="#9fb4bf" stroke-width="5"/><rect x="805" y="345" width="170" height="40" rx="16" fill="#cde6f2"/>')}
+  ${hot('duck', '<ellipse cx="880" cy="350" rx="32" ry="20" fill="#ffd23f"/><circle cx="900" cy="325" r="16" fill="#ffd23f"/><path d="M913 325 L930 330 L913 334Z" fill="#ff8a1f"/><circle cx="904" cy="321" r="3" fill="#222"/>')}
+  ${hot('back', `<rect x="300" y="500" width="400" height="70" rx="12" fill="#3c4a52" opacity="0.6"/><text x="500" y="545" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('back')}</text>`)}
   </svg>`;
 }
 function sceneHall() {
   const f = S.f;
   const doors = [[150, '401'], [290, '402'], [380, '403'], [620, '405'], [710, '406'], [850, '407']];
-  return `<svg viewBox="0 0 1000 600" role="img" aria-label="The hallway">
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('hallScene')}">
   <rect width="1000" height="600" fill="#24182c"/><path d="M0 0 L420 230 L580 230 L1000 0Z" fill="#1b1222"/><path d="M0 600 L420 370 L580 370 L1000 600Z" fill="#5a1f2a"/>
   <path d="M0 0 L420 230 L420 370 L0 600Z" fill="#3a2a40"/><path d="M1000 0 L580 230 L580 370 L1000 600Z" fill="#3a2a40"/>
   ${[0.2, 0.45, 0.7].map((k) => `<ellipse cx="500" cy="${(30 + k * 190).toFixed(0)}" rx="${(60 - k * 50).toFixed(0)}" ry="${(10 - k * 7).toFixed(0)}" fill="#ffe2a0" opacity="0.8"/>`).join('')}
-  ${doors.map(([x, n], i) => { const left = x < 500, k = left ? x / 420 : (1000 - x) / 420, h = 260 - k * 120, y = 300 - h / 2 + 20, w = 70 - k * 30; return `<g data-hot="d${n}" tabindex="0" role="button" aria-label="Door ${n}"><rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/><text x="${x}" y="${y - 6}" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="${(18 - k * 7).toFixed(0)}" fill="#d9a74a">${n}</text></g>`; }).join('')}
-  <g data-hot="end" tabindex="0" role="button" aria-label="End of the hallway">
-    <rect x="420" y="230" width="160" height="140" fill="#2f2236"/>
-    ${f.refreshed ? '<rect x="465" y="262" width="70" height="108" fill="#2e7d4f" stroke="#164a2d" stroke-width="3"/><text x="500" y="255" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="16" fill="#6fdca8">EXIT</text>' : '<rect x="440" y="250" width="120" height="36" fill="#0b0910"/><text x="500" y="274" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="12" fill="#ff5a4e">EXIT 404</text><text x="500" y="320" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#a99cb5">NOT FOUND</text>'}
-  </g>
-  <g data-hot="panel" tabindex="0" role="button" aria-label="Maintenance panel"><rect x="880" y="250" width="70" height="100" fill="#4a4a56" stroke="#22222a" stroke-width="4" transform="skewY(-18) translate(0 290)"/><text x="915" y="235" text-anchor="middle" font-family="Barlow, sans-serif" font-size="13" fill="#a99cb5">panel</text></g>
-  <g data-hot="d404" tabindex="0" role="button" aria-label="Back into room 404"><rect x="40" y="520" width="240" height="56" rx="10" fill="#3c2a44" opacity="0.8"/><text x="160" y="556" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="20" fill="#fff">⟵ room 404</text></g>
+  ${doors.map(([x, n]) => { const left = x < 500, k = left ? x / 420 : (1000 - x) / 420, h = 260 - k * 120, y = 300 - h / 2 + 20, w = 70 - k * 30; return `<g data-hot="d${n}" tabindex="0" role="button" aria-label="${esc(T().aria.doorN(n))}"><rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/><text x="${x}" y="${y - 6}" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="${(18 - k * 7).toFixed(0)}" fill="#d9a74a">${n}</text></g>`; }).join('')}
+  ${hot('end', `<rect x="420" y="230" width="160" height="140" fill="#2f2236"/>
+    ${f.refreshed ? `<rect x="465" y="262" width="70" height="108" fill="#2e7d4f" stroke="#164a2d" stroke-width="3"/><text x="500" y="255" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="16" fill="#6fdca8">${W('exit')}</text>` : `<rect x="430" y="250" width="140" height="36" fill="#0b0910"/><text x="500" y="274" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="12" fill="#ff5a4e">${W('exit404')}</text><text x="500" y="320" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#a99cb5">${W('notFound')}</text>`}`)}
+  ${hot('panel', `<rect x="880" y="250" width="70" height="100" fill="#4a4a56" stroke="#22222a" stroke-width="4" transform="skewY(-18) translate(0 290)"/><text x="915" y="235" text-anchor="middle" font-family="Barlow, sans-serif" font-size="13" fill="#a99cb5">${W('panel')}</text>`)}
+  ${hot('d404', `<rect x="40" y="520" width="240" height="56" rx="10" fill="#3c2a44" opacity="0.8"/><text x="160" y="556" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="20" fill="#fff">${W('room404')}</text>`)}
   </svg>`;
 }
 const SCENES = { bed: sceneBed, desk: sceneDesk, bath: sceneBath, hall: sceneHall };
 function renderScene() {
   $('sceneSvg').innerHTML = SCENES[S.view]();
-  $('loc').textContent = VIEWS[S.view];
+  $('loc').textContent = T().views[S.view];
   const turn = S.view === 'bed' || S.view === 'desk';
   $('navL').hidden = !turn; $('navR').hidden = !turn;
 }
@@ -413,11 +620,11 @@ function go(view) { S.view = view; save(); renderScene(); Sound.click(); }
 // ---------- inventory
 function renderInv() {
   const box = $('inv'); box.innerHTML = '';
-  if (!S.inv.length) { box.appendChild(mk('span', 'empty', 'Your pockets are empty.')); return; }
+  if (!S.inv.length) { box.appendChild(mk('span', 'empty', esc(t('empty')))); return; }
   for (const id of S.inv) {
-    const it = ITEMS[id];
+    const it = item(id);
     const b = mk('button', `item${justGot === id ? ' new' : ''}`, `<span aria-hidden="true">${it.icon}</span><small>${esc(it.name)}${it.note ? `<br>${esc(it.note)}` : ''}</small>`);
-    b.setAttribute('aria-pressed', String(S.sel === id)); b.setAttribute('aria-label', `${it.name}${it.note ? ', ' + it.note : ''}`);
+    b.setAttribute('aria-pressed', String(S.sel === id)); b.setAttribute('aria-label', `${it.name}${it.note ? ', ' + it.note : ''}`); b.setAttribute('data-item', id);
     b.addEventListener('click', () => tapItem(id));
     box.appendChild(b);
   }
@@ -425,16 +632,16 @@ function renderInv() {
 }
 function tapItem(id) {
   Sound.init();
-  if (S.sel === id) { S.sel = null; say(ITEMS[id].desc); }
+  if (S.sel === id) { S.sel = null; say(esc(item(id).desc)); }
   else if (S.sel) { combine(S.sel, id); }
-  else { S.sel = id; say(`${ITEMS[id].desc} <i>Now tap where to use it.</i>`); Sound.click(); }
+  else { S.sel = id; say(`${esc(item(id).desc)} ${t('useWhere')}`); Sound.click(); }
   renderInv();
 }
 function combine(a, b) {
   const pair = [a, b].sort().join('+');
-  if (pair === 'batteries+remoteDead') { take('batteries'); take('remoteDead'); give('remote'); S.f.remoteWorks = true; S.sel = null; say('You click the batteries into the remote. A tiny red light blinks. It lives!'); }
-  else if (a === 'chocolate' || b === 'chocolate') { S.sel = null; say('Chocolate does not combine with that. It combines with your mouth, though.'); Sound.nope(); }
-  else { S.sel = null; say(pick(['Those two do not go together.', 'You try. Nothing happens, except mild embarrassment.', 'Combining those would be very creative, and very useless.'])); Sound.nope(); }
+  if (pair === 'batteries+remoteDead') { take('batteries'); take('remoteDead'); give('remote'); S.f.remoteWorks = true; S.sel = null; say(t('combined')); }
+  else if (a === 'chocolate' || b === 'chocolate') { S.sel = null; say(t('chocCombine')); Sound.nope(); }
+  else { S.sel = null; say(t('combineFail')); Sound.nope(); }
   save();
 }
 
@@ -446,89 +653,89 @@ function openModal(title, html, setup, onClose) {
 }
 function closeModal() { $('modal').hidden = true; const f = modalOnClose; modalOnClose = null; if (f) f(); renderScene(); }
 $('mClose').addEventListener('click', closeModal);
+// a button inside a close-up; act is a language-independent name for it
+function act(box, actName, label, fn, cls = 'chip') { const c = mk('button', cls, label); c.setAttribute('data-act', actName); c.addEventListener('click', () => fn(c)); box.appendChild(c); return c; }
 
 // ---------- interactions
-function tapHot(hot) {
+function tapHot(h) {
   Sound.init();
-  const sel = S.sel, f = S.f;
-  if (sel && useItem(sel, hot)) { save(); renderScene(); renderInv(); return; }
+  const sel = S.sel;
+  if (sel && useItem(sel, h)) { save(); renderScene(); renderInv(); return; }
   if (sel) { S.sel = null; renderInv(); }
-  const H = HOTS[hot];
-  if (H) H(); else say('Nothing special.');
+  const H = HOTS[h];
+  if (H) H(); else say(t('nothing'));
   save(); renderScene();
 }
 const HOTS = {
   door: () => {
-    if (S.f.doorOpen) { go('hall'); say('The hallway of the fourth floor. It is very long, very quiet and very carpeted.'); return; }
-    openModal('The door', '<p>Solid wood, no handle. Where the handle should be there is just a <b>square hole</b>. Through the peephole you see a hallway, with another hallway behind it.</p>');
+    if (S.f.doorOpen) { go('hall'); say(t('toHall')); return; }
+    openModal(t('doorTitle'), t('doorBody'));
   },
-  painting: () => { S.f.straight = true; S.f.paintingSeen = true; openModal('The painting', `${paintingSvg(500, 280, true)}<p>A night sky. Someone painted four stars very carefully: each one is a different size and has a <b>different number of points</b>. A brass plate says “The faint ones speak first.”</p>`); },
+  painting: () => { S.f.straight = true; S.f.paintingSeen = true; openModal(t('paintTitle'), `${paintingSvg(500, 280, true)}<p>${t('paintBody')}</p>`); },
   pillow: () => {
-    if (!S.f.remote) { S.f.remote = true; give('remoteDead'); say('Under the pillow: a TV remote. You open the back. No batteries. Of course.'); }
-    else say('Just a pillow. It smells faintly of regret.');
+    if (!S.f.remote) { S.f.remote = true; give('remoteDead'); say(t('pillow')); }
+    else say(t('pillowAgain'));
   },
-  pillow2: () => say('Under this pillow: a mint and a note: “Checkout is at 12:00. Late guests stay forever.” You eat the mint. You feel no better.'),
-  bed: () => say('The bed is made perfectly. Too perfectly. Nobody has ever slept in it, except you, apparently.'),
+  pillow2: () => say(t('pillow2')),
+  bed: () => say(t('bed')),
   drawer: () => {
-    if (!S.f.drawerOpen) { openModal('Nightstand drawer', '<p>It will not open. There is no keyhole, just a sticker:</p><div class="note">Smart Drawer™. Opens when the alarm is set for <b>breakfast</b>.<br>— Grand Paradox Wake-up Service</div>'); return; }
-    const parts = [`<p>The drawer is open.</p>`];
-    openModal('Nightstand drawer', `${parts.join('')}<div class="chips" id="dr"></div><div class="note">Guest book, last entry: “Room 404? Never heard of it.” — Room 405</div>`, (b) => {
+    if (!S.f.drawerOpen) { openModal(t('drawerTitle'), t('drawerLocked')); return; }
+    openModal(t('drawerTitle'), `${t('drawerOpen')}<div class="chips" id="dr"></div><div class="note">${t('guestbook')}</div>`, (b) => {
       const box = b.querySelector('#dr');
-      if (!S.f.uvTaken) { const c = mk('button', 'chip take', '🔦 Take the UV torch'); c.addEventListener('click', () => { S.f.uvTaken = true; give('uv'); c.remove(); say('A UV torch. In escape rooms, these always matter.'); }); box.appendChild(c); }
-      else box.appendChild(mk('span', '', 'Nothing else in here.'));
+      if (!S.f.uvTaken) act(box, 'uv', t('takeUv'), (c) => { S.f.uvTaken = true; give('uv'); c.remove(); say(t('tookUv')); }, 'chip take');
+      else box.appendChild(mk('span', '', esc(t('nothingElse'))));
     });
   },
   clock: () => openClock(),
-  lamp: () => { S.f.lampOff = !S.f.lampOff; Sound.click(); say(S.f.lampOff ? 'Click. Darker. Creepier. You turn it back on in your mind.' : 'Click. Light. Much better.'); },
+  lamp: () => { S.f.lampOff = !S.f.lampOff; Sound.click(); say(S.f.lampOff ? t('lampOff') : t('lampOn')); },
   tv: () => {
-    if (!S.f.tvOn) { say(S.f.remote ? 'The TV is off and has no buttons. The remote would help, if it had batteries.' : 'The TV is off. It has no buttons at all. Who designs these things?'); return; }
+    if (!S.f.tvOn) { say(S.f.remoteWorks ? t('tvTryRemote') : S.f.remote ? t('tvDeadRemote') : t('tvNoRemote')); return; }
     openTv();
   },
-  guide: () => openModal('TV guide', '<div class="note">Grand Paradox TV<br>1 · Welcome<br>7 · Weather<br>12 · Cooking<br>404 · <i>(not found)</i></div>'),
+  guide: () => openModal(t('guideTitle'), t('guideBody')),
   minibar: () => openMinibar(),
-  desk: () => say(pick(['A pen that does not write, and hotel paper that says “Grand Paradox: you never really leave.”', 'The desk drawers hold a room service menu. Soup of the day: “yesterday’s soup”.'])),
+  desk: () => say(t('desk')),
   wardrobe: () => {
-    if (!S.f.wardrobeOpen) { say('The wardrobe is locked. It has a very small brass keyhole.'); return; }
+    if (!S.f.wardrobeOpen) { say(t('wardrobeLocked')); return; }
     openWardrobe();
   },
-  bathdoor: () => { go('bath'); say('The bathroom. Clean, white, and slightly echoey.'); },
+  bathdoor: () => { go('bath'); say(t('toBath')); },
   back: () => { go('desk'); },
-  shower: () => {
-    S.f.showerOn = !S.f.showerOn; if (S.f.showerOn) { Sound.water(); say('You turn the shower on, hot. Steam starts to fill the room.'); } else say('You turn the shower off.');
-  },
+  shower: () => { S.f.showerOn = !S.f.showerOn; if (S.f.showerOn) { Sound.water(); say(t('showerOn')); } else say(t('showerOff')); },
   mirror: () => {
-    if (S.steam > 0.6) { S.f.mirrorRead = true; say(`Letters appear in the steam on the mirror: <b>BREAKFAST ${S.breakfast[0]}:${String(S.breakfast[1]).padStart(2, '0')}</b>.`); }
-    else say(S.f.showerOn ? 'The mirror is starting to fog up…' : 'Your reflection looks tired. And trapped. Mostly trapped.');
+    if (S.steam > 0.6) { S.f.mirrorRead = true; say(t('mirrorRead', breakfastText())); }
+    else say(S.f.showerOn ? t('mirrorFog') : t('mirror'));
   },
-  sink: () => { Sound.water(); say('Hot water runs over your hands. Very hot. Good to know.'); },
-  towels: () => say('Three fluffy towels, rolled like burritos. Nothing inside. You checked. Twice.'),
-  toilet: () => say('You lift the tank lid. Just water and a very surprised spider. You put the lid back. Sorry, spider.'),
-  tub: () => say('A bathtub. A rubber duck floats in it, looking smug.'),
+  sink: () => { Sound.water(); say(t('sink')); },
+  towels: () => say(t('towels')),
+  toilet: () => say(t('toilet')),
+  tub: () => say(t('tub')),
   duck: () => {
-    if (!S.f.batteries) { S.f.batteries = true; give('batteries'); Sound.squeak(); say('Squeak! The duck has a little hatch underneath. Inside: two AA batteries. It was a light-up duck.'); }
-    else { Sound.squeak(); say('Squeak. The duck looks lighter without its batteries. And betrayed.'); }
+    Sound.squeak();
+    if (!S.f.batteries) { S.f.batteries = true; give('batteries'); say(t('duck')); }
+    else say(t('duckAgain'));
   },
   end: () => {
     if (S.f.refreshed) { escape(); return; }
-    say('A sign at the end of the hallway: <b>EXIT 404 · NOT FOUND</b>. There is only wall where the exit should be.');
+    say(t('endLocked'));
   },
   panel: () => openPanel(),
-  d404: () => { go('desk'); say('Back in room 404. It still does not exist.'); },
+  d404: () => { go('desk'); say(t('d404')); },
 };
-['401', '402', '403', '405', '406', '407'].forEach((n, i) => { HOTS['d' + n] = () => say(['Locked. A sign: “Do not disturb. Already disturbed.”', 'Locked. Someone inside is practising the trombone, badly.', 'Locked. You hear the sea. On the fourth floor.', 'Locked. The number plate says 405, then 404, then 405 again.', 'Locked. A note: “Room 404 people, please stop knocking.”', 'Locked. Snoring. Very peaceful snoring.'][i]); });
+['401', '402', '403', '405', '406', '407'].forEach((n, i) => { HOTS['d' + n] = () => say(T().doors[i]); });
 
-function useItem(id, hot) {
+function useItem(id, h) {
   const f = S.f;
-  if (id === 'remote' && hot === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say('The TV flickers on. The remote has number keys for channels.'); return true; }
-  if (id === 'remoteDead' && hot === 'tv') { S.sel = null; Sound.nope(); say('Nothing. The remote needs batteries. Where would a hotel hide batteries?'); return true; }
-  if (id === 'tray' && hot === 'sink') { take('tray'); give('key'); f.melted = true; Sound.water(); say('You hold the tray under the hot water. The ice melts, and a tiny brass key drops into the sink.'); return true; }
-  if (id === 'key' && hot === 'wardrobe') { take('key'); f.wardrobeOpen = true; Sound.unlock(); say('The brass key fits! The wardrobe swings open: a bathrobe, and a small safe on the floor.'); openWardrobe(); return true; }
-  if (id === 'handle' && hot === 'door') { take('handle'); f.doorOpen = true; Sound.door(); say('The handle slides into the square hole. You turn it. Click. The door of room 404 opens.'); return true; }
-  if (id === 'uv' && hot === 'painting') { S.sel = null; say('You shine the UV torch on the painting. Nothing glows. The stars are just stars.'); return true; }
-  if (id === 'uv' && hot === 'mirror') { S.sel = null; say('Under UV light the mirror shows… a lot of old fingerprints. Gross, but useless.'); return true; }
-  if (id === 'uv' && hot === 'wardrobe' && f.wardrobeOpen) { S.sel = null; openSafe(true); return true; }
-  if (id === 'chocolate') { take('chocolate'); S.left = Math.min(TOTAL, S.left + 60); say('You eat the $19 chocolate. Your brain feels faster. (+1 minute)'); return true; }
-  if (id === 'voucher' && hot === 'panel') { S.sel = null; openPanel(); say('The voucher said: “Feeling lost? Just REFRESH.” Hmm.'); return true; }
+  if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
+  if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
+  if (id === 'tray' && h === 'sink') { take('tray'); give('key'); f.melted = true; Sound.water(); say(t('melt')); return true; }
+  if (id === 'key' && h === 'wardrobe') { take('key'); f.wardrobeOpen = true; Sound.unlock(); say(t('wardrobeOpened')); openWardrobe(); return true; }
+  if (id === 'handle' && h === 'door') { take('handle'); f.doorOpen = true; Sound.door(); say(t('doorOpened')); return true; }
+  if (id === 'uv' && h === 'painting') { S.sel = null; say(t('uvPainting')); return true; }
+  if (id === 'uv' && h === 'mirror') { S.sel = null; say(t('uvMirror')); return true; }
+  if (id === 'uv' && h === 'wardrobe' && f.wardrobeOpen) { S.sel = null; openSafe(true); return true; }
+  if (id === 'chocolate') { take('chocolate'); S.left = Math.min(TOTAL, S.left + 60); say(t('ateChoc')); return true; }
+  if (id === 'voucher' && h === 'panel') { S.sel = null; openPanel(); say(t('voucherPanel')); return true; }
   return false;
 }
 
@@ -538,16 +745,16 @@ function openClock() {
     b.querySelector('#now').textContent = hotel();
     b.querySelector('#al').textContent = `AL ${String(S.alarm[0]).padStart(2, '0')}:${String(S.alarm[1]).padStart(2, '0')}`;
     b.querySelector('#al').classList.toggle('ok', S.alarmOn);
-    b.querySelector('#onoff').textContent = S.alarmOn ? 'Alarm: ON' : 'Alarm: OFF';
+    b.querySelector('#onoff').textContent = S.alarmOn ? t('alarmOn') : t('alarmOff');
   };
-  openModal('Clock radio', '<div class="row"><div class="display" id="now">11:15</div></div><div class="row"><div class="display" id="al">AL 06:00</div></div><div class="row"><button class="chip" id="hr" type="button">Hour +</button><button class="chip" id="mn" type="button">Minutes +15</button><button class="chip" id="onoff" type="button">Alarm: OFF</button></div><p class="tip" id="clockMsg">The clock shows the hotel time. Checkout is at 12:00.</p>', (b) => {
+  openModal(t('clockTitle'), `<div class="row"><div class="display" id="now">11:15</div></div><div class="row"><div class="display" id="al">AL 06:00</div></div><div class="row"><button class="chip" id="hr" type="button">${esc(t('hourPlus'))}</button><button class="chip" id="mn" type="button">${esc(t('minPlus'))}</button><button class="chip" id="onoff" type="button"></button></div><p class="tip" id="clockMsg">${esc(t('clockInfo'))}</p>`, (b) => {
     draw(b);
     const changed = () => {
       Sound.click(); draw(b);
       if (S.alarmOn && S.alarm[0] === S.breakfast[0] && S.alarm[1] === S.breakfast[1] && !S.f.drawerOpen) {
-        S.f.drawerOpen = true; Sound.beep(); b.querySelector('#clockMsg').textContent = 'BEEP BEEP BEEP… *click*. Something in the nightstand just unlocked.';
-        say('The alarm beeps, and the nightstand drawer pops open with a click.');
-      } else if (S.alarmOn && !S.f.drawerOpen) b.querySelector('#clockMsg').textContent = 'The alarm is on. Nothing happens.';
+        S.f.drawerOpen = true; Sound.beep(); b.querySelector('#clockMsg').textContent = t('ring');
+        say(t('ringSay'));
+      } else if (S.alarmOn && !S.f.drawerOpen) b.querySelector('#clockMsg').textContent = t('alarmNothing');
       save();
     };
     b.querySelector('#hr').addEventListener('click', () => { S.alarm[0] = (S.alarm[0] + 1) % 24; changed(); });
@@ -555,26 +762,20 @@ function openClock() {
     b.querySelector('#onoff').addEventListener('click', () => { S.alarmOn = !S.alarmOn; changed(); });
   });
 }
-const CHANNELS = {
-  1: 'WELCOME TO THE GRAND PARADOX<br><br>“Every room has a story. Some rooms do not even have a number.”',
-  7: 'WEATHER<br><br>Heavy fog expected in all bathrooms. Hot steam may reveal hidden messages.',
-  12: 'COOKING WITH CHEF PARADOX<br><br>Today: ice cubes! Fun fact: hot water melts them. Whatever is frozen inside, falls out.',
-  404: null,
-};
 function openTv() {
   const screen = () => {
     const ch = S.tvCh || '1';
-    if (ch === '404') { S.f.saw404 = true; return ['', `THE MANAGER<br><br>“Lost your way out? The safe knows. The stars know the code: count their points, from the <b>faintest</b> star to the <b>brightest</b>.”`]; }
-    if (CHANNELS[ch]) return ['', CHANNELS[ch]];
-    return ['static', `CH ${esc(ch)}<br><br>no signal`];
+    if (ch === '404') S.f.saw404 = true;
+    const text = T().channels[ch];
+    return text ? ['', text] : ['static', t('noSignal', esc(ch))];
   };
-  openModal('TV', '<div class="tvscreen" id="tvs"></div><div class="row"><div class="display" id="tvin">--</div></div><div class="keypad" id="tvk"></div>', (b) => {
+  openModal(t('tvTitle'), '<div class="tvscreen" id="tvs"></div><div class="row"><div class="display" id="tvin">--</div></div><div class="keypad" id="tvk"></div>', (b) => {
     let typed = '';
     const show = () => { const [cls, html] = screen(); const s = b.querySelector('#tvs'); s.className = `tvscreen ${cls}`; s.innerHTML = html; b.querySelector('#tvin').textContent = typed || S.tvCh || '1'; };
     show();
     const pad = b.querySelector('#tvk');
     for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK']) {
-      const btn = mk('button', `key${k.length > 1 || k === 'C' ? ' wide' : ''}`, k);
+      const btn = mk('button', `key${k === 'C' || k === 'OK' ? ' wide' : ''}`, k);
       btn.addEventListener('click', () => {
         Sound.click();
         if (k === 'C') typed = '';
@@ -587,36 +788,35 @@ function openTv() {
   });
 }
 function openMinibar() {
-  openModal('Minibar', '<p>Cold air and tiny overpriced things.</p><div class="chips" id="mb"></div>', (b) => {
+  openModal(t('minibarTitle'), `${t('minibarBody')}<div class="chips" id="mb"></div>`, (b) => {
     const box = b.querySelector('#mb');
-    const add = (label, fn, cls = '') => { const c = mk('button', `chip ${cls}`, label); c.addEventListener('click', () => fn(c)); box.appendChild(c); };
-    add('🥤 Soda', () => say('Sugar-free cola, $14. You put it back very carefully.'));
-    if (!S.f.choc) add('🍫 Chocolate', (c) => { S.f.choc = true; give('chocolate'); c.remove(); say('You take the chocolate. $19. Put it on the room bill. Room 404’s bill.'); }, 'take');
-    if (!S.f.trayTaken) add('🧊 Ice tray', (c) => { S.f.trayTaken = true; give('tray'); c.remove(); say('An ice cube tray. In one cube, something small and metal is frozen solid.'); }, 'take');
-    add('🥜 Peanuts', () => say('“May contain nuts.” It is a bag of nuts.'));
+    act(box, 'soda', t('soda'), () => say(t('sodaSay')));
+    if (!S.f.choc) act(box, 'chocolate', t('chocolate'), (c) => { S.f.choc = true; give('chocolate'); c.remove(); say(t('chocSay')); }, 'chip take');
+    if (!S.f.trayTaken) act(box, 'tray', t('iceTray'), (c) => { S.f.trayTaken = true; give('tray'); c.remove(); say(t('traySay')); }, 'chip take');
+    act(box, 'peanuts', t('peanuts'), () => say(t('peanutSay')));
   });
 }
 function openWardrobe() {
-  openModal('Wardrobe', '<p>A fluffy bathrobe on a hanger, and a small safe with a keypad on the floor.</p><div class="chips" id="wd"></div>', (b) => {
+  openModal(t('wardrobeTitle'), `${t('wardrobeBody')}<div class="chips" id="wd"></div>`, (b) => {
     const box = b.querySelector('#wd');
-    if (!S.f.voucher) { const c = mk('button', 'chip take', '👘 Check the robe pockets'); c.addEventListener('click', () => { S.f.voucher = true; give('voucher'); c.remove(); say('In the robe pocket: a spa voucher. “Feeling lost? Just REFRESH. – Paradox Spa, key F5.”'); }); box.appendChild(c); }
-    else box.appendChild(mk('span', '', 'The robe pockets are empty now.'));
-    const s = mk('button', 'chip', S.f.safeOpen ? '🔓 The safe (open)' : '🔒 The safe'); s.addEventListener('click', () => openSafe(S.sel === 'uv' || false)); box.appendChild(s);
-    if (has('uv') && !S.f.safeOpen) { const u = mk('button', 'chip', '🔦 Shine the UV torch on the safe'); u.addEventListener('click', () => openSafe(true)); box.appendChild(u); }
+    if (!S.f.voucher) act(box, 'robe', t('robe'), (c) => { S.f.voucher = true; give('voucher'); c.remove(); say(t('robeSay')); }, 'chip take');
+    else box.appendChild(mk('span', '', esc(t('robeEmpty'))));
+    act(box, 'safe', S.f.safeOpen ? t('safeOpenBtn') : t('safeBtn'), () => openSafe(S.sel === 'uv'));
+    if (has('uv') && !S.f.safeOpen) act(box, 'uvsafe', t('uvSafeBtn'), () => openSafe(true));
   });
 }
 function openSafe(uv) {
   if (S.f.safeOpen) {
-    openModal('Safe', '<p>The safe is open.</p><div class="chips" id="sf"></div>', (b) => {
+    openModal(t('safeTitle'), `${t('safeIsOpen')}<div class="chips" id="sf"></div>`, (b) => {
       const box = b.querySelector('#sf');
-      if (!S.f.handleTaken) { const c = mk('button', 'chip take', '🔩 Take the door handle'); c.addEventListener('click', () => { S.f.handleTaken = true; give('handle'); c.remove(); say('A brass door handle with a square pin. Room 404’s door has a square hole…'); }); box.appendChild(c); }
-      else box.appendChild(mk('span', '', 'Empty. Just the smell of old money.'));
+      if (!S.f.handleTaken) act(box, 'handle', t('takeHandle'), (c) => { S.f.handleTaken = true; give('handle'); c.remove(); say(t('tookHandle')); }, 'chip take');
+      else box.appendChild(mk('span', '', esc(t('safeEmpty'))));
     });
     return;
   }
   if (uv) S.f.uvSafe = true;
   const glow = new Set(S.f.uvSafe ? code().map(String) : []);
-  openModal('Safe', `<p>${S.f.uvSafe ? 'Under UV light, four keys glow with old fingerprints.' : 'A four-digit code.'}</p><div class="row"><div class="display" id="sd">____</div></div><div class="keypad" id="sk"></div>`, (b) => {
+  openModal(t('safeTitle'), `<p>${S.f.uvSafe ? t('safeUv') : t('safeCode')}</p><div class="row"><div class="display" id="sd">____</div></div><div class="keypad" id="sk"></div>`, (b) => {
     let typed = '';
     const show = (ok) => { const d = b.querySelector('#sd'); d.textContent = (typed + '____').slice(0, 4); d.classList.toggle('ok', !!ok); };
     const pad = b.querySelector('#sk');
@@ -626,8 +826,8 @@ function openSafe(uv) {
         Sound.click();
         if (k === 'C') typed = '';
         else if (k === 'OK') {
-          if (typed === code().join('')) { S.f.safeOpen = true; show(true); Sound.unlock(); say('Click-clunk. The safe opens!'); save(); setTimeout(() => { if (!$('modal').hidden) openSafe(false); }, 700); return; }
-          Sound.nope(); say(pick(['ERROR. The safe beeps rudely.', 'Wrong code. The safe sighs electronically.', 'Nope. The display shows a little frowning face.'])); typed = '';
+          if (typed === code().join('')) { S.f.safeOpen = true; show(true); Sound.unlock(); say(t('safeOpened')); save(); setTimeout(() => { if (!$('modal').hidden) openSafe(false); }, 700); return; }
+          Sound.nope(); say(t('safeWrong')); typed = '';
         } else if (typed.length < 4) typed += k;
         show();
       });
@@ -636,14 +836,8 @@ function openSafe(uv) {
     show();
   });
 }
-const FKEYS = {
-  F1: 'HELP: Help is not available on this floor.', F2: 'The lights flicker. Rename? Rename what?', F3: 'SEARCH: 1 result: “you, lost”.',
-  F4: 'Nothing happens. Probably for the best.', F6: 'The hallway lights point at the ceiling. Very helpful.', F7: 'A faint carpet smell. Caret browsing?',
-  F8: 'The elevator music gets louder. There is no elevator.', F9: 'Something hums inside the wall, then stops.', F10: 'A menu appears in your mind. It is the soup menu again.',
-  F11: 'Everything looks bigger for a second. Full screen hallway.', F12: 'Inspect element: the exit is set to display: none.',
-};
 function openPanel() {
-  openModal('Maintenance panel', '<p>A dusty grey panel with old keyboard keys screwed onto it. A sticker: “STAFF ONLY. If guests get lost, the system needs a fresh start.”</p><div class="keypad" style="grid-template-columns:repeat(4, 64px)" id="fk"></div><p class="tip" id="fkMsg"> </p>', (b) => {
+  openModal(t('panelTitle'), `${t('panelBody')}<div class="keypad" style="grid-template-columns:repeat(4, 64px)" id="fk"></div><p class="tip" id="fkMsg"> </p>`, (b) => {
     const pad = b.querySelector('#fk');
     for (let i = 1; i <= 12; i++) {
       const k = `F${i}`, btn = mk('button', 'key wide', k);
@@ -651,11 +845,11 @@ function openPanel() {
         Sound.click();
         if (k === 'F5') {
           S.f.refreshed = true; save(); Sound.tv();
-          b.querySelector('#fkMsg').textContent = 'The whole hallway flickers like a reloading web page… and at the end, an EXIT door appears.';
-          say('You pressed F5. The hallway refreshes, and the exit is found at last. Go!');
+          b.querySelector('#fkMsg').textContent = t('f5');
+          say(t('f5Say'));
           return;
         }
-        b.querySelector('#fkMsg').textContent = FKEYS[k];
+        b.querySelector('#fkMsg').textContent = T().fkeys[k];
       });
       pad.appendChild(btn);
     }
@@ -664,34 +858,20 @@ function openPanel() {
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
-  { id: 'remote', done: () => S.f.remote, hints: ['Hotels hide things in beds.', 'Look under the pillows.', 'Tap the left pillow on the bed: there is a remote under it.'] },
-  { id: 'batteries', done: () => S.f.batteries, hints: ['The remote needs power. What in this room might run on batteries?', 'Something in the bathroom lights up… or used to.', 'Tap the rubber duck in the bathtub: the batteries are inside it.'] },
-  { id: 'combine', done: () => S.f.remoteWorks, hints: ['You have a remote and batteries.', 'Combine items: tap one item, then tap the other.', 'Tap the batteries, then tap the remote.'] },
-  { id: 'tv', done: () => S.f.tvOn, hints: ['Now the remote works. What does a remote control?', 'Hold the remote and tap the TV.', 'Tap the remote in your bag, then tap the TV on the desk side.'] },
-  { id: 'mirror', done: () => S.f.mirrorRead, hints: ['The TV weather report talks about fog in bathrooms.', 'Hot steam reveals messages on mirrors.', 'Turn on the shower, wait a few seconds, then tap the mirror.'] },
-  { id: 'drawer', done: () => S.f.drawerOpen, hints: ['The nightstand drawer opens “when the alarm is set for breakfast”.', 'The mirror told you when breakfast is. Set the clock radio alarm to that time.', `Tap the clock radio, set the alarm to the time on the mirror with Hour + and Minutes +15, then switch the alarm ON.`] },
-  { id: 'uv', done: () => S.f.uvTaken, hints: ['The drawer is open now.', 'There is something useful in the nightstand drawer.', 'Tap the drawer and take the UV torch.'] },
-  { id: 'tray', done: () => S.f.trayTaken, hints: ['Have you looked inside the minibar?', 'Something frozen in the minibar.', 'Open the minibar and take the ice tray.'] },
-  { id: 'melt', done: () => S.f.melted, hints: ['Something metal is frozen in the ice. How do you melt ice?', 'The cooking channel (12) has a tip. And the sink has hot water.', 'Hold the ice tray and tap the bathroom sink.'] },
-  { id: 'wardrobe', done: () => S.f.wardrobeOpen, hints: ['A tiny brass key. What has a tiny keyhole?', 'The wardrobe on the desk side is locked.', 'Hold the brass key and tap the wardrobe.'] },
-  { id: 'safe', done: () => S.f.safeOpen, hints: ['The safe needs four digits. Watch TV channel 404 and look at the painting.', 'Count the points of each star. The manager says: from the faintest (smallest) star to the brightest (biggest). The UV torch shows which keys are used.', () => `The code is ${code().join('')}.`] },
-  { id: 'handle', done: () => S.f.handleTaken, hints: ['What was in the safe?', 'Take what is in the safe.', 'Open the safe again and take the door handle.'] },
-  { id: 'door', done: () => S.f.doorOpen, hints: ['The door has a square hole.', 'The handle from the safe has a square pin.', 'Hold the door handle and tap the door on the bed side.'] },
-  { id: 'refresh', done: () => S.f.refreshed, hints: ['The exit is “not found”. Where have you seen “404 not found” before?', 'The spa voucher from the robe says: “Feeling lost? Just REFRESH.” The maintenance panel has keyboard keys.', 'Tap the maintenance panel in the hallway and press F5.'] },
-  { id: 'exit', done: () => S.done, hints: ['The exit is there now.', 'Walk to the end of the hallway.', 'Tap the green EXIT door at the end of the hallway.'] },
-];
+  ['remote', () => S.f.remote], ['batteries', () => S.f.batteries], ['combine', () => S.f.remoteWorks], ['tv', () => S.f.tvOn],
+  ['mirror', () => S.f.mirrorRead], ['drawer', () => S.f.drawerOpen], ['uv', () => S.f.uvTaken], ['tray', () => S.f.trayTaken],
+  ['melt', () => S.f.melted], ['wardrobe', () => S.f.wardrobeOpen], ['safe', () => S.f.safeOpen], ['handle', () => S.f.handleTaken],
+  ['door', () => S.f.doorOpen], ['refresh', () => S.f.refreshed], ['exit', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
 function openHints() {
   const g = GOALS.find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
-  const text = (h) => (typeof h === 'function' ? h() : h);
-  openModal('Hints', `<p>Each new hint puts <b>2 minutes</b> on the clock. Hints you have already seen are free.</p><ol class="hints" id="hl">${g.hints.slice(0, seen).map((h) => `<li>${esc(text(h))}</li>`).join('')}</ol><div class="row" id="hr"></div>`, (b) => {
+  const text = (h) => (typeof h === 'function' ? h(code().join('')) : h);
+  openModal(t('hintsTitle'), `<p>${t('hintsIntro')}</p><ol class="hints" id="hl">${g.hints.slice(0, seen).map((h) => `<li>${esc(text(h))}</li>`).join('')}</ol><div class="row" id="hr"></div>`, (b) => {
     const row = b.querySelector('#hr');
-    if (seen < g.hints.length) {
-      const btn = mk('button', 'btn', seen ? 'Another hint (−2 min)' : 'Show a hint (−2 min)');
-      btn.addEventListener('click', () => { S.hintSeen[g.id] = seen + 1; S.hints++; S.left -= HINT_COST; save(); tickClock(); openHints(); });
-      row.appendChild(btn);
-    } else row.appendChild(mk('span', 'tip', 'That was the last hint for this step.'));
+    if (seen < g.hints.length) act(row, 'hint', seen ? t('hintMore') : t('hintFirst'), () => { S.hintSeen[g.id] = seen + 1; S.hints++; S.left -= HINT_COST; save(); tickClock(); openHints(); }, 'btn');
+    else row.appendChild(mk('span', 'tip', esc(t('hintLast'))));
   });
 }
 $('btnHint').addEventListener('click', () => { Sound.init(); openHints(); });
@@ -699,10 +879,9 @@ $('btnHint').addEventListener('click', () => { Sound.init(); openHints(); });
 // ---------- clock and endings
 let lastTick = 0, paused = true;
 function tickClock() {
-  const left = S.left;
-  $('clock').textContent = S.overtime ? 'OVERTIME' : hotel();
-  $('left').textContent = S.overtime ? 'checkout was at 12:00' : `${Math.ceil(left / 60)} min to checkout`;
-  $('clockBox').classList.toggle('low', !S.overtime && left < 300);
+  $('clock').textContent = S.overtime ? t('overtime') : hotel();
+  $('left').textContent = S.overtime ? t('overtimeLeft') : t('minLeft', Math.ceil(S.left / 60));
+  $('clockBox').classList.toggle('low', !S.overtime && S.left < 300);
 }
 function frame(now) {
   requestAnimationFrame(frame);
@@ -719,52 +898,43 @@ function frame(now) {
   S.steam += (target - S.steam) * dt * (S.f.showerOn ? 0.45 : 0.12);
   if (S.view === 'bath' && $('modal').hidden && Math.abs(S.steam - old) > 0.0005 && Math.floor(S.steam * 40) !== Math.floor(old * 40)) renderScene();
 }
+function showEnd(eyebrow, title, text, left, overtimeOffer) {
+  $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; $('endBest').textContent = profile.best ? mmss(profile.best) : '–';
+  $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
+}
 function timeUp() {
   if (S.done || S.overtime) return;
   paused = true; Sound.lose();
-  $('modal').hidden = true;
-  $('endEyebrow').textContent = '12:00 · checkout time';
-  $('endTitle').textContent = 'You stay forever';
-  $('endText').textContent = 'The clock hits noon. Somewhere a bell rings, and room 404 quietly becomes your room. Forever. (Or keep searching in overtime, just not for the leaderboard.)';
-  $('endLeft').textContent = '0:00'; $('endHints').textContent = S.hints; $('endBest').textContent = profile.best ? mmss(profile.best) : '–';
-  $('btnOvertime').hidden = false; $('lbPost').hidden = true; $('lbResult').textContent = '';
-  save(); $('screenEnd').hidden = false;
+  $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
+  save();
+  showEnd(t('upEyebrow'), t('upTitle'), t('upText'), 0, true);
 }
 function escape() {
   S.done = true; paused = true; Sound.win();
   const left = S.overtime ? 0 : Math.floor(S.left);
   if (!S.overtime) { profile.best = Math.max(profile.best, left); profile.escapes++; saveProfile(); }
-  $('endEyebrow').textContent = S.overtime ? 'Escaped, in overtime' : `Checked out at ${hotel()}`;
-  $('endTitle').textContent = 'You escaped!';
-  $('endText').textContent = S.overtime
-    ? 'You pushed the EXIT door and stepped out into daylight. A little late, but free.'
-    : `You pushed the EXIT door and stepped out of the Grand Paradox with ${mmss(left)} to spare. Behind you, the door of room 404 fades into the wallpaper. ${S.hints ? `Hints used: ${S.hints}.` : 'No hints at all. Impressive.'}`;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; $('endBest').textContent = profile.best ? mmss(profile.best) : '–';
-  $('btnOvertime').hidden = true;
   store.del(SAVE_KEY);
-  $('screenEnd').hidden = false;
+  showEnd(S.overtime ? t('winEyebrowOver') : t('winEyebrow', hotel()), t('winTitle'), S.overtime ? t('winTextOver') : t('winText', mmss(left), S.hints), left, false);
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
-$('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say('Overtime. The clock has stopped caring, and so have you. Find the way out.'); });
+$('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
 $('btnEndNew').addEventListener('click', () => newGame());
 
-// ---------- start, menu, saving
+// ---------- start, menu, saving, language
 function begin() {
   Sound.init();
   $('screenStart').hidden = true; $('screenEnd').hidden = true; paused = false; lastTick = 0;
   renderScene(); renderInv(); tickClock();
 }
-function newGame() {
-  S = freshState(); save(); begin();
-  say('You wake up on top of the covers in room 404. Your head hurts. The door has no handle. The clock radio says 11:15. Checkout is at 12:00.');
-}
+function newGame() { S = freshState(); save(); begin(); say(t('start')); }
 // starting over needs a second tap when there is a saved game (a confirm() dialog can be blocked inside embedded previews)
 let armedNew = 0;
 $('btnNew').addEventListener('click', () => {
-  if (store.get(SAVE_KEY, null) && Date.now() - armedNew > 4000) { armedNew = Date.now(); $('btnNew').textContent = 'Tap again to start over'; return; }
+  if (store.get(SAVE_KEY, null) && Date.now() - armedNew > 4000) { armedNew = Date.now(); $('btnNew').textContent = t('confirmNew'); return; }
   armedNew = 0; newGame();
 });
-$('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say('Back in room 404. Nothing has changed. Except the time.'); });
+$('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say(t('back')); });
 $('btnMenu').addEventListener('click', () => { paused = true; save(); showStart(); });
 $('navL').addEventListener('click', () => go(S.view === 'bed' ? 'desk' : 'bed'));
 $('navR').addEventListener('click', () => go(S.view === 'bed' ? 'desk' : 'bed'));
@@ -772,11 +942,18 @@ $('scene').addEventListener('click', (e) => { const h = e.target.closest('[data-
 $('scene').addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const h = e.target.closest('[data-hot]'); if (h) { e.preventDefault(); tapHot(h.getAttribute('data-hot')); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { paused = true; save(); } else if (S && $('screenStart').hidden && $('screenEnd').hidden) { paused = false; lastTick = 0; } });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
-
+function applyLang() {
+  document.documentElement.lang = lang; document.title = t('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.innerHTML = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+  $('btnLang').textContent = t('otherLang'); $('btnLang').setAttribute('lang', lang === 'de' ? 'en' : 'de');
+  renderMute(); renderScene(); renderInv(); tickClock();
+}
+$('btnLang').addEventListener('click', () => { lang = lang === 'de' ? 'en' : 'de'; profile.lang = lang; saveProfile(); applyLang(); showStart(); });
 function showStart() {
   const saved = store.get(SAVE_KEY, null);
-  $('btnContinue').hidden = !saved;
-  $('btnNew').textContent = saved ? 'New game' : 'Check in';
+  $('btnContinue').hidden = !saved || saved.done;
+  $('btnNew').textContent = saved && !saved.done ? t('newGame') : t('checkIn'); armedNew = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
@@ -796,23 +973,23 @@ async function lbFetch(force) {
 }
 function lbNote(list, text, link) {
   list.textContent = ''; const li = mk('li', 'none'); li.textContent = text;
-  if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); }
+  if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL + (lang === 'de' ? '?lang=de' : ''); a.target = '_blank'; a.rel = 'noopener'; a.textContent = t('lbOpen'); li.appendChild(a); }
   list.appendChild(li);
 }
 async function renderLeaderboard(force) {
   const list = $('lbList');
-  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbWho').textContent = profile.name ? t('lbWho', profile.name) : '';
   $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
-  if (!lbReachable()) { lbNote(list, 'The leaderboard lives on the public version of the game.', true); return; }
+  if (!lbReachable()) { lbNote(list, t('lbPublic'), true); return; }
   const data = await lbFetch(force);
-  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  if (!data) { lbNote(list, t('lbFail')); return; }
   const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
-  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody has escaped today yet.' : 'Nobody has escaped yet. Be the first.'); return; }
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? t('lbEmptyDaily') : t('lbEmpty')); return; }
   list.textContent = '';
   rows.forEach((r, i) => {
     const li = mk('li', r.id === profile.deviceId ? 'me' : '');
     const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank);
-    for (const text of [r.name, `${mmss(r.score)} left`, `${r.dist} hint${r.dist === 1 ? '' : 's'}`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); }
+    for (const text of [r.name, t('lbLeft', mmss(r.score)), t('lbHints', r.dist)]) { const el = mk('span'); el.textContent = text; li.appendChild(el); }
     list.appendChild(li);
   });
 }
@@ -827,24 +1004,25 @@ function lbAfter(score, hints) {
 }
 async function lbSend() {
   const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
-  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post your time.'; $('lbName').focus(); return; }
+  if (!name) { out.textContent = t('lbNeedName'); $('lbName').focus(); return; }
   if (!lbLast || LB.posting) return;
   if (name !== profile.name) { profile.name = name; saveProfile(); }
-  LB.posting = true; out.textContent = 'Posting…';
+  LB.posting = true; out.textContent = t('lbPosting');
   try {
     const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
     const res = await r.json().catch(() => ({}));
-    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this time.';
-    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `Rank #${rk.alltime}` : 'Not in the top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; LB.at = 0; }
-  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+    if (!r.ok) out.textContent = r.status === 429 ? t('lbTooFast') : t('lbRejected');
+    else { const rk = res.rank || {}; out.textContent = t('lbRank', rk.alltime, rk.daily); lbLast = null; LB.at = 0; }
+  } catch (e) { out.textContent = t('lbFail'); }
   LB.posting = false;
 }
 $('lbSend').addEventListener('click', lbSend);
 $('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
 
-renderMute();
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 S = store.get(SAVE_KEY, null) || freshState();
-renderScene(); renderInv(); tickClock(); say('');
+applyLang(); say('');
 showStart();
 requestAnimationFrame(frame);
 })();

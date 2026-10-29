@@ -455,11 +455,7 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
         <p class="best" id="bestStart">No best run yet</p>
         <div class="sub-row">
           <button class="link-btn" id="btnShop" type="button">Shop · bank $<span id="bankStart">0</span></button>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/pigeon-revenge/" target="_blank" rel="noopener">Pigeon Revenge</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/elevator-roulette/" target="_blank" rel="noopener">Elevator Roulette</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/volcano-bingo/" target="_blank" rel="noopener">Volcano Bingo</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/room-404/" target="_blank" rel="noopener">Room 404</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/rogue-ball/" target="_blank" rel="noopener">Rogue Ball</a>
+          <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
         </div>
         <p class="rotate-hint">Turn your phone sideways to see further ahead.</p>
       </div>
@@ -4154,6 +4150,8 @@ renderMenu(); renderMute();
 game.city = new City(Math.floor(Math.random() * 456976));
 if (document.fonts && document.fonts.load) document.fonts.load(`900 24px ${DISPLAY}`).catch(() => {});
 requestAnimationFrame(frame);
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
 </body>

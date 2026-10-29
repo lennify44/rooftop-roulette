@@ -160,10 +160,7 @@ body {
         <p class="lede">For once, you are the ball. The croupier calls a pocket, you pick the moment to drop into the spinning wheel. Win big, but quietly: when the heat reaches the top, security throws you out.</p>
         <div class="row" style="justify-content:flex-start"><button class="btn" id="btnStart" type="button"><span>Roll in</span></button></div>
         <div class="sub-row">
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/elevator-roulette/" target="_blank" rel="noopener">Elevator Roulette</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/volcano-bingo/" target="_blank" rel="noopener">Volcano Bingo</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/room-404/" target="_blank" rel="noopener">Room 404</a>
+          <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
         </div>
         <p class="best" id="bestStart">No best run yet</p>
       </div>
@@ -666,6 +663,8 @@ function showStart() {
 }
 renderMute(); layout(); showStart();
 requestAnimationFrame(frame);
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
 </body>

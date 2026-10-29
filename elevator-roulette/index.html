@@ -264,11 +264,7 @@ details.how summary { cursor: pointer; font-family: var(--font-mono); font-size:
           <button class="link-btn" id="btnShop" type="button">Toolbox · bank $<span id="shopLink">0</span></button>
         </div>
         <div class="sub-row">
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/pigeon-revenge/" target="_blank" rel="noopener">Pigeon Revenge</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/volcano-bingo/" target="_blank" rel="noopener">Volcano Bingo</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/room-404/" target="_blank" rel="noopener">Room 404</a>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/rogue-ball/" target="_blank" rel="noopener">Rogue Ball</a>
+          <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
         </div>
         <dl class="stats">
           <div><dt>Best cash-out</dt><dd id="startBest">$0</dd></div>
@@ -1098,6 +1094,8 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
 })();
 renderMute();
 renderLobby();
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
 </body>

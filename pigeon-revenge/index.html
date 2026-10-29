@@ -124,7 +124,7 @@ body {
         <p class="lede">The runners stole your rooftop. Now it’s your turn: swoop down on the street and snatch their hats, fries, ice cream and phones. Every snatch in a row raises your combo.</p>
         <div class="cta-row">
           <button class="btn" id="btnStart" type="button"><span>Fly</span></button>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
+          <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
         </div>
         <p class="best" id="bestStart">No best flight yet</p>
         <p class="rotate-hint">Turn your phone sideways to see further ahead.</p>
@@ -159,7 +159,7 @@ body {
         </dl>
         <div class="cta-row">
           <button class="btn" id="btnAgain" type="button"><span>Fly again</span></button>
-          <a class="link-btn" href="https://lennify44.github.io/rooftop-roulette/" target="_blank" rel="noopener">Rooftop Roulette</a>
+          <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
         </div>
       </div>
       <div class="side">
@@ -630,6 +630,8 @@ function frame(now) {
 resize(); renderBest();
 if (document.fonts && document.fonts.load) document.fonts.load(`900 24px ${DISPLAY}`).catch(() => {});
 requestAnimationFrame(frame);
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
 </body>
