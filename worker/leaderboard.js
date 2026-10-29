@@ -11,6 +11,7 @@ const GAMES = {
   volcano: { prefix: 'volcano:', maxScore: 1e8, maxDist: 10000 },     // points, bingos
   rogueball: { prefix: 'rogueball:', maxScore: 1e10, maxDist: 10000 }, // chips, spins
   room404: { prefix: 'room404:', maxScore: 2701, maxDist: 100 },        // seconds left at the escape, hints used
+  sushi: { prefix: 'sushi:', maxScore: 1e7, maxDist: 10 },              // earnings of one service, restaurant 1-4
 };
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
