@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="A vampire courier freeruns across a sunny city and may only touch the shade, which shrinks as noon comes.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shadow Run">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Shadow Runner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: full-bleed side-view street on canvas; smoke meter and clock on top; two touch zones (brake | jump) at the bottom */
+  --night: #1a1424;
+  --chalk: #f6efe6;
+  --haze: #c2b6cc;
+  --sun: #ffcf4a;
+  --blood: #d6283a;
+  --good: #5fe0a8;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); }
+.score { font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
+.sub { font-family: var(--font-mono); font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); font-variant-numeric: tabular-nums; }
+.smoke { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.smoke .bar { width: 130px; height: 12px; border-radius: 6px; background: rgba(0, 0, 0, 0.45); overflow: hidden; border: 1.5px solid rgba(255, 255, 255, 0.6); }
+.smoke .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffcf4a, #ff7a3d, #d6283a); }
+.clock { font-family: var(--font-mono); font-weight: 600; font-size: 22px; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); text-align: center; }
+.clock small { display: block; font-size: 11px; color: var(--haze); }
+.hud-btns { display: flex; gap: 8px; pointer-events: auto; }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.45); cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+.zones { position: absolute; inset: auto 0 0 0; height: 26%; display: grid; grid-template-columns: 38fr 62fr; pointer-events: none; transition: opacity 0.8s; }
+.zones.fade { opacity: 0; }
+.zone { display: grid; place-content: end center; gap: 2px; padding-block: 14px; text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: 0.12em; color: rgba(246, 239, 230, 0.9); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.zone small { font-family: var(--font-body); font-weight: 500; font-size: 12px; letter-spacing: 0.02em; }
+.zone-l { background: linear-gradient(0deg, rgba(120, 150, 255, 0.2), transparent); border-right: 1px dashed rgba(246, 239, 230, 0.3); }
+.zone-r { background: linear-gradient(0deg, rgba(255, 207, 74, 0.18), transparent); }
+.toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); max-width: 90%; padding: 6px 14px; background: rgba(26, 20, 36, 0.9); border: 2px solid var(--sun); border-radius: 10px; font-family: var(--font-display); font-weight: 900; font-size: 20px; text-align: center; pointer-events: none; }
+.screen {
+  position: absolute; inset: 0; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y; z-index: 3;
+  padding-block: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-bottom)); padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+  background: linear-gradient(90deg, rgba(26, 20, 36, 0.96) 0%, rgba(26, 20, 36, 0.86) 60%, rgba(26, 20, 36, 0.6) 100%);
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(48px, 10vw, 96px); line-height: 0.86; text-wrap: balance; }
+.logo span { color: var(--blood); text-shadow: 0 0 22px rgba(214, 40, 58, 0.5); }
+.lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
+.btn { border: 0; cursor: pointer; padding: 0.4em 1.4em; color: #1a1424; background: var(--sun); font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
+.btn > span { display: inline-block; transform: skewX(12deg); }
+.btn.ghost { background: var(--chalk); }
+.link-btn, a.link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.side { display: grid; gap: 8px; align-content: start; }
+.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.places { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.place { display: grid; gap: 3px; align-content: start; padding: 12px; text-align: left; border: 2px solid rgba(246, 239, 230, 0.25); border-radius: 12px; background: rgba(26, 20, 36, 0.8); color: var(--chalk); cursor: pointer; font-family: var(--font-body); }
+.place b { font-family: var(--font-display); font-weight: 900; font-size: 26px; line-height: 1; text-transform: uppercase; }
+.place .stars { color: var(--sun); letter-spacing: 2px; }
+.place span { font-size: 13px; color: var(--haze); }
+.place:disabled { opacity: 0.4; cursor: default; }
+.items { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.item { display: grid; gap: 6px; align-content: start; padding: 12px 14px; border-radius: 12px; background: rgba(26, 20, 36, 0.8); border: 2px solid rgba(246, 239, 230, 0.2); }
+.item .nm { font-family: var(--font-display); font-weight: 900; font-size: 22px; line-height: 1; text-transform: uppercase; }
+.item p { margin: 0; font-size: 14px; color: var(--haze); }
+.item button { justify-self: start; padding: 6px 14px; border: 0; border-radius: 8px; cursor: pointer; background: var(--sun); color: #1a1424; font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.05em; text-transform: uppercase; }
+.item button:disabled { opacity: 0.4; cursor: default; }
+.stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.bigstars { font-size: 40px; letter-spacing: 6px; color: var(--sun); margin: 0; }
+.bigstars i { font-style: normal; color: rgba(246, 239, 230, 0.18); }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { padding: 3px 10px; border: 1.5px solid rgba(246, 239, 230, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1.2fr 1fr 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--sun); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist li.me span:nth-child(2) { color: var(--sun); font-weight: 600; }
+.toplist .none { display: block; color: var(--haze); }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 10px 0 0; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; padding: 6px 8px; border: 1.5px solid rgba(246, 239, 230, 0.4); background: rgba(26, 20, 36, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
+.tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+.icon-btn:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .place:focus-visible, .item button:focus-visible, .lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+@media (max-height: 520px) { .logo { font-size: clamp(42px, 8vw, 64px); } .lede { font-size: 14px; } .btn { font-size: 22px; } .score { font-size: 24px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" aria-label="A sunny street"></canvas>
+  <div class="hud" id="hud" hidden>
+    <div>
+      <div class="score" id="score">0</div>
+      <div class="sub">📦 <span id="parcels">10</span> · 🚪 <span id="delivered">0</span> · 🪙 <span id="coins">0</span></div>
+      <div class="smoke"><span aria-hidden="true">🦇</span><div class="bar" aria-label="Smoke"><i id="smokeBar"></i></div></div>
+    </div>
+    <div class="clock" id="clockBox"><span id="clock">7:00</span><small id="placeName">Old Town</small></div>
+    <div class="hud-btns">
+      <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
+      <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    </div>
+  </div>
+  <div class="zones" id="zones" hidden><div class="zone zone-l">BRAKE<small>hold: wait in the shade</small></div><div class="zone zone-r">JUMP<small>hold: higher</small></div></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">From the makers of Rooftop Roulette</p>
+        <h1 class="logo">Shadow<br><span>Runner</span></h1>
+        <p class="lede">A vampire courier, a bag of parcels and a city full of sunshine. Stay in the shade while you freerun to every door before noon. As the sun climbs, the shadows shrink.</p>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Run</span></button><button class="link-btn" id="btnShop" type="button">Wardrobe · 🪙 <span id="bankStart">0</span></button></div>
+        <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+      </div>
+      <div class="side">
+        <h2 class="label">How to run</h2>
+        <ul class="rules">
+          <li>☀️ Sunlight makes you smoke. Shade heals you. Full smoke and you’re a bat.</li>
+          <li>👆 Right side: jump (hold for higher). Left side: hold to brake and wait in a shadow.</li>
+          <li>🚚 Trucks and clouds carry their shadow with them: brake to stay under it.</li>
+          <li>🚪 Run past a glowing door in the shade to deliver a parcel.</li>
+          <li>☂️ Umbrellas shield you for a few seconds. Garlic stands and open cellars trip you.</li>
+          <li>🕛 Reach noon to finish the district. Deliver all 10 parcels for a second star, and keep your smoke under 70% for the third.</li>
+        </ul>
+        <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenPlaces" aria-label="Choose a district" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Choose a district</p>
+        <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Which<br><span>district?</span></h1>
+        <p class="lede">Finish a district (reach noon) to open the next. Eternal Morning opens after Downtown.</p>
+        <div class="cta-row"><button class="link-btn" id="btnPlacesBack" type="button">Back</button><button class="link-btn" id="btnShop2" type="button">Wardrobe</button></div>
+      </div>
+      <div class="places" id="places"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenShop" aria-label="Wardrobe" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Wardrobe · paid with tips</p>
+        <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Dress for<br><span>the sun</span></h1>
+        <p class="lede">Coins: <b>🪙 <span id="shopBank">0</span></b>. Every delivery pays a tip.</p>
+        <button class="btn ghost" id="btnShopBack" type="button"><span>Back</span></button>
+      </div>
+      <div class="items" id="shopItems"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenPause" aria-label="Paused" hidden>
+    <div class="menu"><div>
+      <p class="eyebrow">Paused</p>
+      <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Hiding in<br><span>a doorway</span></h1>
+      <div class="cta-row"><button class="btn" id="btnResume" type="button"><span>Resume</span></button><button class="link-btn" id="btnQuit" type="button">Give up</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="screenOver" aria-label="Run over" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow" id="overEyebrow">Run over</p>
+        <h1 class="logo" id="overTitle" style="font-size: clamp(40px, 8vw, 80px)">Noon!</h1>
+        <p class="bigstars" id="overStars"></p>
+        <p class="lede" id="overText"></p>
+        <div class="cta-row"><button class="btn" id="btnAgain" type="button"><span>Again</span></button><button class="link-btn" id="btnNext" type="button">Districts</button><button class="link-btn" id="btnShop3" type="button">Wardrobe</button></div>
+        <dl class="stats">
+          <div><dt>Score</dt><dd id="overScore">0</dd></div>
+          <div><dt>Delivered</dt><dd id="overDelivered">0</dd></div>
+          <div><dt>Distance</dt><dd id="overDist">0 m</dd></div>
+        </dl>
+      </div>
+      <div class="side">
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post score</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'shadow-runner-profile';
+const profile = Object.assign({ bank: 0, stars: {}, best: {}, up: {}, name: '', deviceId: '', muted: false, tutorial: false }, store.get(PROFILE_KEY, {}));
+if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+
+// ---------- districts and upgrades
+const PLACES = [
+  { id: 'old', name: 'Old Town', mix: { block: 4, awnings: 4, plaza: 2 }, sky: ['#ffb38a', '#9fd3ff'], facade: ['#c8875a', '#b3704a', '#d39a6a', '#a8604a'], speed: 250, tip: 1, text: 'Narrow streets and shop awnings. A gentle start.' },
+  { id: 'market', name: 'Market', mix: { stalls: 5, block: 2, plaza: 2 }, trucks: true, sky: ['#ffc48a', '#a6d8ff'], facade: ['#e0b25a', '#c9884a', '#b86b4a', '#e2c27a'], speed: 260, tip: 1.2, text: 'Market stalls and delivery trucks with moving shadows.' },
+  { id: 'park', name: 'Park', mix: { trees: 5, lawn: 3, block: 1 }, clouds: 1.6, sky: ['#ffbe8f', '#a8dcff'], facade: ['#6a9a5a', '#5f8a4a', '#7aaa6a', '#4f7a4a'], speed: 265, tip: 1.3, text: 'Trees and wide sunny lawns. Clouds are your friends.' },
+  { id: 'river', name: 'Riverside', mix: { bridge: 4, quay: 3, trees: 2 }, clouds: 1.2, sky: ['#ffb0a0', '#98cfff'], facade: ['#7a8aa0', '#6a7a90', '#8a9ab0', '#5a6a80'], speed: 270, tip: 1.4, text: 'Deep shade under bridges, bright open quays between.' },
+  { id: 'down', name: 'Downtown', mix: { tower: 4, block: 2, plaza: 2 }, mirrors: true, trucks: true, sky: ['#ffa890', '#8ec8ff'], facade: ['#5a6070', '#6a7080', '#4a5060', '#7a8090'], speed: 280, tip: 1.6, text: 'Tall towers, long morning shadows, mirror windows that throw sunbeams.' },
+  { id: 'eternal', name: 'Eternal Morning', mix: { block: 3, awnings: 3, stalls: 2, trees: 2, bridge: 1, tower: 2, plaza: 2 }, trucks: true, mirrors: true, clouds: 1.2, endless: true, sky: ['#ff9f8a', '#9ad0ff'], facade: ['#a8604a', '#5a6070', '#6a9a5a', '#c8875a'], speed: 270, tip: 1.5, text: 'Endless. Every morning faster, until you turn into a bat.' },
+];
+const UPGRADES = [
+  { id: 'hat', name: 'Wide hat', price: 300, desc: 'Smoke 15% slower in the sun.' },
+  { id: 'cape', name: 'Long cape', price: 600, desc: 'Once per run, a full smoke meter drops back to half instead of poof.' },
+  { id: 'shades', name: 'Sunglasses', price: 250, desc: 'Mirror sunbeams glow a second before they arrive.' },
+  { id: 'garlic', name: 'Garlic necklace', price: 200, desc: 'Garlic stands no longer trip you. Somehow.' },
+];
+const has = (id) => !!profile.up[id];
+
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = profile.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  setMuted(m) { if (this.master) this.master.gain.value = m ? 0 : 0.5; },
+  tone(f, dur, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol = 0.1, lp = 2000) { if (!this.ctx) return; const n = Math.floor(this.ctx.sampleRate * dur), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain(); s.buffer = buf; f.type = 'lowpass'; f.frequency.value = lp; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(this.master); s.start(); },
+  jump() { this.tone(330, 0.12, 'triangle', 0.08, 220); },
+  land() { this.noise(0.06, 0.06, 600); },
+  sizzle() { this.noise(0.15, 0.04, 5000); },
+  deliver() { [784, 988, 1319].forEach((f, i) => this.tone(f, 0.12, 'triangle', 0.08, 0, i * 0.05)); },
+  stumble() { this.tone(160, 0.25, 'sawtooth', 0.08, -60); },
+  umbrella() { this.tone(523, 0.1, 'sine', 0.08); this.tone(784, 0.2, 'sine', 0.07, 0, 0.08); },
+  bell() { [1047, 784, 1047, 784].forEach((f, i) => this.tone(f, 0.5, 'sine', 0.06, 0, i * 0.35)); },
+  poof() { this.noise(0.6, 0.2, 1500); this.tone(600, 0.5, 'square', 0.06, -450); },
+};
+function renderMute() {
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
+}
+$('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
+
+// ---------- layout
+const L = { W: 0, H: 0, dpr: 1, ground: 0, runX: 0, u: 1 };
+function layout() {
+  const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  // world units: the street is the same height in every orientation; wide screens simply see further ahead
+  const u = clamp(Math.min(H / 520, W / 700), 0.5, 1.6);
+  Object.assign(L, { W, H, dpr, u, ground: H * 0.74, runX: Math.min(W * 0.26, 220 * u) });
+}
+addEventListener('resize', layout);
+
+// ---------- game state
+const DAY = 120, GRAV = 2300, JUMP = 860, HOLD_GRAV = 0.45;
+const game = { id: 0, running: false, paused: false, place: PLACES[0], t: 0, x: 0, vx: 0, y: 0, vy: 0, onGround: true, smoke: 0, shield: 0, hat: true, capeUsed: false, parcels: 8, delivered: 0, coins: 0, score: 0, stumble: 0, brake: false, holdJump: false, jumpHeld: 0, items: [], genX: 0, parts: [], floats: [], shaded: true, beam: false, ended: false, loop: 0, hint: 0, bats: 0, eclipse: 0 };
+// sun elevation from 10° at 7:00 to 80° at noon; k = how far a 1-unit-high object throws its shadow
+function sunK() { const f = (game.t % DAY) / DAY, e = (15 + 65 * f) * Math.PI / 180; return 1 / Math.tan(e); }
+function clockOf(t) { const m = Math.floor(((t % DAY) / DAY) * 300); return `${7 + Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; }
+
+// ---------- generating the street ahead
+// The street is planned as shade patches and sun gaps for the moment the runner will get there:
+// sun gaps grow from about half a second at 7:00 to 1.5 s at noon, and every shade source is placed
+// so that its shadow (which depends on the sun angle) lands on its patch at that moment.
+const SPEC = {
+  old: { gap: [60, 380], patch: [280, 520], kinds: ['block', 'awning', 'awning'] },
+  market: { gap: [70, 420], patch: [240, 480], kinds: ['stall', 'stall', 'block'] },
+  park: { gap: [80, 440], patch: [220, 460], kinds: ['tree', 'tree', 'tree', 'block'] },
+  river: { gap: [90, 460], patch: [260, 520], kinds: ['bridge', 'bridge', 'tree'] },
+  down: { gap: [90, 480], patch: [240, 500], kinds: ['tower', 'tower', 'block'] },
+  eternal: { gap: [90, 460], patch: [240, 500], kinds: ['block', 'awning', 'stall', 'tree', 'bridge', 'tower'] },
+};
+function kAt(t) { const f = (Math.max(0, t) % DAY) / DAY, e = (15 + 65 * f) * Math.PI / 180; return 1 / Math.tan(e); }
+function gen(upTo) {
+  const P = game.place, S = SPEC[P.id];
+  while (game.genX < upTo) {
+    // plan from where the runner really is; cover the patch whether they arrive a second early or up to 6 s late (braking)
+    const tArrive = game.t + Math.max(0, game.genX - game.x) / P.speed, f = (tArrive % DAY) / DAY, kE = kAt(tArrive - 1), kL = kAt(tArrive + 6), loopBoost = P.endless ? 1 + Math.floor(tArrive / DAY) * 0.12 : 1;
+    const first = game.genX < 400;
+    // shade patch
+    const p0 = game.genX, len = first ? 700 : rnd(S.patch[0], S.patch[1]) * (1 - 0.35 * f), p1 = p0 + len;
+    const kind = first ? 'block' : pick(S.kinds);
+    if (kind === 'block' || kind === 'tower') {
+      const h = kind === 'tower' ? rnd(360, 600) : rnd(150, 280), e = h * kL * 0.55;
+      add({ type: 'building', x0: p0, x1: Math.max(p0 + 110, p1 - e), h, col: pick(P.facade), tower: kind === 'tower' });
+      if (kind === 'tower' && P.mirrors && Math.random() < 0.55) add({ type: 'mirror', x: p0 + len * 0.3, phase: rnd(0, 6), span: rnd(160, 280) });
+    } else if (kind === 'awning' || kind === 'stall') {
+      const y = kind === 'stall' ? rnd(54, 66) : rnd(62, 82), sE = y * kE * 0.55, sL = y * kL * 0.55, a0 = p0 - sE, a1 = p1 - sL;
+      add({ type: 'facade', x0: a0 - 30, x1: a1 + 30, h: rnd(150, 220), col: pick(P.facade) });
+      const n = kind === 'stall' ? Math.ceil((a1 - a0) / 110) : Math.ceil((a1 - a0) / 170), w = (a1 - a0) / n;
+      for (let i = 0; i < n; i++) add({ type: 'awning', x0: a0 + i * w + (kind === 'stall' ? 4 : 1), x1: a0 + (i + 1) * w - (kind === 'stall' ? 4 : 1), y, col: pick(['#d6283a', '#2a7a5a', '#e0b25a', '#3a5aa0', '#ff8a3d']), stall: kind === 'stall' });
+    } else if (kind === 'tree') {
+      const h = rnd(105, 150), sE = h * kE * 0.55, sL = h * kL * 0.55, a0 = p0 - sE, a1 = p1 - sL, span = a1 - a0;
+      const n = Math.max(1, Math.round(span / 190)), r = span / (n * 1.8);
+      for (let i = 0; i < n; i++) add({ type: 'tree', cx: a0 + (i + 0.5) * (span / n), r, h });
+    } else if (kind === 'bridge') {
+      add({ type: 'bridge', x0: p0 - 92 * kE * 0.3, x1: p1 - 92 * kL * 0.3, y: 92 });
+    }
+    if (!first && Math.random() < 0.22) add({ type: 'door', x: p0 + len * rnd(0.35, 0.65) });
+    // sun gap after it
+    const gap = first ? 120 : (S.gap[0] + (S.gap[1] - S.gap[0]) * f) * rnd(0.75, 1) * loopBoost;
+    const umbrellaHere = !first && Math.random() < 0.3;
+    if (umbrellaHere) add({ type: 'umbrella', x: p1 - 40, got: false });
+    if (!first && Math.random() < (umbrellaHere ? 0.5 : 0.06)) add({ type: 'door', x: p1 + gap * 0.5, sunny: true });
+    // obstacles, never closer than a reaction distance to each other
+    for (const ox of [p0 + len * rnd(0.2, 0.8), p1 + gap * rnd(0.2, 0.8)]) {
+      if (first || Math.random() > 0.55) continue;
+      const last = game.items.filter((i) => i.obstacle).slice(-1)[0];
+      if (last && ox - last.x < 280) continue;
+      const r = Math.random();
+      if (r < 0.4) add({ type: 'barrier', x: ox, w: 26, h: rnd(32, 46), obstacle: true });
+      else if (r < 0.6) add({ type: 'bin', x: ox, w: 24, h: 30, obstacle: true });
+      else if (r < 0.75) add({ type: 'garlic', x: ox, w: 40, h: 40, obstacle: true });
+      else if (r < 0.9) add({ type: 'cellar', x: ox, w: rnd(56, 76), h: 0, obstacle: true });
+      else add({ type: 'pigeon', x: ox + 300, w: 24, h: 0, obstacle: true, fly: true });
+    }
+    if (P.trucks && Math.random() < 0.16) add({ type: 'truck', x0: p0 - 500, w: rnd(150, 210), h: rnd(70, 90), vx: rnd(90, 170), col: pick(['#f2efe8', '#e0b25a', '#5a8ac0', '#c84a3a']) });
+    if (P.clouds && Math.random() < 0.1 * P.clouds) add({ type: 'cloud', x0: p0 + rnd(-200, 400), w: rnd(220, 380), alt: rnd(420, 620), vx: rnd(-30, 30) });
+    game.genX = p1 + gap;
+  }
+}
+function add(it) { game.items.push(it); }
+// where an item (and the shadow it can throw) ends, so nothing is dropped while it still shades the street
+function endX(it) { if (it.x1 !== undefined) return it.x1 + 800; if (it.cx !== undefined) return it.cx + it.r + 800; if (it.x0 !== undefined) return it.x0 + (it.w || 0) + 1300; return it.x ?? 0; }
+
+// ---------- shade
+function shadeIntervals() {
+  const k = sunK(), out = [];
+  for (const it of game.items) {
+    if (it.type === 'building') out.push([it.x0, it.x1 + it.h * k * 0.55]);
+    else if (it.type === 'awning') out.push([it.x0 + it.y * k * 0.55, it.x1 + it.y * k * 0.55]);
+    else if (it.type === 'tree') out.push([it.cx - it.r * 0.9 + it.h * k * 0.55, it.cx + it.r * 0.9 + it.h * k * 0.55]);
+    else if (it.type === 'bridge') out.push([it.x0 + it.y * k * 0.3, it.x1 + it.y * k * 0.3]);
+    else if (it.type === 'truck') out.push([it.x0, it.x0 + it.w + it.h * k * 0.55]);
+    else if (it.type === 'cloud') out.push([it.x0 + Math.min(1200, it.alt * k * 0.25), it.x0 + it.w + Math.min(1200, it.alt * k * 0.25)]);
+  }
+  return out;
+}
+function beams() {
+  // mirror windows throw a hot sunbeam that sweeps along the street near the tower
+  const out = [];
+  for (const it of game.items) if (it.type === 'mirror') { const c = it.x + Math.sin(game.t * 0.9 + it.phase) * it.span * 0.5 + it.span * 0.4; out.push([c - 34, c + 34, Math.sin(game.t * 0.9 + it.phase + 0.8)]); }
+  return out;
+}
+const inAny = (x, list) => list.some(([a, b]) => x >= a && x <= b);
+
+// ---------- flow
+function startRun(place) {
+  Sound.init();
+  game.place = place;
+  Object.assign(game, { id: game.id + 1, running: true, paused: false, t: 0, x: 0, vx: place.speed, y: 0, vy: 0, onGround: true, smoke: 0, maxSmoke: 0, shield: 0, hat: true, capeUsed: false, parcels: 10, delivered: 0, coins: 0, score: 0, stumble: 0, brake: false, holdJump: false, items: [], genX: -300, parts: [], floats: [], ended: false, loop: 0, eclipse: 0 });
+  game.hint = profile.tutorial ? 0 : 1;
+  pointers.clear(); game.brake = false; game.holdJump = false;   // a finger still down from the last run must not keep braking
+  ['screenStart', 'screenPlaces', 'screenOver', 'screenPause', 'screenShop'].forEach((id) => { $(id).hidden = true; });
+  $('hud').hidden = false; $('zones').hidden = false; $('zones').classList.remove('fade');
+  setTimeout(() => $('zones').classList.add('fade'), 6000);
+  layout(); gen(2400); updateHud();
+  toast(`${place.name} · run to noon`);
+}
+function endRun(why) {
+  if (game.ended) return;
+  game.ended = true; game.running = false; game.paused = false;
+  const P = game.place, finished = why === 'noon';
+  const score = Math.round(game.delivered * 100 + game.x / 20 + (finished ? 500 : 0));
+  const stars = P.endless ? 0 : finished ? (game.parcels === 0 ? (game.maxSmoke < 0.7 ? 3 : 2) : 1) : 0;
+  profile.bank += game.coins; profile.stars[P.id] = Math.max(profile.stars[P.id] || 0, stars);
+  const wasBest = score > (profile.best[P.id] || 0); profile.best[P.id] = Math.max(profile.best[P.id] || 0, score);
+  if (finished || game.delivered > 0) profile.tutorial = true;
+  saveProfile();
+  if (why === 'poof') Sound.poof(); else Sound.bell();
+  $('overEyebrow').textContent = `${P.name} · ${finished ? 'noon bells' : why === 'poof' ? 'too much sun' : 'gave up'}`;
+  $('overTitle').textContent = finished ? (stars === 3 ? 'Perfect route!' : 'Made it to noon!') : why === 'poof' ? 'Poof! A bat.' : 'Run over';
+  $('overStars').innerHTML = P.endless ? '' : '★'.repeat(stars) + `<i>${'★'.repeat(3 - stars)}</i>`;
+  const next = PLACES[PLACES.indexOf(P) + 1];
+  $('overText').textContent = `${game.delivered} parcels delivered, ${fmt(game.x / 20)} m freerun${P.endless ? `, ${game.loop} mornings survived` : ''}. ${game.coins} coins in tips.${wasBest && score > 0 ? ' New best here.' : ''}${!P.endless ? ` Stars: reach noon · deliver all 10 · and keep the smoke under 70% (yours peaked at ${Math.round(game.maxSmoke * 100)}%).` : ''}${finished && next && !P.endless ? ` ${next.name} is open!` : ''}`;
+  $('overScore').textContent = fmt(score); $('overDelivered').textContent = game.delivered; $('overDist').textContent = `${fmt(game.x / 20)} m`;
+  $('hud').hidden = true; $('zones').hidden = true; $('screenOver').hidden = false;
+  lbAfterGame(score, PLACES.indexOf(P) + 1);
+}
+function pause(on) { if (!game.running) return; game.paused = on; $('screenPause').hidden = !on; }
+let toastTimer = 0;
+function toast(text) { const el = $('toast'); el.textContent = text; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 1800); }
+function updateHud() {
+  $('score').textContent = fmt(game.delivered * 100 + game.x / 20);
+  $('parcels').textContent = game.parcels; $('delivered').textContent = game.delivered; $('coins').textContent = game.coins;
+  $('smokeBar').style.width = `${Math.round(game.smoke * 100)}%`;
+  $('clock').textContent = clockOf(game.t); $('placeName').textContent = game.place.endless ? `${game.place.name} · ${game.loop + 1}` : game.place.name;
+}
+function floatText(t, x, y, c, life = 1, size = 1) { game.floats.push({ t, x, y, c, life, max: life, size }); }
+function puff(x, y, n, col) { for (let i = 0; i < n; i++) game.parts.push({ x, y, vx: rnd(-40, 40), vy: rnd(-90, -30), life: rnd(0.4, 0.9), max: 0.9, c: col || '#bbb', s: rnd(3, 6) }); }
+
+// ---------- update
+function update(dt) {
+  if (!game.running || game.paused) return;
+  const P = game.place;
+  game.t += dt;
+  if (!P.endless && game.t >= DAY) { endRun('noon'); return; }
+  if (P.endless && game.t >= DAY * (game.loop + 1)) { game.loop++; game.vx = P.speed * (1 + game.loop * 0.12); Sound.bell(); toast(`Morning ${game.loop + 1}: faster!`); }
+  // speed: braking slows to a walk, a stumble costs speed for a moment
+  const base = P.speed * (P.endless ? 1 + game.loop * 0.12 : 1);
+  const target = game.brake && game.onGround ? base * 0.18 : base * (game.stumble > 0 ? 0.55 : 1);
+  game.vx += (target - game.vx) * Math.min(1, dt * (game.brake ? 7 : 3));
+  game.stumble = Math.max(0, game.stumble - dt);
+  game.x += game.vx * dt;
+  // jumping
+  if (!game.onGround) {
+    game.vy += GRAV * (game.holdJump && game.vy < 0 ? HOLD_GRAV : 1) * dt; game.y += game.vy * dt;
+    if (game.y >= 0) { game.y = 0; game.vy = 0; game.onGround = true; Sound.land(); }
+  }
+  // moving things
+  for (const it of game.items) { if (it.type === 'truck' || it.type === 'cloud') it.x0 += it.vx * dt; if (it.type === 'pigeon') it.x -= 140 * dt; }
+  game.items = game.items.filter((it) => endX(it) > game.x - 1500);
+  gen(game.x + L.W / L.u + 1200);
+  // shade, sun and smoke
+  const sh = shadeIntervals(), bm = beams();
+  const inBeam = bm.some(([a, b]) => game.x >= a && game.x <= b);
+  game.eclipse = Math.max(0, game.eclipse - dt);
+  game.shaded = game.eclipse > 0 || (inAny(game.x, sh) && !inBeam);
+  if (game.shield > 0) game.shield -= dt;
+  if (!game.shaded && game.shield <= 0) {
+    game.smoke += dt * 0.42 * (has('hat') ? 0.85 : 1) * (game.hat ? 1 : 1.2) * (inBeam ? 1.6 : 1);
+    if (Math.random() < dt * 30) puff(L.runX + rnd(-8, 8), L.ground - 50 * L.u + game.y * L.u, 1, '#d8d0c8');
+    if (Math.random() < dt * 6) Sound.sizzle();
+  } else game.smoke = Math.max(0, game.smoke - dt * 0.5);
+  game.maxSmoke = Math.max(game.maxSmoke || 0, game.smoke);
+  if (game.smoke >= 1) {
+    if (has('cape') && !game.capeUsed) { game.capeUsed = true; game.smoke = 0.5; toast('Your cape saved you!'); }
+    else { game.smoke = 1; puff(L.runX, L.ground - 40 * L.u, 40, '#555'); endRun('poof'); return; }
+  }
+  // items you run through
+  for (const it of game.items) {
+    if (it.type === 'door' && !it.done && Math.abs(it.x - game.x) < 22) {
+      if (game.shaded && game.parcels > 0) { it.done = true; game.parcels--; game.delivered++; const tip = Math.round(rnd(8, 16) * P.tip); game.coins += tip; Sound.deliver(); floatText(`+${tip} 🪙`, L.runX, L.ground - 120 * L.u, '#ffcf4a', 1); if (game.hint) { game.hint = 0; profile.tutorial = true; saveProfile(); } }
+      else if (!it.missed) { it.missed = true; if (!game.shaded && game.parcels > 0) floatText('Too sunny to knock!', L.runX, L.ground - 120 * L.u, '#ffb0a0', 0.9); }
+    }
+    if (it.type === 'umbrella' && !it.got && Math.abs(it.x - game.x) < 30 && game.y > -90) { it.got = true; game.shield = 4; Sound.umbrella(); toast('☂️ Umbrella: 4 seconds of shade'); }
+    if (it.obstacle && !it.hit) {
+      const dx = Math.abs(it.x - game.x);
+      if (it.type === 'cellar') { if (dx < it.w / 2 && game.onGround) { it.hit = true; trip(it, true); } }
+      else if (it.type === 'pigeon') { if (dx < 22 && game.y > -30) { it.hit = true; if (game.hat) { game.hat = false; toast('A pigeon took your hat! (smoke faster)'); } trip(it, false); } }
+      else if (dx < (it.w / 2 + 10) && -game.y < it.h) { it.hit = true; if (it.type === 'garlic' && has('garlic')) continue; trip(it, false); if (it.type === 'garlic') { game.smoke = Math.min(0.99, game.smoke + 0.12); floatText('Garlic!', L.runX, L.ground - 110 * L.u, '#e8e0a0', 0.9); } }
+    }
+  }
+  if (game.items.some((it) => it.type === 'cloud') && Math.random() < dt * 0.0015) { game.eclipse = 8; toast('🌑 An eclipse! Everything is shade'); }
+  for (let i = game.parts.length - 1; i >= 0; i--) { const p = game.parts[i]; p.life -= dt; if (p.life <= 0) { game.parts.splice(i, 1); continue; } p.x += p.vx * dt - game.vx * L.u * dt * 0.3; p.y += p.vy * dt; }
+  for (let i = game.floats.length - 1; i >= 0; i--) { const f = game.floats[i]; f.life -= dt; f.y -= 30 * dt; if (f.life <= 0) game.floats.splice(i, 1); }
+  updateHud();
+}
+function trip(it, cellar) {
+  game.stumble = 0.7; Sound.stumble(); game.smoke = Math.min(0.99, game.smoke + 0.06);
+  if (cellar && game.parcels > 0) { game.parcels--; floatText('Lost a parcel in the cellar!', L.runX, L.ground - 110 * L.u, '#ffb0a0', 1); }
+}
+function jumpStart() { if (!game.running || game.paused) return; game.holdJump = true; if (game.onGround) { game.onGround = false; game.vy = -JUMP; Sound.jump(); } }
+
+// ---------- drawing
+function sx(wx) { return L.runX + (wx - game.x) * L.u; }
+function drawFrame() {
+  const { W, H, u } = L;
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  const f = (game.t % DAY) / DAY, P = game.place;
+  // sky brightens from pink morning to white noon
+  const g = ctx.createLinearGradient(0, 0, 0, L.ground);
+  g.addColorStop(0, f < 0.5 ? P.sky[0] : '#8cc8ff'); g.addColorStop(1, f < 0.5 ? '#ffe0c0' : '#fff6dc');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, L.ground);
+  // the sun climbs from low left to high overhead
+  const sa = (15 + 65 * f) * Math.PI / 180, sunX = W * 0.5 - Math.cos(sa) * W * 0.45, sunY = L.ground - Math.sin(sa) * (L.ground - 40);
+  ctx.fillStyle = 'rgba(255,230,140,0.35)'; ctx.beginPath(); ctx.arc(sunX, sunY, 46 * u, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(sunX, sunY, 26 * u, 0, Math.PI * 2); ctx.fill();
+  // clouds in the sky
+  for (const it of game.items) if (it.type === 'cloud') { const cx = sx(it.x0 + it.w / 2), cy = 80 * u + (it.alt - 420) * 0.15 * u; ctx.fillStyle = 'rgba(255,255,255,0.9)'; for (const [dx, dy, r] of [[-0.3, 0, 0.22], [0, -0.1, 0.28], [0.3, 0, 0.22]]) { ctx.beginPath(); ctx.arc(cx + dx * it.w * u, cy + dy * it.w * u, r * it.w * u * 0.6, 0, Math.PI * 2); ctx.fill(); } }
+  // buildings and towers
+  for (const it of game.items) if (it.type === 'building' || it.type === 'facade') {
+    const x0 = sx(it.x0), x1 = sx(it.x1); if (x1 < -50 || x0 > W + 50) continue;
+    const top = L.ground - it.h * u;
+    ctx.fillStyle = it.col; ctx.fillRect(x0, top, x1 - x0, it.h * u);
+    ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(x0, top, 6 * u, it.h * u);
+    ctx.fillStyle = it.tower ? 'rgba(170,210,255,0.55)' : 'rgba(40,30,40,0.35)';
+    for (let wy = top + 16 * u; wy < L.ground - 50 * u; wy += 34 * u) for (let wx = x0 + 14 * u; wx < x1 - 20 * u; wx += 30 * u) ctx.fillRect(wx, wy, 14 * u, 18 * u);
+  }
+  // mirror sunbeams
+  for (const it of game.items) if (it.type === 'mirror') { const tx = sx(it.x); ctx.fillStyle = 'rgba(200,240,255,0.9)'; ctx.fillRect(tx - 10 * u, L.ground - 220 * u, 20 * u, 26 * u); }
+  for (const [a, b, early] of beams()) { const x0 = sx(a), x1 = sx(b); if (x1 < 0 || x0 > W) continue; ctx.fillStyle = `rgba(255,250,200,${0.35 + (has('shades') && early > 0.7 ? 0.25 : 0)})`; ctx.beginPath(); ctx.moveTo(x0 + 20 * u, L.ground - 200 * u); ctx.lineTo(x1 - 20 * u, L.ground - 200 * u); ctx.lineTo(x1, L.ground); ctx.lineTo(x0, L.ground); ctx.fill(); }
+  // trucks on the road behind the pavement
+  for (const it of game.items) if (it.type === 'truck') { const x0 = sx(it.x0); if (x0 > W + 50 || x0 + it.w * u < -50) continue; ctx.fillStyle = it.col; ctx.fillRect(x0, L.ground - it.h * u - 6 * u, it.w * u, it.h * u); ctx.fillStyle = '#2a2a32'; ctx.beginPath(); ctx.arc(x0 + 30 * u, L.ground - 6 * u, 10 * u, 0, Math.PI * 2); ctx.arc(x0 + it.w * u - 30 * u, L.ground - 6 * u, 10 * u, 0, Math.PI * 2); ctx.fill(); }
+  // bridges and trees
+  for (const it of game.items) if (it.type === 'bridge') { const x0 = sx(it.x0), x1 = sx(it.x1); ctx.fillStyle = '#6a6070'; ctx.fillRect(x0, L.ground - it.y * u - 22 * u, x1 - x0, 22 * u); ctx.fillStyle = '#4a4050'; ctx.fillRect(x0, L.ground - it.y * u, 18 * u, it.y * u); ctx.fillRect(x1 - 18 * u, L.ground - it.y * u, 18 * u, it.y * u); }
+  for (const it of game.items) if (it.type === 'tree') { const cx = sx(it.cx); if (cx < -150 || cx > W + 150) continue; ctx.fillStyle = '#6a4a32'; ctx.fillRect(cx - 7 * u, L.ground - it.h * u, 14 * u, it.h * u); ctx.fillStyle = '#3f8a4a'; ctx.beginPath(); ctx.arc(cx, L.ground - it.h * u, it.r * u, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#4f9a5a'; ctx.beginPath(); ctx.arc(cx - it.r * 0.3 * u, L.ground - it.h * u - it.r * 0.3 * u, it.r * 0.6 * u, 0, Math.PI * 2); ctx.fill(); }
+  // pavement: bright where the sun hits, dark where there is shade
+  ctx.fillStyle = '#f2e0b8'; ctx.fillRect(0, L.ground, W, H - L.ground);
+  ctx.fillStyle = 'rgba(40,30,60,0.55)';
+  const sh = game.eclipse > 0 ? [[game.x - 2000, game.x + 4000]] : shadeIntervals();
+  for (const [a, b] of sh) { const x0 = sx(a), x1 = sx(b); if (x1 < 0 || x0 > W) continue; ctx.fillRect(Math.max(0, x0), L.ground, Math.min(W, x1) - Math.max(0, x0), 26 * u); }
+  ctx.fillStyle = '#c9b48a'; ctx.fillRect(0, L.ground + 26 * u, W, 6 * u);
+  ctx.fillStyle = '#5a5a66'; ctx.fillRect(0, L.ground + 32 * u, W, H - L.ground - 32 * u);
+  // awnings over the pavement (drawn over the shade so you see what casts it)
+  for (const it of game.items) if (it.type === 'awning') { const x0 = sx(it.x0), x1 = sx(it.x1); if (x1 < 0 || x0 > W) continue; const y = L.ground - it.y * u; ctx.fillStyle = it.col; ctx.beginPath(); ctx.moveTo(x0, y - 10 * u); ctx.lineTo(x1, y - 10 * u); ctx.lineTo(x1 + 6 * u, y + 6 * u); ctx.lineTo(x0 - 6 * u, y + 6 * u); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.35)'; for (let sx2 = x0; sx2 < x1; sx2 += 18 * u) ctx.fillRect(sx2, y - 10 * u, 9 * u, 16 * u); if (it.stall) { ctx.fillStyle = '#8a6040'; ctx.fillRect(x0, y + 6 * u, 4 * u, it.y * u - 6 * u); ctx.fillRect(x1 - 4 * u, y + 6 * u, 4 * u, it.y * u - 6 * u); } }
+  // doors, umbrellas, obstacles
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  for (const it of game.items) {
+    const x = sx(it.x ?? 0); if (it.x === undefined || x < -60 || x > W + 60) continue;
+    if (it.type === 'door') { ctx.fillStyle = it.done ? '#5a4a3a' : '#3a2418'; ctx.fillRect(x - 14 * u, L.ground - 46 * u, 28 * u, 46 * u); if (!it.done && game.parcels > 0) { ctx.strokeStyle = `rgba(255,207,74,${0.6 + Math.sin(game.t * 8) * 0.3})`; ctx.lineWidth = 3; ctx.strokeRect(x - 16 * u, L.ground - 48 * u, 32 * u, 48 * u); ctx.font = `${Math.round(16 * u)}px sans-serif`; ctx.fillText('📦', x, L.ground - 50 * u); } }
+    else if (it.type === 'umbrella' && !it.got) { ctx.font = `${Math.round(30 * u)}px sans-serif`; ctx.fillText('☂️', x, L.ground - 20 * u + Math.sin(game.t * 4) * 4); }
+    else if (it.type === 'barrier') { ctx.fillStyle = '#e04a3a'; ctx.fillRect(x - it.w / 2 * u, L.ground - it.h * u, it.w * u, it.h * u); ctx.fillStyle = '#fff'; ctx.fillRect(x - it.w / 2 * u, L.ground - it.h * u + 6 * u, it.w * u, 6 * u); }
+    else if (it.type === 'bin') { ctx.fillStyle = '#4a7a5a'; ctx.fillRect(x - it.w / 2 * u, L.ground - it.h * u, it.w * u, it.h * u); }
+    else if (it.type === 'garlic') { ctx.fillStyle = '#9a7a5a'; ctx.fillRect(x - it.w / 2 * u, L.ground - it.h * u * 0.6, it.w * u, it.h * u * 0.6); ctx.font = `${Math.round(22 * u)}px sans-serif`; ctx.fillText('🧄', x, L.ground - it.h * u * 0.6); }
+    else if (it.type === 'cellar') { ctx.fillStyle = '#1a1210'; ctx.fillRect(x - it.w / 2 * u, L.ground, it.w * u, 14 * u); ctx.fillStyle = '#6a4a32'; ctx.fillRect(x - it.w / 2 * u - 6 * u, L.ground - 4 * u, 8 * u, 6 * u); }
+    else if (it.type === 'pigeon' && !it.hit) { ctx.font = `${Math.round(24 * u)}px sans-serif`; ctx.fillText('🐦', x, L.ground - 30 * u + Math.sin(game.t * 12) * 3); }
+  }
+  // the vampire courier
+  const rx = L.runX, ry = L.ground + game.y * u, run = game.t * (game.vx / 30), legs = game.onGround ? Math.sin(run) * 10 * u : 6 * u;
+  ctx.save(); ctx.translate(rx, ry);
+  if (game.shield > 0) { ctx.fillStyle = '#d6283a'; ctx.beginPath(); ctx.arc(0, -66 * u, 26 * u, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#3a2418'; ctx.fillRect(-1.5 * u, -66 * u, 3 * u, 22 * u); }
+  ctx.strokeStyle = '#1a1424'; ctx.lineWidth = 5 * u; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, -22 * u); ctx.lineTo(legs, 0); ctx.moveTo(0, -22 * u); ctx.lineTo(-legs, 0); ctx.stroke();
+  ctx.fillStyle = '#1a1424'; ctx.beginPath(); ctx.moveTo(-6 * u, -48 * u); ctx.lineTo(-24 * u - Math.sin(run * 0.5) * 4 * u, -14 * u); ctx.lineTo(6 * u, -20 * u); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#2a1e36'; ctx.fillRect(-8 * u, -48 * u, 16 * u, 28 * u);
+  ctx.fillStyle = '#c8a070'; ctx.fillRect(4 * u, -42 * u, 14 * u, 12 * u);
+  ctx.fillStyle = game.shaded ? '#e8e4f0' : '#ffd8c8'; ctx.beginPath(); ctx.arc(0, -56 * u, 9 * u, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d6283a'; ctx.fillRect(2 * u, -58 * u, 3 * u, 3 * u);
+  if (game.hat) { ctx.fillStyle = '#1a1424'; ctx.fillRect(-14 * u, -64 * u, 28 * u, 4 * u); ctx.fillRect(-8 * u, -74 * u, 16 * u, 10 * u); }
+  ctx.restore();
+  for (const p of game.parts) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  for (const fl of game.floats) { ctx.globalAlpha = clamp(fl.life / fl.max * 1.5, 0, 1); ctx.font = `900 ${Math.round(18 * fl.size)}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(26,20,36,0.7)'; ctx.strokeText(fl.t, fl.x, fl.y); ctx.fillStyle = fl.c; ctx.fillText(fl.t, fl.x, fl.y); }
+  ctx.globalAlpha = 1;
+  if (!game.shaded && game.running && game.shield <= 0) { ctx.fillStyle = `rgba(255,220,120,${0.08 + game.smoke * 0.18})`; ctx.fillRect(0, 0, W, H); }
+  if (game.hint && game.running) { const text = '🚪 Run past a glowing door while you are in the shade'; ctx.font = `600 ${Math.round(Math.min(16, W * 0.04))}px "Barlow", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const w = ctx.measureText(text).width + 24; ctx.fillStyle = 'rgba(255,207,74,0.95)'; ctx.fillRect(W / 2 - w / 2, 70, w, 28); ctx.fillStyle = '#1a1424'; ctx.fillText(text, W / 2, 85); }
+}
+
+// ---------- loop and input
+let last = 0, acc = 0;
+const STEP = 1 / 120;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+  acc += dt; while (acc >= STEP) { if (game.running) update(STEP); else { game.t += STEP; } acc -= STEP; }
+  drawFrame();
+}
+const pointers = new Map();
+function zoneOf(e) { const r = cv.getBoundingClientRect(); return e.clientX - r.left < r.width * 0.38 ? 'brake' : 'jump'; }
+function applyPointers() { game.brake = [...pointers.values()].includes('brake'); game.holdJump = [...pointers.values()].includes('jump'); }
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); Sound.init(); if (!game.running || game.paused) return; const z = zoneOf(e); pointers.set(e.pointerId, z); if (z === 'jump') jumpStart(); applyPointers(); });
+const release = (e) => { pointers.delete(e.pointerId); applyPointers(); };
+addEventListener('pointerup', release); addEventListener('pointercancel', release);
+addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === 'ArrowUp' || e.key === ' ') { e.preventDefault(); pointers.set('k', 'jump'); jumpStart(); applyPointers(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { pointers.set('kb', 'brake'); applyPointers(); } });
+addEventListener('keyup', (e) => { if (e.key === 'ArrowUp' || e.key === ' ') pointers.delete('k'); if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') pointers.delete('kb'); applyPointers(); });
+$('btnPause').addEventListener('click', () => pause(true));
+$('btnResume').addEventListener('click', () => { pause(false); last = 0; });
+$('btnQuit').addEventListener('click', () => { $('screenPause').hidden = true; game.paused = false; endRun('quit'); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// ---------- menus
+function showStart() { ['screenPlaces', 'screenOver', 'screenShop', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bankStart').textContent = fmt(profile.bank); $('screenStart').hidden = false; renderLeaderboard(); if (!game.items.length) { game.place = PLACES[0]; game.genX = -300; layout(); gen(3000); } }
+const unlocked = (i) => i === 0 || (profile.stars[PLACES[i - 1].id] || 0) >= 1;
+function showPlaces() {
+  ['screenStart', 'screenOver', 'screenShop'].forEach((id) => { $(id).hidden = true; });
+  const box = $('places'); box.innerHTML = '';
+  PLACES.forEach((p, i) => {
+    const st = profile.stars[p.id] || 0, open = unlocked(i);
+    const b = mk('button', 'place', `<b>${p.name}</b><span class="stars">${p.endless ? (profile.best[p.id] ? `best ${fmt(profile.best[p.id])}` : 'endless') : '★'.repeat(st) + '☆'.repeat(3 - st)}</span><span>${open ? p.text : `Locked: reach noon in ${PLACES[i - 1].name}.`}</span>`);
+    b.disabled = !open; b.setAttribute('data-place', p.id); b.addEventListener('click', () => startRun(p)); box.appendChild(b);
+  });
+  $('screenPlaces').hidden = false;
+}
+let shopFrom = 'screenStart';
+function showShop(from) {
+  shopFrom = from; ['screenStart', 'screenPlaces', 'screenOver'].forEach((id) => { $(id).hidden = true; });
+  $('shopBank').textContent = fmt(profile.bank);
+  const box = $('shopItems'); box.innerHTML = '';
+  for (const u of UPGRADES) {
+    const el = mk('div', 'item', `<span class="nm">${u.name}</span><p>${u.desc}</p>`);
+    const b = mk('button', '', has(u.id) ? 'Owned' : `Buy 🪙 ${fmt(u.price)}`);
+    b.disabled = has(u.id) || profile.bank < u.price; b.setAttribute('data-up', u.id);
+    b.addEventListener('click', () => { if (has(u.id) || profile.bank < u.price) return; profile.bank -= u.price; profile.up[u.id] = true; saveProfile(); Sound.init(); Sound.deliver(); showShop(shopFrom); });
+    el.appendChild(b); box.appendChild(el);
+  }
+  $('screenShop').hidden = false;
+}
+$('btnPlay').addEventListener('click', () => { Sound.init(); profile.tutorial ? showPlaces() : startRun(PLACES[0]); });
+$('btnShop').addEventListener('click', () => showShop('screenStart'));
+$('btnShop2').addEventListener('click', () => showShop('screenPlaces'));
+$('btnShop3').addEventListener('click', () => showShop('screenOver'));
+$('btnShopBack').addEventListener('click', () => { $('screenShop').hidden = true; if (shopFrom === 'screenPlaces') showPlaces(); else if (shopFrom === 'screenOver') $('screenOver').hidden = false; else showStart(); });
+$('btnPlacesBack').addEventListener('click', showStart);
+$('btnAgain').addEventListener('click', () => startRun(game.place));
+$('btnNext').addEventListener('click', showPlaces);
+
+// ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/shadow-runner/';
+const GAME_ID = 'shadow';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function deviceId() { if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); } return profile.deviceId; }
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}&date=${todayKey()}`); if (!r.ok) return null; LB.cache = await r.json(); LB.at = Date.now(); return LB.cache; } catch (e) { return null; }
+}
+function lbNote(list, text, link) { list.textContent = ''; const li = mk('li', 'none'); li.textContent = text; if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); } list.appendChild(li); }
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody has run today yet.' : 'No scores yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => { const li = mk('li', r.id === profile.deviceId ? 'me' : ''); const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank); for (const text of [r.name, fmt(r.score), (PLACES[r.dist - 1] || PLACES[0]).name]) { const el = mk('span'); el.textContent = text; li.appendChild(el); } list.appendChild(li); });
+}
+$('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
+let lbLast = null;
+function lbAfterGame(score, placeNo) { const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true; if (!lbReachable() || score <= 0) return; lbLast = { game: GAME_ID, score, dist: placeNo, daily: true, date: todayKey() }; $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend(); }
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post this score.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
+    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; LB.at = 0; }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
+}
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
+
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
+renderMute(); showStart();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
