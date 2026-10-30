@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="The same morning keeps repeating: learn who orders what and bake ahead for one perfect morning.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bakery">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Time-Loop Bakery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: a bakery counter seen from behind; clock and timeline on top, the door with customers, the counter, two ovens at the bottom, the notebook beside (landscape) or on demand (portrait) */
+  --night: #241812;
+  --cream: #fbf1e1;
+  --crust: #c98a4b;
+  --choc: #4a2e1f;
+  --chalk: #fbf1e1;
+  --haze: #cdb79f;
+  --good: #5fe0a8;
+  --bad: #ff6b5b;
+  --glow: #ffb347;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.4;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#app {
+  position: relative; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 8px;
+  padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  background: radial-gradient(ellipse at 50% 0%, #4a2f20 0%, var(--night) 70%);
+}
+#app.rewinding { animation: rewind 0.9s; }
+@keyframes rewind { 0% { filter: none; } 40% { filter: sepia(1) blur(2px) brightness(1.3); } 100% { filter: none; } }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.clock { font-family: var(--font-mono); font-weight: 600; font-size: 30px; color: var(--glow); text-shadow: 0 0 12px rgba(255, 179, 71, 0.5); font-variant-numeric: tabular-nums; }
+.clock.late { color: var(--bad); }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--haze); text-align: center; }
+.meta b { color: var(--chalk); font-size: 14px; }
+.top-btns { display: flex; gap: 8px; }
+.pill { height: 40px; padding: 0 14px; border: 1.5px solid rgba(251, 241, 225, 0.35); border-radius: 20px; background: rgba(0, 0, 0, 0.25); color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 14px; }
+.pill.hot { border-color: var(--glow); color: var(--glow); }
+.timeline { position: relative; height: 34px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); overflow: hidden; }
+.timeline .now { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: var(--glow); box-shadow: 0 0 8px var(--glow); }
+.timeline .mark { position: absolute; top: 3px; transform: translateX(-50%); font-size: 16px; line-height: 1; text-align: center; }
+.timeline .mark small { display: block; font-family: var(--font-mono); font-size: 9px; color: var(--haze); }
+.timeline .ev { position: absolute; top: 0; bottom: 0; background: rgba(255, 107, 91, 0.25); }
+.shop { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 8px; }
+.floor { position: relative; min-height: 0; display: flex; align-items: flex-end; gap: 10px; padding: 8px 10px; border-radius: 12px; background: linear-gradient(180deg, #6b4a32 0%, #57392a 100%); overflow: hidden; }
+.door { flex: 0 0 auto; width: 64px; align-self: stretch; display: grid; place-items: center; border: 3px solid #2e1d13; border-radius: 6px 6px 0 0; background: #3b2618; color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 12px; text-align: center; }
+.door.shut { background: repeating-linear-gradient(90deg, #8a5a32 0 8px, #7a4e2a 8px 16px); }
+.door span { font-size: 26px; display: block; }
+.queue { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap-reverse; align-content: flex-start; gap: 6px 8px; align-items: flex-end; overflow: hidden; }
+.cust { position: relative; flex: 0 0 auto; width: 76px; display: grid; justify-items: center; gap: 2px; padding: 0; border: 0; background: none; color: var(--chalk); cursor: pointer; font-family: var(--font-body); animation: walk 0.4s; }
+@keyframes walk { from { transform: translateX(-30px); opacity: 0; } }
+.cust .bubble { padding: 4px 8px; border-radius: 12px; background: var(--cream); color: var(--choc); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.cust .bubble big { font-size: 22px; vertical-align: middle; }
+.cust .face { font-size: 40px; line-height: 1; }
+.cust .name { font-size: 11px; color: var(--haze); }
+.cust .wait { width: 60px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+.cust .wait i { display: block; height: 100%; background: var(--good); }
+.cust.happy .face::after { content: "💛"; position: absolute; top: 18px; right: 6px; font-size: 18px; }
+.cust.sad { opacity: 0.55; }
+.cust.ready .bubble { box-shadow: 0 0 0 3px var(--good); }
+.fx { position: absolute; right: 10px; top: 8px; display: flex; gap: 6px; }
+.fuse { padding: 6px 10px; border: 2px solid #2e1d13; border-radius: 8px; background: #8b8b96; color: #1b1b1f; cursor: pointer; font-family: var(--font-mono); font-weight: 600; font-size: 11px; }
+.fuse.on { background: var(--good); }
+.dark { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); display: grid; place-items: center; font-family: var(--font-display); font-weight: 900; font-size: 26px; color: var(--glow); pointer-events: none; }
+.counter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px; border-radius: 12px; background: #c98a4b; box-shadow: inset 0 -6px 0 #a06a35; }
+.slot { aspect-ratio: 1.4; min-height: 44px; display: grid; place-items: center; border-radius: 10px; background: rgba(255, 255, 255, 0.25); font-size: 30px; border: 0; padding: 0; cursor: default; }
+.slot.burnt { filter: grayscale(1) brightness(0.5); }
+.bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.oven { position: relative; min-height: 86px; display: grid; place-items: center; align-content: center; gap: 2px; padding: 8px; border: 3px solid #2e1d13; border-radius: 12px; background: #2b1c14; color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 13px; overflow: hidden; }
+.oven .icon { font-size: 34px; line-height: 1; }
+.oven .bar { position: absolute; left: 0; bottom: 0; height: 6px; background: var(--glow); }
+.oven.baking { background: radial-gradient(ellipse at 50% 80%, #8a3b12 0%, #2b1c14 75%); }
+.oven.ready { background: radial-gradient(ellipse at 50% 80%, #c9761e 0%, #3b2618 75%); box-shadow: 0 0 0 3px var(--good); }
+.oven.burning { box-shadow: 0 0 0 3px var(--bad); }
+.oven.paused { filter: brightness(0.5); }
+.recipes { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 12px; background: rgba(20, 12, 8, 0.85); }
+.recipes .box { width: min(100%, 460px); display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: var(--cream); color: var(--choc); }
+.recipes h2 { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-transform: uppercase; }
+.recipes .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 8px; }
+.recipe { display: grid; justify-items: center; gap: 0; padding: 8px 4px; border: 2px solid var(--crust); border-radius: 10px; background: #fff7ea; color: var(--choc); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 13px; }
+.recipe span { font-size: 30px; line-height: 1.1; }
+.recipe small { font-family: var(--font-mono); font-size: 11px; color: #8a6040; }
+.note-panel { position: absolute; z-index: 2; right: max(10px, env(safe-area-inset-right)); top: 60px; width: min(92vw, 360px); max-height: 70vh; overflow-y: auto; padding: 12px 14px; border-radius: 14px; background: #fff7ea; color: var(--choc); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.note-panel h2 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 900; font-size: 24px; text-transform: uppercase; }
+.note-panel ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
+.note-panel li { display: grid; grid-template-columns: 46px 30px 1fr; gap: 6px; align-items: center; font-size: 14px; }
+.note-panel li b { font-family: var(--font-mono); font-size: 13px; }
+.note-panel li em { font-style: normal; font-size: 12px; color: #a04a2a; }
+.note-panel .disc { margin-top: 8px; display: grid; gap: 4px; font-size: 13px; }
+.note-panel .disc p { margin: 0; padding: 6px 8px; border-radius: 8px; background: #f3e2c6; }
+.toast { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); z-index: 4; max-width: 90%; padding: 8px 16px; background: rgba(36, 24, 18, 0.95); border: 2px solid var(--glow); border-radius: 12px; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-align: center; pointer-events: none; }
+.pill:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .oven:focus-visible, .door:focus-visible, .fuse:focus-visible, .cust:focus-visible, .recipe:focus-visible, .day:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+.screen {
+  position: absolute; inset: 0; z-index: 5; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  background: linear-gradient(90deg, rgba(36, 24, 18, 0.97) 0%, rgba(36, 24, 18, 0.9) 60%, rgba(36, 24, 18, 0.75) 100%);
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(48px, 10vw, 96px); line-height: 0.86; text-wrap: balance; }
+.logo span { color: var(--glow); text-shadow: 0 0 20px rgba(255, 179, 71, 0.45); }
+.lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
+.btn { border: 0; cursor: pointer; padding: 0.4em 1.4em; color: var(--choc); background: var(--glow); font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
+.btn > span { display: inline-block; transform: skewX(12deg); }
+.link-btn, a.link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.side { display: grid; gap: 8px; align-content: start; }
+.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.days { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.day { display: grid; gap: 3px; align-content: start; padding: 12px; text-align: left; border: 2px solid rgba(251, 241, 225, 0.25); border-radius: 12px; background: rgba(36, 24, 18, 0.8); color: var(--chalk); cursor: pointer; font-family: var(--font-body); }
+.day b { font-family: var(--font-display); font-weight: 900; font-size: 24px; line-height: 1; text-transform: uppercase; }
+.day .stars { color: var(--glow); letter-spacing: 2px; }
+.day span { font-size: 13px; color: var(--haze); }
+.day:disabled { opacity: 0.4; cursor: default; }
+.bigstars { font-size: 40px; letter-spacing: 6px; color: var(--glow); margin: 0; }
+.bigstars i { font-style: normal; color: rgba(251, 241, 225, 0.18); }
+@media (orientation: landscape) and (max-height: 600px) {
+  #app { grid-template-columns: minmax(0, 1fr) minmax(220px, 32%); grid-template-rows: auto auto minmax(0, 1fr) auto; column-gap: 10px; }
+  .top, .timeline { grid-column: 1 / -1; }
+  .shop { grid-column: 1; grid-row: 3; }
+  .bottom { grid-column: 1; grid-row: 4; }
+  .note-panel { position: static; grid-column: 2; grid-row: 3 / 5; width: auto; max-height: none; box-shadow: none; }
+  #btnNotes { display: none; }
+  .oven { min-height: 64px; } .oven .icon { font-size: 26px; } .cust .face { font-size: 32px; } .clock { font-size: 24px; }
+  .logo { font-size: clamp(42px, 8vw, 64px); } .lede { font-size: 14px; } .btn { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { #app.rewinding, .cust { animation: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="clock" id="clock">7:00</div>
+    <div class="meta"><b id="dayName">Opening Day</b><br>loop <span id="loopNo">1</span> · <span id="happyNo">0</span>/<span id="custNo">5</span> happy</div>
+    <div class="top-btns"><button class="pill" id="btnNotes" type="button">Notebook</button><button class="pill hot" id="btnRewind" type="button">Rewind ⟲</button><button class="pill" id="btnMenu" type="button" aria-label="Menu">☰</button></div>
+  </header>
+  <div class="timeline" id="timeline" aria-label="Morning timeline"><span class="now" id="now"></span></div>
+  <main class="shop">
+    <div class="floor" id="floor">
+      <button class="door" id="door" type="button"><span>🚪</span>Door open</button>
+      <div class="queue" id="queue" aria-live="polite"></div>
+      <div class="fx"><button class="fuse on" id="fuse" type="button">FUSE ✓</button></div>
+    </div>
+    <div class="counter" id="counter" aria-label="Counter"></div>
+  </main>
+  <div class="bottom" id="ovens"></div>
+  <aside class="note-panel" id="notes" hidden>
+    <h2>Notebook</h2>
+    <ol id="noteList"></ol>
+    <div class="disc" id="discList"></div>
+  </aside>
+  <div class="recipes" id="recipes" hidden><div class="box"><h2>Bake what?</h2><div class="grid" id="recipeGrid"></div><button class="link-btn" id="recipeClose" type="button" style="color:#4a2e1f">Cancel</button></div></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">From the makers of Rooftop Roulette</p>
+        <h1 class="logo">Time-Loop<br><span>Bakery</span></h1>
+        <p class="lede">The same morning keeps repeating. At 8:15 the clock jumps back to 7:00 and the bakery resets, but your notebook remembers who came in, when, and what they wanted. Bake ahead and give one perfect morning.</p>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Open up</span></button></div>
+        <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+      </div>
+      <div class="side">
+        <h2 class="label">How it works</h2>
+        <ul class="rules">
+          <li>🔥 Tap an oven to bake. Tap it again when it dings to put the pastry on the counter. Too long and it burns.</li>
+          <li>🙋 When a customer’s bubble glows, tap them to hand over what they want.</li>
+          <li>📓 Everyone you meet goes into the notebook and onto the timeline at the top.</li>
+          <li>⟲ Rewind any time. Nothing carries over except what you know.</li>
+          <li>⭐ Serve everyone in one loop to finish the day: 3 loops or fewer is three stars.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenDays" aria-label="Choose a day" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Choose a morning</p>
+        <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Which<br><span>morning?</span></h1>
+        <p class="lede">Finish a day to open the next. The daily morning is the same for everyone today.</p>
+        <button class="link-btn" id="btnDaysBack" type="button">Back</button>
+      </div>
+      <div class="days" id="days"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenDone" aria-label="Day done" hidden>
+    <div class="menu"><div>
+      <p class="eyebrow" id="doneEyebrow">Perfect morning</p>
+      <h1 class="logo" id="doneTitle" style="font-size: clamp(40px, 8vw, 80px)">Day done!</h1>
+      <p class="bigstars" id="doneStars"></p>
+      <p class="lede" id="doneText"></p>
+      <div class="cta-row"><button class="btn" id="btnNextDay" type="button"><span>Next morning</span></button><button class="link-btn" id="btnDays" type="button">All mornings</button></div>
+    </div></div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'time-loop-bakery-profile';
+const profile = Object.assign({ stars: {}, loops: {}, muted: false, daily: {} }, store.get(PROFILE_KEY, {}));
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+const clockText = (t) => { const m = Math.floor(t); return `${7 + Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; };
+
+// ---------- recipes, days
+const RECIPES = {
+  muffin: { name: 'Muffin', icon: '🧁', bake: 5 },
+  croissant: { name: 'Croissant', icon: '🥐', bake: 6 },
+  pretzel: { name: 'Pretzel', icon: '🥨', bake: 8 },
+  bread: { name: 'Bread', icon: '🍞', bake: 14 },
+  cake: { name: 'Cake', icon: '🎂', bake: 20 },
+};
+const MORNING = 75, WAIT = 7, BURN = 8, SLOTS = 4;
+const P = (at, face, name, want, line, extra) => Object.assign({ at, face, name, want, line }, extra || {});
+const DAYS = [
+  { id: 'd1', name: 'Opening Day', text: 'Five customers. Someone wants a cake early…', people: [
+    P(8, '📮', 'Postman', 'croissant', 'A croissant, quick!'), P(16, '👵', 'Grandma', 'cake', 'My birthday cake, dear.'),
+    P(30, '🧒', 'Kid', 'muffin', 'Muffin please!'), P(45, '👷', 'Builder', 'bread', 'One loaf for the crew.'), P(58, '👩‍🏫', 'Teacher', 'pretzel', 'A pretzel, thank you.')] },
+  { id: 'd2', name: 'The Dog', text: 'A dog has learned that pastries sit on the counter.', dog: 34, people: [
+    P(6, '🧔', 'Barista', 'croissant', 'Croissant to go.'), P(18, '👵', 'Grandma', 'cake', 'Cake, like yesterday. Was it yesterday?'),
+    P(37, '🧒', 'Kid', 'muffin', 'Did a dog run past?'), P(44, '👷', 'Builder', 'bread', 'Bread!'), P(52, '🧑‍🎨', 'Painter', 'pretzel', 'A pretzel, the colour of sunrise.'), P(65, '🎩', 'Mayor', 'cake', 'A cake for the town hall.')] },
+  { id: 'd3', name: 'Twins', text: 'Twins, a regular with a secret, and a doctor in a hurry.', people: [
+    P(5, '👩‍🦱', 'Regular', 'croissant', 'The usual.', { muffinSwitch: true }), P(15, '👵', 'Grandma', 'bread', 'A loaf, please.'),
+    P(25, '👧', 'Twin Mia', 'pretzel', 'Pretzel!'), P(25, '👦', 'Twin Max', 'pretzel', 'Same as her!'),
+    P(38, '🧒', 'Kid', 'muffin', 'Muffin!'), P(50, '👩‍⚕️', 'Doctor', 'cake', 'A cake for the ward, fast.'), P(62, '📮', 'Postman', 'croissant', 'Croissant again!')] },
+  { id: 'd4', name: 'Power Cut', text: 'Something in the fuse box is about to give up.', fuse: 50, people: [
+    P(4, '🧔', 'Barista', 'croissant', 'Croissant.'), P(12, '🧒', 'Kid', 'muffin', 'Muffin!'), P(22, '👵', 'Grandma', 'cake', 'The cake, dear.'),
+    P(35, '👷', 'Builder', 'bread', 'Bread for the crew.'), P(48, '👩‍🏫', 'Teacher', 'pretzel', 'Pretzel, please.'), P(58, '🎩', 'Mayor', 'cake', 'Another cake for the town hall.'),
+    P(64, '🧑‍🎨', 'Painter', 'croissant', 'A croissant, golden like the light.'), P(70, '👩‍⚕️', 'Doctor', 'bread', 'One loaf.')] },
+  { id: 'd5', name: 'Rush Hour', text: 'Ten customers, two ovens, no time to think.', people: [
+    P(3, '🧔', 'Barista', 'croissant', 'Croissant!'), P(8, '🧒', 'Kid', 'muffin', 'Muffin!'), P(14, '📮', 'Postman', 'pretzel', 'Pretzel!'),
+    P(21, '👵', 'Grandma', 'cake', 'Cake, dear.'), P(28, '👷', 'Builder', 'bread', 'Bread!'), P(34, '👩‍🦱', 'Regular', 'croissant', 'The usual.'),
+    P(41, '👧', 'Mia', 'muffin', 'Muffin!'), P(48, '🎩', 'Mayor', 'cake', 'Cake for the hall.'), P(56, '🧑‍🎨', 'Painter', 'pretzel', 'Pretzel.'), P(66, '👩‍⚕️', 'Doctor', 'bread', 'A loaf.')] },
+];
+// a seeded daily morning that is always solvable with two ovens
+function seeded(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+const FACES = [['🧔', 'Barista'], ['🧒', 'Kid'], ['📮', 'Postman'], ['👵', 'Grandma'], ['👷', 'Builder'], ['👩‍🦱', 'Regular'], ['🎩', 'Mayor'], ['🧑‍🎨', 'Painter'], ['👩‍⚕️', 'Doctor'], ['👩‍🏫', 'Teacher']];
+function dailyDay() {
+  let h = 2166136261; for (const c of 'bakery-' + todayKey()) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  for (let sub = 0; sub < 50; sub++) {
+    const r = seeded(h + sub * 7919), people = [], kinds = Object.keys(RECIPES);
+    let t = 3 + Math.floor(r() * 4);
+    const faces = FACES.slice().sort(() => r() - 0.5);
+    for (let i = 0; i < 8 && t < 70; i++) { const want = kinds[Math.floor(r() * kinds.length)]; people.push(P(t, faces[i][0], faces[i][1], want, `${RECIPES[want].name}, please.`)); t += 5 + Math.floor(r() * 6); }
+    const d = { id: 'daily', name: 'Daily Morning', text: 'Same for everyone today.', people };
+    if (feasible(d)) return d;
+  }
+  return DAYS[0];
+}
+// can two ovens and a four-space counter serve everyone? earliest-deadline-first with bakes started as late as allowed
+function feasible(day) {
+  const jobs = day.people.map((p) => ({ deadline: p.at + WAIT - 0.5, bake: RECIPES[p.want].bake })).sort((a, b) => a.deadline - b.deadline);
+  const ovens = [0, 0];
+  const done = [];
+  for (const j of jobs) {
+    ovens.sort((a, b) => a - b);
+    const start = Math.max(ovens[0], 0), end = start + j.bake;
+    if (end > j.deadline) return false;
+    ovens[0] = end; done.push([end, j.deadline]);
+  }
+  // counter: pastries waiting at any moment (finished but not yet collected) must fit
+  for (const [end] of done) { const waiting = done.filter(([e, d]) => e <= end && d - WAIT + 0.5 > end).length; if (waiting > SLOTS) return false; }
+  return true;
+}
+
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  tone(f, dur, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  ding() { this.tone(1568, 0.5, 'sine', 0.08); this.tone(2093, 0.4, 'sine', 0.05, 0, 0.05); },
+  bell() { this.tone(988, 0.3, 'triangle', 0.08); this.tone(1319, 0.4, 'triangle', 0.06, 0, 0.1); },
+  happy() { [659, 784, 1047].forEach((f, i) => this.tone(f, 0.15, 'triangle', 0.09, 0, i * 0.06)); },
+  sad() { this.tone(240, 0.35, 'sawtooth', 0.06, -80); },
+  burn() { this.tone(180, 0.5, 'square', 0.05, -60); },
+  rewind() { this.tone(1200, 0.8, 'sawtooth', 0.05, -1000); },
+  bark() { this.tone(300, 0.08, 'square', 0.1, 100); this.tone(320, 0.08, 'square', 0.1, 120, 0.15); },
+  win() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => this.tone(f, 0.25, 'triangle', 0.09, 0, i * 0.09)); },
+};
+
+// ---------- state
+const game = { day: null, dayIndex: 0, loop: 1, t: 0, running: false, ovens: [], counter: [], people: [], served: 0, doorShut: false, fuseOn: true, powerOut: 0, notes: {}, disc: {}, pickOven: -1, done: false, dogDone: false, fuseDone: false };
+function knownKey(p) { return `${p.at}|${p.name}`; }
+function startDay(i) {
+  Sound.init();
+  game.dayIndex = i; game.day = i === 'daily' ? dailyDay() : DAYS[i];
+  game.loop = 1; game.notes = {}; game.disc = {}; game.done = false;
+  ['screenStart', 'screenDays', 'screenDone'].forEach((id) => { $(id).hidden = true; });
+  resetLoop(); game.running = true;
+  toast(`${game.day.name} · loop 1`);
+}
+function resetLoop() {
+  Object.assign(game, { t: 0, ovens: [{}, {}], counter: [], served: 0, doorShut: false, fuseOn: !game.day.fuse, powerOut: 0, pickOven: -1, dogDone: false, fuseDone: false });
+  game.people = game.day.people.map((p) => ({ ...p, state: 'away', waitT: 0, want: p.want }));
+  render();
+}
+function rewind(auto) {
+  if (game.done || !game.running) return;
+  const happy = game.people.filter((p) => p.state === 'happy').length;
+  game.loop++;
+  Sound.rewind();
+  const app = $('app'); app.classList.remove('rewinding'); void app.offsetWidth; app.classList.add('rewinding');
+  toast(`${auto ? '8:15 · ' : ''}${happy}/${game.people.length} happy · rewinding to 7:00 · loop ${game.loop}`);
+  resetLoop();
+}
+function finishDay() {
+  game.done = true; game.running = false; Sound.win();
+  const loops = game.loop, stars = loops <= 3 ? 3 : loops <= 5 ? 2 : 1, id = game.day.id;
+  if (id === 'daily') profile.daily[todayKey()] = Math.min(profile.daily[todayKey()] || 99, loops);
+  else { profile.stars[id] = Math.max(profile.stars[id] || 0, stars); profile.loops[id] = Math.min(profile.loops[id] || 99, loops); }
+  saveProfile();
+  $('doneEyebrow').textContent = `${game.day.name} · perfect morning`;
+  $('doneTitle').textContent = stars === 3 ? 'Master baker!' : stars === 2 ? 'Day done!' : 'Finally!';
+  $('doneStars').innerHTML = '★'.repeat(stars) + `<i>${'★'.repeat(3 - stars)}</i>`;
+  $('doneText').textContent = `Everyone left happy in loop ${loops}. ${stars < 3 ? 'Three loops or fewer gives three stars.' : 'Nobody will ever know how many mornings it took. Except you.'}`;
+  const nextI = typeof game.dayIndex === 'number' && game.dayIndex + 1 < DAYS.length ? game.dayIndex + 1 : null;
+  $('btnNextDay').hidden = nextI === null; $('btnNextDay').onclick = () => startDay(nextI);
+  $('screenDone').hidden = false;
+}
+
+// ---------- actions
+function tapOven(i) {
+  if (!game.running) return;
+  const o = game.ovens[i];
+  if (!o.item) { game.pickOven = i; openRecipes(); return; }
+  if (o.t >= RECIPES[o.item].bake) {
+    if (game.counter.length >= SLOTS) { toast('The counter is full'); return; }
+    const burnt = o.t >= RECIPES[o.item].bake + BURN;
+    game.counter.push({ item: o.item, burnt });
+    game.ovens[i] = {};
+    if (burnt) { toast('Burnt… nobody wants that'); learn('burnt', '🔥 Pastries burn 8 seconds after the oven dings. Burnt ones are useless.'); }
+    render(); return;
+  }
+  toast(`${RECIPES[o.item].name} still baking`);
+}
+function bake(kind) {
+  const i = game.pickOven; game.pickOven = -1; closeRecipes();
+  if (i < 0 || game.ovens[i].item) return;
+  game.ovens[i] = { item: kind, t: 0, dinged: false };
+  render();
+}
+function tapCustomer(p) {
+  if (!game.running || p.state !== 'wait') return;
+  const want = currentWant(p);
+  const idx = game.counter.findIndex((c) => c.item === want && !c.burnt);
+  if (idx < 0) { toast(`No ${RECIPES[want].name.toLowerCase()} on the counter`); return; }
+  game.counter.splice(idx, 1);
+  p.state = 'happy'; game.served++; Sound.happy();
+  render();
+  if (game.people.every((q) => q.state === 'happy')) setTimeout(() => { if (!game.done) finishDay(); }, 600);
+}
+// the regular takes a muffin instead if she sees one when she walks in (a discovery)
+function currentWant(p) { return p.switched ? 'muffin' : p.want; }
+function learn(key, text) { if (game.disc[key]) return; game.disc[key] = text; renderNotes(); toast('📓 New note in the notebook'); }
+function openRecipes() { const g = $('recipeGrid'); g.innerHTML = ''; for (const [k, r] of Object.entries(RECIPES)) { const b = mk('button', 'recipe', `<span>${r.icon}</span>${r.name}<small>${r.bake} min</small>`); b.setAttribute('data-recipe', k); b.addEventListener('click', () => bake(k)); g.appendChild(b); } $('recipes').hidden = false; }
+function closeRecipes() { $('recipes').hidden = true; }
+$('recipeClose').addEventListener('click', () => { game.pickOven = -1; closeRecipes(); });
+$('door').addEventListener('click', () => { if (!game.running) return; game.doorShut = !game.doorShut; render(); });
+$('fuse').addEventListener('click', () => { if (!game.running) return; if (!game.fuseOn) { game.fuseOn = true; toast('Fuse flipped: the power is safe'); } render(); });
+$('btnRewind').addEventListener('click', () => rewind(false));
+$('btnNotes').addEventListener('click', () => { $('notes').hidden = !$('notes').hidden; });
+$('btnMenu').addEventListener('click', () => { game.running = false; showDays(); });
+
+// ---------- time
+function update(dt) {
+  if (!game.running) return;
+  game.t += dt;
+  const D = game.day;
+  // power cut: ovens pause unless the fuse was flipped in time
+  if (D.fuse && !game.fuseDone && game.t >= D.fuse) { game.fuseDone = true; if (!game.fuseOn) { game.powerOut = 10; Sound.sad(); toast('⚡ Power cut! The ovens stop'); learn('fuse', `⚡ At ${clockText(D.fuse)} the power fails for 10 minutes. Flip the fuse box (top right) any time before ${clockText(D.fuse)} to stop it.`); } }
+  game.powerOut = Math.max(0, game.powerOut - dt);
+  for (const o of game.ovens) {
+    if (!o.item) continue;
+    if (game.powerOut <= 0) o.t += dt;
+    const b = RECIPES[o.item].bake;
+    if (o.t >= b && !o.dinged) { o.dinged = true; Sound.ding(); }
+    if (o.t >= b + BURN && !o.burnWarn) { o.burnWarn = true; Sound.burn(); }
+  }
+  // the dog
+  if (D.dog && !game.dogDone && game.t >= D.dog) {
+    game.dogDone = true;
+    Sound.bark();
+    if (!game.doorShut && game.counter.length) { const stolen = game.counter.pop(); toast(`🐕 A dog stole a ${RECIPES[stolen.item].name.toLowerCase()}!`); learn('dog', `🐕 At ${clockText(D.dog)} a dog runs in and steals from the counter. Shut the door just before.`); }
+    else if (game.doorShut) toast('🐕 Scratch scratch… the door kept the dog out');
+    else learn('dog', `🐕 At ${clockText(D.dog)} a dog runs in and looks for pastries. Shut the door just before.`);
+  }
+  if (game.doorShut && D.dog && game.t > D.dog + 3) game.doorShut = false;
+  // customers walk in, order, wait, leave
+  for (const p of game.people) {
+    if (p.state === 'away' && game.t >= p.at) {
+      p.state = 'wait'; p.waitT = 0; Sound.bell();
+      if (p.muffinSwitch && game.counter.some((c) => c.item === 'muffin' && !c.burnt)) { p.switched = true; learn('regular', '👩‍🦱 The regular switches to a muffin if she sees one on the counter when she walks in.'); }
+      const k = knownKey(p); if (!game.notes[k]) { game.notes[k] = { at: p.at, face: p.face, name: p.name, want: currentWant(p) }; renderNotes(); }
+    } else if (p.state === 'wait') {
+      p.waitT += dt;
+      if (p.waitT >= WAIT) { p.state = 'sad'; Sound.sad(); }
+    }
+  }
+  if (game.t >= MORNING) { rewind(true); return; }
+}
+
+// ---------- rendering
+let lastSig = '';
+function render() {
+  $('clock').textContent = clockText(game.t); $('clock').classList.toggle('late', game.t > MORNING - 10);
+  $('dayName').textContent = game.day ? game.day.name : '';
+  $('loopNo').textContent = game.loop; $('happyNo').textContent = game.people.filter((p) => p.state === 'happy').length; $('custNo').textContent = game.people.length;
+  $('now').style.left = `${(game.t / MORNING) * 100}%`;
+  const door = $('door'); door.classList.toggle('shut', game.doorShut); door.innerHTML = `<span>${game.doorShut ? '🚪' : '🚪'}</span>${game.doorShut ? 'Door shut' : 'Door open'}`;
+  const fuse = $('fuse'); fuse.hidden = !(game.day && game.day.fuse); fuse.classList.toggle('on', game.fuseOn); fuse.textContent = game.fuseOn ? 'FUSE ✓' : 'FUSE ?';
+  // customers in the shop right now
+  const q = $('queue'), inShop = game.people.filter((p) => p.state === 'wait' || ((p.state === 'happy' || p.state === 'sad') && game.t - p.at < WAIT + 1.5));
+  const sig = inShop.map((p) => p.name + p.state + (p.switched ? 's' : '')).join() + game.counter.map((c) => c.item + c.burnt).join();
+  if (sig !== lastSig) {
+    lastSig = sig; q.innerHTML = '';
+    for (const p of inShop) {
+      const want = currentWant(p), ready = p.state === 'wait' && game.counter.some((c) => c.item === want && !c.burnt);
+      const b = mk('button', `cust ${p.state}${ready ? ' ready' : ''}`, `<span class="bubble">${p.state === 'happy' ? 'Thanks!' : p.state === 'sad' ? 'Never mind…' : `<big>${RECIPES[want].icon}</big> ${p.line}`}</span><span class="face">${p.face}</span><span class="name">${p.name}</span><span class="wait"><i></i></span>`);
+      b.setAttribute('data-cust', p.name); b.addEventListener('click', () => tapCustomer(p)); p.el = b; q.appendChild(b);
+    }
+  }
+  for (const p of inShop) if (p.el) { const i = p.el.querySelector('.wait i'); if (i) i.style.width = `${p.state === 'wait' ? Math.max(0, 1 - p.waitT / WAIT) * 100 : 0}%`; }
+  const c = $('counter'); c.innerHTML = '';
+  for (let i = 0; i < SLOTS; i++) { const it = game.counter[i]; const s = mk('div', `slot${it && it.burnt ? ' burnt' : ''}`, it ? RECIPES[it.item].icon : ''); c.appendChild(s); }
+  const ov = $('ovens'); if (ov.children.length !== game.ovens.length) { ov.innerHTML = ''; game.ovens.forEach((_, i) => { const b = mk('button', 'oven'); b.setAttribute('data-oven', i); b.addEventListener('click', () => tapOven(i)); ov.appendChild(b); }); }
+  game.ovens.forEach((o, i) => {
+    const b = ov.children[i];
+    if (!o.item) { b.className = 'oven'; b.innerHTML = '<span class="icon">🔥</span>Empty: tap to bake'; return; }
+    const r = RECIPES[o.item], ready = o.t >= r.bake, burning = o.t >= r.bake + BURN;
+    b.className = `oven${ready ? ' ready' : ' baking'}${burning ? ' burning' : ''}${game.powerOut > 0 ? ' paused' : ''}`;
+    b.innerHTML = `<span class="icon">${burning ? '💨' : r.icon}</span>${burning ? 'Burnt! Tap to clear' : ready ? `Ready! Tap · burns in ${Math.ceil(r.bake + BURN - o.t)}` : `${r.name} · ${Math.ceil(r.bake - o.t)} min`}<span class="bar" style="width:${Math.min(100, (o.t / r.bake) * 100)}%"></span>`;
+  });
+  const fl = $('floor'); let dk = fl.querySelector('.dark');
+  if (game.powerOut > 0 && !dk) { dk = mk('div', 'dark', 'POWER CUT'); fl.appendChild(dk); } else if (game.powerOut <= 0 && dk) dk.remove();
+}
+function renderNotes() {
+  const list = $('noteList'), entries = Object.values(game.notes).sort((a, b) => a.at - b.at);
+  list.innerHTML = entries.length ? '' : '<li style="display:block;color:#8a6040">Nobody yet. Keep the shop open and watch who comes in.</li>';
+  for (const n of entries) {
+    const latest = n.at + WAIT - RECIPES[n.want].bake;
+    const li = mk('li', '', `<b>${clockText(n.at)}</b><span style="font-size:22px">${n.face}</span><span>${n.name}: ${RECIPES[n.want].icon} ${RECIPES[n.want].name}${latest < 3 ? ` <em>start by ${clockText(Math.max(0, latest))}!</em>` : ''}</span>`);
+    list.appendChild(li);
+  }
+  const dl = $('discList'); dl.innerHTML = '';
+  for (const t of Object.values(game.disc)) { const p = mk('p'); p.textContent = t; dl.appendChild(p); }
+  // the timeline shows what you know
+  const tl = $('timeline'); tl.querySelectorAll('.mark, .ev').forEach((e) => e.remove());
+  for (const n of entries) { const m = mk('span', 'mark', `${RECIPES[n.want].icon}<small>${clockText(n.at)}</small>`); m.style.left = `${(n.at / MORNING) * 100}%`; tl.appendChild(m); }
+  if (game.disc.dog) { const e = mk('span', 'ev'); e.style.left = `${((game.day.dog - 2) / MORNING) * 100}%`; e.style.width = `${(4 / MORNING) * 100}%`; tl.appendChild(e); }
+  if (game.disc.fuse) { const e = mk('span', 'ev'); e.style.left = `${((game.day.fuse - 5) / MORNING) * 100}%`; e.style.width = `${(5 / MORNING) * 100}%`; tl.appendChild(e); }
+}
+let toastTimer = 0;
+function toast(text) { const el = $('toast'); el.textContent = text; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2200); }
+
+// ---------- loop
+let last = 0, acc = 0, rAcc = 0;
+const STEP = 1 / 60;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+  acc += dt; rAcc += dt;
+  while (acc >= STEP) { update(STEP); acc -= STEP; }
+  if (game.running && rAcc > 0.1) { rAcc = 0; render(); }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && game.running && !game.done) { game.running = false; showDays(); } });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// ---------- menus
+const unlocked = (i) => i === 0 || (profile.stars[DAYS[i - 1].id] || 0) >= 1;
+function showDays() {
+  ['screenStart', 'screenDone'].forEach((id) => { $(id).hidden = true; });
+  const box = $('days'); box.innerHTML = '';
+  DAYS.forEach((d, i) => {
+    const st = profile.stars[d.id] || 0, open = unlocked(i);
+    const b = mk('button', 'day', `<b>Day ${i + 1} · ${d.name}</b><span class="stars">${'★'.repeat(st)}${'☆'.repeat(3 - st)}${profile.loops[d.id] ? ` <small style="color:#cdb79f">${profile.loops[d.id]} loops</small>` : ''}</span><span>${open ? d.text : 'Finish the morning before to open this one.'}</span>`);
+    b.disabled = !open; b.setAttribute('data-day', i); b.addEventListener('click', () => startDay(i)); box.appendChild(b);
+  });
+  const dl = profile.daily[todayKey()];
+  const b = mk('button', 'day', `<b>Daily Morning</b><span class="stars">${dl ? `done in ${dl} loops` : 'new today'}</span><span>A new morning every day, the same for everyone.</span>`);
+  b.disabled = !unlocked(1); b.setAttribute('data-day', 'daily'); b.addEventListener('click', () => startDay('daily')); box.appendChild(b);
+  $('screenDays').hidden = false;
+}
+$('btnPlay').addEventListener('click', () => { Sound.init(); profile.stars.d1 ? showDays() : startDay(0); });
+$('btnDaysBack').addEventListener('click', () => { $('screenDays').hidden = true; $('screenStart').hidden = false; });
+$('btnDays').addEventListener('click', showDays);
+
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
+game.day = DAYS[0]; resetLoop(); renderNotes();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

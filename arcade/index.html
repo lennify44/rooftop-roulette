@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
+<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
 <meta name="theme-color" content="#110e22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +114,11 @@ const ART = {
   volcano: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
     <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
     ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>`,
+  bakery: `<svg viewBox="0 0 320 160" aria-hidden="true"><rect width="320" height="160" fill="#4a2f20"/><rect y="108" width="320" height="52" fill="#c98a4b"/><rect y="104" width="320" height="6" fill="#a06a35"/>
+    <circle cx="70" cy="56" r="34" fill="#fbf1e1" stroke="#2e1d13" stroke-width="5"/><line x1="70" y1="56" x2="70" y2="34" stroke="#2e1d13" stroke-width="4"/><line x1="70" y1="56" x2="54" y2="56" stroke="#2e1d13" stroke-width="4"/>
+    <path d="M108 30 A40 40 0 1 1 100 84" fill="none" stroke="#ffb347" stroke-width="4" stroke-dasharray="6 5"/><path d="M100 84 l-10 -2 l6 -8z" fill="#ffb347"/>
+    <text x="150" y="100" font-size="30">🥐</text><text x="190" y="100" font-size="30">🎂</text><text x="234" y="100" font-size="30">🍞</text><text x="270" y="64" font-size="34">👵</text>
+    <rect x="132" y="22" width="120" height="26" rx="8" fill="#fbf1e1"/><text x="192" y="40" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="14" fill="#4a2e1f">LOOP 3 · 7:16</text></svg>`,
   weather: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ec4f2"/><stop offset="1" stop-color="#cfeaff"/></linearGradient></defs><rect width="320" height="160" fill="url(#a7)"/>
     <path d="M0 160 V122 Q80 108 160 120 T320 116 V160Z" fill="#6cbf5a"/>
     <g fill="#7d8796"><circle cx="78" cy="44" r="16"/><circle cx="98" cy="36" r="20"/><circle cx="118" cy="46" r="15"/></g>${Array.from({ length: 7 }, (_, i) => `<line x1="${84 + i * 6}" y1="62" x2="${80 + i * 6}" y2="${100 + (i % 2) * 6}" stroke="#7fb8ff" stroke-width="2"/>`).join('')}
@@ -142,6 +147,9 @@ const GAMES = [
     pitch: 'Freerun across the rooftops while roulette wheels change the rules. Pests and bosses can’t be beaten, only outrun.',
     best: () => { const b = read('rooftop-roulette-best'); return b && b.score ? [`$${fmt(b.score)}`, `${fmt(b.dist)} m`] : null; },
     world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
+  { id: 'bakery', name: 'Time-Loop <span>Bakery</span>', url: 'time-loop-bakery/', accent: '#ffb347', board: null, badge: 'New', tags: ['time loop', 'planning', 'puzzle'],
+    pitch: 'The same morning keeps repeating. Learn who orders what and when, then bake ahead for one perfect morning.',
+    best: () => { const p = read('time-loop-bakery-profile'); const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; const days = p && p.stars ? Object.keys(p.stars).length : 0; return st ? [`${st} ★`, `${days} of 5 mornings`] : null; } },
   { id: 'weather', name: 'Weather <span>Machine</span>', url: 'weather-machine/', accent: '#ffc93c', board: 'weather', badge: 'New', tags: ['aiming', 'juggling', 'seasons'],
     pitch: 'Be the weather above a tiny hill town. Gardens want rain, laundry wants sun, and they all live next door to each other.',
     best: () => { const p = read('weather-machine-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [`${fmt(b)} ☀`, `${st} ★`] : null; },
