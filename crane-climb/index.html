@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="Wall-jump up a skyscraper under construction, dodge falling tools and stay ahead of the dust storm.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crane Climb">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Crane Climb</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: a vertical shaft of steel beams on canvas; height and storm distance on top; tap the left or right half to leap to that wall */
+  --night: #161c2a;
+  --chalk: #f4f1ea;
+  --haze: #aab4c4;
+  --steel: #e0a83a;
+  --good: #5fe0a8;
+  --bad: #ff6b5b;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); }
+.height { font-family: var(--font-display); font-weight: 900; font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
+.height small { font-size: 16px; color: var(--steel); }
+.sub { font-family: var(--font-mono); font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); font-variant-numeric: tabular-nums; }
+.storm { margin-top: 4px; font-family: var(--font-mono); font-size: 12px; }
+.storm.close { color: var(--bad); }
+.hud-btns { display: flex; gap: 8px; pointer-events: auto; }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.45); cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+.zones { position: absolute; inset: auto 0 0 0; height: 22%; display: grid; grid-template-columns: 1fr 1fr; pointer-events: none; transition: opacity 0.8s; }
+.zones.fade { opacity: 0; }
+.zone { display: grid; place-content: end center; padding-block: 14px; font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: 0.12em; color: rgba(244, 241, 234, 0.9); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.zone-l { background: linear-gradient(0deg, rgba(224, 168, 58, 0.18), transparent); border-right: 1px dashed rgba(244, 241, 234, 0.3); }
+.zone-r { background: linear-gradient(0deg, rgba(224, 168, 58, 0.18), transparent); }
+.toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); max-width: 90%; padding: 6px 14px; background: rgba(22, 28, 42, 0.9); border: 2px solid var(--steel); border-radius: 10px; font-family: var(--font-display); font-weight: 900; font-size: 20px; text-align: center; pointer-events: none; }
+.screen {
+  position: absolute; inset: 0; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y; z-index: 3;
+  padding-block: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-bottom)); padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+  background: linear-gradient(90deg, rgba(22, 28, 42, 0.96) 0%, rgba(22, 28, 42, 0.86) 60%, rgba(22, 28, 42, 0.6) 100%);
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(48px, 10vw, 96px); line-height: 0.86; text-wrap: balance; }
+.logo span { color: var(--steel); text-shadow: 0 0 22px rgba(224, 168, 58, 0.45); }
+.lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
+.btn { border: 0; cursor: pointer; padding: 0.4em 1.4em; color: #161c2a; background: var(--steel); font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
+.btn > span { display: inline-block; transform: skewX(12deg); }
+.btn.ghost { background: var(--chalk); }
+.link-btn, a.link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.side { display: grid; gap: 8px; align-content: start; }
+.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.items { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.item { display: grid; gap: 6px; align-content: start; padding: 12px 14px; border-radius: 12px; background: rgba(22, 28, 42, 0.8); border: 2px solid rgba(244, 241, 234, 0.2); }
+.item .nm { font-family: var(--font-display); font-weight: 900; font-size: 22px; line-height: 1; text-transform: uppercase; }
+.item p { margin: 0; font-size: 14px; color: var(--haze); }
+.item button { justify-self: start; padding: 6px 14px; border: 0; border-radius: 8px; cursor: pointer; background: var(--steel); color: #161c2a; font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.05em; text-transform: uppercase; }
+.item button:disabled { opacity: 0.4; cursor: default; }
+.stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { padding: 3px 10px; border: 1.5px solid rgba(244, 241, 234, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1.2fr 1fr 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--steel); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist li.me span:nth-child(2) { color: var(--steel); font-weight: 600; }
+.toplist .none { display: block; color: var(--haze); }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 10px 0 0; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; padding: 6px 8px; border: 1.5px solid rgba(244, 241, 234, 0.4); background: rgba(22, 28, 42, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
+.tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+.icon-btn:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .item button:focus-visible, .lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+@media (max-height: 520px) { .logo { font-size: clamp(42px, 8vw, 64px); } .lede { font-size: 14px; } .btn { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" aria-label="The building shaft"></canvas>
+  <div class="hud" id="hud" hidden>
+    <div>
+      <div class="height"><span id="floor">0</span> <small>floors</small></div>
+      <div class="sub">🪙 <span id="coins">0</span> · <span id="stageName">Foundations</span> · ⛑️ <span id="helmet">0</span></div>
+      <div class="storm" id="storm">Dust storm: 6 floors below</div>
+    </div>
+    <div class="hud-btns">
+      <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
+      <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    </div>
+  </div>
+  <div class="zones" id="zones" hidden><div class="zone zone-l">◀ LEFT WALL</div><div class="zone zone-r">RIGHT WALL ▶</div></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">From the makers of Rooftop Roulette</p>
+        <h1 class="logo">Crane<br><span>Climb</span></h1>
+        <p class="lede">Climb a skyscraper under construction, wall to wall, beam by beam. Tools fall from above, beams go missing, crane hooks swing past, and a dust storm climbs after you.</p>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Climb</span></button><button class="link-btn" id="btnShop" type="button">Gear · 🪙 <span id="bankStart">0</span></button></div>
+        <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+        <p class="tip" id="bestStart"></p>
+      </div>
+      <div class="side">
+        <h2 class="label">How to climb</h2>
+        <ul class="rules">
+          <li>👆 Tap the left half to leap to the left wall, the right half for the right wall. Each move climbs one floor; tapping the wall you’re on hops straight up.</li>
+          <li>⚠️ A red marker at the top shows where something will fall. Move out of that lane.</li>
+          <li>🕳️ Missing beams make you slide down to the next one. Rusty beams crack if you stay. Glass is slippery.</li>
+          <li>🪝 Tap the side a crane hook is on as it swings past to ride it up.</li>
+          <li>🌪️ Keep ahead of the dust storm.</li>
+        </ul>
+        <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenShop" aria-label="Gear" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Gear · paid with coins from the beams</p>
+        <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Climbing<br><span>gear</span></h1>
+        <p class="lede">Coins: <b>🪙 <span id="shopBank">0</span></b>.</p>
+        <button class="btn ghost" id="btnShopBack" type="button"><span>Back</span></button>
+      </div>
+      <div class="items" id="shopItems"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenPause" aria-label="Paused" hidden>
+    <div class="menu"><div>
+      <p class="eyebrow">Paused</p>
+      <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Hanging<br><span>on</span></h1>
+      <div class="cta-row"><button class="btn" id="btnResume" type="button"><span>Resume</span></button><button class="link-btn" id="btnQuit" type="button">Climb down</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="screenOver" aria-label="Climb over" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow" id="overEyebrow">Climb over</p>
+        <h1 class="logo" id="overTitle" style="font-size: clamp(40px, 8vw, 80px)">Swallowed by dust</h1>
+        <p class="lede" id="overText"></p>
+        <div class="cta-row"><button class="btn" id="btnAgain" type="button"><span>Climb again</span></button><button class="link-btn" id="btnMenu" type="button">Menu</button><button class="link-btn" id="btnShop3" type="button">Gear</button></div>
+        <dl class="stats">
+          <div><dt>Height</dt><dd id="overFloor">0</dd></div>
+          <div><dt>Coins</dt><dd id="overCoins">0</dd></div>
+          <div><dt>Best</dt><dd id="overBest">0</dd></div>
+        </dl>
+      </div>
+      <div class="side">
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post height</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'crane-climb-profile';
+const profile = Object.assign({ bank: 0, best: 0, bestStage: 0, up: {}, name: '', deviceId: '', muted: false }, store.get(PROFILE_KEY, {}));
+if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+
+// ---------- stages by height
+const STAGES = [
+  { from: 0, name: 'Foundations', storm: 1.0, hazard: 1.3, missing: 0.08, rusty: 0.05, glass: 0, wind: 0, sky: ['#7a8aa8', '#c8d0dc'] },
+  { from: 50, name: 'Steel', storm: 1.15, hazard: 1.0, missing: 0.12, rusty: 0.1, glass: 0, wind: 0, sky: ['#6a7aa0', '#d8c8b0'] },
+  { from: 120, name: 'Glass', storm: 1.3, hazard: 0.85, missing: 0.12, rusty: 0.06, glass: 0.45, wind: 0, sky: ['#5a7ab0', '#c8e0f0'] },
+  { from: 200, name: 'Wind', storm: 1.45, hazard: 0.75, missing: 0.14, rusty: 0.08, glass: 0.2, wind: 0.18, sky: ['#4a6aa8', '#f0c8a0'] },
+  { from: 300, name: 'Spire', storm: 1.6, hazard: 0.65, missing: 0.18, rusty: 0.1, glass: 0.25, wind: 0.22, sky: ['#3a4a88', '#ff9a8a'] },
+];
+const stageAt = (f) => { let s = STAGES[0]; for (const st of STAGES) if (f >= st.from) s = st; return s; };
+const UPGRADES = [
+  { id: 'helmet', name: 'Hard hat', price: 120, desc: 'Start every climb with one hit absorbed.' },
+  { id: 'gloves', name: 'Grip gloves', price: 200, desc: 'Glass and rust hold you twice as long.' },
+  { id: 'magnet', name: 'Coin magnet', price: 150, desc: 'Collect coins on the other wall too.' },
+  { id: 'boots', name: 'Spring boots', price: 300, desc: 'Every 15 floors, your next three moves climb two floors each.' },
+];
+const has = (id) => !!profile.up[id];
+
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = profile.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  setMuted(m) { if (this.master) this.master.gain.value = m ? 0 : 0.5; },
+  tone(f, dur, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol = 0.1, lp = 2000) { if (!this.ctx) return; const n = Math.floor(this.ctx.sampleRate * dur), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain(); s.buffer = buf; f.type = 'lowpass'; f.frequency.value = lp; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(this.master); s.start(); },
+  clang() { this.tone(1200 + Math.random() * 300, 0.12, 'square', 0.04); this.tone(600, 0.15, 'triangle', 0.05); },
+  coin() { this.tone(1319, 0.08, 'square', 0.05); this.tone(1760, 0.12, 'square', 0.04, 0, 0.06); },
+  hit() { this.noise(0.3, 0.25, 1200); this.tone(180, 0.3, 'sawtooth', 0.08, -60); },
+  slide() { this.tone(700, 0.4, 'sawtooth', 0.04, -400); },
+  hook() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.15, 'triangle', 0.08, 0, i * 0.07)); },
+  warn() { this.tone(880, 0.08, 'square', 0.04); },
+  stage() { [392, 523, 659, 784].forEach((f, i) => this.tone(f, 0.25, 'triangle', 0.08, 0, i * 0.1)); },
+  over() { this.noise(1, 0.2, 600); },
+};
+function renderMute() {
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
+}
+$('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
+
+// ---------- layout
+const L = { W: 0, H: 0, dpr: 1, fh: 50, wallL: 0, wallR: 0 };
+function layout() {
+  const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const shaftW = Math.min(W * 0.9, H * 0.75, 520);
+  Object.assign(L, { W, H, dpr, fh: clamp(H / 13, 34, 70), wallL: W / 2 - shaftW / 2, wallR: W / 2 + shaftW / 2 });
+}
+addEventListener('resize', layout);
+
+// ---------- state: floors are whole numbers; each floor has a beam on the left (0) and right (1) wall
+const MOVE_T = 0.2;
+const game = { id: 0, running: false, paused: false, t: 0, floor: 0, side: 0, from: null, moveT: 0, queued: null, beams: [], storm: -6, coins: 0, helmet: 0, hazards: [], hooks: [], riding: null, clingT: 0, maxFloor: 0, nextHazard: 2, nextHook: 12, stage: STAGES[0], parts: [], floats: [], ended: false, shake: 0, spring: 0, lastStage: 0 };
+function beam(f, side) { while (game.beams.length <= f + 2) genFloor(game.beams.length); return f < 0 ? { type: 'steel' } : game.beams[f][side]; }
+function genFloor(f) {
+  const S = stageAt(f);
+  const make = () => { const r = Math.random(); if (f < 4) return { type: 'steel' }; if (r < S.missing) return { type: 'missing' }; if (r < S.missing + S.rusty) return { type: 'rusty' }; if (r < S.missing + S.rusty + S.glass) return { type: 'glass' }; return { type: 'steel' }; };
+  let a = make(), b = make();
+  // never both beams missing, and not the same wall missing two floors in a row
+  if (a.type === 'missing' && b.type === 'missing') b = { type: 'steel' };
+  const prev = game.beams[f - 1];
+  if (prev && prev[0].type === 'missing' && a.type === 'missing') a = { type: 'steel' };
+  if (prev && prev[1].type === 'missing' && b.type === 'missing') b = { type: 'steel' };
+  for (const bm of [a, b]) if (bm.type !== 'missing' && Math.random() < 0.18) bm.coin = true;
+  game.beams.push([a, b]);
+}
+
+// ---------- flow
+function startRun() {
+  Sound.init();
+  Object.assign(game, { id: game.id + 1, running: true, paused: false, t: 0, floor: 0, side: 0, from: null, moveT: 0, queued: null, beams: [], storm: -6, coins: 0, helmet: has('helmet') ? 1 : 0, hazards: [], hooks: [], riding: null, clingT: 0, maxFloor: 0, nextHazard: 2, nextHook: rnd(10, 16), stage: STAGES[0], parts: [], floats: [], ended: false, shake: 0, spring: 0, lastStage: 0 });
+  ['screenStart', 'screenOver', 'screenPause', 'screenShop'].forEach((id) => { $(id).hidden = true; });
+  $('hud').hidden = false; $('zones').hidden = false; $('zones').classList.remove('fade'); setTimeout(() => $('zones').classList.add('fade'), 5000);
+  layout(); beam(30, 0); updateHud(); toast('Climb! The dust storm is coming');
+}
+function endRun(why) {
+  if (game.ended) return;
+  game.ended = true; game.running = false; game.paused = false; Sound.over();
+  const isBest = game.maxFloor > profile.best, stageNo = STAGES.indexOf(stageAt(game.maxFloor)) + 1;
+  profile.best = Math.max(profile.best, game.maxFloor); profile.bestStage = Math.max(profile.bestStage, stageNo); profile.bank += game.coins; saveProfile();
+  $('overEyebrow').textContent = `${stageAt(game.maxFloor).name} · ${why === 'storm' ? 'the dust storm caught you' : 'climbed down'}`;
+  $('overTitle').textContent = isBest && game.maxFloor > 0 ? 'New record!' : why === 'storm' ? 'Swallowed by dust' : 'Climb over';
+  $('overText').textContent = `You reached floor ${game.maxFloor} in ${game.t.toFixed(0)} seconds and picked up ${game.coins} coins.`;
+  $('overFloor').textContent = game.maxFloor; $('overCoins').textContent = game.coins; $('overBest').textContent = profile.best;
+  $('hud').hidden = true; $('zones').hidden = true; $('screenOver').hidden = false;
+  lbAfterGame(game.maxFloor, stageNo);
+}
+function pause(on) { if (!game.running) return; game.paused = on; $('screenPause').hidden = !on; }
+let toastTimer = 0;
+function toast(text) { const el = $('toast'); el.textContent = text; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 1600); }
+function updateHud() {
+  $('floor').textContent = game.floor; $('coins').textContent = game.coins; $('stageName').textContent = game.stage.name; $('helmet').textContent = game.helmet;
+  const d = Math.max(0, game.floor - game.storm); const el = $('storm'); el.textContent = `Dust storm: ${d.toFixed(0)} floors below`; el.classList.toggle('close', d < 3);
+}
+function floatText(t, x, y, c, life = 1, size = 1) { game.floats.push({ t, x, y, c, life, max: life, size }); }
+
+// ---------- moves
+function tap(side) {
+  if (!game.running || game.paused) return;
+  // a crane hook passing on that side is grabbed instead of jumping
+  const hk = game.hooks.find((h) => !h.used && Math.abs(h.floor - game.floor) <= 1.2 && (side === 0 ? h.x < 0.5 : h.x >= 0.5));
+  if (hk && !game.riding && game.moveT <= 0) { hk.used = true; game.riding = { hook: hk, t: 0, from: game.floor, to: game.floor + 6 }; Sound.hook(); toast('🪝 Riding the crane!'); return; }
+  if (game.moveT > 0 || game.riding) { game.queued = side; return; }
+  move(side);
+}
+function move(side) {
+  const S = game.stage;
+  // gusts sometimes push a leap across back onto the same wall
+  if (S.wind && side !== game.side && Math.random() < S.wind) { side = game.side; floatText('Gust!', L.W / 2, L.H * 0.4, '#cfe8ff', 0.8); }
+  const climb = game.spring > 0 ? 2 : 1; if (game.spring > 0) game.spring--;
+  game.from = { floor: game.floor, side: game.side }; game.floor += climb; game.side = side; game.moveT = MOVE_T; game.clingT = 0;
+  Sound.clang();
+}
+function arrive() {
+  // landing on a missing beam: slide down that wall to the next beam
+  let b = beam(game.floor, game.side), slid = 0;
+  while (b.type === 'missing' && game.floor > 0) { game.floor--; slid++; b = beam(game.floor, game.side); }
+  if (slid) { Sound.slide(); floatText(`Slid down ${slid}`, wallX(game.side), L.H * 0.5, '#ffb0a0', 0.9); }
+  if (b.coin) { b.coin = false; game.coins++; Sound.coin(); }
+  if (has('magnet')) { const o = beam(game.floor, 1 - game.side); if (o.coin) { o.coin = false; game.coins++; } }
+  if (game.floor > game.maxFloor) {
+    game.maxFloor = game.floor;
+    if (has('boots') && game.maxFloor % 15 === 0) { game.spring = 3; toast('Spring boots charged'); }
+  }
+}
+function knockDown(n, why) {
+  if (game.helmet > 0) { game.helmet--; floatText('Hard hat saved you!', L.W / 2, L.H * 0.45, '#ffd27a', 1); Sound.clang(); return; }
+  game.floor = Math.max(0, game.floor - n); let b = beam(game.floor, game.side); while (b.type === 'missing' && game.floor > 0) { game.floor--; b = beam(game.floor, game.side); }
+  game.shake = 12; Sound.hit(); floatText(`${why}! −${n}`, L.W / 2, L.H * 0.45, '#ff6b5b', 1);
+}
+
+// ---------- update
+function update(dt) {
+  if (!game.running || game.paused) return;
+  game.t += dt; game.shake = Math.max(0, game.shake - dt * 30);
+  const S = stageAt(game.floor); game.stage = S;
+  const si = STAGES.indexOf(S); if (si > game.lastStage) { game.lastStage = si; Sound.stage(); toast(`${S.name}!`); }
+  // the storm rises and never falls more than 10 floors behind, so the pressure stays on
+  game.storm = Math.max(game.storm + dt * S.storm * (1 + Math.max(0, game.floor - 300) / 300), game.floor - 10);
+  if (game.storm >= game.floor - 0.2 && !game.riding) { endRun('storm'); return; }
+  // moving
+  if (game.riding) {
+    const r = game.riding; r.t += dt; const k = Math.min(1, r.t / 1.3);
+    game.floor = Math.round(r.from + (r.to - r.from) * k);
+    if (k >= 1) { game.riding = null; game.side = r.hook.x < 0.5 ? 0 : 1; arrive(); }
+  } else if (game.moveT > 0) {
+    game.moveT -= dt;
+    if (game.moveT <= 0) { game.moveT = 0; arrive(); if (game.queued !== null) { const q = game.queued; game.queued = null; move(q); } }
+  } else {
+    // clinging: rust cracks and glass slips if you stay too long
+    const b = beam(game.floor, game.side);
+    if (b.type === 'rusty' || b.type === 'glass') {
+      game.clingT += dt;
+      const limit = (b.type === 'rusty' ? 1.4 : 1.0) * (has('gloves') ? 2 : 1);
+      if (game.clingT > limit) { game.clingT = 0; if (b.type === 'rusty') b.type = 'missing'; game.floor = Math.max(0, game.floor - 1); let nb = beam(game.floor, game.side); while (nb.type === 'missing' && game.floor > 0) { game.floor--; nb = beam(game.floor, game.side); } Sound.slide(); floatText(b.type === 'missing' ? 'Crack!' : 'Slip!', wallX(game.side), L.H * 0.5, '#ffb0a0', 0.8); }
+    }
+  }
+  // falling hazards: lane 0 = left wall, 1 = middle, 2 = right wall; a warning shows first
+  if (game.t >= game.nextHazard) {
+    const lane = Math.random() < 0.35 ? 1 : (Math.random() < 0.5 ? 0 : 2);
+    game.hazards.push({ lane, floor: game.floor + 9, warn: 0.9, kind: pick(['🔨', '🔩', '🪣', '🧱']), speed: rnd(7, 10) });
+    if (game.floor > 80 && Math.random() < 0.25) game.hazards.push({ lane: lane === 0 ? 2 : 0, floor: game.floor + 11, warn: 1.1, kind: pick(['🔨', '🔩']), speed: rnd(7, 10) });
+    game.nextHazard = game.t + S.hazard * rnd(0.7, 1.2); Sound.warn();
+  }
+  for (const h of game.hazards) {
+    if (h.warn > 0) { h.warn -= dt; continue; }
+    h.floor -= h.speed * dt;
+    const myLane = game.moveT > 0 && game.from && game.from.side !== game.side ? 1 : game.side === 0 ? 0 : 2;
+    if (!h.hit && Math.abs(h.floor - game.floor) < 0.55 && h.lane === myLane && !game.riding) { h.hit = true; knockDown(h.kind === '🧱' ? 4 : 3, 'Hit'); }
+  }
+  game.hazards = game.hazards.filter((h) => h.floor > game.floor - 8);
+  // crane hooks swing across the shaft
+  if (game.t >= game.nextHook) { game.hooks.push({ floor: game.floor + 1, x: Math.random() < 0.5 ? -0.1 : 1.1, dir: 0, used: false }); const hk = game.hooks[game.hooks.length - 1]; hk.dir = hk.x < 0 ? 1 : -1; game.nextHook = game.t + rnd(12, 20); }
+  for (const hk of game.hooks) hk.x += hk.dir * dt * 0.45;
+  game.hooks = game.hooks.filter((hk) => hk.x > -0.3 && hk.x < 1.3 && !(hk.used && !game.riding));
+  for (let i = game.parts.length - 1; i >= 0; i--) { const p = game.parts[i]; p.life -= dt; if (p.life <= 0) game.parts.splice(i, 1); }
+  for (let i = game.floats.length - 1; i >= 0; i--) { const f = game.floats[i]; f.life -= dt; f.y -= 30 * dt; if (f.life <= 0) game.floats.splice(i, 1); }
+  updateHud();
+}
+
+// ---------- drawing
+const wallX = (side) => (side === 0 ? L.wallL + 26 : L.wallR - 26);
+let camF = 0;
+function fy(f) { return L.H * 0.62 - (f - camF) * L.fh; }
+function drawFrame() {
+  const { W, H } = L, S = game.stage;
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  // smooth camera on the climber
+  let pf = game.floor;
+  if (game.moveT > 0 && game.from) pf = game.from.floor + (game.floor - game.from.floor) * (1 - game.moveT / MOVE_T);
+  camF += (pf - camF) * 0.15;
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, S.sky[0]); g.addColorStop(1, S.sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // city far below
+  ctx.fillStyle = 'rgba(30,40,60,0.35)'; for (let i = 0; i < 12; i++) { const bx = (i * 97) % W, bh = 60 + (i * 41) % 90; ctx.fillRect(bx, H - bh + camF * 3, 50, bh + 400); }
+  ctx.save(); if (game.shake) ctx.translate(rnd(-game.shake, game.shake) * 0.4, rnd(-game.shake, game.shake) * 0.4);
+  // shaft walls and beams
+  ctx.fillStyle = 'rgba(20,24,36,0.5)'; ctx.fillRect(L.wallL, 0, L.wallR - L.wallL, H);
+  ctx.fillStyle = '#4a5068'; ctx.fillRect(L.wallL - 10, 0, 14, H); ctx.fillRect(L.wallR - 4, 0, 14, H);
+  const top = Math.ceil(camF + H * 0.62 / L.fh) + 1, bottom = Math.max(0, Math.floor(camF - H * 0.38 / L.fh) - 1);
+  for (let f = bottom; f <= top; f++) {
+    for (const side of [0, 1]) {
+      const b = beam(f, side), y = fy(f), x0 = side === 0 ? L.wallL : L.wallR - 52;
+      if (b.type === 'missing') { ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.setLineDash([4, 4]); ctx.strokeRect(x0, y - 6, 52, 12); ctx.setLineDash([]); continue; }
+      ctx.fillStyle = b.type === 'rusty' ? '#a0522d' : b.type === 'glass' ? 'rgba(180,230,255,0.85)' : '#e0a83a';
+      ctx.fillRect(x0, y - 6, 52, 12);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; for (let i = 0; i < 4; i++) ctx.fillRect(x0 + 6 + i * 12, y - 2, 4, 4);
+      if (b.coin) { ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('🪙', x0 + 26, y - 8); }
+    }
+    if (f % 10 === 0) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${f}`, W / 2, fy(f)); }
+  }
+  // crane hooks
+  for (const hk of game.hooks) { const x = L.wallL + (L.wallR - L.wallL) * hk.x, y = fy(hk.floor); ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, y - 14); ctx.stroke(); ctx.font = '26px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🪝', x, y); }
+  // hazards and their warnings
+  const laneX = (l) => (l === 0 ? wallX(0) : l === 2 ? wallX(1) : W / 2);
+  for (const h of game.hazards) {
+    if (h.warn > 0) { ctx.fillStyle = `rgba(255,80,60,${0.5 + Math.sin(game.t * 20) * 0.3})`; ctx.beginPath(); ctx.moveTo(laneX(h.lane) - 14, 62); ctx.lineTo(laneX(h.lane) + 14, 62); ctx.lineTo(laneX(h.lane), 84); ctx.fill(); continue; }
+    ctx.font = '26px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(h.kind, laneX(h.lane), fy(h.floor));
+  }
+  // the climber
+  let cx = wallX(game.side), cy = fy(game.floor);
+  if (game.moveT > 0 && game.from) { const k = 1 - game.moveT / MOVE_T; cx = wallX(game.from.side) + (wallX(game.side) - wallX(game.from.side)) * k; cy = fy(game.from.floor + (game.floor - game.from.floor) * k) - Math.sin(k * Math.PI) * 20; }
+  if (game.riding) { const hk = game.riding.hook; cx = L.wallL + (L.wallR - L.wallL) * clamp(hk.x, 0.1, 0.9); cy = fy(game.floor) + 10; }
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(game.side === 0 && game.moveT <= 0 ? -1 : 1, 1);
+  ctx.fillStyle = '#ff8a3d'; ctx.fillRect(-8, -26, 16, 18);
+  ctx.strokeStyle = '#1b1f2e'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-4, -8); ctx.lineTo(-8, 6); ctx.moveTo(4, -8); ctx.lineTo(10, 4); ctx.moveTo(-6, -22); ctx.lineTo(-14, -34); ctx.moveTo(6, -22); ctx.lineTo(14, -32); ctx.stroke();
+  ctx.fillStyle = '#f0c8a0'; ctx.beginPath(); ctx.arc(0, -32, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = game.helmet ? '#ffd23f' : '#888'; ctx.beginPath(); ctx.arc(0, -35, 8, Math.PI, 0); ctx.fill();
+  ctx.restore();
+  // the dust storm
+  const sy = fy(game.storm);
+  const sg = ctx.createLinearGradient(0, sy - 60, 0, sy + 40); sg.addColorStop(0, 'rgba(190,160,120,0)'); sg.addColorStop(0.5, 'rgba(190,160,120,0.85)'); sg.addColorStop(1, 'rgba(150,120,90,1)');
+  ctx.fillStyle = sg; ctx.fillRect(0, sy - 60, W, H - sy + 60);
+  for (let i = 0; i < 8; i++) { const x = (i * 131 + game.t * 60) % (W + 80) - 40; ctx.fillStyle = 'rgba(210,180,140,0.6)'; ctx.beginPath(); ctx.arc(x, sy - 20 + Math.sin(game.t * 2 + i) * 10, 30, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  for (const fl of game.floats) { ctx.globalAlpha = clamp(fl.life / fl.max * 1.5, 0, 1); ctx.font = `900 ${Math.round(20 * fl.size)}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(22,28,42,0.7)'; ctx.strokeText(fl.t, fl.x, fl.y); ctx.fillStyle = fl.c; ctx.fillText(fl.t, fl.x, fl.y); }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- loop and input
+let last = 0, acc = 0;
+const STEP = 1 / 120;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+  acc += dt; while (acc >= STEP) { update(STEP); acc -= STEP; }
+  drawFrame();
+}
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); Sound.init(); const r = cv.getBoundingClientRect(); tap(e.clientX - r.left < r.width / 2 ? 0 : 1); });
+addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === 'ArrowLeft') tap(0); if (e.key === 'ArrowRight') tap(1); });
+$('btnPause').addEventListener('click', () => pause(true));
+$('btnResume').addEventListener('click', () => { pause(false); last = 0; });
+$('btnQuit').addEventListener('click', () => { $('screenPause').hidden = true; game.paused = false; endRun('quit'); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// ---------- menus
+function showStart() { ['screenOver', 'screenShop', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bankStart').textContent = fmt(profile.bank); $('bestStart').textContent = profile.best ? `Best: floor ${profile.best} (${STAGES[Math.max(0, profile.bestStage - 1)].name})` : ''; $('screenStart').hidden = false; renderLeaderboard(); layout(); }
+let shopFrom = 'screenStart';
+function showShop(from) {
+  shopFrom = from; ['screenStart', 'screenOver'].forEach((id) => { $(id).hidden = true; });
+  $('shopBank').textContent = fmt(profile.bank);
+  const box = $('shopItems'); box.innerHTML = '';
+  for (const u of UPGRADES) {
+    const el = mk('div', 'item', `<span class="nm">${u.name}</span><p>${u.desc}</p>`);
+    const b = mk('button', '', has(u.id) ? 'Owned' : `Buy 🪙 ${fmt(u.price)}`);
+    b.disabled = has(u.id) || profile.bank < u.price; b.setAttribute('data-up', u.id);
+    b.addEventListener('click', () => { if (has(u.id) || profile.bank < u.price) return; profile.bank -= u.price; profile.up[u.id] = true; saveProfile(); Sound.init(); Sound.coin(); showShop(shopFrom); });
+    el.appendChild(b); box.appendChild(el);
+  }
+  $('screenShop').hidden = false;
+}
+$('btnPlay').addEventListener('click', startRun);
+$('btnShop').addEventListener('click', () => showShop('screenStart'));
+$('btnShop3').addEventListener('click', () => showShop('screenOver'));
+$('btnShopBack').addEventListener('click', () => { $('screenShop').hidden = true; if (shopFrom === 'screenOver') $('screenOver').hidden = false; else showStart(); });
+$('btnAgain').addEventListener('click', startRun);
+$('btnMenu').addEventListener('click', showStart);
+
+// ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/crane-climb/';
+const GAME_ID = 'crane';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function deviceId() { if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); } return profile.deviceId; }
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}&date=${todayKey()}`); if (!r.ok) return null; LB.cache = await r.json(); LB.at = Date.now(); return LB.cache; } catch (e) { return null; }
+}
+function lbNote(list, text, link) { list.textContent = ''; const li = mk('li', 'none'); li.textContent = text; if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); } list.appendChild(li); }
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody has climbed today yet.' : 'No climbs yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => { const li = mk('li', r.id === profile.deviceId ? 'me' : ''); const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank); for (const text of [r.name, `floor ${r.score}`, (STAGES[r.dist - 1] || STAGES[0]).name]) { const el = mk('span'); el.textContent = text; li.appendChild(el); } list.appendChild(li); });
+}
+$('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
+let lbLast = null;
+function lbAfterGame(score, stageNo) { const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true; if (!lbReachable() || score <= 0) return; lbLast = { game: GAME_ID, score, dist: stageNo, daily: true, date: todayKey() }; $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend(); }
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post your height.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this height.';
+    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; LB.at = 0; }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
+}
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
+
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
+renderMute(); showStart();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Fragile Freerun, Shadow Runner, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
+<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Crane Climb, Fragile Freerun, Shadow Runner, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
 <meta name="theme-color" content="#110e22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +114,13 @@ const ART = {
   volcano: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
     <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
     ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>`,
+  crane: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a11" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a6aa8"/><stop offset="1" stop-color="#f0c8a0"/></linearGradient></defs><rect width="320" height="160" fill="url(#a11)"/>
+    <rect x="96" y="0" width="128" height="160" fill="rgba(20,24,36,0.5)"/><rect x="88" y="0" width="12" height="160" fill="#4a5068"/><rect x="220" y="0" width="12" height="160" fill="#4a5068"/>
+    ${[0, 1, 2, 3, 4].map((i) => `<rect x="100" y="${18 + i * 32}" width="40" height="9" fill="${i === 2 ? '#a0522d' : '#e0a83a'}"/>${i === 1 ? '' : `<rect x="180" y="${34 + i * 32 - 16}" width="40" height="9" fill="${i === 3 ? 'rgba(180,230,255,0.85)' : '#e0a83a'}"/>`}`).join('')}
+    <path d="M128 98 Q160 70 192 66" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 5"/>
+    <g transform="translate(160 76)"><rect x="-7" y="-22" width="14" height="16" fill="#ff8a3d"/><line x1="-4" y1="-6" x2="-8" y2="6" stroke="#1b1f2e" stroke-width="4" stroke-linecap="round"/><line x1="4" y1="-6" x2="10" y2="4" stroke="#1b1f2e" stroke-width="4" stroke-linecap="round"/><line x1="6" y1="-18" x2="16" y2="-28" stroke="#1b1f2e" stroke-width="4" stroke-linecap="round"/><circle cx="0" cy="-28" r="6" fill="#f0c8a0"/><path d="M-8 -30 A8 8 0 0 1 8 -30Z" fill="#ffd23f"/></g>
+    <text x="200" y="26" font-size="20">🔨</text><path d="M196 4 L210 4 L203 14Z" fill="#ff5a3c"/><line x1="268" y1="0" x2="268" y2="50" stroke="#333" stroke-width="2"/><text x="256" y="66" font-size="22">🪝</text>
+    <path d="M0 140 Q40 118 80 136 T160 132 T240 138 T320 130 L320 160 L0 160Z" fill="rgba(190,160,120,0.9)"/></svg>`,
   fragile: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a10" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f7a"/><stop offset="1" stop-color="#ffd8b0"/></linearGradient></defs><rect width="320" height="160" fill="url(#a10)"/>
     <rect x="0" y="70" width="120" height="90" fill="#9a5a4a"/><rect x="180" y="112" width="140" height="48" fill="#8a4a3a"/><rect x="0" y="70" width="120" height="5" fill="rgba(0,0,0,0.25)"/><rect x="180" y="112" width="140" height="5" fill="rgba(0,0,0,0.25)"/>
     <path d="M110 60 Q160 10 205 100" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 5"/>
@@ -158,6 +165,10 @@ const GAMES = [
     pitch: 'Freerun across the rooftops while roulette wheels change the rules. Pests and bosses can’t be beaten, only outrun.',
     best: () => { const b = read('rooftop-roulette-best'); return b && b.score ? [`$${fmt(b.score)}`, `${fmt(b.dist)} m`] : null; },
     world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
+  { id: 'crane', name: 'Crane <span>Climb</span>', url: 'crane-climb/', accent: '#e0a83a', board: 'crane', badge: 'New · parkour', tags: ['parkour', 'climbing', 'reflex'],
+    pitch: 'Wall-jump up a skyscraper under construction. Dodge falling tools, ride crane hooks and stay ahead of the dust storm.',
+    best: () => { const p = read('crane-climb-profile'); return p && p.best ? [`floor ${fmt(p.best)}`, ['', 'Foundations', 'Steel', 'Glass', 'Wind', 'Spire'][p.bestStage] || ''] : null; },
+    world: (e) => [`floor ${fmt(e.score)}`, ['', 'Foundations', 'Steel', 'Glass', 'Wind', 'Spire'][e.dist] || ''] },
   { id: 'fragile', name: 'Fragile <span>Freerun</span>', url: 'fragile-freerun/', accent: '#ffc94d', board: 'fragile', badge: 'New · parkour', tags: ['parkour', 'timing', 'cargo'],
     pitch: 'Carry a wedding cake, eggs or a goldfish bowl over the rooftops. Roll as you land or the cargo cracks.',
     best: () => { const p = read('fragile-freerun-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [fmt(b), `${st} ★`] : null; },

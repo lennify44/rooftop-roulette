@@ -15,6 +15,7 @@ const GAMES = {
   weather: { prefix: 'weather:', maxScore: 1e7, maxDist: 10 },          // season score, season 1-5
   shadow: { prefix: 'shadow:', maxScore: 1e7, maxDist: 10 },            // run score, district 1-6
   fragile: { prefix: 'fragile:', maxScore: 1e6, maxDist: 10 },          // delivery score, route 1-4
+  crane: { prefix: 'crane:', maxScore: 5000, maxDist: 5 },              // floors climbed, stage 1-5
 };
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
