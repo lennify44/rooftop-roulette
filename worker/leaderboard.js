@@ -18,6 +18,7 @@ const GAMES = {
   crane: { prefix: 'crane:', maxScore: 5000, maxDist: 5 },              // floors climbed, stage 1-5
   ghost: { prefix: 'ghost:', maxScore: 60000, maxDist: 16 },           // stars x 1000 + par-time bonus, levels finished
   echo: { prefix: 'echo:', maxScore: 50000, maxDist: 5 },               // metres, district 1-5
+  shutter: { prefix: 'shutter:', maxScore: 20000, maxDist: 5 },         // photo points of one run, district 1-5
 };
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
