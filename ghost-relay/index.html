@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="A rooftop relay with your own ghosts: they hold the doors and become the steps for your next runner.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ghost Relay">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Ghost Relay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: side-view rooftops on canvas; leg counter, timer and a level strip on top; hold left = stop, right = jump */
+  --night: #141b2e;
+  --chalk: #f4f1ea;
+  --haze: #a9b3c8;
+  --ghost: #7fe3ff;
+  --good: #5fe0a8;
+  --bad: #ff6b5b;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); }
+.legs { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 900; font-size: 24px; line-height: 1; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
+.leg-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--chalk); }
+.leg-dot.used { background: var(--ghost); border-color: var(--ghost); opacity: 0.6; }
+.leg-dot.live { background: #ffb347; border-color: #ffb347; }
+.sub { margin-top: 3px; font-family: var(--font-mono); font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); font-variant-numeric: tabular-nums; }
+.hud-btns { display: flex; gap: 8px; pointer-events: auto; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.45); cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+.next-btn { height: 44px; padding: 0 14px; border: 2px solid var(--ghost); border-radius: 22px; background: rgba(20, 27, 46, 0.75); color: var(--ghost); cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; }
+.next-btn:disabled { opacity: 0.35; cursor: default; }
+.zones { position: absolute; inset: auto 0 0 0; height: 24%; display: grid; grid-template-columns: 1fr 1fr; pointer-events: none; transition: opacity 0.8s; }
+.zones.fade { opacity: 0; }
+.zone { display: grid; place-content: end center; padding-block: 14px; font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: 0.12em; color: rgba(244, 241, 234, 0.9); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.zone-l { background: linear-gradient(0deg, rgba(255, 107, 91, 0.18), transparent); border-right: 1px dashed rgba(244, 241, 234, 0.3); }
+.zone-r { background: linear-gradient(0deg, rgba(127, 227, 255, 0.18), transparent); }
+.toast { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); width: max-content; max-width: 90%; padding: 8px 16px; background: rgba(20, 27, 46, 0.9); border: 2px solid var(--ghost); border-radius: 10px; text-align: center; pointer-events: none; }
+.toast b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 24px; text-transform: uppercase; }
+.toast span { font-size: 14px; color: var(--haze); }
+.screen {
+  position: absolute; inset: 0; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y; z-index: 3;
+  padding-block: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-bottom)); padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+  background: linear-gradient(90deg, rgba(20, 27, 46, 0.97) 0%, rgba(20, 27, 46, 0.88) 60%, rgba(20, 27, 46, 0.65) 100%);
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(48px, 10vw, 96px); line-height: 0.86; text-wrap: balance; }
+.logo span { color: var(--ghost); text-shadow: 0 0 22px rgba(127, 227, 255, 0.5); }
+.lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
+.btn { min-height: 44px; border: 0; cursor: pointer; padding: 0.4em 1.4em; color: #141b2e; background: var(--ghost); font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
+.btn > span { display: inline-block; transform: skewX(12deg); }
+.btn.ghost { background: var(--chalk); }
+.link-btn, a.link-btn { min-height: 44px; border: 0; background: none; padding: 10px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.side { display: grid; gap: 8px; align-content: start; }
+.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.worlds { display: grid; gap: 14px; }
+.world h3 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; }
+.world h3 small { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--haze); letter-spacing: 0.08em; margin-left: 8px; }
+.lvls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.lvl { min-height: 64px; display: grid; gap: 2px; place-content: center; text-align: center; padding: 6px 4px; border-radius: 10px; border: 2px solid rgba(244, 241, 234, 0.25); background: rgba(20, 27, 46, 0.8); color: var(--chalk); cursor: pointer; font-family: var(--font-body); }
+.lvl b { font-family: var(--font-display); font-weight: 900; font-size: 20px; line-height: 1; }
+.lvl i { font-style: normal; font-size: 11px; color: var(--haze); line-height: 1.1; }
+.lvl .st { font-size: 13px; letter-spacing: 1px; color: #ffd166; }
+.lvl:disabled { opacity: 0.35; cursor: default; }
+.lvl.done { border-color: var(--ghost); }
+.stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.bigstars { font-size: 40px; letter-spacing: 6px; color: #ffd166; margin: 0 0 6px; }
+.bigstars .off { color: rgba(244, 241, 234, 0.2); }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { min-height: 32px; padding: 3px 10px; border: 1.5px solid rgba(244, 241, 234, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1.2fr 1fr 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--ghost); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist li.me span:nth-child(2) { color: var(--ghost); font-weight: 600; }
+.toplist .none { display: block; color: var(--haze); }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 10px 0 0; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; min-height: 40px; padding: 6px 8px; border: 1.5px solid rgba(244, 241, 234, 0.4); background: rgba(20, 27, 46, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
+.tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+.icon-btn:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .lvl:focus-visible, .next-btn:focus-visible, .lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+@media (max-height: 520px) { .logo { font-size: clamp(42px, 8vw, 64px); } .lede { font-size: 14px; } .btn { font-size: 22px; } .lvl { min-height: 52px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" aria-label="The rooftops"></canvas>
+  <div class="hud" id="hud" hidden>
+    <div>
+      <div class="legs"><span id="legDots"></span><span id="legText">Leg 1</span></div>
+      <div class="sub"><span id="lvlName">1-1</span> · ⏱ <span id="timer">0.0</span>s · par <span id="par">2 legs</span></div>
+    </div>
+    <div class="hud-btns">
+      <button class="next-btn" id="btnNext" type="button">Next leg ⏭</button>
+      <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
+      <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    </div>
+  </div>
+  <div class="zones" id="zones" hidden><div class="zone zone-l">◀ HOLD = STOP</div><div class="zone zone-r">JUMP ▶</div></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">From the makers of Rooftop Roulette</p>
+        <h1 class="logo">Ghost<br><span>Relay</span></h1>
+        <p class="lede">A rooftop relay with your own ghosts. Your runner never stops running unless you hold them back. Doors need someone on the plate, walls need someone to climb on. Run a leg, then team up with its ghost.</p>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button><button class="link-btn" id="btnLevels" type="button">Levels · <span id="starCount">0</span> ★</button></div>
+        <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+      </div>
+      <div class="side">
+        <h2 class="label">How it works</h2>
+        <ul class="rules">
+          <li>🏃 The runner runs by themselves. <b>Hold the left half</b> to stop, <b>tap the right half</b> to jump (hold for higher).</li>
+          <li>👻 Press <b>Next leg</b> and your run becomes a ghost that repeats it exactly, and keeps standing where you left it.</li>
+          <li>🟦 Ghosts hold plates, press buttons and flip levers. A ghost standing still is a step you can climb on.</li>
+          <li>⭐ Stars: reach the flag, use no more legs than par, beat the par time.</li>
+        </ul>
+        <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenLevels" aria-label="Levels" hidden>
+    <div class="menu" style="align-items:start">
+      <div>
+        <p class="eyebrow">16 levels · 4 worlds</p>
+        <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Pick a<br><span>leg</span></h1>
+        <p class="lede">Finish a level to open the next. A new world opens with 6 stars in the one before.</p>
+        <button class="btn ghost" id="btnLevelsBack" type="button"><span>Back</span></button>
+      </div>
+      <div class="worlds" id="worlds"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenPause" aria-label="Paused" hidden>
+    <div class="menu"><div>
+      <p class="eyebrow">Paused</p>
+      <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Catch your<br><span>breath</span></h1>
+      <div class="cta-row"><button class="btn" id="btnResume" type="button"><span>Resume</span></button></div>
+      <div class="sub-row"><button class="link-btn" id="btnUndo" type="button">Redo previous leg</button><button class="link-btn" id="btnRestart" type="button">Restart level</button><button class="link-btn" id="btnQuit" type="button">Levels</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="screenDone" aria-label="Level done" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow" id="doneEyebrow">Level done</p>
+        <h1 class="logo" id="doneTitle" style="font-size: clamp(40px, 8vw, 80px)">Baton in!</h1>
+        <p class="bigstars" id="doneStars"></p>
+        <p class="lede" id="doneText"></p>
+        <div class="cta-row"><button class="btn" id="btnNextLevel" type="button"><span>Next level</span></button><button class="link-btn" id="btnRetry" type="button">Try again</button><button class="link-btn" id="btnDoneLevels" type="button">Levels</button></div>
+        <dl class="stats">
+          <div><dt>Time</dt><dd id="doneTime">0.0</dd></div>
+          <div><dt>Legs</dt><dd id="doneLegs">1</dd></div>
+          <div><dt>Total ★</dt><dd id="doneTotal">0</dd></div>
+        </dl>
+      </div>
+      <div class="side">
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post score</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'ghost-relay-profile';
+const profile = Object.assign({ stars: {}, best: {}, name: '', deviceId: '', muted: false, posted: 0 }, store.get(PROFILE_KEY, {}));
+if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+
+// ---------- levels: roofs are solid blocks [x0, x1, top]; everything else stands on the roof under its x
+// plates hold doors/lasers/lifts while someone stands on them; buttons open timed doors for 4 s; levers toggle bridges
+const WORLDS = [
+  { name: 'Rooftops', sky: ['#2b3a6b', '#e9a07a'] },
+  { name: 'Laundry Lines', sky: ['#24506b', '#9fd8c8'] },
+  { name: 'Clocktower', sky: ['#3a2b5b', '#d8a0c0'] },
+  { name: 'Storm', sky: ['#1a2238', '#5a6a88'] },
+];
+const LEVELS = [
+  { id: '1-1', name: 'First Leg', legs: 1, time: 6.1, flag: 1800, roofs: [[0, 520, 420], [640, 1000, 420], [1120, 1400, 370], [1520, 1950, 420]],
+    tip: 'Tap the right half to jump, hold it to jump further.' },
+  { id: '1-2', name: 'Hold the Door', legs: 2, time: 5.2, flag: 1520, roofs: [[0, 1000, 420], [1120, 1650, 420]], plates: [{ id: 'a', x: 320 }], doors: [{ x: 760, by: 'a' }],
+    tip: 'Hold the left half to stop on the plate, then press Next leg. Your ghost keeps holding it.' },
+  { id: '1-3', name: 'Step Up', legs: 2, time: 7.5, flag: 1900, roofs: [[0, 800, 420], [800, 1500, 190], [1640, 2050, 300]],
+    tip: 'Too high to jump. Run into the wall, press Next leg, then climb on your ghost.' },
+  { id: '1-4', name: 'Relay', legs: 3, time: 6.9, flag: 1700, roofs: [[0, 1100, 420], [1100, 1850, 190]], plates: [{ id: 'a', x: 300 }], doors: [{ x: 700, by: 'a' }],
+    tip: 'One ghost for the door, one for the wall.' },
+
+  { id: '2-1', name: 'Quick Door', legs: 1, time: 6.0, flag: 1900, roofs: [[0, 1400, 420], [1520, 2000, 420]], buttons: [{ id: 'b', x: 300 }], doors: [{ x: 1000, by: 'b' }], belts: [{ x0: 1050, x1: 1400, k: 1.5 }],
+    tip: 'Buttons open their door for 4 seconds. Fast belts throw you further.' },
+  { id: '2-2', name: 'Too Far', legs: 2, time: 9.4, flag: 2200, roofs: [[0, 1600, 420], [1720, 2300, 420]], buttons: [{ id: 'b', x: 420 }], doors: [{ x: 2000, by: 'b' }], belts: [{ x0: 600, x1: 1500, k: 0.6 }],
+    tip: 'The door shuts before you get there. Who could press the button later?' },
+  { id: '2-3', name: 'Fast Lane', legs: 2, time: 9.7, flag: 2400, roofs: [[0, 1200, 420], [1200, 2000, 190], [2120, 2500, 300]], belts: [{ x0: 600, x1: 1200, k: 1.5 }, { x0: 1400, x1: 1880, k: 0.6 }], buttons: [{ id: 'b', x: 1340 }], doors: [{ x: 1920, by: 'b' }],
+    tip: 'A step at the end of a fast belt. Jump early.' },
+  { id: '2-4', name: 'Laundry Day', legs: 3, time: 10.1, flag: 2700, roofs: [[0, 1450, 420], [1570, 2300, 420], [2300, 2800, 190]], buttons: [{ id: 'b', x: 500 }], plates: [{ id: 'a', x: 1700 }], doors: [{ x: 1300, by: 'b' }, { x: 2050, by: 'a' }], belts: [{ x0: 2120, x1: 2300, k: 1.4 }],
+    tip: 'A button, a plate and a wall. Three runners, three jobs.' },
+
+  { id: '3-1', name: 'Lever', legs: 1, time: 8.8, flag: 2600, roofs: [[0, 800, 420], [1200, 1900, 420], [2300, 2700, 420]], levers: [{ id: 'l', x: 450 }, { id: 'm', x: 1450 }], bridges: [{ x0: 800, x1: 1200, by: 'l', on: false }, { x0: 1900, x1: 2300, by: 'm', on: true }],
+    tip: 'Running into a lever flips it. Every touch flips it again: jump over the ones you don’t want.' },
+  { id: '3-2', name: 'Lift Off', legs: 2, time: 7.1, flag: 1700, roofs: [[0, 1000, 420], [1120, 1800, 190]], plates: [{ id: 'a', x: 320 }], lifts: [{ x0: 1000, x1: 1120, lo: 420, hi: 190, by: 'a' }],
+    tip: 'The lift only rises while the plate is held. Be on it when it goes up.' },
+  { id: '3-3', name: 'Two Bridges', legs: 2, time: 7.1, flag: 2100, roofs: [[0, 700, 420], [1000, 1500, 420], [1800, 2200, 420]], levers: [{ id: 'l', x: 400 }], bridges: [{ x0: 700, x1: 1000, by: 'l', on: true }, { x0: 1500, x1: 1800, by: 'l', on: false }],
+    tip: 'One lever, two bridges. The flip has to happen while you are between them.' },
+  { id: '3-4', name: 'Clockwork', legs: 3, time: 9.2, flag: 2300, roofs: [[0, 1100, 420], [1220, 1800, 190], [2100, 2450, 190]], plates: [{ id: 'a', x: 300 }, { id: 'c', x: 950 }], doors: [{ x: 750, by: 'a' }], lifts: [{ x0: 1100, x1: 1220, lo: 420, hi: 190, by: 'c' }], levers: [{ id: 'l', x: 1500 }], bridges: [{ x0: 1800, x1: 2100, by: 'l', on: false }],
+    tip: 'Door, lift, bridge. Time the lift for your last runner.' },
+
+  { id: '4-1', name: 'Laser Gate', legs: 2, time: 7.3, flag: 2100, roofs: [[0, 1200, 420], [1320, 1600, 420], [1600, 2250, 200]], plates: [{ id: 'a', x: 300 }], lasers: [{ x: 800, by: 'a' }], fans: [{ x0: 1400, x1: 1600 }],
+    tip: 'Lasers are off only while their plate is held. Fans blow you up.' },
+  { id: '4-2', name: 'Updraft', legs: 1, time: 8.1, flag: 2500, roofs: [[0, 1300, 420], [1450, 2000, 180], [2150, 2600, 300]], buttons: [{ id: 'b', x: 300 }], doors: [{ x: 1100, by: 'b' }], fans: [{ x0: 1250, x1: 1450 }], belts: [{ x0: 1500, x1: 1950, k: 1.5 }],
+    tip: 'Ride the wind, then mind the belt.' },
+  { id: '4-3', name: 'Three Hands', legs: 3, time: 10.2, flag: 2250, roofs: [[0, 1200, 420], [1200, 2350, 190]], plates: [{ id: 'a', x: 300 }], lasers: [{ x: 750, by: 'a' }], buttons: [{ id: 'b', x: 1350 }], doors: [{ x: 1950, by: 'b' }], belts: [{ x0: 1450, x1: 1900, k: 0.5 }],
+    tip: 'One ghost holds, one ghost steps, you run.' },
+  { id: '4-4', name: 'Eye of the Storm', legs: 3, time: 10.7, flag: 2900, roofs: [[0, 1000, 420], [1300, 1700, 420], [1820, 2400, 200], [2600, 3000, 260]], plates: [{ id: 'a', x: 250 }, { id: 'c', x: 1420 }], lasers: [{ x: 600, by: 'a' }], levers: [{ id: 'l', x: 800 }], bridges: [{ x0: 1000, x1: 1300, by: 'l', on: false }], lifts: [{ x0: 1700, x1: 1820, lo: 420, hi: 200, by: 'c' }], belts: [{ x0: 1900, x1: 2300, k: 1.4 }],
+    tip: 'Everything at once. Watch who flips the lever first.' },
+];
+const LINK_COLORS = ['#4dd8ff', '#ff5ad8', '#b6ff4d', '#ffb04d'];
+
+// ---------- physics
+const RUN = 300, GRAV = 2100, JUMP = 760, HOLD = 0.22, HW = 11, BH = 40, DOOR_H = 260, MAX_LEG = 25, LEGS = 3;
+const ACC = 1800, BRAKE = 2400, AIR = 700, FAN_UP = 3900, LIFT_V = 160;
+const STEP = 1 / 120;
+
+const L = { W: 0, H: 0, dpr: 1, s: 1 };
+function layout() {
+  const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  Object.assign(L, { W, H, dpr, s: clamp(Math.min(H / 560, W / 760), 0.42, 1.6) });
+}
+addEventListener('resize', layout);
+
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = profile.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  setMuted(m) { if (this.master) this.master.gain.value = m ? 0 : 0.5; },
+  tone(f, dur, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol = 0.1, lp = 2000) { if (!this.ctx) return; const n = Math.floor(this.ctx.sampleRate * dur), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain(); s.buffer = buf; f.type = 'lowpass'; f.frequency.value = lp; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(this.master); s.start(); },
+  jump() { this.tone(420, 0.14, 'square', 0.05, 380); },
+  land() { this.noise(0.06, 0.08, 900); },
+  plate(on) { this.tone(on ? 660 : 440, 0.08, 'triangle', 0.07); },
+  door() { this.noise(0.25, 0.08, 500); this.tone(160, 0.25, 'sawtooth', 0.04, 60); },
+  lever() { this.tone(900, 0.05, 'square', 0.05); this.tone(600, 0.08, 'square', 0.04, 0, 0.05); },
+  zap() { this.tone(1400, 0.35, 'sawtooth', 0.08, -1200); this.noise(0.3, 0.15, 3000); },
+  fall() { this.tone(500, 0.6, 'sine', 0.08, -420); },
+  leg() { this.tone(330, 0.12, 'triangle', 0.07); this.tone(494, 0.18, 'triangle', 0.07, 0, 0.1); },
+  ghost() { [880, 660, 440].forEach((f, i) => this.tone(f, 0.18, 'sine', 0.05, 0, i * 0.06)); },
+  win() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.22, 'triangle', 0.08, 0, i * 0.09)); },
+};
+function renderMute() {
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
+}
+$('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
+
+// ---------- level setup: resolve every piece to the roof under it
+let lv = null, li = 0, doneTimer = 0;
+function roofTop(x) { for (const r of lv.roofs) if (x >= r[0] && x <= r[1]) return r[2]; return 420; }
+function buildLevel(idx) {
+  const src = LEVELS[idx], color = {};
+  let ci = 0; const col = (id) => { if (!(id in color)) color[id] = LINK_COLORS[ci++ % LINK_COLORS.length]; return color[id]; };
+  lv = { src, idx, roofs: src.roofs, flag: src.flag, end: Math.max(...src.roofs.map((r) => r[1])) };
+  lv.plates = (src.plates || []).map((p) => ({ ...p, y: 0, w: 30, kind: 'plate', c: col(p.id) }));
+  lv.buttons = (src.buttons || []).map((p) => ({ ...p, y: 0, w: 20, kind: 'button', c: col(p.id) }));
+  lv.levers = (src.levers || []).map((p) => ({ ...p, y: 0, c: col(p.id) }));
+  lv.doors = (src.doors || []).map((d) => ({ ...d, y: 0, open: 0, c: col(d.by) }));
+  lv.lasers = (src.lasers || []).map((d) => ({ ...d, y: 0, c: col(d.by) }));
+  lv.bridges = (src.bridges || []).map((b) => ({ ...b, y: 0, c: col(b.by) }));
+  lv.lifts = (src.lifts || []).map((f) => ({ ...f, y: f.lo, c: col(f.by) }));
+  lv.belts = src.belts || []; lv.fans = src.fans || [];
+  for (const arr of [lv.plates, lv.buttons, lv.levers, lv.doors, lv.lasers]) for (const p of arr) p.y = roofTop(p.x);
+  for (const b of lv.bridges) b.y = roofTop(b.x0 - 1);
+  lv.flagY = roofTop(lv.flag);
+}
+
+// ---------- state
+const game = { mode: 'menu', paused: false, legs: [], leg: 0, t: 0, steps: 0, count: 0, run: null, rec: [], state: null, dead: 0, deadWhy: '', done: false, parts: [], floats: [], camX: 0, bump: 0 };
+function freshState() {
+  return { held: {}, prevHeld: {}, timed: {}, toggles: {}, touch: {}, lifts: lv.lifts.map((f) => f.lo) };
+}
+function newRunner() { return { x: 60, y: roofTop(60), vx: RUN, vy: 0, ground: null, brake: false, jumpHeld: false, holdT: 0, coyote: 0, buffer: 0, alive: true }; }
+function startLevel(idx) {
+  Sound.init(); clearTimeout(doneTimer); li = idx; buildLevel(idx);
+  Object.assign(game, { mode: 'play', paused: false, legs: [], done: false });
+  ['screenStart', 'screenLevels', 'screenPause', 'screenDone'].forEach((id) => { $(id).hidden = true; });
+  $('hud').hidden = false; layout(); startLeg();
+  showToast(`${lv.src.id} · ${lv.src.name}`, lv.src.tip, 3200);
+  $('zones').hidden = false; $('zones').classList.remove('fade'); clearTimeout(zoneTimer); zoneTimer = setTimeout(() => $('zones').classList.add('fade'), 4500);
+}
+let zoneTimer = 0;
+function startLeg() {
+  Object.assign(game, { leg: game.legs.length, t: 0, steps: 0, count: 0.7, run: newRunner(), rec: [], state: freshState(), dead: 0, deadWhy: '', parts: [], floats: [] });
+  game.camX = 0; pointers.clear(); keys.brake = false; keys.jump = false; Sound.leg(); updateHud();
+}
+function nextLeg(auto) {
+  if (game.mode !== 'play' || game.done || game.dead) return;
+  if (game.legs.length + 1 >= LEGS) { if (!auto) showToast('Last runner', 'This one has to reach the flag. Pause → Redo previous leg to change a ghost.', 2200); return; }
+  game.legs.push({ frames: game.rec, alive: true }); Sound.ghost(); startLeg();
+}
+function undoLeg() { if (!game.legs.length) return; game.legs.pop(); startLeg(); }
+function updateHud() {
+  const dots = $('legDots'); dots.textContent = '';
+  for (let i = 0; i < LEGS; i++) dots.appendChild(mk('span', 'leg-dot' + (i < game.legs.length ? ' used' : i === game.legs.length ? ' live' : '')));
+  $('legText').textContent = `Leg ${game.legs.length + 1}`;
+  $('lvlName').textContent = `${lv.src.id} ${lv.src.name}`; $('par').textContent = `${lv.src.legs} leg${lv.src.legs > 1 ? 's' : ''} · ${lv.src.time.toFixed(1)}s`;
+  $('btnNext').disabled = game.legs.length + 1 >= LEGS; $('btnUndo').disabled = !game.legs.length;
+}
+let toastTimer = 0;
+function showToast(title, text, ms = 1600) { const el = $('toast'); el.textContent = ''; const b = mk('b'); b.textContent = title; el.appendChild(b); if (text) { const s = mk('span'); s.textContent = text; el.appendChild(s); } el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, ms); }
+function floatText(t, x, y, c) { game.floats.push({ t, x, y, c, life: 1 }); }
+function burst(x, y, c, n = 10) { for (let i = 0; i < n; i++) game.parts.push({ x, y, vx: (Math.random() - 0.5) * 260, vy: -Math.random() * 260, c, life: 0.5 + Math.random() * 0.3 }); }
+
+// ---------- bodies: the live runner plus every ghost at the current step
+function ghostAt(g, step) {
+  const f = g.frames, n = f.length / 3;
+  if (step < n) { const i = step * 3, p = Math.max(0, step - 1) * 3; return { x: f[i], y: f[i + 1], ground: !!(f[i + 2] & 1), still: !!(f[i + 2] & 1) && Math.abs(f[i] - f[p]) < 0.3 && step > 0, gone: false }; }
+  if (!g.alive || !n) return { gone: true };
+  const i = (n - 1) * 3; return { x: f[i], y: f[i + 1], ground: !!(f[i + 2] & 1), still: !!(f[i + 2] & 1), gone: false };
+}
+function bodies() {
+  const out = [];
+  game.legs.forEach((g, gi) => { const b = ghostAt(g, game.steps); if (!b.gone) out.push({ id: 'g' + gi, ...b }); });
+  const r = game.run; if (r && r.alive) out.push({ id: 'live', x: r.x, y: r.y, ground: !!r.ground, still: false });
+  return out;
+}
+const onPad = (b, p) => b.ground && Math.abs(b.y - p.y) < 2 && b.x + HW > p.x - p.w && b.x - HW < p.x + p.w;
+const touchLever = (b, l) => Math.abs(b.x - l.x) < HW + 6 && b.y > l.y - 36 && b.y - BH < l.y;
+function updateWorld(dt) {
+  const st = game.state, bs = bodies();
+  // plates and buttons
+  for (const p of lv.plates) { const h = bs.some((b) => onPad(b, p)); if (h !== !!st.held[p.id]) Sound.plate(h); st.held[p.id] = h; }
+  for (const p of lv.buttons) { const h = bs.some((b) => onPad(b, p)); if (h && !st.prevHeld[p.id]) { st.timed[p.id] = game.t + 4; Sound.plate(true); } st.prevHeld[p.id] = h; }
+  // levers flip once per body per touch
+  for (const l of lv.levers) for (const b of bs) { const k = l.id + b.id, on = touchLever(b, l); if (on && !st.touch[k]) { st.toggles[l.id] = (st.toggles[l.id] || 0) + 1; Sound.lever(); burst(l.x, l.y - 30, l.c, 6); } st.touch[k] = on; }
+  for (const d of lv.doors) { const want = isOpen(d.by) ? 1 : 0; if (want && d.open === 0) Sound.door(); d.open = clamp(d.open + (want ? 4 : -4) * dt, 0, 1); }
+  lv.lifts.forEach((f, i) => { const target = st.held[f.by] ? f.hi : f.lo; const y = st.lifts[i]; st.lifts[i] = y > target ? Math.max(target, y - LIFT_V * dt) : Math.min(target, y + LIFT_V * dt); f.y = st.lifts[i]; });
+}
+function isOpen(by) { const st = game.state; return !!st.held[by] || (st.timed[by] || 0) > game.t; }
+const bridgeOn = (b) => b.on !== ((game.state.toggles[b.by] || 0) % 2 === 1);
+const laserOn = (z) => !game.state.held[z.by];
+function solids() {
+  const out = lv.roofs.map((r) => ({ x0: r[0], x1: r[1], top: r[2], bottom: 1e9 }));
+  for (const d of lv.doors) if (d.open < 0.9) out.push({ x0: d.x - 8, x1: d.x + 8, top: d.y - DOOR_H, bottom: d.y, door: true });
+  return out;
+}
+function tops() {
+  const out = lv.roofs.map((r) => ({ x0: r[0], x1: r[1], top: r[2] }));
+  for (const b of lv.bridges) if (bridgeOn(b)) out.push({ x0: b.x0, x1: b.x1, top: b.y });
+  lv.lifts.forEach((f, i) => out.push({ x0: f.x0, x1: f.x1, top: f.y, lift: i }));
+  game.legs.forEach((g) => { const b = ghostAt(g, game.steps); if (!b.gone && b.still) out.push({ x0: b.x - HW, x1: b.x + HW, top: b.y - BH, ghost: true }); });
+  return out;
+}
+function stepRunner(dt) {
+  const r = game.run; if (!r.alive) return;
+  // ride lifts
+  if (r.ground && r.ground.lift !== undefined) r.y = lv.lifts[r.ground.lift].y;
+  const braking = r.brake;
+  let target = braking ? 0 : RUN;
+  if (r.ground && !braking) for (const b of lv.belts) if (r.x >= b.x0 && r.x <= b.x1 && Math.abs(r.y - roofTop(r.x)) < 1) target = RUN * b.k;
+  const a = r.ground ? (target < r.vx ? BRAKE : ACC) : AIR;
+  r.vx = r.vx < target ? Math.min(target, r.vx + a * dt) : Math.max(target, r.vx - a * dt);
+  // jump: buffered a moment before landing, coyote a moment after leaving an edge
+  r.buffer = Math.max(0, r.buffer - dt); r.coyote = r.ground ? 0.08 : Math.max(0, r.coyote - dt);
+  if (r.buffer > 0 && (r.ground || r.coyote > 0)) { r.vy = -JUMP; r.ground = null; r.coyote = 0; r.buffer = 0; r.holdT = HOLD; Sound.jump(); }
+  if (!r.jumpHeld) r.holdT = 0;
+  let g = GRAV; if (r.holdT > 0 && r.vy < 0) { g *= 0.5; r.holdT -= dt; }
+  let inFan = false; for (const f of lv.fans) if (r.x > f.x0 && r.x < f.x1) { g = GRAV - FAN_UP; inFan = true; }
+  r.vy += g * dt; if (inFan) r.vy = Math.max(-640, r.vy);
+  // x: run into walls and closed doors
+  let nx = r.x + r.vx * dt; r.bumped = false;
+  for (const s of solids()) if (nx + HW > s.x0 && r.x - HW < s.x1 && r.y > s.top + 0.5 && r.y - BH < s.bottom && r.x + HW <= s.x0 + 0.5) { nx = Math.min(nx, s.x0 - HW); r.bumped = true; }
+  if (r.bumped && r.vx > 0) r.vx = 0;
+  r.x = nx;
+  // y: land on roofs, bridges, lifts and still ghosts
+  let ny = r.y + r.vy * dt, land = null;
+  if (r.vy >= 0) for (const s of tops()) if (r.x + HW > s.x0 && r.x - HW < s.x1 && r.y <= s.top + 0.5 && ny >= s.top && (!land || s.top < land.top)) land = s;
+  const wasGround = !!r.ground;
+  if (land) { ny = land.top; if (!wasGround && r.vy > 400) Sound.land(); r.vy = 0; r.ground = land; } else r.ground = null;
+  r.y = ny;
+  // lasers and falls end the leg
+  for (const z of lv.lasers) if (laserOn(z) && r.x + HW > z.x - 4 && r.x - HW < z.x + 4 && r.y > z.y - DOOR_H && r.y - BH < z.y) return die('zap');
+  if (r.y > 760) return die('fall');
+}
+function die(why) {
+  const r = game.run; r.alive = false; game.dead = 0.9; game.deadWhy = why;
+  if (why === 'zap') { Sound.zap(); burst(r.x, r.y - 20, '#ff4d5e', 18); } else Sound.fall();
+  floatText(why === 'zap' ? 'Zapped!' : 'Fell!', r.x, r.y - 50, '#ff6b5b');
+}
+function finish() {
+  game.done = true; Sound.win(); burst(game.run.x, game.run.y - 20, '#ffd166', 24);
+  const legs = game.legs.length + 1, time = game.t, src = lv.src;
+  const stars = 1 + (legs <= src.legs ? 1 : 0) + (legs <= src.legs && time <= src.time ? 1 : 0);
+  const prevStars = profile.stars[src.id] || 0, prevBest = profile.best[src.id];
+  profile.stars[src.id] = Math.max(prevStars, stars);
+  if (legs <= src.legs && (prevBest === undefined || time < prevBest)) profile.best[src.id] = Math.round(time * 100) / 100;
+  saveProfile();
+  clearTimeout(doneTimer); doneTimer = setTimeout(() => showDone(stars, legs, time, prevStars), 900);
+}
+
+// ---------- update
+function update(dt) {
+  if (game.mode !== 'play' || game.paused || game.done) return;
+  for (let i = game.parts.length - 1; i >= 0; i--) { const p = game.parts[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; if (p.life <= 0) game.parts.splice(i, 1); }
+  for (let i = game.floats.length - 1; i >= 0; i--) { const f = game.floats[i]; f.life -= dt; f.y -= 40 * dt; if (f.life <= 0) game.floats.splice(i, 1); }
+  if (game.count > 0) { game.count -= dt; return; }
+  if (game.dead > 0) { game.dead -= dt; if (game.dead <= 0) startLeg(); return; }
+  const r = game.run;
+  r.brake = keys.brake || [...pointers.values()].includes('brake');
+  r.jumpHeld = keys.jump || [...pointers.values()].includes('jump');
+  game.t += dt; game.steps++;
+  updateWorld(dt);
+  stepRunner(dt);
+  if (!r.alive) return;
+  game.rec.push(r.x, r.y, r.ground ? 1 : 0);
+  if (r.x >= lv.flag - 6) { finish(); return; }
+  if (game.t >= MAX_LEG) { if (game.legs.length + 1 < LEGS) { showToast('Time!', 'This runner becomes a ghost.'); nextLeg(true); } else die('fall'); }
+  $('timer').textContent = game.t.toFixed(1);
+}
+
+// ---------- drawing
+function drawRunner(x, y, alpha, color, pose) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y);
+  const k = pose.air ? 0 : Math.sin(pose.t * 18) * (pose.still ? 0 : 1);
+  ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-7 + k * 6, -2); ctx.lineTo(-8 + k * 4, 0); ctx.moveTo(0, -18); ctx.lineTo(7 - k * 6, -2); ctx.lineTo(9 - k * 4, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, -32); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(9 + k * 4, pose.air ? -38 : -22); ctx.moveTo(0, -30); ctx.lineTo(-8 - k * 4, pose.air ? -36 : -24); ctx.stroke();
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(1, -38, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawFrame() {
+  const { W, H, s } = L, world = WORLDS[Math.floor(li / 4)] || WORLDS[0];
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, world.sky[0]); g.addColorStop(1, world.sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (!lv) return;
+  const r = game.run;
+  const viewW = W / s, target = clamp((r ? r.x : 0) - viewW * 0.32, -40, Math.max(-40, lv.end - viewW + 40));
+  game.camX += (target - game.camX) * 0.18;
+  const oy = H / 2 - 390 * s;
+  // far skyline
+  ctx.fillStyle = 'rgba(10,14,30,0.25)'; for (let i = 0; i < 14; i++) { const bx = ((i * 173 - game.camX * 0.3) % (W + 200) + W + 200) % (W + 200) - 100, bh = 120 + (i * 53) % 160; ctx.fillRect(bx, H - bh * s - oy * 0.2, 70, bh * s + 400); }
+  ctx.save(); ctx.translate(-game.camX * s, oy); ctx.scale(s, s);
+  if (world.name === 'Storm') { ctx.fillStyle = 'rgba(200,210,255,0.25)'; for (let i = 0; i < 40; i++) { const x = game.camX + ((i * 97 + game.t * 300) % (viewW + 100)), y = ((i * 61 + game.t * 900) % 800) - 100; ctx.fillRect(x, y, 2, 14); } }
+  // roofs
+  for (const rf of lv.roofs) {
+    ctx.fillStyle = '#2a2f45'; ctx.fillRect(rf[0], rf[2], rf[1] - rf[0], 900);
+    ctx.fillStyle = '#4a4f6a'; ctx.fillRect(rf[0], rf[2], rf[1] - rf[0], 8);
+    ctx.fillStyle = 'rgba(255,214,120,0.35)'; for (let x = rf[0] + 24; x < rf[1] - 30; x += 60) for (let y = rf[2] + 40; y < rf[2] + 400; y += 70) if ((x * 7 + y * 3) % 5 < 2) ctx.fillRect(x, y, 18, 26);
+  }
+  // belts
+  for (const b of lv.belts) { const y = roofTop(b.x0 + 1); ctx.fillStyle = b.k > 1 ? '#3a8a5a' : '#8a5a3a'; ctx.fillRect(b.x0, y - 2, b.x1 - b.x0, 8); ctx.fillStyle = 'rgba(255,255,255,0.5)'; const off = (game.t * 120 * (b.k > 1 ? 1 : -1)) % 30; for (let x = b.x0 + ((off + 30) % 30); x < b.x1 - 8; x += 30) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 8, y + 3); ctx.lineTo(x, y + 6); ctx.fill(); } }
+  // fans
+  for (const f of lv.fans) { const y = roofTop(f.x0 - 1); ctx.fillStyle = 'rgba(200,240,255,0.12)'; ctx.fillRect(f.x0, 0, f.x1 - f.x0, y); ctx.strokeStyle = 'rgba(220,245,255,0.6)'; ctx.lineWidth = 2; for (let i = 0; i < 6; i++) { const x = f.x0 + 15 + i * (f.x1 - f.x0 - 30) / 5, yy = y - ((game.t * 260 + i * 70) % (y - 40)); ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x, yy - 30); ctx.stroke(); } ctx.fillStyle = '#556'; ctx.fillRect(f.x0, y + 30, f.x1 - f.x0, 14); }
+  // bridges, lifts
+  for (const b of lv.bridges) { if (bridgeOn(b)) { ctx.fillStyle = '#9a6a3a'; ctx.fillRect(b.x0, b.y, b.x1 - b.x0, 12); ctx.fillStyle = b.c; ctx.fillRect(b.x0, b.y + 10, b.x1 - b.x0, 3); } else { ctx.strokeStyle = b.c; ctx.globalAlpha = 0.5; ctx.setLineDash([8, 8]); ctx.strokeRect(b.x0, b.y, b.x1 - b.x0, 12); ctx.setLineDash([]); ctx.globalAlpha = 1; } }
+  for (const f of lv.lifts) { ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.x0 + 10, 0); ctx.lineTo(f.x0 + 10, f.y); ctx.moveTo(f.x1 - 10, 0); ctx.lineTo(f.x1 - 10, f.y); ctx.stroke(); ctx.fillStyle = '#7a8098'; ctx.fillRect(f.x0, f.y, f.x1 - f.x0, 14); ctx.fillStyle = f.c; ctx.fillRect(f.x0, f.y + 12, f.x1 - f.x0, 3); ctx.strokeStyle = f.c; ctx.globalAlpha = 0.35; ctx.setLineDash([4, 6]); ctx.strokeRect(f.x0, f.hi, f.x1 - f.x0, 14); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+  // plates, buttons, levers
+  for (const p of lv.plates) { const on = game.state && game.state.held[p.id]; ctx.fillStyle = p.c; ctx.globalAlpha = on ? 1 : 0.6; ctx.fillRect(p.x - p.w, p.y - (on ? 2 : 5), p.w * 2, on ? 2 : 5); ctx.globalAlpha = 1; if (on) { ctx.fillStyle = p.c; ctx.globalAlpha = 0.2; ctx.fillRect(p.x - p.w, p.y - 60, p.w * 2, 58); ctx.globalAlpha = 1; } }
+  for (const p of lv.buttons) { const left = game.state ? (game.state.timed[p.id] || 0) - game.t : 0; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.w * 0.8, Math.PI, 0); ctx.fill(); if (left > 0) { ctx.strokeStyle = p.c; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y - 36, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (left / 4)); ctx.stroke(); } }
+  for (const l of lv.levers) { const flipped = game.state && (game.state.toggles[l.id] || 0) % 2 === 1; ctx.strokeStyle = '#ddd'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + (flipped ? 14 : -14), l.y - 32); ctx.stroke(); ctx.fillStyle = l.c; ctx.beginPath(); ctx.arc(l.x + (flipped ? 14 : -14), l.y - 32, 6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#556'; ctx.fillRect(l.x - 8, l.y - 4, 16, 4); }
+  // doors and lasers
+  for (const d of lv.doors) { const h = DOOR_H * (1 - d.open); ctx.fillStyle = '#5a6078'; ctx.fillRect(d.x - 8, d.y - DOOR_H, 16, h); ctx.fillStyle = d.c; ctx.fillRect(d.x - 8, d.y - DOOR_H + h - 6, 16, 6); ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.strokeRect(d.x - 8, d.y - DOOR_H, 16, DOOR_H); }
+  for (const z of lv.lasers) { ctx.fillStyle = '#444'; ctx.fillRect(z.x - 7, z.y - DOOR_H - 10, 14, 10); ctx.fillRect(z.x - 7, z.y - 6, 14, 6); if (game.state && laserOn(z)) { ctx.fillStyle = `rgba(255,60,80,${0.7 + Math.sin(game.t * 40) * 0.2})`; ctx.fillRect(z.x - 2, z.y - DOOR_H, 4, DOOR_H - 6); ctx.fillStyle = 'rgba(255,60,80,0.2)'; ctx.fillRect(z.x - 7, z.y - DOOR_H, 14, DOOR_H - 6); } ctx.fillStyle = z.c; ctx.fillRect(z.x - 7, z.y - DOOR_H - 12, 14, 3); }
+  // flag
+  ctx.fillStyle = '#ddd'; ctx.fillRect(lv.flag, lv.flagY - 90, 4, 90);
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { ctx.fillStyle = (i + j) % 2 ? '#111' : '#fff'; ctx.fillRect(lv.flag + 4 + i * 10, lv.flagY - 90 + j * 10, 10, 10); }
+  // ghosts and their trails
+  game.legs.forEach((gh, gi) => {
+    const b = ghostAt(gh, game.steps); const color = gi === 0 ? '#7fe3ff' : '#b6a4ff';
+    const f = gh.frames, n = Math.min(f.length / 3, game.steps); ctx.strokeStyle = color; ctx.globalAlpha = 0.18; ctx.lineWidth = 3; ctx.beginPath();
+    for (let i = Math.max(0, n - 90); i < n; i += 3) { if (i === Math.max(0, n - 90)) ctx.moveTo(f[i * 3], f[i * 3 + 1] - 20); else ctx.lineTo(f[i * 3], f[i * 3 + 1] - 20); } ctx.stroke(); ctx.globalAlpha = 1;
+    if (!b.gone) { drawRunner(b.x, b.y, 0.55, color, { t: game.t, air: !b.ground, still: b.still }); if (b.still) { ctx.fillStyle = color; ctx.globalAlpha = 0.5; ctx.fillRect(b.x - HW, b.y - BH - 2, HW * 2, 3); ctx.globalAlpha = 1; } }
+  });
+  if (r && r.alive) drawRunner(r.x, r.y, 1, '#ffb347', { t: game.t, air: !r.ground, still: r.vx < 20 });
+  for (const p of game.parts) { ctx.globalAlpha = clamp(p.life * 2, 0, 1); ctx.fillStyle = p.c; ctx.fillRect(p.x - 3, p.y - 3, 6, 6); }
+  ctx.globalAlpha = 1;
+  for (const fl of game.floats) { ctx.globalAlpha = clamp(fl.life * 1.5, 0, 1); ctx.font = '900 26px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,27,46,0.7)'; ctx.strokeText(fl.t, fl.x, fl.y); ctx.fillStyle = fl.c; ctx.fillText(fl.t, fl.x, fl.y); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  drawStrip();
+  if (game.count > 0 && game.mode === 'play' && !game.paused) { ctx.font = `900 ${Math.round(44 * Math.min(1.4, s * 1.2))}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#ffb347'; ctx.strokeStyle = 'rgba(20,27,46,0.8)'; ctx.lineWidth = 6; const txt = game.legs.length ? `Leg ${game.legs.length + 1}` : 'Go!'; ctx.strokeText(txt, W / 2, H * 0.42); ctx.fillText(txt, W / 2, H * 0.42); }
+}
+// the whole level as a strip under the HUD: where the plates, doors, ghosts and flag are
+function drawStrip() {
+  if (game.mode !== 'play') return;
+  const x0 = 12, x1 = L.W - 12, y = Math.max(62, (L.H > L.W ? 74 : 62)), k = (x1 - x0) / (lv.end + 40), sy = 0.06;
+  ctx.fillStyle = 'rgba(10,14,30,0.45)'; ctx.fillRect(x0 - 4, y - 18, x1 - x0 + 8, 34);
+  for (const rf of lv.roofs) { ctx.fillStyle = 'rgba(244,241,234,0.55)'; ctx.fillRect(x0 + rf[0] * k, y + (rf[2] - 300) * sy, (rf[1] - rf[0]) * k, 3); }
+  for (const p of [...lv.plates, ...lv.buttons]) { ctx.fillStyle = p.c; ctx.fillRect(x0 + p.x * k - 3, y + (p.y - 300) * sy - 3, 6, 3); }
+  for (const d of [...lv.doors, ...lv.lasers]) { ctx.fillStyle = d.c; ctx.fillRect(x0 + d.x * k - 1, y + (d.y - 300) * sy - 12, 3, 12); }
+  for (const b of lv.bridges) { ctx.fillStyle = b.c; ctx.globalAlpha = bridgeOn(b) ? 1 : 0.35; ctx.fillRect(x0 + b.x0 * k, y + (b.y - 300) * sy, (b.x1 - b.x0) * k, 2); ctx.globalAlpha = 1; }
+  ctx.fillStyle = '#fff'; ctx.fillRect(x0 + lv.flag * k, y + (lv.flagY - 300) * sy - 12, 2, 12);
+  game.legs.forEach((gh, gi) => { const b = ghostAt(gh, game.steps); if (!b.gone) { ctx.fillStyle = gi === 0 ? '#7fe3ff' : '#b6a4ff'; ctx.beginPath(); ctx.arc(x0 + b.x * k, y + (b.y - 300) * sy - 5, 4, 0, Math.PI * 2); ctx.fill(); } });
+  const r = game.run; if (r && r.alive) { ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.arc(x0 + r.x * k, y + (r.y - 300) * sy - 5, 5, 0, Math.PI * 2); ctx.fill(); }
+}
+
+// ---------- loop and input
+let last = 0, acc = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+  acc += dt; while (acc >= STEP) { update(STEP); acc -= STEP; }
+  drawFrame();
+}
+const pointers = new Map(), keys = { brake: false, jump: false };
+function pressJump() { const r = game.run; if (r && r.alive && game.mode === 'play' && !game.paused) r.buffer = 0.1; }
+cv.addEventListener('pointerdown', (e) => {
+  e.preventDefault(); Sound.init(); if (game.mode !== 'play' || game.paused) return;
+  const rc = cv.getBoundingClientRect(), side = e.clientX - rc.left < rc.width / 2 ? 'brake' : 'jump';
+  pointers.set(e.pointerId, side); if (side === 'jump') pressJump();
+});
+const release = (e) => { pointers.delete(e.pointerId); };
+cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release); cv.addEventListener('pointerleave', release);
+addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.repeat) return;
+  if (e.key === 'ArrowLeft' || e.key === 'a') keys.brake = true;
+  if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'w') { keys.jump = true; pressJump(); e.preventDefault(); }
+  if (e.key === 'n') nextLeg();
+});
+addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft' || e.key === 'a') keys.brake = false; if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'w') keys.jump = false; });
+$('btnNext').addEventListener('click', () => nextLeg());
+function pause(on) { if (game.mode !== 'play' || game.done) return; game.paused = on; pointers.clear(); $('screenPause').hidden = !on; updateHud(); }
+$('btnPause').addEventListener('click', () => pause(true));
+$('btnResume').addEventListener('click', () => { pause(false); last = 0; });
+$('btnUndo').addEventListener('click', () => { pause(false); undoLeg(); });
+$('btnRestart').addEventListener('click', () => { pause(false); startLevel(li); });
+$('btnQuit').addEventListener('click', () => { pause(false); game.mode = 'menu'; showLevels(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// ---------- menus and progress
+const totalStars = () => Object.values(profile.stars).reduce((a, n) => a + n, 0);
+const worldStars = (w) => LEVELS.slice(w * 4, w * 4 + 4).reduce((a, l) => a + (profile.stars[l.id] || 0), 0);
+function levelOpen(i) { if (i === 0) return true; if (i % 4 === 0) return worldStars(i / 4 - 1) >= 6 && !!profile.stars[LEVELS[i - 1].id]; return !!profile.stars[LEVELS[i - 1].id]; }
+function firstOpenUnfinished() { for (let i = 0; i < LEVELS.length; i++) if (levelOpen(i) && !profile.stars[LEVELS[i].id]) return i; let i = LEVELS.length - 1; while (i > 0 && !levelOpen(i)) i--; return i; }
+function score() { let s = totalStars() * 1000; for (const l of LEVELS) if (profile.best[l.id] !== undefined) s += Math.max(0, Math.round((l.time - profile.best[l.id]) * 10)); return s; }
+function showStart() { ['screenLevels', 'screenDone', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('hud').hidden = true; $('zones').hidden = true; game.mode = 'menu'; $('starCount').textContent = totalStars(); $('screenStart').hidden = false; renderLeaderboard(); layout(); }
+function showLevels() {
+  ['screenStart', 'screenDone', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('hud').hidden = true; $('zones').hidden = true; game.mode = 'menu';
+  const box = $('worlds'); box.textContent = '';
+  WORLDS.forEach((w, wi) => {
+    const sec = mk('div', 'world'); const h = mk('h3'); h.textContent = w.name; const sm = mk('small'); sm.textContent = `${worldStars(wi)} / 12 ★`; h.appendChild(sm); sec.appendChild(h);
+    const grid = mk('div', 'lvls');
+    LEVELS.slice(wi * 4, wi * 4 + 4).forEach((l, k) => {
+      const i = wi * 4 + k, st = profile.stars[l.id] || 0, b = mk('button', 'lvl' + (st ? ' done' : ''));
+      b.innerHTML = `<b>${l.id}</b><i></i><span class="st">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span>`; b.querySelector('i').textContent = l.name;
+      b.disabled = !levelOpen(i); b.setAttribute('data-level', String(i));
+      b.addEventListener('click', () => startLevel(i)); grid.appendChild(b);
+    });
+    sec.appendChild(grid); box.appendChild(sec);
+  });
+  $('screenLevels').hidden = false;
+}
+function showDone(stars, legs, time, prevStars) {
+  game.mode = 'menu'; $('hud').hidden = true; $('zones').hidden = true;
+  const src = lv.src;
+  $('doneEyebrow').textContent = `${src.id} · ${src.name}`;
+  $('doneTitle').textContent = stars === 3 ? 'Perfect relay!' : stars > prevStars ? 'Baton in!' : 'Made it!';
+  $('doneStars').innerHTML = '★'.repeat(stars) + `<span class="off">${'★'.repeat(3 - stars)}</span>`;
+  const tips = [];
+  if (legs > src.legs) tips.push(`It can be done with ${src.legs} leg${src.legs > 1 ? 's' : ''}.`);
+  else if (time > src.time) tips.push(`Par time is ${src.time.toFixed(1)} s: less waiting on the last leg.`);
+  $('doneText').textContent = tips.join(' ') || 'Every runner did their job.';
+  $('doneTime').textContent = time.toFixed(2) + 's'; $('doneLegs').textContent = legs; $('doneTotal').textContent = totalStars();
+  const nxt = li + 1 < LEVELS.length && levelOpen(li + 1);
+  $('btnNextLevel').hidden = !nxt;
+  $('screenDone').hidden = false;
+  lbAfterLevel();
+}
+$('btnPlay').addEventListener('click', () => startLevel(firstOpenUnfinished()));
+$('btnLevels').addEventListener('click', showLevels);
+$('btnLevelsBack').addEventListener('click', showStart);
+$('btnNextLevel').addEventListener('click', () => startLevel(li + 1));
+$('btnRetry').addEventListener('click', () => startLevel(li));
+$('btnDoneLevels').addEventListener('click', showLevels);
+
+// ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/ghost-relay/';
+const GAME_ID = 'ghost';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function deviceId() { if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); } return profile.deviceId; }
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}&date=${todayKey()}`); if (!r.ok) return null; LB.cache = await r.json(); LB.at = Date.now(); return LB.cache; } catch (e) { return null; }
+}
+function lbNote(list, text, link) { list.textContent = ''; const li2 = mk('li', 'none'); li2.textContent = text; if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li2.appendChild(a); } list.appendChild(li2); }
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'No relays finished today yet.' : 'No relays yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => { const row = mk('li', r.id === profile.deviceId ? 'me' : ''); const rank = mk('b'); rank.textContent = String(i + 1); row.appendChild(rank); for (const text of [r.name, `${Math.floor(r.score / 1000)} ★`, `${r.dist} levels`]) { const el = mk('span'); el.textContent = text; row.appendChild(el); } list.appendChild(row); });
+}
+$('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
+let lbLast = null;
+function lbAfterLevel() {
+  const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true;
+  const sc = score(); if (!lbReachable() || sc <= profile.posted) return;
+  lbLast = { game: GAME_ID, score: sc, dist: Object.keys(profile.stars).length, daily: true, date: todayKey() };
+  $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend();
+}
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post your score.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
+    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; profile.posted = lbLast.score; saveProfile(); lbLast = null; LB.at = 0; $('lbPost').hidden = true; }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
+}
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
+
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
+renderMute(); showStart();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
