@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Shadow Runner, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
+<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Fragile Freerun, Shadow Runner, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
 <meta name="theme-color" content="#110e22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +114,11 @@ const ART = {
   volcano: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
     <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
     ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>`,
+  fragile: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a10" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9f7a"/><stop offset="1" stop-color="#ffd8b0"/></linearGradient></defs><rect width="320" height="160" fill="url(#a10)"/>
+    <rect x="0" y="70" width="120" height="90" fill="#9a5a4a"/><rect x="180" y="112" width="140" height="48" fill="#8a4a3a"/><rect x="0" y="70" width="120" height="5" fill="rgba(0,0,0,0.25)"/><rect x="180" y="112" width="140" height="5" fill="rgba(0,0,0,0.25)"/>
+    <path d="M110 60 Q160 10 205 100" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 5"/>
+    <g transform="translate(170 46) rotate(15)"><line x1="0" y1="-14" x2="6" y2="0" stroke="#1b1630" stroke-width="4"/><line x1="0" y1="-14" x2="-8" y2="-2" stroke="#1b1630" stroke-width="4"/><rect x="-6" y="-32" width="12" height="18" fill="#2a6aa0"/><circle cx="0" cy="-38" r="6" fill="#f0c8a0"/><rect x="-12" y="-62" width="24" height="18" fill="#e8d0a0"/><text x="0" y="-48" text-anchor="middle" font-size="13">🎂</text></g>
+    <circle cx="205" cy="104" r="14" fill="none" stroke="#ffc94d" stroke-width="3"/><text x="270" y="104" text-anchor="middle" font-size="26">🙋</text></svg>`,
   shadow: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a9" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb38a"/><stop offset="1" stop-color="#ffe0c0"/></linearGradient></defs><rect width="320" height="160" fill="url(#a9)"/>
     <circle cx="44" cy="40" r="18" fill="#fff3b0"/><rect x="70" y="40" width="90" height="82" fill="#c8875a"/><rect x="200" y="58" width="70" height="64" fill="#a8604a"/>
     <path d="M196 74 h82 l6 12 h-94z" fill="#d6283a"/>
@@ -153,6 +158,10 @@ const GAMES = [
     pitch: 'Freerun across the rooftops while roulette wheels change the rules. Pests and bosses can’t be beaten, only outrun.',
     best: () => { const b = read('rooftop-roulette-best'); return b && b.score ? [`$${fmt(b.score)}`, `${fmt(b.dist)} m`] : null; },
     world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
+  { id: 'fragile', name: 'Fragile <span>Freerun</span>', url: 'fragile-freerun/', accent: '#ffc94d', board: 'fragile', badge: 'New · parkour', tags: ['parkour', 'timing', 'cargo'],
+    pitch: 'Carry a wedding cake, eggs or a goldfish bowl over the rooftops. Roll as you land or the cargo cracks.',
+    best: () => { const p = read('fragile-freerun-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [fmt(b), `${st} ★`] : null; },
+    world: (e) => [fmt(e.score), ['', 'Old Roofs', 'Construction', 'Harbour', 'Skyline'][e.dist] || ''] },
   { id: 'shadow', name: 'Shadow <span>Runner</span>', url: 'shadow-runner/', accent: '#d6283a', board: 'shadow', badge: 'New · parkour', tags: ['parkour', 'runner', 'sun & shade'],
     pitch: 'A vampire courier freeruns across a sunny city and may only touch the shade. As noon comes, the shadows shrink.',
     best: () => { const p = read('shadow-runner-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [fmt(b), `${st} ★`] : null; },

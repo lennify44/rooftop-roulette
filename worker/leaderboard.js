@@ -14,6 +14,7 @@ const GAMES = {
   sushi: { prefix: 'sushi:', maxScore: 1e7, maxDist: 10 },              // earnings of one service, restaurant 1-4
   weather: { prefix: 'weather:', maxScore: 1e7, maxDist: 10 },          // season score, season 1-5
   shadow: { prefix: 'shadow:', maxScore: 1e7, maxDist: 10 },            // run score, district 1-6
+  fragile: { prefix: 'fragile:', maxScore: 1e6, maxDist: 10 },          // delivery score, route 1-4
 };
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;

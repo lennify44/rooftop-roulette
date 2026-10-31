@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="Parkour across the rooftops with fragile cargo: roll as you land or the wedding cake cracks.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fragile Run">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Fragile Freerun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: full-bleed side view of rooftops on canvas; cargo health and route progress on top; two touch zones (roll | jump) */
+  --night: #1b1630;
+  --chalk: #f6f0e6;
+  --haze: #b8b0cc;
+  --gold: #ffc94d;
+  --good: #5fe0a8;
+  --bad: #ff6b5b;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); }
+.cargo { display: flex; align-items: center; gap: 8px; }
+.cargo .icon { font-size: 30px; line-height: 1; }
+.cargo .bar { width: 130px; height: 14px; border-radius: 7px; background: rgba(0, 0, 0, 0.45); overflow: hidden; border: 1.5px solid rgba(255, 255, 255, 0.6); }
+.cargo .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff6b5b, #ffc94d 50%, #5fe0a8); transition: width 0.25s; }
+.sub { font-family: var(--font-mono); font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); font-variant-numeric: tabular-nums; }
+.prog { width: min(40vw, 240px); height: 8px; border-radius: 4px; background: rgba(0, 0, 0, 0.4); overflow: hidden; margin: 4px auto 0; }
+.prog i { display: block; height: 100%; width: 0; background: var(--gold); }
+.center { text-align: center; font-family: var(--font-mono); font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+.center b { font-family: var(--font-display); font-weight: 900; font-size: 22px; }
+.hud-btns { display: flex; gap: 8px; pointer-events: auto; }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.45); cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+.zones { position: absolute; inset: auto 0 0 0; height: 26%; display: grid; grid-template-columns: 38fr 62fr; pointer-events: none; transition: opacity 0.8s; }
+.zones.fade { opacity: 0; }
+.zone { display: grid; place-content: end center; gap: 2px; padding-block: 14px; text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: 0.12em; color: rgba(246, 240, 230, 0.9); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.zone small { font-family: var(--font-body); font-weight: 500; font-size: 12px; letter-spacing: 0.02em; }
+.zone-l { background: linear-gradient(0deg, rgba(120, 220, 170, 0.18), transparent); border-right: 1px dashed rgba(246, 240, 230, 0.3); }
+.zone-r { background: linear-gradient(0deg, rgba(255, 201, 77, 0.18), transparent); }
+.toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); max-width: 90%; padding: 6px 14px; background: rgba(27, 22, 48, 0.9); border: 2px solid var(--gold); border-radius: 10px; font-family: var(--font-display); font-weight: 900; font-size: 20px; text-align: center; pointer-events: none; }
+.screen {
+  position: absolute; inset: 0; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y; z-index: 3;
+  padding-block: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-bottom)); padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+  background: linear-gradient(90deg, rgba(27, 22, 48, 0.96) 0%, rgba(27, 22, 48, 0.86) 60%, rgba(27, 22, 48, 0.6) 100%);
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(48px, 10vw, 96px); line-height: 0.86; text-wrap: balance; }
+.logo span { color: var(--gold); text-shadow: 0 0 22px rgba(255, 201, 77, 0.45); }
+.lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
+.btn { border: 0; cursor: pointer; padding: 0.4em 1.4em; color: #1b1630; background: var(--gold); font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
+.btn > span { display: inline-block; transform: skewX(12deg); }
+.btn.ghost { background: var(--chalk); }
+.link-btn, a.link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.side { display: grid; gap: 8px; align-content: start; }
+.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.picker { display: grid; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: grid; justify-items: center; gap: 0; min-width: 82px; padding: 8px 10px; border: 2px solid rgba(246, 240, 230, 0.25); border-radius: 12px; background: rgba(27, 22, 48, 0.8); color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 13px; }
+.chip span { font-size: 28px; line-height: 1.1; }
+.chip small { font-size: 11px; color: var(--haze); }
+.chip[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.chip:disabled { opacity: 0.4; cursor: default; }
+.items { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.item { display: grid; gap: 6px; align-content: start; padding: 12px 14px; border-radius: 12px; background: rgba(27, 22, 48, 0.8); border: 2px solid rgba(246, 240, 230, 0.2); }
+.item .nm { font-family: var(--font-display); font-weight: 900; font-size: 22px; line-height: 1; text-transform: uppercase; }
+.item p { margin: 0; font-size: 14px; color: var(--haze); }
+.item button { justify-self: start; padding: 6px 14px; border: 0; border-radius: 8px; cursor: pointer; background: var(--gold); color: #1b1630; font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.05em; text-transform: uppercase; }
+.item button:disabled { opacity: 0.4; cursor: default; }
+.stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.bigstars { font-size: 40px; letter-spacing: 6px; color: var(--gold); margin: 0; }
+.bigstars i { font-style: normal; color: rgba(246, 240, 230, 0.18); }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { padding: 3px 10px; border: 1.5px solid rgba(246, 240, 230, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1.2fr 1fr 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--gold); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist li.me span:nth-child(2) { color: var(--gold); font-weight: 600; }
+.toplist .none { display: block; color: var(--haze); }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 10px 0 0; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; padding: 6px 8px; border: 1.5px solid rgba(246, 240, 230, 0.4); background: rgba(27, 22, 48, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
+.tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+.icon-btn:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .chip:focus-visible, .item button:focus-visible, .lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+@media (max-height: 520px) { .logo { font-size: clamp(42px, 8vw, 64px); } .lede { font-size: 14px; } .btn { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" aria-label="Rooftops"></canvas>
+  <div class="hud" id="hud" hidden>
+    <div>
+      <div class="cargo"><span class="icon" id="cargoIcon">🎂</span><div class="bar" aria-label="Cargo"><i id="cargoBar"></i></div></div>
+      <div class="sub"><span id="cargoPct">100%</span> · perfect rolls <b id="rolls">0</b></div>
+    </div>
+    <div class="center"><b id="routeName">Old Roofs</b><div class="prog"><i id="progBar"></i></div><span id="timer">0.0 s</span></div>
+    <div class="hud-btns">
+      <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
+      <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    </div>
+  </div>
+  <div class="zones" id="zones" hidden><div class="zone zone-l">ROLL<small>tap as you land · ducks pipes</small></div><div class="zone zone-r">JUMP<small>hold: higher</small></div></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">From the makers of Rooftop Roulette</p>
+        <h1 class="logo">Fragile<br><span>Freerun</span></h1>
+        <p class="lede">A wedding cake, a tray of eggs, a goldfish bowl. Carry them over the rooftops, fast. Every hard landing cracks your cargo, unless you roll the moment your feet touch the roof.</p>
+        <div class="picker">
+          <h2 class="label">Cargo</h2><div class="chips" id="cargoChips"></div>
+          <h2 class="label">Route</h2><div class="chips" id="routeChips"></div>
+        </div>
+        <div class="cta-row" style="margin-top:14px"><button class="btn" id="btnPlay" type="button"><span>Deliver</span></button><button class="link-btn" id="btnShop" type="button">Parcel shop · 🪙 <span id="bankStart">0</span></button></div>
+        <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+      </div>
+      <div class="side">
+        <h2 class="label">How to run</h2>
+        <ul class="rules">
+          <li>👆 Right side: jump. Hold for a higher, longer jump.</li>
+          <li>🤸 Left side: roll. Tap it as you land after a big drop and the cargo feels nothing. Rolling also ducks under pipes and washing lines.</li>
+          <li>📦 Hard landings, bumps and pigeons crack the cargo. Falling between roofs loses it.</li>
+          <li>⭐ Deliver it: one star. Two and three stars need more of the cargo intact (each route says how much). Faster = bigger tips.</li>
+          <li>🔓 Stars unlock new routes and trickier cargo.</li>
+        </ul>
+        <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenShop" aria-label="Parcel shop" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Parcel shop · paid with tips</p>
+        <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Courier<br><span>gear</span></h1>
+        <p class="lede">Coins: <b>🪙 <span id="shopBank">0</span></b>. Fast deliveries pay better tips.</p>
+        <button class="btn ghost" id="btnShopBack" type="button"><span>Back</span></button>
+      </div>
+      <div class="items" id="shopItems"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenPause" aria-label="Paused" hidden>
+    <div class="menu"><div>
+      <p class="eyebrow">Paused</p>
+      <h1 class="logo" style="font-size: clamp(40px, 8vw, 76px)">Catching<br><span>your breath</span></h1>
+      <div class="cta-row"><button class="btn" id="btnResume" type="button"><span>Resume</span></button><button class="link-btn" id="btnQuit" type="button">Give up</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="screenOver" aria-label="Delivery over" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow" id="overEyebrow">Delivery</p>
+        <h1 class="logo" id="overTitle" style="font-size: clamp(40px, 8vw, 80px)">Delivered!</h1>
+        <p class="bigstars" id="overStars"></p>
+        <p class="lede" id="overText"></p>
+        <div class="cta-row"><button class="btn" id="btnAgain" type="button"><span>Again</span></button><button class="link-btn" id="btnMenu" type="button">Cargo &amp; routes</button><button class="link-btn" id="btnShop3" type="button">Shop</button></div>
+        <dl class="stats">
+          <div><dt>Score</dt><dd id="overScore">0</dd></div>
+          <div><dt>Cargo</dt><dd id="overCargo">100%</dd></div>
+          <div><dt>Time</dt><dd id="overTime">0 s</dd></div>
+        </dl>
+      </div>
+      <div class="side">
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post score</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'fragile-freerun-profile';
+const profile = Object.assign({ bank: 0, stars: {}, best: {}, up: {}, name: '', deviceId: '', muted: false, cargo: 'eggs', route: 'old' }, store.get(PROFILE_KEY, {}));
+if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
+
+// ---------- cargo, routes, gear
+const CARGO = {
+  eggs: { name: 'Eggs', icon: '🥚', drop: 1, bump: 1.4, grav: 1, need: 0, text: 'Every bump hurts a little.' },
+  cake: { name: 'Wedding cake', icon: '🎂', drop: 1.5, bump: 1, grav: 1, need: 0, text: 'Hard landings hurt 1.5×.' },
+  fish: { name: 'Fish bowl', icon: '🐠', drop: 1, bump: 1, grav: 1, slosh: true, need: 2, text: 'Two jumps in a row slosh water out.' },
+  vase: { name: 'Grandma’s vase', icon: '🏺', drop: 1.9, bump: 0.5, grav: 1, need: 4, text: 'Shrugs off bumps, hates drops.' },
+  balloons: { name: 'Balloons', icon: '🎈', drop: 0.6, bump: 1, grav: 0.78, pop: true, need: 6, text: 'Floaty jumps. Pigeons pop them.' },
+  pizza: { name: 'Pizza tower', icon: '🍕', drop: 1, bump: 1, grav: 1, windy: true, need: 8, text: 'Wind blows slices off.' },
+};
+const ROUTES = [
+  { id: 'old', name: 'Old Roofs', length: 18000, gap: [50, 150], step: [-160, 50], obst: 0.55, wind: 0, speed: 255, stars: [80, 99], sky: ['#ff9f7a', '#ffd8b0'], roof: ['#9a5a4a', '#8a4a3a', '#a86a5a'], need: 0, text: 'Gentle steps and chimneys.' },
+  { id: 'site', name: 'Construction Site', length: 20000, gap: [60, 180], step: [-250, 60], obst: 0.6, wind: 0, speed: 265, stars: [70, 95], sky: ['#ffb35a', '#ffe2a0'], roof: ['#7a7a86', '#e0a83a', '#6a6a76'], need: 1, text: 'Big drops off scaffolding.' },
+  { id: 'harbour', name: 'Harbour Cranes', length: 22000, gap: [80, 210], step: [-170, 70], obst: 0.55, wind: 1, speed: 270, stars: [60, 90], sky: ['#7aa0d8', '#d8e8ff'], roof: ['#3a6a9a', '#c84a3a', '#5a5a6a'], need: 3, text: 'Long gaps and gusty wind.' },
+  { id: 'sky', name: 'Skyline', length: 24000, gap: [80, 220], step: [-260, 80], obst: 0.7, wind: 1.3, speed: 280, stars: [50, 85], sky: ['#5a4a9a', '#ffb0a0'], roof: ['#4a4a5a', '#6a6a7a', '#3a3a4a'], need: 6, text: 'The highest drops. Everything at once.' },
+];
+const UPGRADES = [
+  { id: 'shoes', name: 'Soft shoes', price: 350, desc: 'The roll window is 50% wider.' },
+  { id: 'wrap', name: 'Bubble wrap', price: 600, desc: 'All cargo damage −20%.' },
+  { id: 'gloves', name: 'Grip gloves', price: 800, desc: 'Once per run, grab a roof edge instead of falling.' },
+  { id: 'hands', name: 'Steady hands', price: 300, desc: 'Wind gusts shake the cargo half as much.' },
+];
+const has = (id) => !!profile.up[id];
+const totalStars = () => Object.values(profile.stars).reduce((a, n) => a + n, 0);
+
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = profile.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  setMuted(m) { if (this.master) this.master.gain.value = m ? 0 : 0.5; },
+  tone(f, dur, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol = 0.1, lp = 2000) { if (!this.ctx) return; const n = Math.floor(this.ctx.sampleRate * dur), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain(); s.buffer = buf; f.type = 'lowpass'; f.frequency.value = lp; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(this.master); s.start(); },
+  jump() { this.tone(330, 0.12, 'triangle', 0.08, 220); },
+  land() { this.noise(0.07, 0.07, 700); },
+  crack() { this.noise(0.12, 0.18, 4000); this.tone(900, 0.08, 'square', 0.05, -500); },
+  roll() { this.tone(500, 0.1, 'sine', 0.07, 300); this.tone(800, 0.12, 'triangle', 0.06, 0, 0.06); },
+  wind() { this.noise(0.8, 0.08, 500); },
+  fall() { this.tone(700, 0.9, 'sine', 0.08, -600); },
+  done() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.2, 'triangle', 0.09, 0, i * 0.08)); },
+};
+function renderMute() {
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
+}
+$('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
+
+// ---------- layout
+const L = { W: 0, H: 0, dpr: 1, u: 1, runX: 0, baseY: 0 };
+function layout() {
+  const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const u = clamp(Math.min(H / 520, W / 700), 0.5, 1.6);
+  Object.assign(L, { W, H, dpr, u, runX: Math.min(W * 0.26, 220 * u), baseY: H * 0.7 });
+}
+addEventListener('resize', layout);
+
+// ---------- state (world units: y is height above the street, up is positive)
+const GRAV = 2100, JUMP = 900, HOLD_GRAV = 0.5, V_SAFE = 1150, ROLL_WIN = 0.16;
+const game = { id: 0, running: false, paused: false, route: ROUTES[0], cargo: CARGO.eggs, t: 0, x: 0, y: 0, vx: 0, vy: 0, onGround: true, holdJump: false, rollT: 0, rollPrime: 0, sinceLand: 9, health: 1, perfect: 0, roofs: [], items: [], genX: 0, camY: 0, gloveUsed: false, falling: false, lastJumpAt: -9, lastLandAt: -9, wind: 0, windT: 0, nextWind: 8, parts: [], floats: [], ended: false, shake: 0 };
+function reach(drop, speed) {
+  const vHold = JUMP - GRAV * HOLD_GRAV * 0.23, up = JUMP * 0.23 - 0.5 * GRAV * HOLD_GRAV * 0.0529 + (vHold * vHold) / (2 * GRAV);
+  return speed * (0.23 + vHold / GRAV + Math.sqrt(Math.max(0, 2 * (up + drop) / GRAV)));
+}
+function roofAt(x) { for (const r of game.roofs) if (x >= r.x0 && x <= r.x1) return r; return null; }
+function gen(upTo) {
+  const R = game.route;
+  while (game.genX < upTo && game.genX < R.length + 1200) {
+    const prev = game.roofs[game.roofs.length - 1];
+    const first = !prev, len = first ? 900 : rnd(260, 620);
+    let y = first ? 220 : clamp(prev.y + rnd(R.step[0], R.step[1]), 90, 520);
+    // a step up is only allowed as high as a held jump can reach
+    if (prev && y - prev.y > 70) y = prev.y + 70;
+    // never wider than a held jump reaches for this height difference, minus room for jumping a bit early
+    const gap = first ? 0 : Math.max(40, Math.min(rnd(R.gap[0], R.gap[1]), reach(prev.y - y, R.speed) - 110));
+    const x0 = first ? -300 : prev.x1 + gap, x1 = x0 + len;
+    const roof = { x0, x1, y, col: pick(R.roof), end: x0 > R.length };
+    game.roofs.push(roof);
+    if (!first && x0 < R.length) {
+      // obstacles on the roof, spaced a reaction distance apart
+      let ox = x0 + rnd(170, 240);
+      while (ox < x1 - 220) {
+        if (Math.random() < R.obst) {
+          const r = Math.random();
+          if (r < 0.35) game.items.push({ type: 'box', x: ox, w: 34, h: rnd(30, 42), roof });
+          else if (r < 0.5) game.items.push({ type: 'chimney', x: ox, w: 26, h: 64, roof });
+          else if (r < 0.75) game.items.push({ type: 'pipe', x: ox, w: 70, low: 34, high: 58, roof });
+          else if (r < 0.88) game.items.push({ type: 'line', x: ox, w: 90, low: 36, high: 56, roof });
+          else game.items.push({ type: 'pigeon', x: ox + 260, w: 24, h: 30, roof, fly: true });
+        }
+        ox += rnd(220, 360);
+      }
+    }
+    game.genX = x1;
+  }
+}
+
+// ---------- flow
+function startRun() {
+  Sound.init();
+  const route = ROUTES.find((r) => r.id === profile.route) || ROUTES[0], cargo = CARGO[profile.cargo] || CARGO.eggs;
+  Object.assign(game, { id: game.id + 1, running: true, paused: false, route, cargo, t: 0, x: 0, y: 220, vx: route.speed, vy: 0, onGround: true, holdJump: false, rollT: 0, rollPrime: 0, sinceLand: 9, health: 1, perfect: 0, roofs: [], items: [], genX: 0, camY: 220, gloveUsed: false, falling: false, lastJumpAt: -9, lastLandAt: -9, wind: 0, windT: 0, nextWind: rnd(6, 12), parts: [], floats: [], ended: false, shake: 0 });
+  pointers.clear();
+  ['screenStart', 'screenOver', 'screenPause', 'screenShop'].forEach((id) => { $(id).hidden = true; });
+  $('hud').hidden = false; $('zones').hidden = false; $('zones').classList.remove('fade'); setTimeout(() => $('zones').classList.add('fade'), 6000);
+  $('cargoIcon').textContent = cargo.icon; $('routeName').textContent = route.name;
+  layout(); gen(3000); updateHud();
+  toast(`${cargo.icon} ${cargo.name} · ${route.name}`);
+}
+function endRun(why) {
+  if (game.ended) return;
+  game.ended = true; game.running = false; game.paused = false;
+  const R = game.route, C = game.cargo, delivered = why === 'done', pct = Math.round(game.health * 100);
+  const stars = delivered ? (pct >= R.stars[1] ? 3 : pct >= R.stars[0] ? 2 : 1) : 0;
+  const parTime = R.length / R.speed, timeBonus = delivered ? Math.max(0, Math.round((parTime * 1.25 - game.t) * 10)) : 0;
+  const score = delivered ? pct * 20 + timeBonus + game.perfect * 40 : 0;
+  const tips = delivered ? Math.round(pct * 0.6 + timeBonus * 0.05 + game.perfect * 2) : 0;
+  const key = `${R.id}|${profile.cargo}`;
+  profile.bank += tips; profile.stars[key] = Math.max(profile.stars[key] || 0, stars);
+  const wasBest = score > (profile.best[key] || 0); profile.best[key] = Math.max(profile.best[key] || 0, score);
+  saveProfile();
+  if (delivered) Sound.done();
+  $('overEyebrow').textContent = `${C.icon} ${C.name} · ${R.name}`;
+  $('overTitle').textContent = delivered ? (stars === 3 ? 'Flawless!' : stars === 2 ? 'Delivered!' : 'Delivered… mostly') : why === 'fell' ? 'Dropped it!' : why === 'broken' ? 'Smashed!' : 'Run over';
+  $('overStars').innerHTML = '★'.repeat(stars) + `<i>${'★'.repeat(3 - stars)}</i>`;
+  $('overText').textContent = delivered ? `The customer gets ${pct}% of the ${C.name.toLowerCase()}. ${game.perfect} perfect rolls, ${tips} coins in tips. Stars on this route: ${R.stars[0]}% and ${R.stars[1]}%.${wasBest ? ' New best for this cargo here.' : ''}` : why === 'fell' ? 'You fell between two roofs. The cargo did not survive the street.' : why === 'broken' ? `Nothing left of the ${C.name.toLowerCase()} to deliver. Roll on big drops!` : 'Delivery cancelled.';
+  $('overScore').textContent = fmt(score); $('overCargo').textContent = `${pct}%`; $('overTime').textContent = `${game.t.toFixed(1)} s`;
+  $('hud').hidden = true; $('zones').hidden = true; $('screenOver').hidden = false;
+  lbAfterGame(score, ROUTES.indexOf(R) + 1);
+}
+function pause(on) { if (!game.running) return; game.paused = on; $('screenPause').hidden = !on; }
+let toastTimer = 0;
+function toast(text) { const el = $('toast'); el.textContent = text; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 1600); }
+function updateHud() {
+  $('cargoBar').style.width = `${Math.round(game.health * 100)}%`; $('cargoPct').textContent = `${Math.round(game.health * 100)}%`;
+  $('rolls').textContent = game.perfect; $('progBar').style.width = `${clamp(game.x / game.route.length, 0, 1) * 100}%`; $('timer').textContent = `${game.t.toFixed(1)} s`;
+}
+function floatText(t, x, y, c, life = 1, size = 1) { game.floats.push({ t, x, y, c, life, max: life, size }); }
+function damage(amount, why) {
+  const d = amount * (has('wrap') ? 0.8 : 1);
+  if (d <= 0) return;
+  game.health = Math.max(0, game.health - d); game.shake = Math.min(14, 4 + d * 60); Sound.crack();
+  floatText(`−${Math.round(d * 100)}% ${why}`, L.runX, L.baseY - 120 * L.u, '#ff9a8a', 1);
+  for (let i = 0; i < 8; i++) game.parts.push({ x: L.runX, y: L.baseY - 80 * L.u, vx: rnd(-120, 120), vy: rnd(-200, -40), life: 0.7, max: 0.7, c: pick(['#fff3d0', '#ffd27a', '#ff9a8a']), s: rnd(2, 4) });
+  if (game.health <= 0) endRun('broken');
+}
+
+// ---------- update
+function update(dt) {
+  if (!game.running || game.paused) return;
+  const R = game.route, C = game.cargo;
+  game.t += dt; game.shake = Math.max(0, game.shake - dt * 30);
+  game.rollT = Math.max(0, game.rollT - dt); game.rollPrime = Math.max(0, game.rollPrime - dt); game.sinceLand += dt;
+  // wind gusts on the windy routes push you and shake the cargo
+  if (R.wind && game.t >= game.nextWind) { game.windT = 2.2; game.wind = (Math.random() < 0.5 ? -1 : 1) * 60 * R.wind; game.nextWind = game.t + rnd(7, 13); Sound.wind(); toast(game.wind > 0 ? 'Tailwind!' : 'Headwind!'); if (C.windy) damage(0.08 * (has('hands') ? 0.5 : 1), 'wind'); else damage(0.02 * (has('hands') ? 0.5 : 1), 'wind'); }
+  game.windT = Math.max(0, game.windT - dt);
+  const vx = R.speed + (game.windT > 0 ? game.wind : 0);
+  if (game.onGround) game.vx += (vx - game.vx) * Math.min(1, dt * 3);   // wind and recovery act on the ground; a jump keeps its take-off speed
+  const prevX = game.x, prevY = game.y;
+  game.x += game.vx * dt;
+  if (game.falling) game.vx = 0;
+  const roof = roofAt(game.x);
+  if (game.onGround) {
+    if (!roof || roof.y < game.y - 2) { game.onGround = false; game.vy = 0; }   // ran off an edge
+    else game.y = roof.y;
+  }
+  if (!game.onGround) {
+    const g = GRAV * C.grav * (game.holdJump && game.vy > 0 ? HOLD_GRAV : 1);
+    game.vy -= g * dt; game.y += game.vy * dt;
+    if (roof && game.vy <= 0 && prevY >= roof.y - 1 && game.y <= roof.y) land(roof);
+    else if (roof && game.y < roof.y - 6 && roofAt(prevX) !== roof) {
+      if (game.y > roof.y - 70) { game.y = roof.y; game.onGround = true; game.vy = 0; damage(0.06 * C.bump, 'scramble'); game.vx *= 0.6; }   // just short: scramble up
+      else { game.x = roof.x0 - 4; game.vx = 0; game.vy = Math.min(game.vy, 0); }   // far too short: smack into the wall and drop into the gap
+    }
+    if (!game.falling && game.y < -40) {
+      const near = game.roofs.find((r) => game.x >= r.x0 - 40 && game.x <= r.x0 + 10 && r.y - game.y < 120);
+      if (has('gloves') && !game.gloveUsed && near) { game.gloveUsed = true; game.y = near.y; game.x = near.x0 + 4; game.vy = 0; game.onGround = true; damage(0.05, 'grab'); toast('Grabbed the ledge!'); }
+      else { game.falling = true; Sound.fall(); }
+    }
+    if (game.falling && game.y < -400) { endRun('fell'); return; }
+  }
+  game.camY += (Math.max(80, game.y) - game.camY) * Math.min(1, dt * 3);
+  // obstacles
+  for (const it of game.items) {
+    if (it.hit) continue;
+    if (it.fly) it.x -= 130 * dt;
+    if (Math.abs(it.x - game.x) > it.w / 2 + (it.type === 'pipe' || it.type === 'line' ? 2 : 10)) continue;
+    const h = game.y - it.roof.y;   // height above that roof
+    let hit = false;
+    if (it.type === 'box' || it.type === 'chimney') hit = h < it.h;
+    else if (it.type === 'pipe' || it.type === 'line') hit = game.rollT <= 0 && h < it.high && (h + 60) > it.low;
+    else if (it.type === 'pigeon') hit = game.rollT <= 0 && h < 40 && h > -10;
+    if (hit) {
+      it.hit = true;
+      if (it.type === 'pigeon' && C.pop) damage(0.25, 'pop!'); else damage((it.type === 'pigeon' ? 0.04 : 0.07) * C.bump, it.type === 'pigeon' ? 'pigeon' : 'bump');
+      game.vx *= 0.8;
+    }
+  }
+  if (game.x >= R.length && game.onGround) { endRun('done'); return; }
+  gen(game.x + L.W / L.u + 1500);
+  game.roofs = game.roofs.filter((r) => r.x1 > game.x - 1200); game.items = game.items.filter((it) => it.x > game.x - 600);
+  for (let i = game.parts.length - 1; i >= 0; i--) { const p = game.parts[i]; p.life -= dt; if (p.life <= 0) { game.parts.splice(i, 1); continue; } p.vy += 500 * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+  for (let i = game.floats.length - 1; i >= 0; i--) { const f = game.floats[i]; f.life -= dt; f.y -= 30 * dt; if (f.life <= 0) game.floats.splice(i, 1); }
+  updateHud();
+}
+function land(roof) {
+  const impact = -game.vy;
+  game.y = roof.y; game.vy = 0; game.onGround = true; game.sinceLand = 0; game.lastLandAt = game.t;
+  const win = ROLL_WIN * (has('shoes') ? 1.5 : 1);
+  const rolled = game.rollPrime > 0 && game.rollPrime <= win + 0.25;
+  if (impact > V_SAFE) {
+    if (rolled) { game.perfect++; game.rollT = 0.45; Sound.roll(); floatText('Perfect roll!', L.runX, L.baseY - 120 * L.u, '#5fe0a8', 1); }
+    else { game.pendingImpact = impact; game.pendingT = win; }   // a roll pressed just after touchdown still counts
+  } else Sound.land();
+  game.rollPrime = 0;
+}
+function jump() {
+  if (!game.running || game.paused) return;
+  game.holdJump = true;
+  if (game.onGround) {
+    game.onGround = false; game.vy = JUMP; game.vx = Math.max(game.vx, game.route.speed * 0.97); Sound.jump();
+    if (game.cargo.slosh && game.t - game.lastLandAt < 0.35 && game.t - game.lastJumpAt < 1.6) damage(0.07, 'slosh');
+    game.lastJumpAt = game.t;
+  }
+}
+function roll() {
+  if (!game.running || game.paused) return;
+  if (game.pendingImpact) { game.pendingImpact = 0; game.perfect++; game.rollT = 0.45; Sound.roll(); floatText('Perfect roll!', L.runX, L.baseY - 120 * L.u, '#5fe0a8', 1); return; }
+  if (game.onGround) { game.rollT = 0.7; Sound.roll(); }
+  else game.rollPrime = 0.25 + ROLL_WIN * (has('shoes') ? 1.5 : 1);
+}
+// a hard landing without a roll costs cargo once the roll window has passed
+function settleImpact(dt) {
+  if (!game.pendingImpact) return;
+  game.pendingT -= dt;
+  if (game.pendingT <= 0) { const imp = game.pendingImpact; game.pendingImpact = 0; damage((imp - V_SAFE) * 0.0007 * game.cargo.drop, 'drop'); }
+}
+
+// ---------- drawing
+function sx(wx) { return L.runX + (wx - game.x) * L.u; }
+function sy(wy) { return L.baseY - (wy - game.camY) * L.u; }
+function drawFrame() {
+  const { W, H, u } = L, R = game.route;
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, R.sky[0]); g.addColorStop(1, R.sky[1]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // distant skyline drifting slowly
+  ctx.fillStyle = 'rgba(40,30,70,0.25)';
+  for (let i = 0; i < 14; i++) { const bx = ((i * 137 - game.x * 0.15 * u) % (W + 200) + W + 200) % (W + 200) - 100, bh = 80 + (i * 53) % 120; ctx.fillRect(bx, H * 0.55 - bh * u, 70 * u, bh * u + H); }
+  ctx.save(); if (game.shake) ctx.translate(rnd(-game.shake, game.shake) * 0.4, rnd(-game.shake, game.shake) * 0.4);
+  // roofs (each a building block down to the bottom of the screen)
+  for (const r of game.roofs) {
+    const x0 = sx(r.x0), x1 = sx(r.x1); if (x1 < -20 || x0 > W + 20) continue;
+    const top = sy(r.y);
+    ctx.fillStyle = r.col; ctx.fillRect(x0, top, x1 - x0, H - top + 10);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x0, top, x1 - x0, 6 * u);
+    ctx.fillStyle = 'rgba(255,240,200,0.35)';
+    for (let wy = top + 30 * u; wy < H; wy += 40 * u) for (let wx = x0 + 16 * u; wx < x1 - 24 * u; wx += 36 * u) ctx.fillRect(wx, wy, 14 * u, 18 * u);
+    if (r.end) { ctx.font = `${Math.round(40 * u)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('🚪', x0 + 60 * u, top); ctx.fillText('🙋', x0 + 110 * u, top); }
+  }
+  // obstacles
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  for (const it of game.items) {
+    const x = sx(it.x), base = sy(it.roof.y); if (x < -80 || x > W + 80) continue;
+    if (it.type === 'box') { ctx.fillStyle = '#b8c0c8'; ctx.fillRect(x - it.w / 2 * u, base - it.h * u, it.w * u, it.h * u); ctx.fillStyle = '#7a8088'; ctx.fillRect(x - it.w / 2 * u + 4 * u, base - it.h * u + 6 * u, it.w * u - 8 * u, 6 * u); }
+    else if (it.type === 'chimney') { ctx.fillStyle = '#8a3a2a'; ctx.fillRect(x - it.w / 2 * u, base - it.h * u, it.w * u, it.h * u); ctx.fillStyle = 'rgba(200,200,200,0.4)'; ctx.beginPath(); ctx.arc(x, base - it.h * u - 10 * u - Math.sin(game.t * 3) * 4, 8 * u, 0, Math.PI * 2); ctx.fill(); }
+    else if (it.type === 'pipe') { ctx.fillStyle = '#5a6a7a'; ctx.fillRect(x - it.w / 2 * u, base - it.high * u, it.w * u, (it.high - it.low) * u); ctx.fillRect(x - it.w / 2 * u, base - it.high * u, 8 * u, it.high * u); ctx.fillRect(x + it.w / 2 * u - 8 * u, base - it.high * u, 8 * u, it.high * u); }
+    else if (it.type === 'line') { ctx.strokeStyle = '#ddd'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - it.w / 2 * u, base - it.high * u); ctx.lineTo(x + it.w / 2 * u, base - it.high * u); ctx.stroke(); ctx.font = `${Math.round(20 * u)}px sans-serif`; ctx.textBaseline = 'top'; ctx.fillText('👕', x - 20 * u, base - it.high * u); ctx.fillText('🧦', x + 18 * u, base - it.high * u); ctx.textBaseline = 'bottom'; }
+    else if (it.type === 'pigeon' && !it.hit) { ctx.font = `${Math.round(24 * u)}px sans-serif`; ctx.fillText('🐦', x, base - 24 * u + Math.sin(game.t * 12) * 3); }
+  }
+  // the courier with the cargo held overhead
+  const rx = L.runX, ry = sy(game.y), rolling = game.rollT > 0, run = game.t * (game.vx / 30);
+  ctx.save(); ctx.translate(rx, ry);
+  if (rolling) { ctx.rotate(game.rollT * Math.PI * 3); ctx.fillStyle = '#2a6aa0'; ctx.beginPath(); ctx.arc(0, -16 * u, 16 * u, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+  else {
+    const legs = game.onGround ? Math.sin(run) * 10 * u : 6 * u;
+    ctx.strokeStyle = '#1b1630'; ctx.lineWidth = 5 * u; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, -22 * u); ctx.lineTo(legs, 0); ctx.moveTo(0, -22 * u); ctx.lineTo(-legs, 0); ctx.stroke();
+    ctx.fillStyle = '#2a6aa0'; ctx.fillRect(-8 * u, -48 * u, 16 * u, 28 * u);
+    ctx.beginPath(); ctx.moveTo(-6 * u, -44 * u); ctx.lineTo(-10 * u, -70 * u); ctx.moveTo(6 * u, -44 * u); ctx.lineTo(10 * u, -70 * u); ctx.stroke();
+    ctx.fillStyle = '#f0c8a0'; ctx.beginPath(); ctx.arc(0, -56 * u, 8 * u, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c84a3a'; ctx.fillRect(-9 * u, -66 * u, 18 * u, 5 * u);
+    // cargo box with cracks as it gets damaged
+    ctx.fillStyle = '#e8d0a0'; ctx.fillRect(-16 * u, -98 * u, 32 * u, 26 * u);
+    ctx.font = `${Math.round(22 * u)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(game.cargo.icon, 0, -85 * u);
+    if (game.health < 0.9) { ctx.strokeStyle = 'rgba(60,30,20,0.8)'; ctx.lineWidth = 2; const n = Math.ceil((1 - game.health) * 6); for (let i = 0; i < n; i++) { ctx.beginPath(); ctx.moveTo(-14 * u + i * 5 * u, -98 * u); ctx.lineTo(-10 * u + i * 5 * u, -86 * u); ctx.lineTo(-14 * u + i * 6 * u, -74 * u); ctx.stroke(); } }
+    ctx.restore();
+  }
+  if (game.rollPrime > 0 && !game.onGround) { ctx.strokeStyle = 'rgba(95,224,168,0.8)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(rx, ry - 40 * u, 30 * u, 0, Math.PI * 2); ctx.stroke(); }
+  // a ring warns when the next landing will be hard: tap ROLL as it closes
+  if (!game.onGround && game.vy < -V_SAFE * 0.7) { const roof = roofAt(game.x); if (roof) { const d = (game.y - roof.y) / Math.max(1, -game.vy); if (d < 0.35) { ctx.strokeStyle = `rgba(255,201,77,${0.9 - d * 2})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(rx, sy(roof.y) - 4, (10 + d * 120) * u, 0, Math.PI * 2); ctx.stroke(); } } }
+  for (const p of game.parts) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.c; ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  for (const fl of game.floats) { ctx.globalAlpha = clamp(fl.life / fl.max * 1.5, 0, 1); ctx.font = `900 ${Math.round(20 * fl.size)}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(27,22,48,0.7)'; ctx.strokeText(fl.t, fl.x, fl.y); ctx.fillStyle = fl.c; ctx.fillText(fl.t, fl.x, fl.y); }
+  ctx.globalAlpha = 1;
+  if (game.windT > 0) { ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2; for (let i = 0; i < 10; i++) { const y = 60 + i * (H / 10), x = ((game.t * 600 * Math.sign(game.wind) + i * 173) % W + W) % W; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.sign(game.wind) * 40, y); ctx.stroke(); } }
+}
+
+// ---------- loop and input
+let last = 0, acc = 0;
+const STEP = 1 / 120;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+  acc += dt; while (acc >= STEP) { if (game.running && !game.paused) { update(STEP); settleImpact(STEP); } acc -= STEP; }
+  drawFrame();
+}
+const pointers = new Map();
+function zoneOf(e) { const r = cv.getBoundingClientRect(); return e.clientX - r.left < r.width * 0.38 ? 'roll' : 'jump'; }
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); Sound.init(); if (!game.running || game.paused) return; const z = zoneOf(e); pointers.set(e.pointerId, z); if (z === 'jump') jump(); else roll(); });
+const release = (e) => { pointers.delete(e.pointerId); game.holdJump = [...pointers.values()].includes('jump'); };
+addEventListener('pointerup', release); addEventListener('pointercancel', release);
+addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === 'ArrowUp' || e.key === ' ') { e.preventDefault(); pointers.set('k', 'jump'); jump(); } if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') roll(); });
+addEventListener('keyup', (e) => { if (e.key === 'ArrowUp' || e.key === ' ') { pointers.delete('k'); game.holdJump = [...pointers.values()].includes('jump'); } });
+$('btnPause').addEventListener('click', () => pause(true));
+$('btnResume').addEventListener('click', () => { pause(false); last = 0; });
+$('btnQuit').addEventListener('click', () => { $('screenPause').hidden = true; game.paused = false; endRun('quit'); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// ---------- menus
+function renderPicker() {
+  const ts = totalStars(), cb = $('cargoChips'), rb = $('routeChips'); cb.innerHTML = ''; rb.innerHTML = '';
+  for (const [id, c] of Object.entries(CARGO)) {
+    const open = ts >= c.need, b = mk('button', 'chip', `<span>${c.icon}</span>${c.name}<small>${open ? c.text : `${c.need} ★ to unlock`}</small>`);
+    b.disabled = !open; b.setAttribute('aria-pressed', String(profile.cargo === id)); b.setAttribute('data-cargo', id);
+    b.addEventListener('click', () => { profile.cargo = id; saveProfile(); renderPicker(); }); cb.appendChild(b);
+  }
+  for (const r of ROUTES) {
+    const open = ts >= r.need, st = Math.max(0, ...Object.keys(CARGO).map((c) => profile.stars[`${r.id}|${c}`] || 0));
+    const b = mk('button', 'chip', `<span>${'★'.repeat(st) || '☆'}</span>${r.name}<small>${open ? r.text : `${r.need} ★ to unlock`}</small>`);
+    b.disabled = !open; b.setAttribute('aria-pressed', String(profile.route === r.id)); b.setAttribute('data-route', r.id);
+    b.addEventListener('click', () => { profile.route = r.id; saveProfile(); renderPicker(); }); rb.appendChild(b);
+  }
+}
+function showStart() {
+  ['screenOver', 'screenShop', 'screenPause'].forEach((id) => { $(id).hidden = true; });
+  if (totalStars() < (CARGO[profile.cargo] || CARGO.eggs).need) profile.cargo = 'eggs';
+  if (totalStars() < (ROUTES.find((r) => r.id === profile.route) || ROUTES[0]).need) profile.route = 'old';
+  $('bankStart').textContent = fmt(profile.bank); renderPicker(); $('screenStart').hidden = false; renderLeaderboard();
+  if (!game.roofs.length) { game.route = ROUTES[0]; game.x = 0; game.y = 220; game.camY = 220; layout(); gen(3000); }
+}
+let shopFrom = 'screenStart';
+function showShop(from) {
+  shopFrom = from; ['screenStart', 'screenOver'].forEach((id) => { $(id).hidden = true; });
+  $('shopBank').textContent = fmt(profile.bank);
+  const box = $('shopItems'); box.innerHTML = '';
+  for (const u of UPGRADES) {
+    const el = mk('div', 'item', `<span class="nm">${u.name}</span><p>${u.desc}</p>`);
+    const b = mk('button', '', has(u.id) ? 'Owned' : `Buy 🪙 ${fmt(u.price)}`);
+    b.disabled = has(u.id) || profile.bank < u.price; b.setAttribute('data-up', u.id);
+    b.addEventListener('click', () => { if (has(u.id) || profile.bank < u.price) return; profile.bank -= u.price; profile.up[u.id] = true; saveProfile(); Sound.init(); Sound.done(); showShop(shopFrom); });
+    el.appendChild(b); box.appendChild(el);
+  }
+  $('screenShop').hidden = false;
+}
+$('btnPlay').addEventListener('click', startRun);
+$('btnShop').addEventListener('click', () => showShop('screenStart'));
+$('btnShop3').addEventListener('click', () => showShop('screenOver'));
+$('btnShopBack').addEventListener('click', () => { $('screenShop').hidden = true; if (shopFrom === 'screenOver') $('screenOver').hidden = false; else showStart(); });
+$('btnAgain').addEventListener('click', startRun);
+$('btnMenu').addEventListener('click', showStart);
+
+// ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/fragile-freerun/';
+const GAME_ID = 'fragile';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function deviceId() { if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); } return profile.deviceId; }
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}&date=${todayKey()}`); if (!r.ok) return null; LB.cache = await r.json(); LB.at = Date.now(); return LB.cache; } catch (e) { return null; }
+}
+function lbNote(list, text, link) { list.textContent = ''; const li = mk('li', 'none'); li.textContent = text; if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); } list.appendChild(li); }
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody has delivered today yet.' : 'No scores yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => { const li = mk('li', r.id === profile.deviceId ? 'me' : ''); const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank); for (const text of [r.name, fmt(r.score), (ROUTES[r.dist - 1] || ROUTES[0]).name]) { const el = mk('span'); el.textContent = text; li.appendChild(el); } list.appendChild(li); });
+}
+$('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
+let lbLast = null;
+function lbAfterGame(score, routeNo) { const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true; if (!lbReachable() || score <= 0) return; lbLast = { game: GAME_ID, score, dist: routeNo, daily: true, date: todayKey() }; $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend(); }
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post this score.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
+    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; LB.at = 0; }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
+}
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
+
+// the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
+renderMute(); showStart();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
