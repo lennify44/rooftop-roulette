@@ -42,14 +42,14 @@
     const root = host.attachShadow({ mode: 'open' });
     root.innerHTML = `<style>
       .bg{position:absolute;inset:0;background:rgba(10,8,20,.72);display:grid;place-items:center;padding:16px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-      .card{width:min(420px,100%);background:#fff;color:#1a1420;border-radius:16px;padding:18px 18px 14px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+      .card{color-scheme:light;width:min(420px,100%);background:#fff;color:#1a1420;border-radius:16px;padding:18px 18px 14px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
       h2{margin:0 0 4px;font-size:22px;line-height:1.15}
       p{margin:0 0 12px;font-size:14px;color:#5a5260}
       .rates{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
       .rates button{min-height:64px;border:2px solid #e3dde8;border-radius:12px;background:#f7f4fa;cursor:pointer;font-size:26px;display:grid;place-items:center;gap:2px;padding:4px 0;color:#1a1420}
       .rates button span{font-size:11px;font-weight:600}
       .rates button[aria-pressed="true"]{border-color:#ff7a2f;background:#fff1e6}
-      textarea{width:100%;box-sizing:border-box;min-height:84px;border:2px solid #e3dde8;border-radius:12px;padding:10px;font:16px system-ui,sans-serif;resize:vertical}
+      textarea{background:#fff;color:#1a1420;width:100%;box-sizing:border-box;min-height:84px;border:2px solid #e3dde8;border-radius:12px;padding:10px;font:16px system-ui,sans-serif;resize:vertical}
       .row{display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap}
       .row button{min-height:44px;padding:0 18px;border-radius:22px;border:0;font-weight:700;font-size:16px;cursor:pointer}
       .send{background:#ff7a2f;color:#fff}.cancel{background:#eee;color:#1a1420}
