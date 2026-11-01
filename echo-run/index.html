@@ -141,7 +141,7 @@ body {
           <li>👏 Tap the <b>left half</b> to clap. The echo outlines roofs and hazards, then they fade. Claps cost breath.</li>
           <li>🦘 Tap the <b>right half</b> to jump, hold for higher. Gaps, chimneys, water towers and cats need a jump.</li>
           <li>〰️ Yellow wires hang at head height: run under them, don’t jump. Blue glass is a skylight: jump over it.</li>
-          <li>✨ Fireflies and streetlights glow by themselves. Each new district gives a heart back. Grab letters to buy better ears.</li>
+          <li>✨ Without a clap you see nothing but yourself. Fireflies and streetlights glow by themselves. Each new district gives a heart back.</li>
         </ul>
         <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
         <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
@@ -216,10 +216,10 @@ function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.
 // ---------- districts (one every 600 m) and gear
 const PX_PER_M = 20, DISTRICT_M = 600;
 const DISTRICTS = [
-  { name: 'Old Town', radius: 640, moon: 0.05, sky: '#0a1020', hint: 'Clap before every edge.' },
+  { name: 'Old Town', radius: 640, moon: 0, sky: '#0a1020', hint: 'Clap before every edge.' },
   { name: 'Harbour Fog', radius: 460, moon: 0, sky: '#0b1214', hint: 'Fog swallows the echo. Clap more often.' },
   { name: 'Rain Quarter', radius: 480, moon: 0, sky: '#080c16', hint: 'Raindrops tick little spots alight.' },
-  { name: 'Bell Hill', radius: 520, moon: 0.02, sky: '#100a18', hint: 'Every bell stroke lights the whole street.' },
+  { name: 'Bell Hill', radius: 520, moon: 0, sky: '#100a18', hint: 'Every bell stroke lights the whole street.' },
   { name: 'Storm', radius: 560, moon: 0, sky: '#06080f', hint: 'Lightning shows everything, for a blink.' },
 ];
 const districtAt = (m) => DISTRICTS[Math.min(DISTRICTS.length - 1, Math.floor(m / DISTRICT_M))];
@@ -233,7 +233,7 @@ const has = (id) => !!profile.up[id];
 
 // ---------- physics
 const GRAV = 2100, JUMP = 820, HOLD = 0.22, HW = 11, BH = 40, STEP = 1 / 120, RING_V = 1400;
-const speedAt = (m) => 320 + 220 * Math.min(1, m / 3000);
+const speedAt = (m) => 330 + 290 * Math.min(1, m / 2400);
 // how far a fully held jump carries at this speed when the landing is `drop` px lower (negative = higher)
 function reach(drop, speed) {
   let y = 0, vy = -JUMP, t = 0, held = HOLD;
@@ -245,7 +245,7 @@ const L = { W: 0, H: 0, dpr: 1, s: 1 };
 function layout() {
   const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-  Object.assign(L, { W, H, dpr, s: clamp(Math.min(H / 560, W / 820), 0.45, 1.5) });
+  Object.assign(L, { W, H, dpr, s: clamp(Math.min(H / 560, W / 620), 0.5, 1.5) });
 }
 addEventListener('resize', layout);
 
@@ -390,7 +390,6 @@ function update(dt) {
   for (const g of game.rings) { const r0 = g.r; g.r = Math.min(g.R, g.r + RING_V * dt); lightAround(g.x, g.y, g.r, 1); if (r0 === g.R) g.done = true; }
   game.rings = game.rings.filter((g) => !g.done);
   // always visible: a small halo, firefly glow, streetlamps
-  lightAround(r.x, r.y - 20, 130, 0.75);
   if (game.glow > 0) { game.glow -= dt; lightAround(r.x, r.y - 20, 220, 1); }
   for (const it of game.items) if (it.kind === 'lamp' && Math.abs(it.x - r.x) < 900) lightAround(it.x, it.y - 60, 170, 1);
   // district events
@@ -422,7 +421,7 @@ function stepRunner(dt) {
   r.vy += g * dt;
   const nx = r.x + r.vx * dt; let ny = r.y + r.vy * dt;
   // walls: running into the side of a higher roof drops you into the gap
-  for (const rf of game.roofs) if (r.x + HW <= rf.x0 + 0.5 && nx + HW > rf.x0 && ny > rf.y + 8) { r.vx = 0; r.x = rf.x0 - HW; floatText('Wall!', r.x, r.y - 50, '#ff6b6b'); break; }
+  for (const rf of game.roofs) if (r.x + HW <= rf.x0 + 0.5 && nx + HW > rf.x0 && ny > rf.y + 8) { r.vx = 0; r.x = rf.x0 - HW; if (!r.walled) { r.walled = true; floatText('Wall!', r.x, r.y - 50, '#ff6b6b'); Sound.hit(); } break; }
   if (r.vx > 0) r.x = nx;
   const wasGround = r.ground; r.ground = false;
   if (r.vy >= 0) for (const rf of game.roofs) if (r.x + HW > rf.x0 && r.x - HW * 0.4 < rf.x1 && r.y <= rf.y + 8 && ny >= rf.y) { ny = rf.y; if (!wasGround && r.vy > 500) Sound.land(); r.vy = 0; r.ground = true; break; }
@@ -460,7 +459,7 @@ function drawFrame() {
   const oy = H / 2 - 380 * s;
   // stars and a dead skyline far away
   ctx.fillStyle = 'rgba(255,255,255,0.35)'; for (let i = 0; i < 40; i++) { const x = ((i * 211 - game.camX * 0.05) % W + W) % W, y = (i * 97) % (H * 0.5); ctx.fillRect(x, y, 1.5, 1.5); }
-  ctx.fillStyle = 'rgba(40,50,70,0.35)'; for (let i = 0; i < 12; i++) { const bx = ((i * 157 - game.camX * 0.15) % (W + 160) + W + 160) % (W + 160) - 80, bh = 90 + (i * 47) % 140; ctx.fillRect(bx, H * 0.62 - bh, 60, bh + H); }
+  ctx.fillStyle = 'rgba(40,50,70,0.14)'; for (let i = 0; i < 12; i++) { const bx = ((i * 157 - game.camX * 0.15) % (W + 160) + W + 160) % (W + 160) - 80, bh = 90 + (i * 47) % 140; ctx.fillRect(bx, H * 0.62 - bh, 60, bh + H); }
   ctx.save(); ctx.translate(-game.camX * s, oy); ctx.scale(s, s);
   const amb = D.moon + game.flash * 0.6;
   // roofs: sonar outlines per segment, plus the faint moonlight
@@ -502,7 +501,7 @@ function drawFrame() {
   if (r.alive) {
     const k = r.ground ? Math.sin(game.t * 20) : 0, blink = game.inv > 0 && Math.floor(game.t * 16) % 2;
     if (!blink) {
-      ctx.save(); ctx.translate(r.x, r.y); ctx.strokeStyle = '#eef3f6'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.save(); ctx.translate(r.x, r.y); ctx.scale(1.35, 1.35); ctx.fillStyle = 'rgba(95,242,255,0.12)'; ctx.beginPath(); ctx.arc(0, -20, 30, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#eef3f6'; ctx.lineWidth = 5; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-7 + k * 7, 0); ctx.moveTo(0, -18); ctx.lineTo(7 - k * 7, 0); ctx.moveTo(0, -18); ctx.lineTo(2, -32); ctx.moveTo(2, -30); ctx.lineTo(11 + k * 4, r.ground ? -22 : -40); ctx.moveTo(2, -30); ctx.lineTo(-8 - k * 4, r.ground ? -24 : -38); ctx.stroke();
       ctx.fillStyle = '#eef3f6'; ctx.beginPath(); ctx.arc(3, -38, 6, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#c8a050'; ctx.fillRect(-12, -32, 9, 12);
