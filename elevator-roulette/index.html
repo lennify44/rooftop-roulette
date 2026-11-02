@@ -659,32 +659,31 @@ const GAMES = {
     name: 'Count the crowd', title: 'How many are inside?',
     play(lv, done) {
       let count = rint(1, 3), live = true;
-      const steps = 4 + Math.ceil(lv * 0.8), dur = Math.max(380, 760 - lv * 40);
+      // fair after player feedback: slower walkers, never two at once, fewer steps, 5 s to answer
+      const steps = Math.min(8, 3 + Math.ceil(lv * 0.5)), dur = Math.max(560, 900 - lv * 30);
       arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="ch">${count} ${count === 1 ? 'person is' : 'people are'} inside. Keep counting.</p><div class="crowd" id="cr"><div class="box">CAR</div></div>`;
       const cr = $('cr');
       const walk = (into) => {
         const el = mk('span', 'walker'); el.textContent = pick(['🧑', '👩', '👴', '👧', '🧔', '🧑‍💼', '👨‍🍳', '🧕']);
         el.style.transitionDuration = `${dur}ms`; el.style.left = into ? '4%' : '50%'; el.style.opacity = into ? '1' : '0';
         cr.appendChild(el);
-        requestAnimationFrame(() => requestAnimationFrame(() => { el.style.left = into ? '50%' : '96%'; el.style.opacity = into ? '0.15' : '1'; }));
+        requestAnimationFrame(() => requestAnimationFrame(() => { el.style.left = into ? '50%' : '96%'; el.style.opacity = into ? '0.45' : '1'; }));
         setTimeout(() => el.remove(), dur + 60);
       };
       (async () => {
         await wait(1000);
         for (let i = 0; i < steps; i++) {
           if (!live) return;
-          const both = lv >= 6 && Math.random() < 0.3;
           const into = count === 0 || Math.random() < 0.55;
           walk(into); count += into ? 1 : -1;
-          if (both && count > 0) { await wait(dur * 0.35); walk(false); count -= 1; }
-          await wait(dur * 0.9);
+          await wait(dur * 1.15);
         }
         await wait(300);
         if (!live) return;
         const opts = new Set([count]); while (opts.size < 3) opts.add(Math.max(0, count + pick([-2, -1, 1, 2])));
         arena.innerHTML = `<p class="title">How many now?</p><div class="choices">${shuffle([...opts]).map((o) => `<button type="button" class="choice" data-v="${o}">${o}</button>`).join('')}</div>`;
         arena.querySelectorAll('.choice').forEach((c) => onTap(c, () => { if (!live) return; live = false; done(Number(c.getAttribute('data-v')) === count); }));
-        timer(4, () => { live = false; done(false); });
+        timer(5, () => { live = false; done(false); });
       })();
       return () => { live = false; };
     },

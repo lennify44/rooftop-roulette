@@ -244,9 +244,10 @@ const GAMES = [
     pitch: 'Fifteen mini-games, a twist dial and a cable that can snap. Ride up, take the express, or cash out.',
     best: () => { const p = read('elevator-roulette-profile'); return p && p.best ? [`$${fmt(p.best)}`, `floor ${p.floor || 0}`] : null; },
     world: (e) => [`$${fmt(e.score)}`, `floor ${e.dist}`] },
-  { id: 'pigeon', name: 'Pigeon <span>Revenge</span>', url: 'pigeon-revenge/', accent: '#9fb0c8', board: null, tags: ['flying', 'chaos'],
+  { id: 'pigeon', name: 'Pigeon <span>Revenge</span>', url: 'pigeon-revenge/', accent: '#9fb0c8', board: 'pigeon', tags: ['flying', 'chaos'],
     pitch: 'Play a pigeon and snatch hats, fries and phones from the people below.',
-    best: () => { const b = read('pigeon-revenge-best'); return b ? [`$${fmt(b)}`, 'best flight'] : null; } },
+    best: () => { const b = read('pigeon-revenge-best'); return b ? [`$${fmt(b)}`, 'best flight'] : null; },
+    world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
 ];
 
 function link(a, url) {

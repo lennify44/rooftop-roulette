@@ -104,10 +104,10 @@
   }
   function init() {
     let placed = 0;
-    document.querySelectorAll('a[data-hub]').forEach((a) => { a.insertAdjacentElement('afterend', makeButton(a)); placed++; });
+    document.querySelectorAll('a[data-hub]').forEach((a) => { const scr = a.closest('section') || document.body; if (scr.querySelector('[data-feedback-btn]')) return; a.insertAdjacentElement('afterend', makeButton(a)); placed++; });
     for (const id of ['screenOver', 'screenDone', 'screenEnd']) {
       const s = document.getElementById(id); if (!s) continue;
-      const row = s.querySelector('.cta-row'); if (!row) continue;
+      const row = s.querySelector('.cta-row'); if (!row || s.querySelector('[data-feedback-btn]')) continue;
       const like = row.querySelector('.link-btn') || row.querySelector('button:not(.btn)');
       row.appendChild(makeButton(like)); placed++;
     }

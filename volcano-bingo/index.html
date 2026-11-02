@@ -140,7 +140,7 @@ body {
         <h2 class="label">How to play</h2>
         <ul class="rules">
           <li><i style="background:#3d8bff">B</i><span>The rock's colour tells you its column: <b>B</b> blue, <b>I</b> red, <b>N</b> grey, <b>G</b> green, <b>O</b> orange.</span></li>
-          <li><i style="background:#ff8a1f">✓</i><span>On your card: tap it. Not on your card: let it fly. A wrong tap costs a heart.</span></li>
+          <li><i style="background:#ff8a1f">✓</i><span>Rocks with a glowing ring are on your card: tap them. Dull rocks: let them fly. A wrong tap costs a heart.</span></li>
           <li><i style="background:#1b1424">💣</i><span>Bombs must be tapped before they fall back down.</span></li>
           <li><i style="background:#f0c03a">★</i><span>Golden rocks mark your best cell. The gold-ringed number pays ×5.</span></li>
           <li><i style="background:#5fe0a8">♥</i><span>Every BINGO gives a heart back and lets you pick the next card: Mild ×1, Spicy ×2 or Inferno ×3.</span></li>
@@ -547,9 +547,12 @@ function drawScene() {
   ctx.fillStyle = '#1f6b47';
   for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * 0.6 + Math.sin(game.t * 1.3) * 0.05; ctx.beginPath(); ctx.ellipse(px + 4 + Math.cos(a) * 16, py - 52 + Math.sin(a) * 10, 18, 5, a, 0, Math.PI * 2); ctx.fill(); }
 }
+// rocks that belong on your card glow and their cell pulses: no memorising 25 numbers (player feedback)
+function cellFor(n) { const card = game.card; if (!card) return null; for (let c = 0; c < 5; c++) for (let r = 0; r < 5; r++) if (card.nums[c][r] === n && !card.marked[c][r]) return [c, r]; return null; }
 function drawRock(r) {
   const R = L.r;
   if (r.delay > 0) return;
+  const wanted = r.type === 'num' && cellFor(r.n);
   // ember trail
   for (let i = 0; i < r.trail.length; i++) { const [tx, ty] = r.trail[i]; ctx.globalAlpha = (i / r.trail.length) * 0.35; ctx.fillStyle = r.type === 'bomb' ? '#888' : '#ff8a3a'; ctx.beginPath(); ctx.arc(tx, ty, R * (0.3 + i / r.trail.length * 0.5), 0, Math.PI * 2); ctx.fill(); }
   ctx.globalAlpha = 1;
@@ -567,12 +570,15 @@ function drawRock(r) {
     ctx.closePath(); ctx.fill(); ctx.stroke();
   } else {
     const C = COLS[r.col];
+    if (wanted) { const k = 0.6 + 0.4 * Math.sin(game.t * 14); ctx.fillStyle = `rgba(255,236,120,${0.35 * k})`; ctx.beginPath(); ctx.arc(0, 0, R * 1.6, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = `rgba(255,236,120,${0.9 * k})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, R * 1.3, 0, Math.PI * 2); ctx.stroke(); }
+    else ctx.globalAlpha = 0.55;
     ctx.fillStyle = C.d; ctx.beginPath(); ctx.arc(0, R * 0.08, R, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = C.c; ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3; ctx.stroke();
     ctx.fillStyle = r.col === 2 ? '#1b1424' : '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = `600 ${Math.round(R * 0.42)}px "IBM Plex Mono", monospace`; ctx.fillText(C.l, 0, -R * 0.5);
     ctx.font = `900 ${Math.round(R * 1.0)}px "Big Shoulders Display", Impact, sans-serif`; ctx.fillText(String(r.n), 0, R * 0.14);
+    ctx.globalAlpha = 1;
   }
   ctx.restore();
 }
@@ -593,6 +599,7 @@ function drawCard() {
     const marked = card.marked[c][r], lucky = card.lucky[0] === c && card.lucky[1] === r;
     ctx.fillStyle = doneCells.has(key) ? '#ffe2a8' : (c + r) % 2 ? '#efe5d6' : '#f6efe4'; ctx.fillRect(x + 1, y + 1, C.cw - 2, C.ch - 2);
     if (lucky && !marked) { ctx.strokeStyle = '#e0a800'; ctx.lineWidth = 3; ctx.strokeRect(x + 4, y + 4, C.cw - 8, C.ch - 8); }
+    if (!marked && game.rocks.some((rk) => rk.delay <= 0 && rk.type === 'num' && rk.n === card.nums[c][r])) { const k = 0.5 + 0.5 * Math.sin(game.t * 14); ctx.fillStyle = `rgba(255,214,90,${0.35 + 0.35 * k})`; ctx.fillRect(x + 2, y + 2, C.cw - 4, C.ch - 4); ctx.strokeStyle = '#ff8a1f'; ctx.lineWidth = 3; ctx.strokeRect(x + 3, y + 3, C.cw - 6, C.ch - 6); }
     if (marked) {
       const age = card.stamp[key] !== undefined ? game.t - card.stamp[key] : 9, pop = age < 0.25 ? 1 + (0.25 - age) * 2 : 1;
       ctx.fillStyle = c === 2 && r === 2 ? '#c8c3d6' : '#ff6a2b';
