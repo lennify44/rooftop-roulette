@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Skybreaker, Shutter Run, Echo Run, Ghost Relay, Crane Climb, Fragile Freerun, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
+<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Airborne, Skybreaker, Shutter Run, Echo Run, Ghost Relay, Crane Climb, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
 <meta name="theme-color" content="#110e22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +114,13 @@ const ART = {
   volcano: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
     <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
     ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>`,
+  air: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a15" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58b8ff"/><stop offset="1" stop-color="#c8f0ff"/></linearGradient></defs><rect width="320" height="160" fill="url(#a15)"/>
+    <rect x="0" y="0" width="22" height="160" fill="#5a1e7a" opacity="0.55"/>
+    ${[[40, 112, 110], [190, 86, 90], [270, 124, 60]].map(([x, y, w]) => `<path d="M${x} ${y + 6} L${x + w} ${y + 6} L${x + w * 0.75} ${y + 30} L${x + w * 0.45} ${y + 42} L${x + w * 0.2} ${y + 26}Z" fill="#9a6a3a" stroke="#1a1238" stroke-width="2.5"/><rect x="${x - 3}" y="${y - 3}" width="${w + 6}" height="11" rx="5" fill="#5fcf6a" stroke="#1a1238" stroke-width="2.5"/>`).join('')}
+    <path d="M110 104 Q150 30 196 82" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="5 6"/>
+    <g transform="translate(150 50)"><circle r="15" fill="#ff9ad0" stroke="#1a1238" stroke-width="2.5"/><circle cy="2" r="6" fill="#1a1238"/></g>
+    <g transform="translate(150 30)"><path d="M-6 -8 L-12 4 M6 -8 L12 4" stroke="#1a1238" stroke-width="5" stroke-linecap="round"/><ellipse cy="-18" rx="9" ry="10" fill="#ff5aa8" stroke="#1a1238" stroke-width="2.5"/><circle cx="1" cy="-32" r="7" fill="#ffd9b0" stroke="#1a1238" stroke-width="2.5"/><path d="M-7 -34 A8 8 0 0 1 9 -34Z" fill="#ffb52e"/></g>
+    <text x="300" y="30" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#fff" stroke="#1a1238" stroke-width="1">CHAIN ×3</text></svg>`,
   sky: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a14" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a8a"/><stop offset="1" stop-color="#ff7a7a"/></linearGradient></defs><rect width="320" height="160" fill="url(#a14)"/>
     <path d="M0 150 Q40 130 80 146 T160 140 T240 148 T320 138 L320 160 L0 160Z" fill="#2a1048"/>
     ${[[70, 46, '#3ef2ff'], [250, 40, '#ffd23f'], [214, 104, '#ff7ad8']].map(([x, y, c]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#1a1030" stroke-width="3"/><circle r="8" fill="#1a1030"/><circle cx="2" cy="1" r="4" fill="#ff4fa3"/><rect x="-11" y="-24" width="22" height="3" rx="1.5" fill="#fff" opacity="0.7"/></g>`).join('')}
@@ -191,6 +198,10 @@ const GAMES = [
     pitch: 'Freerun across the rooftops while roulette wheels change the rules. Pests and bosses can’t be beaten, only outrun.',
     best: () => { const b = read('rooftop-roulette-best'); return b && b.score ? [`$${fmt(b.score)}`, `${fmt(b.dist)} m`] : null; },
     world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
+  { id: 'air', name: 'Air<span>borne</span>', url: 'airborne/', accent: '#ffb52e', board: 'air', badge: 'New · air parkour', tags: ['parkour', 'platformer', 'stomp combos'],
+    pitch: 'The sky keeps scrolling. Run and jump across floating islands, stomp drones to bounce higher and never let the storm catch you.',
+    best: () => { const p = read('airborne-profile'); return p && p.best ? [fmt(p.best), `${fmt(p.bestDist)} m`] : null; },
+    world: (e) => [fmt(e.score), `${fmt(e.dist)} m`] },
   { id: 'sky', name: 'Sky<span>breaker</span>', url: 'skybreaker/', accent: '#3ef2ff', board: 'sky', badge: 'New · action', tags: ['action', 'combo', 'bosses'],
     pitch: 'Tap to dash. Smash a drone and your dash comes back. Chain them into the sky before the storm eats you.',
     best: () => { const p = read('skybreaker-profile'); return p && p.best ? [fmt(p.best), `${fmt(p.bestHeight)} m`] : null; },
@@ -211,10 +222,6 @@ const GAMES = [
     pitch: 'Wall-jump up a skyscraper under construction. Dodge falling tools, ride crane hooks and stay ahead of the dust storm.',
     best: () => { const p = read('crane-climb-profile'); return p && p.best ? [`floor ${fmt(p.best)}`, ['', 'Foundations', 'Steel', 'Glass', 'Wind', 'Spire'][p.bestStage] || ''] : null; },
     world: (e) => [`floor ${fmt(e.score)}`, ['', 'Foundations', 'Steel', 'Glass', 'Wind', 'Spire'][e.dist] || ''] },
-  { id: 'fragile', name: 'Fragile <span>Freerun</span>', url: 'fragile-freerun/', accent: '#ffc94d', board: 'fragile', badge: 'New · parkour', tags: ['parkour', 'timing', 'cargo'],
-    pitch: 'Carry a wedding cake, eggs or a goldfish bowl over the rooftops. Roll as you land or the cargo cracks.',
-    best: () => { const p = read('fragile-freerun-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [fmt(b), `${st} ★`] : null; },
-    world: (e) => [fmt(e.score), ['', 'Old Roofs', 'Construction', 'Harbour', 'Skyline'][e.dist] || ''] },
   { id: 'bakery', name: 'Time-Loop <span>Bakery</span>', url: 'time-loop-bakery/', accent: '#ffb347', board: null, badge: 'New', tags: ['time loop', 'planning', 'puzzle'],
     pitch: 'The same morning keeps repeating. Learn who orders what and when, then bake ahead for one perfect morning.',
     best: () => { const p = read('time-loop-bakery-profile'); const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; const days = p && p.stars ? Object.keys(p.stars).length : 0; return st ? [`${st} ★`, `${days} of 5 mornings`] : null; } },

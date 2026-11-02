@@ -21,6 +21,7 @@ const GAMES = {
   shutter: { prefix: 'shutter:', maxScore: 20000, maxDist: 5 },         // photo points of one run, district 1-5
   sky: { prefix: 'sky:', maxScore: 2000000, maxDist: 100000 },         // Skybreaker score, height in metres
   pigeon: { prefix: 'pigeon:', maxScore: 10000000, maxDist: 1000000 }, // Pigeon Revenge loot $, distance m
+  air: { prefix: 'air:', maxScore: 5000000, maxDist: 1000000 },        // Airborne score, distance m
 };
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
