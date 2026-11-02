@@ -46,7 +46,7 @@ body {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
 }
 #app {
-  position: relative; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
+  position: relative; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px;
   padding-block: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-bottom)); padding-inline: max(10px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-right));
 }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -137,7 +137,21 @@ body {
   .item { width: 56px; height: 56px; } .item span { font-size: 22px; }
   .scene { max-width: calc((100vh - 70px) * 5 / 3); }
   .logo { font-size: clamp(46px, 8vw, 70px); } .lede { font-size: 14px; }
+  .lo { grid-template-columns: repeat(3, 56px); } .lo button { width: 56px; height: 56px; }
 }
+.lo { display: grid; grid-template-columns: repeat(3, 72px); gap: 8px; justify-content: center; }
+.lo button { width: 72px; height: 72px; border-radius: 12px; border: 2px solid #3a3040; background: #1a1520; cursor: pointer; }
+.lo button.on { background: #ffd54a; border-color: #fff2b0; box-shadow: 0 0 18px #ffb300; }
+.lf { display: grid; gap: 8px; }
+.lfrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lfrow b { font-family: var(--font-display); font-size: 20px; color: var(--brass); }
+.lfrow .chip { min-width: 160px; min-height: 48px; }
+.clues { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.vend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.vend .chip { display: grid; gap: 2px; place-items: center; min-height: 72px; }
+.vend small { font-size: 12px; color: var(--haze); }
+.letters { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.wordin { width: 9em; text-align: center; letter-spacing: 0.3em; font: 600 24px var(--font-mono); text-transform: uppercase; padding: 8px; border-radius: 8px; border: 1.5px solid rgba(243, 236, 224, 0.4); background: #0b0910; color: var(--chalk); }
 @media (prefers-reduced-motion: reduce) { .clock.low b, .item.new { animation: none; } }
 </style>
 <!-- /source:head -->
@@ -174,6 +188,7 @@ body {
         <div class="cta-row">
           <button class="btn" id="btnContinue" type="button" data-i18n="continue" hidden>Continue</button>
           <button class="btn" id="btnNew" type="button">Check in</button>
+          <button class="btn" id="btnCh2" type="button" data-i18n="ch2Btn" hidden>Chapter 2</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -196,7 +211,7 @@ body {
         <p class="eyebrow" id="endEyebrow"></p>
         <h1 class="logo" id="endTitle" style="font-size: clamp(44px, 9vw, 90px)"></h1>
         <p class="lede" id="endText"></p>
-        <div class="cta-row"><button class="btn" id="btnEndNew" type="button" data-i18n="playAgain">Play again</button><button class="link-btn" id="btnOvertime" type="button" data-i18n="overtimeBtn" hidden>Keep searching (overtime)</button></div>
+        <div class="cta-row"><button class="btn" id="btnNextCh" type="button" data-i18n="nextCh" hidden>On to chapter 2</button><button class="btn" id="btnEndNew" type="button" data-i18n="playAgain">Play again</button><button class="link-btn" id="btnOvertime" type="button" data-i18n="overtimeBtn" hidden>Keep searching (overtime)</button></div>
         <dl class="stats"><div><dt data-i18n="timeLeft">Time left</dt><dd id="endLeft">0:00</dd></div><div><dt data-i18n="hintsStat">Hints</dt><dd id="endHints">0</dd></div><div><dt data-i18n="bestStat">Best</dt><dd id="endBest">–</dd></div></dl>
       </div>
       <div class="side">
@@ -221,7 +236,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '' }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0 }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -450,6 +465,137 @@ const TXT = {
     lbRejected: 'Die Bestenliste hat diese Zeit nicht angenommen.', lbRank: (a, d) => (a ? `Platz ${a}` : 'Noch nicht in den Top 50') + (d ? ` · heute Platz ${d}` : '') + '.',
   },
 };
+// ---------- chapter 2 texts (English and German)
+Object.assign(TXT.en, {
+  ch2Btn: 'Chapter 2: The Missing Floor', nextCh: 'On to chapter 2', cur: (n) => `$${n}.00`, tryBtn: 'Try', lit: 'lit', dark: 'dark', fuseWord: 'Fuse',
+  start2: 'The EXIT door clicks shut behind you and melts into the wall. No daylight. You are in a dim service corridor with humming pipes, a flickering bulb and a very tired lift. A sign says: FLOOR 4. The hotel swears there is no floor 4. The clock says 02:20, and at 03:00 the hotel “resets”.',
+  up2Eyebrow: '03:00 · hotel reset', up2Title: 'Filed under “missing”', up2Text: 'The clock hits three. Somewhere a printer starts, and your name slides quietly into a folder called NOT FOUND. (Or keep searching in overtime, just not for the record.)',
+  win2Eyebrow: 'Chapter 2 complete', win2EyebrowOver: 'Chapter 2 complete, in overtime', win2Title: 'The lift has a 4!',
+  win2Text: (left, h, n) => `The brass 4 clicks into the panel and the whole lift hums. For the first time in years, floor 4 has a button. You press M. The lift climbs through the walls, the doors open, and you see a corridor lit by one desk lamp and a door with a gold plate: MANAGER. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5. Chapter 3, The Manager’s Office, is coming soon.`,
+});
+Object.assign(TXT.en.views, { c2hall: 'Service corridor, floor 4', laundry: 'Laundry room', recep: 'Reception 4', lift: 'The lift' });
+Object.assign(TXT.en.svg, { laundry: 'LAUNDRY', reception: 'RECEPTION', fuse: 'FUSES', snacks: 'SNACKS', lostfound: 'LOST & FOUND', keysboard: 'ROOM KEYS', backCorr: '⟵ back to the corridor', liftExit: '⟵ out of the lift', post: 'POST' });
+Object.assign(TXT.en.aria, { c2Scene: 'The service corridor on floor 4', laundryScene: 'The laundry room', recepScene: 'Reception of floor 4', liftScene: 'Inside the lift', laundrydoor: 'Laundry room door', recdoor: 'Reception door', fuse: 'Fuse box', vend: 'Snack machine', poster: 'Floor plan poster', mat: 'Note on the floor', lift: 'Lift', washer: 'Washing machines', cart: 'Laundry cart', lfcab: 'Lost and found cabinet', chute: 'Laundry chute', c2back: 'Back to the corridor', pigeon: 'Pigeonholes with post', keys: 'Key board', cashdrawer: 'Cash drawer', bell: 'Desk bell', liftsock: 'Empty button socket', liftnote: 'Note in the lift', liftpanel: 'Lift buttons' });
+Object.assign(TXT.en.items, {
+  rkey: ['Reception key', '', 'A small brass key on a tag: “RECEPTION 4”.'],
+  card: ['Keycard', '', 'A white staff keycard. “SERVICE LIFT · ALL FLOORS (EXCEPT 4)”.'],
+  coin: ['Coin', '', 'A coin from the washing machine. It has an owl on it. It might even be real money.'],
+  button4: ['Button “4”', '', 'A heavy brass lift button with a big 4 on it. Missing from the lift for years.'],
+});
+TXT.en.notes = {
+  sam: ['Note on the floor', 'To whoever finds this: the 4th floor does not exist. I know, because I have worked the night shift on it for 11 years. Nobody believes me, because the lift goes 1, 2, 3, 5. If you are reading this, you are lost, and that is not your fault. Try the lift. It only needs three things: power, a keycard and a number. — Sam, night porter'],
+  cleaner: ['Cleaner’s note', 'Management wanted to “delete” floor 4 from the lift. I pulled out the brass 4 button before they could, and hid it where nobody would ever pay for it: in the snack machine, behind the MOST expensive thing. Please do not tell the Manager. — Dani, housekeeping'],
+  diary: ['Sam’s diary, page 1', 'Day 1: The new booking system, CONCIERGE, is installed. Day 40: Reservations with typos now come back as “404 NOT FOUND”. Day 41: Guests with a 404 reservation are not sent away. They are “filed” on floor 4, so nobody has to refund them. Day 42: I asked why. The Manager said: “A guest who cannot be found cannot complain.”'],
+  memo: ['Memo from the Manager', 'To all staff. From today floor 4 is removed from the building plan (it saves cleaning, taxes and refunds). Guests with unresolved reservations are moved there “until resolved”. Do NOT resolve them. P.S. The service lift code is on the key board at reception: key on its hook = 1, empty hook = 0, rooms 401 to 407 from left to right, read it as a binary number. Do not write it down. (I wrote it down.)'],
+  lift: ['Note in the lift', 'Next stop: M, the Manager’s office. I have never dared to go. You were not booked into room 404 by accident, you know. Someone typed that in on purpose. — Sam'],
+};
+Object.assign(TXT.en, {
+  poster: '<p>A floor plan of the Grand Paradox: floors 1, 2, 3 and 5. Between 3 and 5 there is only a clean rectangle on the wall, where something was peeled off.</p>',
+  posterTitle: 'Floor plan',
+  chute: 'You drop a sock into the chute. It falls for a very long time. Then, far below, someone applauds.',
+  cart: 'A laundry cart full of towels and uniforms. Under a folded apron you find a scrap of paper.', cartAgain: 'Towels, uniforms and one lonely sock. You already took the interesting thing.',
+  washerCoin: 'You open the porthole of the middle machine. Socks, a tea towel, and a coin stuck in the rubber seal. Finders keepers.', washerAgain: 'Socks. So many socks. Nobody ever comes back for their socks.',
+  matSay: 'A scrap of paper on the floor mat. Handwriting, in a hurry.',
+  laundryTo: 'The laundry room smells of warm cotton and old secrets.', recTo: 'Reception of floor 4. Everything is dusty, except the bell.', back2: 'Back in the corridor. The bulb flickers, as if it is thinking.',
+  recLocked: 'Locked. The sign says RECEPTION 4. A tiny brass keyhole waits.', recOpened: 'The little brass key turns. The reception door swings open with a creak that sounds like a sigh.',
+  lfTitle: 'Lost & Found', lfBody: 'A cabinet of forgotten things. Four name tags hang from four hooks. A card says: “Give every item back to its owner.” Tap a name to change its item.',
+  lfSolved: 'Click! The four hooks swing, and the cabinet door pops open. Inside: a small brass key and a diary page.', lfOpenBody: 'The cabinet is open.', lfEmpty: 'Nothing else in here. Just a very old left glove.',
+  takeRkey: '🔑 Take the brass key', tookRkey: 'A small brass key on a tag: “RECEPTION 4”.', readDiary: '📖 Read the diary page',
+  pigeonTitle: 'Pigeonholes', pigeonBody: 'Five letters that were never delivered, stamped with the day they arrived. The cash drawer’s sticker says: “Password: the senders’ initials, oldest letter first. Obviously.”', mailFrom: 'from', mailDay: 'day',
+  cashTitle: 'Cash drawer', cashBody: 'A five-letter lock, and a sticker: “Password: the senders’ initials, oldest letter first. Obviously.” Where did the Manager keep letters?', cashOpened: 'The drawer slides open with a happy ding. Inside: a keycard and a memo.', cashWrong: 'The lock buzzes. Wrong word.', cashOpenBody: 'The drawer is open.',
+  takeCard: '💳 Take the keycard', tookCard: 'A white staff keycard: “SERVICE LIFT · ALL FLOORS (EXCEPT 4)”.', readMemo: '📄 Read the memo', cashEmpty: 'Empty. Just a mint.',
+  bell: 'DING! A voice in the walls says: “Your reservation could not be found.” You decide not to ring it again.',
+  keysTitle: 'Key board', keysBody: 'Seven hooks, rooms 401 to 407. Some keys hang on their hooks. Some hooks are empty. A sticker on the frame says: “Occupancy register. Do not touch. Do not read. Do not think about it.”',
+  fuseTitle: 'Fuse box', fuseBody: 'Nine fuses in a 3×3 grid. Flipping one also flips its neighbours (up, down, left, right). Light them all to restore the power.', fuseDone: 'All nine fuses glow. Far away a lift hums into life, and the corridor lights come on, brighter than before.',
+  vendTitle: 'Snack machine', vendBody: 'The prices are painted on the glass. It wants a coin.',
+  vendNames: ['Crisps', 'Gum', 'Nuts', 'Mints', 'Soda', 'Biscuits'],
+  vendNoCoin: 'The display blinks: INSERT COIN.', vendFail: ['Clunk. The item wedges, and the machine spits your coin back. Nothing special behind this one.', 'The spiral turns, a bag falls, and the machine takes it back. Your coin returns. Rude.', 'Bzzt. Out of stock. Your coin rolls back out.'],
+  vendWin: 'The spiral turns and a heavy brass disc drops out. Not mints: a button with a big 4 on it!', vendDone: 'The machine hums. Nothing else to buy here today.', vendCoin: 'The coin clinks in. The display says: PICK.',
+  liftDead: 'The lift is dead. The display is dark and the doors do not even try. It needs power.', liftNeedCard: 'The lift has a card reader and nothing else. Try a keycard.', liftDark: 'The reader stays dark. No power, no card check.', cardOk: 'Beep. Card accepted. The display asks for a SERVICE CODE.',
+  liftTitle: 'Service lift', liftBody: 'The reader says: card accepted. The display asks for a SERVICE CODE.', liftOpened: 'The doors slide open with a sigh. Inside: buttons 1, 2, 3, 5, M, and a round hole where 4 should be.', liftWrong: 'ACCESS DENIED. The lift sulks.', liftHere: 'Inside the lift. Buttons for 1, 2, 3, 5 and M. A round hole where 4 should be.',
+  sockEmpty: 'A round socket with the number 4 etched beside it. Something brass would fit.', btnPlaced: 'The brass 4 clicks in and glows. The whole lift hums.',
+});
+Object.assign(TXT.en.hints, {
+  c2_lf: ['Where does a hotel keep things that guests forgot?', 'The laundry room has a cabinet with four name tags and four items. Use the four clues.', 'Ash and Dune have the head or face items; Dune’s is not the sunglasses. Birch and Cedar have the umbrella and scarf; Cedar carries nothing. So: Ash sunglasses, Birch umbrella, Cedar scarf, Dune hat.'],
+  c2_door: ['You have a key with a tag.', 'The tag says RECEPTION 4.', 'Hold the reception key and tap the reception door in the corridor.'],
+  c2_post: ['Reception has post that was never delivered.', 'Open the pigeonholes. Put the letters in order of day, oldest first, and take the first letter of each sender’s name. Type the word in the cash drawer.', (w) => `The word is ${w}.`],
+  c2_power: ['The corridor is dim and the lift is dead. Power comes from a box.', 'Tap the fuse box in the corridor. It is a 3×3 lights-out puzzle.', 'Pressing a fuse flips it and its neighbours. The order does not matter, and pressing a fuse twice cancels out. Aim for all nine lit.'],
+  c2_coin: ['The snack machine wants a coin.', 'Washing machines swallow things.', 'Tap the washing machines in the laundry room and open the middle one.'],
+  c2_vend: ['The cleaner’s note says where the brass button is hidden.', 'It is behind the MOST expensive thing in the snack machine.', 'Hold the coin and tap the snack machine, then pick the slot with the highest price.'],
+  c2_card: ['The lift has a card reader, and you have a card.', 'The lift needs power first.', 'Hold the keycard and tap the lift.'],
+  c2_bin: ['The lift wants a service code. The Manager’s memo says where it is.', 'Memo: key on hook = 1, empty hook = 0, rooms 401 to 407, read as a binary number. The key board is in reception.', (n) => `Type ${n} on the lift keypad.`],
+  c2_place: ['The lift is open. What is missing in there?', 'The 4 button is missing from the panel.', 'Hold the brass button and tap the empty socket in the lift.'],
+});
+
+Object.assign(TXT.de, {
+  ch2Btn: 'Kapitel 2: Das fehlende Stockwerk', nextCh: 'Weiter zu Kapitel 2', cur: (n) => `${n},00 €`, tryBtn: 'Probieren', lit: 'an', dark: 'aus', fuseWord: 'Sicherung',
+  start2: 'Die AUSGANG-Tür klickt hinter dir zu und verschwindet in der Wand. Kein Tageslicht. Du stehst in einem düsteren Wartungsflur mit brummenden Rohren, einer flackernden Glühbirne und einem sehr müden Aufzug. Ein Schild sagt: 4. STOCK. Das Hotel schwört, dass es keinen 4. Stock gibt. Die Uhr zeigt 02:20, und um 03:00 wird das Hotel „zurückgesetzt“.',
+  up2Eyebrow: '03:00 · Hotel-Reset', up2Title: 'Abgelegt unter „vermisst“', up2Text: 'Die Uhr schlägt drei. Irgendwo springt ein Drucker an, und dein Name rutscht leise in einen Ordner namens NICHT GEFUNDEN. (Oder du suchst in der Nachspielzeit weiter, nur nicht für die Akten.)',
+  win2Eyebrow: 'Kapitel 2 geschafft', win2EyebrowOver: 'Kapitel 2 geschafft, in der Nachspielzeit', win2Title: 'Der Aufzug hat eine 4!',
+  win2Text: (left, h, n) => `Die Messing-4 rastet im Tableau ein, und der ganze Aufzug brummt. Zum ersten Mal seit Jahren hat der 4. Stock einen Knopf. Du drückst M. Der Aufzug klettert durch die Wände, die Türen öffnen sich, und vor dir liegt ein Flur, den nur eine Schreibtischlampe beleuchtet, und eine Tür mit goldenem Schild: DIREKTION. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5. Kapitel 3, Das Büro der Direktion, kommt bald.`,
+});
+Object.assign(TXT.de.views, { c2hall: 'Wartungsflur, 4. Stock', laundry: 'Wäscherei', recep: 'Rezeption 4', lift: 'Der Aufzug' });
+Object.assign(TXT.de.svg, { laundry: 'WÄSCHEREI', reception: 'REZEPTION', fuse: 'SICHERUNGEN', snacks: 'SNACKS', lostfound: 'FUNDBÜRO', keysboard: 'ZIMMERSCHLÜSSEL', backCorr: '⟵ zurück in den Flur', liftExit: '⟵ raus aus dem Aufzug', post: 'POST' });
+Object.assign(TXT.de.aria, { c2Scene: 'Der Wartungsflur im 4. Stock', laundryScene: 'Die Wäscherei', recepScene: 'Rezeption des 4. Stocks', liftScene: 'Im Aufzug', laundrydoor: 'Tür zur Wäscherei', recdoor: 'Rezeptionstür', fuse: 'Sicherungskasten', vend: 'Snackautomat', poster: 'Plakat mit dem Stockwerksplan', mat: 'Zettel auf dem Boden', lift: 'Aufzug', washer: 'Waschmaschinen', cart: 'Wäschewagen', lfcab: 'Fundbüro-Schrank', chute: 'Wäscheschacht', c2back: 'Zurück in den Flur', pigeon: 'Postfächer mit Briefen', keys: 'Schlüsselbrett', cashdrawer: 'Kassenschublade', bell: 'Tischglocke', liftsock: 'Leere Knopffassung', liftnote: 'Zettel im Aufzug', liftpanel: 'Aufzugknöpfe' });
+Object.assign(TXT.de.items, {
+  rkey: ['Rezeptionsschlüssel', '', 'Ein kleiner Messingschlüssel mit Anhänger: „REZEPTION 4“.'],
+  card: ['Schlüsselkarte', '', 'Eine weiße Personalkarte. „SERVICE-AUFZUG · ALLE STOCKWERKE (AUSSER 4)“.'],
+  coin: ['Münze', '', 'Eine Münze aus der Waschmaschine. Mit einer Eule drauf. Vielleicht sogar echtes Geld.'],
+  button4: ['Knopf „4“', '', 'Ein schwerer Aufzugknopf aus Messing mit einer großen 4. Fehlt im Aufzug seit Jahren.'],
+});
+TXT.de.notes = {
+  sam: ['Zettel auf dem Boden', 'An alle, die das finden: Den 4. Stock gibt es nicht. Ich weiß es, denn ich arbeite hier seit 11 Jahren als Nachtportier. Mir glaubt keiner, weil der Aufzug 1, 2, 3, 5 fährt. Wenn du das liest, hast du dich verirrt, und das ist nicht deine Schuld. Probier den Aufzug. Er braucht nur drei Dinge: Strom, eine Schlüsselkarte und eine Zahl. — Sam, Nachtportier'],
+  cleaner: ['Notiz der Reinigung', 'Die Direktion wollte den 4. Stock aus dem Aufzug „löschen“. Ich habe den Messingknopf 4 herausgedreht, bevor sie es konnten, und dort versteckt, wo ihn niemand je bezahlen würde: im Snackautomaten, hinter dem TEUERSTEN Ding. Bitte sagt es der Direktion nicht. — Dani, Hauswirtschaft'],
+  diary: ['Sams Tagebuch, Seite 1', 'Tag 1: Das neue Buchungssystem CONCIERGE wird installiert. Tag 40: Reservierungen mit Tippfehlern kommen jetzt als „404 NICHT GEFUNDEN“ zurück. Tag 41: Gäste mit einer 404-Reservierung werden nicht weggeschickt. Sie werden im 4. Stock „abgelegt“, damit ihnen niemand Geld zurückgeben muss. Tag 42: Ich habe gefragt, warum. Die Direktion sagte: „Ein Gast, der nicht gefunden wird, kann sich nicht beschweren.“'],
+  memo: ['Rundschreiben der Direktion', 'An alle Mitarbeitenden. Ab heute ist der 4. Stock aus dem Gebäudeplan gestrichen (spart Reinigung, Steuern und Rückerstattungen). Gäste mit ungeklärten Reservierungen werden dorthin verlegt, „bis zur Klärung“. Klärt sie NICHT. P.S. Der Code für den Service-Aufzug steht am Schlüsselbrett an der Rezeption: Schlüssel am Haken = 1, leerer Haken = 0, Zimmer 401 bis 407 von links nach rechts, als Binärzahl lesen. Nicht aufschreiben. (Ich habe es aufgeschrieben.)'],
+  lift: ['Zettel im Aufzug', 'Nächster Halt: M, das Büro der Direktion. Ich habe mich nie getraut. Du wurdest übrigens nicht aus Versehen in Zimmer 404 gebucht. Jemand hat das mit Absicht eingetippt. — Sam'],
+};
+Object.assign(TXT.de, {
+  poster: '<p>Ein Stockwerksplan des Grand Paradox: Stockwerke 1, 2, 3 und 5. Zwischen 3 und 5 ist nur ein sauberes Rechteck an der Wand, wo etwas abgezogen wurde.</p>',
+  posterTitle: 'Stockwerksplan',
+  chute: 'Du wirfst eine Socke in den Schacht. Sie fällt sehr lange. Dann, weit unten, klatscht jemand.',
+  cart: 'Ein Wäschewagen voller Handtücher und Uniformen. Unter einer gefalteten Schürze findest du einen Zettel.', cartAgain: 'Handtücher, Uniformen und eine einsame Socke. Das Interessante hast du schon.',
+  washerCoin: 'Du öffnest das Bullauge der mittleren Maschine. Socken, ein Geschirrtuch und eine Münze, die im Gummi klemmt. Gefunden, behalten.', washerAgain: 'Socken. So viele Socken. Niemand holt je seine Socken ab.',
+  matSay: 'Ein Zettel auf der Fußmatte. Eilig hingekritzelt.',
+  laundryTo: 'Die Wäscherei riecht nach warmer Baumwolle und alten Geheimnissen.', recTo: 'Die Rezeption des 4. Stocks. Alles verstaubt, nur die Glocke nicht.', back2: 'Zurück im Flur. Die Glühbirne flackert, als würde sie nachdenken.',
+  recLocked: 'Abgeschlossen. Auf dem Schild steht REZEPTION 4. Ein winziges Messingschlüsselloch wartet.', recOpened: 'Der kleine Messingschlüssel dreht sich. Die Rezeptionstür geht mit einem Knarren auf, das wie ein Seufzer klingt.',
+  lfTitle: 'Fundbüro', lfBody: 'Ein Schrank voller vergessener Dinge. An vier Haken hängen vier Namensschilder. Auf einer Karte steht: „Gib jedem Besitzer sein Teil zurück.“ Tippe auf einen Namen, um den Gegenstand zu wechseln.',
+  lfSolved: 'Klick! Die vier Haken schwingen, und die Schranktür springt auf. Darin: ein kleiner Messingschlüssel und eine Tagebuchseite.', lfOpenBody: 'Der Schrank ist offen.', lfEmpty: 'Sonst ist hier nichts. Nur ein sehr alter linker Handschuh.',
+  takeRkey: '🔑 Messingschlüssel nehmen', tookRkey: 'Ein kleiner Messingschlüssel mit Anhänger: „REZEPTION 4“.', readDiary: '📖 Tagebuchseite lesen',
+  pigeonTitle: 'Postfächer', pigeonBody: 'Fünf Briefe, die nie zugestellt wurden, gestempelt mit dem Tag ihres Eingangs. Auf dem Aufkleber der Kassenschublade steht: „Passwort: die Anfangsbuchstaben der Absender, ältester Brief zuerst. Logisch.“', mailFrom: 'von', mailDay: 'Tag',
+  cashTitle: 'Kassenschublade', cashBody: 'Ein Schloss mit fünf Buchstaben und ein Aufkleber: „Passwort: die Anfangsbuchstaben der Absender, ältester Brief zuerst. Logisch.“ Wo hat die Direktion wohl die Briefe aufbewahrt?', cashOpened: 'Die Schublade gleitet mit einem fröhlichen Ding auf. Darin: eine Schlüsselkarte und ein Rundschreiben.', cashWrong: 'Das Schloss brummt. Falsches Wort.', cashOpenBody: 'Die Schublade ist offen.',
+  takeCard: '💳 Schlüsselkarte nehmen', tookCard: 'Eine weiße Personalkarte: „SERVICE-AUFZUG · ALLE STOCKWERKE (AUSSER 4)“.', readMemo: '📄 Rundschreiben lesen', cashEmpty: 'Leer. Nur ein Pfefferminz.',
+  bell: 'DING! Eine Stimme in den Wänden sagt: „Ihre Reservierung konnte nicht gefunden werden.“ Du beschließt, nicht nochmal zu klingeln.',
+  keysTitle: 'Schlüsselbrett', keysBody: 'Sieben Haken, Zimmer 401 bis 407. An manchen hängt ein Schlüssel. Manche Haken sind leer. Ein Aufkleber am Rahmen: „Belegungsliste. Nicht anfassen. Nicht lesen. Nicht darüber nachdenken.“',
+  fuseTitle: 'Sicherungskasten', fuseBody: 'Neun Sicherungen in einem 3×3-Raster. Wenn du eine umlegst, schalten sich auch ihre Nachbarn um (oben, unten, links, rechts). Bring alle zum Leuchten, um den Strom zurückzuholen.', fuseDone: 'Alle neun Sicherungen leuchten. Weit weg brummt ein Aufzug an, und die Flurlichter gehen an, heller als vorher.',
+  vendTitle: 'Snackautomat', vendBody: 'Die Preise stehen auf der Scheibe. Er will eine Münze.',
+  vendNames: ['Chips', 'Kaugummi', 'Nüsse', 'Pfefferminz', 'Limo', 'Kekse'],
+  vendNoCoin: 'Das Display blinkt: MÜNZE EINWERFEN.', vendFail: ['Klonk. Das Fach klemmt, und der Automat spuckt deine Münze wieder aus. Hinter diesem hier steckt nichts Besonderes.', 'Die Spirale dreht sich, eine Tüte fällt, und der Automat holt sie sich zurück. Deine Münze kommt wieder. Unhöflich.', 'Bzzt. Ausverkauft. Deine Münze rollt wieder heraus.'],
+  vendWin: 'Die Spirale dreht sich, und eine schwere Messingscheibe fällt heraus. Kein Pfefferminz: ein Knopf mit einer großen 4!', vendDone: 'Der Automat brummt. Heute gibt es hier nichts mehr zu kaufen.', vendCoin: 'Die Münze klimpert hinein. Das Display sagt: WÄHLEN.',
+  liftDead: 'Der Aufzug ist tot. Das Display ist dunkel, und die Türen versuchen es nicht mal. Er braucht Strom.', liftNeedCard: 'Der Aufzug hat einen Kartenleser und sonst nichts. Probier eine Schlüsselkarte.', liftDark: 'Der Leser bleibt dunkel. Ohne Strom keine Kartenprüfung.', cardOk: 'Piep. Karte akzeptiert. Das Display fragt nach einem SERVICE-CODE.',
+  liftTitle: 'Service-Aufzug', liftBody: 'Der Leser sagt: Karte akzeptiert. Das Display fragt nach einem SERVICE-CODE.', liftOpened: 'Die Türen gleiten mit einem Seufzer auf. Drinnen: Knöpfe 1, 2, 3, 5, M und ein rundes Loch, wo die 4 sein sollte.', liftWrong: 'ZUGRIFF VERWEIGERT. Der Aufzug schmollt.', liftHere: 'Im Aufzug. Knöpfe für 1, 2, 3, 5 und M. Ein rundes Loch, wo die 4 sein sollte.',
+  sockEmpty: 'Eine runde Fassung, daneben ist eine 4 eingeritzt. Etwas aus Messing würde passen.', btnPlaced: 'Die Messing-4 rastet ein und leuchtet. Der ganze Aufzug brummt.',
+});
+Object.assign(TXT.de.hints, {
+  c2_lf: ['Wo bewahrt ein Hotel Dinge auf, die Gäste vergessen haben?', 'In der Wäscherei steht ein Schrank mit vier Namensschildern und vier Gegenständen. Nutze die vier Hinweise.', 'Ash und Dune haben die Kopf- oder Gesichtsteile; Dunes ist nicht die Sonnenbrille. Birch und Cedar haben Schirm und Schal; Cedar trägt nichts in der Hand. Also: Ash Sonnenbrille, Birch Regenschirm, Cedar Schal, Dune Hut.'],
+  c2_door: ['Du hast einen Schlüssel mit Anhänger.', 'Auf dem Anhänger steht REZEPTION 4.', 'Halte den Rezeptionsschlüssel und tippe im Flur auf die Rezeptionstür.'],
+  c2_post: ['An der Rezeption liegt Post, die nie zugestellt wurde.', 'Öffne die Postfächer. Ordne die Briefe nach Tag, den ältesten zuerst, und nimm den ersten Buchstaben jedes Absendernamens. Tippe das Wort in die Kassenschublade.', (w) => `Das Wort lautet ${w}.`],
+  c2_power: ['Der Flur ist düster, und der Aufzug ist tot. Strom kommt aus einem Kasten.', 'Tippe im Flur auf den Sicherungskasten. Es ist ein 3×3-Lichter-Rätsel.', 'Wenn du eine Sicherung drückst, schaltet sie sich und ihre Nachbarn um. Die Reihenfolge ist egal, und zweimal drücken hebt sich auf. Ziel: alle neun leuchten.'],
+  c2_coin: ['Der Snackautomat will eine Münze.', 'Waschmaschinen verschlucken Dinge.', 'Tippe in der Wäscherei auf die Waschmaschinen und öffne die mittlere.'],
+  c2_vend: ['Auf dem Zettel der Reinigung steht, wo der Messingknopf versteckt ist.', 'Er liegt hinter dem TEUERSTEN Ding im Snackautomaten.', 'Halte die Münze und tippe auf den Snackautomaten, dann wähle das Fach mit dem höchsten Preis.'],
+  c2_card: ['Der Aufzug hat einen Kartenleser, und du hast eine Karte.', 'Der Aufzug braucht zuerst Strom.', 'Halte die Schlüsselkarte und tippe auf den Aufzug.'],
+  c2_bin: ['Der Aufzug will einen Service-Code. Im Rundschreiben der Direktion steht, wo er ist.', 'Rundschreiben: Schlüssel am Haken = 1, leerer Haken = 0, Zimmer 401 bis 407, als Binärzahl lesen. Das Schlüsselbrett hängt an der Rezeption.', (n) => `Tippe ${n} auf dem Tastenfeld des Aufzugs ein.`],
+  c2_place: ['Der Aufzug ist offen. Was fehlt darin?', 'Der Knopf 4 fehlt im Tableau.', 'Halte den Messingknopf und tippe im Aufzug auf die leere Fassung.'],
+});
+// the chapter 1 ending now leads to chapter 2
+TXT.en.winTextOver = 'You pushed the EXIT door and stepped out. A little late, but out. Behind it: no daylight, only a dim service corridor and a sign that says FLOOR 4.';
+TXT.en.winText = (left, h) => `You pushed the EXIT door and stepped out of room 404 with ${left} to spare. But there is no daylight on the other side, only a dim service corridor with humming pipes and a sign: FLOOR 4. ${h ? `Hints used: ${h}.` : 'No hints at all. Impressive.'} The story is not over.`;
+TXT.de.winTextOver = 'Du drückst die AUSGANG-Tür auf und trittst hinaus. Etwas spät, aber draußen. Dahinter: kein Tageslicht, nur ein düsterer Wartungsflur und ein Schild: 4. STOCK.';
+TXT.de.winText = (left, h) => `Du drückst die AUSGANG-Tür auf und verlässt Zimmer 404 mit ${left} Restzeit. Doch dahinter ist kein Tageslicht, nur ein düsterer Wartungsflur mit brummenden Rohren und einem Schild: 4. STOCK. ${h ? `Benutzte Tipps: ${h}.` : 'Ganz ohne Tipps. Respekt.'} Die Geschichte ist noch nicht zu Ende.`;
+TXT.en.lfClues = ['Ash and Dune each lost something worn on the head or on the face.', 'Birch and Cedar each lost something that is not worn on the head or on the face.', 'The item Dune lost is not the sunglasses.', 'Nothing Cedar lost is carried in the hand.'];
+TXT.en.lfItems = ['hat', 'umbrella', 'scarf', 'sunglasses'];
+TXT.de.lfClues = ['Ash und Dune haben jeweils etwas verloren, das man auf dem Kopf oder im Gesicht trägt.', 'Birch und Cedar haben jeweils etwas verloren, das man weder auf dem Kopf noch im Gesicht trägt.', 'Was Dune verloren hat, ist nicht die Sonnenbrille.', 'Nichts, was Cedar verloren hat, trägt man in der Hand.'];
+TXT.de.lfItems = ['Hut', 'Regenschirm', 'Schal', 'Sonnenbrille'];
 // language: ?lang=de|en in the link, then the last choice, then the phone's language
 let lang = (() => {
   const q = (/[?&]lang=(de|en)\b/.exec(location.search || '') || [])[1];
@@ -519,7 +665,9 @@ const code = () => S.points.slice();   // star i has size rank i (0 = faintest),
 const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart(2, '0')}`;
 
 function say(text) { $('say').innerHTML = text; }
-function hotel() { const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
+function hotel() {
+  if (S.ch === 2) { const m2 = 180 - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
 const A = (k) => esc(T().aria[k]);
@@ -728,6 +876,7 @@ const HOTS = {
 ['401', '402', '403', '405', '406', '407'].forEach((n, i) => { HOTS['d' + n] = () => say(T().doors[i]); });
 
 function useItem(id, h) {
+  if (S.ch === 2) return useItem2(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -859,6 +1008,269 @@ function openPanel() {
   });
 }
 
+// ---------- chapter 2: the floor that does not exist
+const TOTAL2 = 40 * 60;
+Object.assign(ICONS, { rkey: '🔑', card: '💳', coin: '🪙', button4: '🔘' });
+const MAILNAMES = { N: ['Nico', 'Noor'], I: ['Indy', 'Ines'], G: ['Gray', 'Gil'], H: ['Hayden', 'Hana'], T: ['Tai', 'Toni'], F: ['Finn', 'Fay'], L: ['Lou', 'Lena'], O: ['Ola', 'Otto'], R: ['Robin', 'Rue'], U: ['Uli', 'Uma'], E: ['Eli', 'Eden'], S: ['Sasha', 'Sol'], C: ['Casey', 'Cleo'], K: ['Kai', 'Kit'], B: ['Bo', 'Bea'], Y: ['Yuki', 'Yael'] };
+const LF = { owners: ['Ash', 'Birch', 'Cedar', 'Dune'], icons: ['🎩', '☂️', '🧣', '🕶️'], answer: [3, 1, 2, 0] };
+const shuffle = (a) => a.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map((p) => p[1]);
+function freshState2() {
+  const word = pick(['NIGHT', 'FLOOR', 'GUEST', 'CLOCK', 'LOBBY']);
+  const days = shuffle([3, 5, 8, 11, 14, 17, 21, 26]).slice(0, 5).sort((a, b) => a - b);
+  const rooms = shuffle([401, 402, 403, 404, 405, 406, 407]).slice(0, 5).sort((a, b) => a - b);
+  const letters = word.split('').map((L, i) => ({ name: MAILNAMES[L][i % 2], day: days[i] }));
+  const mails = shuffle(letters).map((m, k) => ({ room: rooms[k], name: m.name, day: m.day }));
+  const val = 33 + Math.floor(Math.random() * 95);   // 33..127: seven hooks, room 401 is the highest bit
+  const bits = Array.from({ length: 7 }, (_, i) => (val >> (6 - i)) & 1);
+  const vprices = shuffle([1, 2, 3, 4, 5, 7]);
+  let lo = Array(9).fill(true);
+  for (const p of shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]).slice(0, 5)) lo = flipFuse(lo, p);
+  return { v: 1, ch: 2, started: Date.now(), left: TOTAL2, hints: 0, hintSeen: {}, view: 'c2hall', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false, word, mails, val, bits, vprices, vslot: vprices.indexOf(7), lo, lf: [-1, -1, -1, -1] };
+}
+function flipFuse(lo, i) {
+  const r = Math.floor(i / 3), c = i % 3, out = lo.slice();
+  for (const [dr, dc] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < 3 && cc >= 0 && cc < 3) out[rr * 3 + cc] = !out[rr * 3 + cc]; }
+  return out;
+}
+const noteIds = ['sam', 'cleaner', 'diary', 'memo', 'lift'];
+const noteCount = () => noteIds.filter((n) => S.f['note_' + n]).length;
+function openNote(id) { const [title, body] = T().notes[id]; S.f['note_' + id] = true; Sound.click(); openModal(title, `<div class="note">${esc(body)}</div>`); save(); }
+
+function keyBoard(big) {
+  const hooks = S.bits.map((b, i) => {
+    const x = 60 + i * 96;
+    const key = b ? `<circle cx="${x}" cy="86" r="15" fill="none" stroke="#f0c75e" stroke-width="7"/><rect x="${x - 4}" y="100" width="8" height="50" rx="2" fill="#f0c75e"/><rect x="${x}" y="130" width="14" height="6" fill="#f0c75e"/><rect x="${x}" y="142" width="10" height="6" fill="#f0c75e"/>` : '';
+    return `<circle cx="${x}" cy="62" r="7" fill="#c9c9d2" stroke="#10181c" stroke-width="2"/>${key}<text x="${x}" y="188" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="20" fill="#efe6d2">${401 + i}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 680 200" ${big ? 'width="100%"' : 'width="100%" height="100%"'} preserveAspectRatio="xMidYMid meet" aria-hidden="true"><rect x="8" y="8" width="664" height="184" rx="10" fill="#4b2f1f" stroke="#2a1a10" stroke-width="6"/>${hooks}</svg>`;
+}
+
+// ----- scenes
+function sceneC2Hall() {
+  const f = S.f, p = f.power, lo = S.lo;
+  const lamp = (x) => `<ellipse cx="${x}" cy="42" rx="46" ry="8" fill="${p ? '#fff3b0' : '#5a2a2a'}"/>${p ? `<path d="M${x - 46} 46 L${x - 160} 470 L${x + 160} 470 L${x + 46} 46Z" fill="#fff3b0" opacity="0.08"/>` : ''}`;
+  const leds = Array.from({ length: 9 }, (_, i) => `<circle cx="${850 + (i % 3) * 30}" cy="${255 + Math.floor(i / 3) * 30}" r="9" fill="${p || lo[i] ? '#ffd54a' : '#2a2a2f'}"/>`).join('');
+  const snackCols = ['#ffd23f', '#ff8a1f', '#7bd88f', '#c79bff', '#ff7aa8', '#8ad0ff'];
+  const snacks = snackCols.map((c, i) => `<rect x="${248 + (i % 2) * 48}" y="${210 + Math.floor(i / 2) * 52}" width="38" height="36" rx="5" fill="${c}"/>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('c2Scene')}">
+  <defs><linearGradient id="cw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p ? '#2f7a76' : '#1b3236'}"/><stop offset="1" stop-color="${p ? '#245c5a' : '#142428'}"/></linearGradient></defs>
+  <rect width="1000" height="470" fill="url(#cw)"/><rect y="470" width="1000" height="130" fill="${p ? '#44585f' : '#252f35'}"/><rect y="462" width="1000" height="10" fill="#10181c"/>
+  <rect y="14" width="1000" height="14" fill="#9aaab2"/><rect y="52" width="1000" height="10" fill="#6c7c84"/>${lamp(200)}${lamp(500)}${lamp(800)}
+  ${hot('laundrydoor', `<rect x="40" y="140" width="160" height="330" fill="#3c8a66" stroke="#10181c" stroke-width="6"/><circle cx="120" cy="270" r="40" fill="#cfe8f2" stroke="#10181c" stroke-width="5"/><circle cx="120" cy="270" r="22" fill="#8ac4de"/><rect x="62" y="165" width="116" height="30" rx="4" fill="#efe6d2"/><text x="120" y="186" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="16" fill="#2a2030">${W('laundry')}</text>`)}
+  ${hot('poster', `<rect x="240" y="72" width="100" height="84" fill="#efe6d2" stroke="#2a1a10" stroke-width="3"/><rect x="252" y="82" width="76" height="9" fill="#d9a74a"/><rect x="252" y="97" width="76" height="9" fill="#d9a74a"/><rect x="252" y="112" width="76" height="9" fill="#d9a74a"/><rect x="252" y="127" width="76" height="9" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="4 3"/><rect x="252" y="142" width="76" height="9" fill="#d9a74a"/>`)}
+  <text x="290" y="178" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="16" fill="#ffd23f">${W('snacks')}</text>
+  ${hot('vend', `<rect x="225" y="185" width="130" height="285" rx="8" fill="#e8453c" stroke="#10181c" stroke-width="6"/><rect x="238" y="200" width="104" height="170" rx="4" fill="#bfeaf0"/>${snacks}<rect x="250" y="388" width="80" height="14" fill="#10181c"/><rect x="250" y="418" width="80" height="34" rx="4" fill="#10181c"/>`)}
+  ${hot('lift', `<rect x="390" y="150" width="180" height="320" fill="#59666e" stroke="#10181c" stroke-width="6"/><rect x="402" y="162" width="76" height="308" fill="#9aa8b0"/><rect x="482" y="162" width="76" height="308" fill="#8a98a0"/>${f.liftOpen ? '<rect x="404" y="164" width="152" height="304" fill="#e0bd62"/><rect x="470" y="164" width="20" height="304" fill="#9a7a2e"/>' : ''}
+    <rect x="420" y="104" width="120" height="36" rx="4" fill="#0b0910"/><text x="480" y="130" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="22" fill="${p ? '#ff5a4e' : '#3a2a2a'}">${p ? (f.liftOpen ? '4' : '3 · 5') : '– –'}</text>
+    <rect x="585" y="280" width="26" height="46" rx="4" fill="#10181c"/><circle cx="598" cy="296" r="6" fill="${f.cardUsed ? '#6fdca8' : p ? '#ffb300' : '#444'}"/>`)}
+  ${hot('recdoor', `<rect x="620" y="140" width="150" height="330" fill="${f.recOpen ? '#0b0910' : '#8a5530'}" stroke="#10181c" stroke-width="6"/>${f.recOpen ? '<path d="M620 140 L680 158 L680 454 L620 470Z" fill="#8a5530"/>' : '<circle cx="748" cy="310" r="7" fill="#d9a74a"/><rect x="651" y="295" width="9" height="9" fill="#10181c"/>'}<rect x="645" y="165" width="100" height="28" rx="4" fill="#d9a74a"/><text x="695" y="185" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="12" fill="#2a1a10">${W('reception')}</text>`)}
+  ${hot('fuse', `<rect x="820" y="190" width="120" height="170" rx="6" fill="#8a949a" stroke="#10181c" stroke-width="5"/><text x="880" y="218" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="13" fill="#10181c">${W('fuse')}</text><rect x="832" y="230" width="96" height="120" fill="#2b3338"/>${leds}`)}
+  ${hot('mat', '<rect x="440" y="510" width="120" height="56" fill="#efe6d2" stroke="#b8a98a" stroke-width="2" transform="rotate(-6 500 538)"/><path d="M455 528 h90 M455 540 h80 M455 552 h60" stroke="#6b5f4a" stroke-width="3" transform="rotate(-6 500 538)"/>')}
+  </svg>`;
+}
+function sceneLaundry() {
+  const machine = (x) => `<rect x="${x}" y="230" width="110" height="240" rx="8" fill="#f1f4f6" stroke="#10181c" stroke-width="5"/><circle cx="${x + 55}" cy="340" r="40" fill="#8ac4de" stroke="#10181c" stroke-width="5"/><circle cx="${x + 55}" cy="340" r="22" fill="#e07a8a"/><rect x="${x + 12}" y="246" width="86" height="22" rx="4" fill="#4a5a64"/><circle cx="${x + 30}" cy="257" r="5" fill="#ffd23f"/>`;
+  const clothes = ['#ff6b6b', '#ffd23f', '#6fdca8', '#8ad0ff', '#c79bff'].map((c, i) => `<rect x="${615 + i * 28}" y="${340 - (i % 2) * 14}" width="40" height="44" rx="8" fill="${c}"/>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('laundryScene')}">
+  <defs><pattern id="ltile" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="#37a79a"/><path d="M0 0H50V50" fill="none" stroke="#2a8a80" stroke-width="2"/></pattern></defs>
+  <rect width="1000" height="470" fill="url(#ltile)"/><rect y="470" width="1000" height="130" fill="#5c6f78"/><rect y="40" width="1000" height="14" fill="#a8b8c0"/>
+  ${hot('washer', `${machine(30)}${machine(160)}${machine(290)}`)}
+  ${hot('lfcab', `<rect x="440" y="100" width="150" height="370" fill="#a8682f" stroke="#2a1a10" stroke-width="6"/><rect x="452" y="140" width="126" height="300" fill="${S.f.lfSolved ? '#140d08' : '#cfe3ea'}" opacity="${S.f.lfSolved ? 1 : 0.6}"/><rect x="455" y="110" width="120" height="26" rx="4" fill="#efe6d2"/><text x="515" y="129" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="14" fill="#2a2030">${W('lostfound')}</text>${['#ff6b6b', '#ffd23f', '#6fdca8', '#8ad0ff'].map((c, i) => `<circle cx="${478 + i * 30}" cy="170" r="9" fill="${c}"/><rect x="${470 + i * 30}" y="182" width="16" height="30" fill="#efe6d2"/>`).join('')}`)}
+  ${hot('cart', `<rect x="610" y="370" width="170" height="90" rx="6" fill="#b8c4cb" stroke="#10181c" stroke-width="5"/>${clothes}<circle cx="640" cy="478" r="12" fill="#10181c"/><circle cx="750" cy="478" r="12" fill="#10181c"/>`)}
+  ${hot('chute', `<rect x="830" y="110" width="130" height="150" rx="6" fill="#8a949a" stroke="#10181c" stroke-width="6"/><rect x="852" y="140" width="86" height="90" fill="#10181c"/><path d="M895 150 v60 m-18 -18 l18 18 l18 -18" fill="none" stroke="#ffd23f" stroke-width="6" stroke-linecap="round"/>`)}
+  ${hot('c2back', `<rect x="300" y="510" width="400" height="60" rx="12" fill="#2a3a40" opacity="0.75"/><text x="500" y="549" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('backCorr')}</text>`)}
+  </svg>`;
+}
+function sceneRecep() {
+  const boxes = Array.from({ length: 12 }, (_, i) => `<rect x="${58 + (i % 4) * 50}" y="${120 + Math.floor(i / 4) * 66}" width="44" height="58" fill="#2a1418" stroke="#d9a74a" stroke-width="3"/>${[1, 3, 4, 8, 10].includes(i) ? `<rect x="${62 + (i % 4) * 50}" y="${150 + Math.floor(i / 4) * 66}" width="36" height="24" fill="#efe6d2" transform="rotate(${i % 2 ? -6 : 5} ${80 + (i % 4) * 50} ${162 + Math.floor(i / 4) * 66})"/>` : ''}`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('recepScene')}">
+  <defs><pattern id="rwp" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#7a2a3a"/><path d="M20 4 l6 16 -6 16 -6 -16z" fill="#8a3446"/></pattern></defs>
+  <rect width="1000" height="470" fill="url(#rwp)"/><rect y="400" width="1000" height="70" fill="#4a2a18"/><rect y="470" width="1000" height="130" fill="#2c3a4a"/>
+  <circle cx="500" cy="90" r="120" fill="#ffd58a" opacity="0.12"/>
+  ${hot('pigeon', `<rect x="40" y="100" width="230" height="230" fill="#3a1d12" stroke="#d9a74a" stroke-width="5"/>${boxes}<text x="155" y="92" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="20" fill="#d9a74a">${W('post')}</text>`)}
+  ${hot('keys', `<g transform="translate(655 100) scale(0.48)">${keyBoard(false).replace(/<svg[^>]*>/, '').replace('</svg>', '')}</g><text x="818" y="82" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="18" fill="#d9a74a">${W('keysboard')}</text>`)}
+  <rect x="290" y="330" width="440" height="30" fill="#8a5530" stroke="#2a1a10" stroke-width="4"/><rect x="300" y="360" width="420" height="110" fill="#6b4020" stroke="#2a1a10" stroke-width="4"/>
+  ${hot('cashdrawer', `<rect x="320" y="385" width="160" height="60" rx="4" fill="#8a5530" stroke="#2a1a10" stroke-width="4"/><circle cx="400" cy="415" r="8" fill="${S.f.cashOpen ? '#6fdca8' : '#d9a74a'}"/>${S.f.cashOpen ? '<rect x="330" y="395" width="140" height="14" fill="#140d08"/>' : ''}`)}
+  ${hot('bell', '<path d="M500 330 a28 22 0 0 1 56 0Z" fill="#d9a74a" stroke="#2a1a10" stroke-width="3"/><rect x="522" y="304" width="12" height="8" fill="#2a1a10"/>')}
+  ${hot('c2back', `<rect x="300" y="510" width="400" height="60" rx="12" fill="#1c2430" opacity="0.8"/><text x="500" y="549" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('backCorr')}</text>`)}
+  </svg>`;
+}
+function sceneLift() {
+  const f = S.f, slots = [['M', 160], ['5', 215], ['4', 270], ['3', 325], ['2', 380], ['1', 435]];
+  const btns = slots.map(([n, y]) => n === '4' ? hot('liftsock', `<circle cx="740" cy="${y}" r="24" fill="${f.btnPlaced ? '#d9a74a' : '#0b0910'}" stroke="#10181c" stroke-width="4"/>${f.btnPlaced ? `<text x="740" y="${y + 8}" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="24" fill="#2a1a10">4</text>` : `<text x="780" y="${y + 6}" font-family="Fraunces, serif" font-weight="800" font-size="16" fill="#a99cb5">4</text>`}`) : `<circle cx="740" cy="${y}" r="24" fill="#d9a74a" stroke="#10181c" stroke-width="4"/><text x="740" y="${y + 8}" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="24" fill="#2a1a10">${n}</text>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('liftScene')}">
+  <defs><linearGradient id="lw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a7a2e"/><stop offset="0.5" stop-color="#e0bd62"/><stop offset="1" stop-color="#9a7a2e"/></linearGradient></defs>
+  <rect width="1000" height="600" fill="url(#lw)"/><rect y="500" width="1000" height="100" fill="#3a2a20"/><rect y="0" width="1000" height="40" fill="#fff3b0" opacity="0.5"/>
+  <rect x="380" y="120" width="230" height="300" rx="6" fill="#cfe1e8" stroke="#6b5424" stroke-width="8"/><path d="M390 130 L500 130 L390 250Z" fill="#fff" opacity="0.3"/>
+  <rect x="690" y="110" width="100" height="360" rx="10" fill="#6b5424" stroke="#3a2a10" stroke-width="5"/>${btns}
+  ${hot('liftnote', '<rect x="160" y="180" width="130" height="100" fill="#efe6d2" stroke="#b8a98a" stroke-width="2" transform="rotate(-4 225 230)"/><path d="M175 205 h100 M175 222 h90 M175 239 h95 M175 256 h60" stroke="#6b5f4a" stroke-width="3" transform="rotate(-4 225 230)"/>')}
+  ${hot('c2back', `<rect x="300" y="520" width="400" height="56" rx="12" fill="#2a1a10" opacity="0.7"/><text x="500" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('liftExit')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { c2hall: sceneC2Hall, laundry: sceneLaundry, recep: sceneRecep, lift: sceneLift });
+
+// ----- close-ups
+function openLostFound() {
+  if (S.f.lfSolved) { openLfOpen(); return; }
+  openModal(t('lfTitle'), `<p>${t('lfBody')}</p><ol class="clues">${T().lfClues.map((c) => `<li>${esc(c)}</li>`).join('')}</ol><div class="lf" id="lf"></div>`, (b) => {
+    const box = b.querySelector('#lf');
+    const draw = () => {
+      box.innerHTML = '';
+      LF.owners.forEach((o, i) => {
+        const row = mk('div', 'lfrow', `<b>${o}</b>`), v = S.lf[i];
+        const c = mk('button', 'chip', v < 0 ? '?' : `${LF.icons[v]} ${esc(T().lfItems[v])}`);
+        c.setAttribute('data-act', 'lf' + i);
+        c.addEventListener('click', () => {
+          Sound.click(); S.lf[i] = S.lf[i] >= 3 ? -1 : S.lf[i] + 1; draw(); save();
+          if (LF.answer.every((a, k) => S.lf[k] === a)) { S.f.lfSolved = true; Sound.unlock(); say(t('lfSolved')); save(); setTimeout(() => { if (!$('modal').hidden) openLfOpen(); }, 700); }
+        });
+        row.appendChild(c); box.appendChild(row);
+      });
+    };
+    draw();
+  });
+}
+function openLfOpen() {
+  openModal(t('lfTitle'), `<p>${t('lfOpenBody')}</p><div class="chips" id="lo2"></div>`, (b) => {
+    const box = b.querySelector('#lo2');
+    if (!S.f.rkeyTaken) act(box, 'rkey', t('takeRkey'), (c) => { S.f.rkeyTaken = true; give('rkey'); c.remove(); say(t('tookRkey')); }, 'chip take');
+    act(box, 'diary', t('readDiary'), () => openNote('diary'));
+    if (S.f.rkeyTaken) box.appendChild(mk('span', '', esc(t('lfEmpty'))));
+  });
+}
+function openPigeon() {
+  const rows = S.mails.map((m) => `<li><b>${m.room}</b> · ${esc(t('mailFrom'))} <b>${esc(m.name)}</b> · ${esc(t('mailDay'))} ${m.day}</li>`).join('');
+  openModal(t('pigeonTitle'), `<p>${t('pigeonBody')}</p><ul class="letters">${rows}</ul>`);
+}
+function openCash() {
+  if (S.f.cashOpen) { openCashOpen(); return; }
+  openModal(t('cashTitle'), `<p>${t('cashBody')}</p><div class="row"><input class="wordin" id="w5" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="${esc(t('cashTitle'))}"></div><div class="row"><button class="btn" id="w5go" type="button" data-act="word">${esc(t('tryBtn'))}</button></div><p class="tip" id="w5msg"></p>`, (b) => {
+    const inp = b.querySelector('#w5'), msg = b.querySelector('#w5msg');
+    const go5 = () => {
+      if (inp.value.trim().toUpperCase() === S.word) { S.f.cashOpen = true; Sound.unlock(); msg.textContent = t('cashOpened'); say(t('cashOpened')); save(); setTimeout(() => { if (!$('modal').hidden) openCashOpen(); }, 800); }
+      else { Sound.nope(); msg.textContent = t('cashWrong'); }
+    };
+    b.querySelector('#w5go').addEventListener('click', go5);
+    inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); go5(); } });
+  });
+}
+function openCashOpen() {
+  openModal(t('cashTitle'), `<p>${t('cashOpenBody')}</p><div class="chips" id="ca"></div>`, (b) => {
+    const box = b.querySelector('#ca');
+    if (!S.f.cardTaken) act(box, 'card', t('takeCard'), (c) => { S.f.cardTaken = true; give('card'); c.remove(); say(t('tookCard')); }, 'chip take');
+    act(box, 'memo', t('readMemo'), () => openNote('memo'));
+    if (S.f.cardTaken) box.appendChild(mk('span', '', esc(t('cashEmpty'))));
+  });
+}
+function openFuse() {
+  openModal(t('fuseTitle'), `<p>${t('fuseBody')}</p><div class="lo" id="lo"></div><p class="tip" id="loMsg"></p>`, (b) => {
+    const grid = b.querySelector('#lo'), msg = b.querySelector('#loMsg');
+    const draw = () => {
+      grid.innerHTML = '';
+      S.lo.forEach((on, i) => {
+        const c = mk('button', on ? 'on' : ''); c.setAttribute('data-fuse', String(i)); c.setAttribute('aria-label', `${t('fuseWord')} ${i + 1}, ${on ? t('lit') : t('dark')}`);
+        c.addEventListener('click', () => press(i)); grid.appendChild(c);
+      });
+    };
+    const press = (i) => {
+      if (S.f.power) return;
+      S.lo = flipFuse(S.lo, i); Sound.click(); draw();
+      if (S.lo.every(Boolean)) { S.f.power = true; Sound.unlock(); msg.textContent = t('fuseDone'); say(t('fuseDone')); }
+      save();
+    };
+    draw(); if (S.f.power) msg.textContent = t('fuseDone');
+  });
+}
+function openVend() {
+  const emo = ['🥔', '🍬', '🥜', '🍭', '🥤', '🍪'];
+  openModal(t('vendTitle'), `<p>${t('vendBody')}</p><div class="vend" id="vm"></div><p class="tip" id="vMsg">${S.f.coinIn ? esc(t('vendCoin')) : ''}</p>`, (b) => {
+    const box = b.querySelector('#vm'), msg = b.querySelector('#vMsg');
+    for (let i = 0; i < 6; i++) {
+      const c = mk('button', 'chip', `<span style="font-size:26px">${emo[i]}</span><small>${esc(T().vendNames[i])}</small><b>${esc(t('cur', S.vprices[i]))}</b>`);
+      c.setAttribute('data-slot', String(i));
+      c.addEventListener('click', () => {
+        if (S.f.btn4) { msg.textContent = t('vendDone'); return; }
+        if (!S.f.coinIn) { Sound.nope(); msg.textContent = t('vendNoCoin'); return; }
+        if (i === S.vslot) { S.f.coinIn = false; S.f.btn4 = true; give('button4'); Sound.unlock(); msg.textContent = t('vendWin'); say(t('vendWin')); }
+        else { Sound.nope(); msg.textContent = t('vendFail'); }
+        save();
+      });
+      box.appendChild(c);
+    }
+  });
+}
+function openLiftPanel() {
+  openModal(t('liftTitle'), `<p>${t('liftBody')}</p><div class="row"><div class="display" id="ld">---</div></div><div class="keypad" id="lk"></div><p class="tip" id="lMsg"></p>`, (b) => {
+    let typed = '';
+    const show = (ok) => { const d = b.querySelector('#ld'); d.textContent = (typed + '---').slice(0, 3); d.classList.toggle('ok', !!ok); };
+    const pad = b.querySelector('#lk'), msg = b.querySelector('#lMsg');
+    for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK']) {
+      const btn = mk('button', `key${k === 'C' || k === 'OK' ? ' wide' : ''}`, k);
+      btn.addEventListener('click', () => {
+        Sound.click();
+        if (k === 'C') typed = '';
+        else if (k === 'OK') {
+          if (typed === String(S.val)) { S.f.liftOpen = true; show(true); Sound.unlock(); Sound.door(); msg.textContent = t('liftOpened'); say(t('liftOpened')); save(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); go('lift'); say(t('liftOpened')); } }, 1100); return; }
+          Sound.nope(); msg.textContent = t('liftWrong'); typed = '';
+        } else if (typed.length < 3) typed += k;
+        show();
+      });
+      pad.appendChild(btn);
+    }
+    show();
+  });
+}
+
+Object.assign(HOTS, {
+  laundrydoor: () => { go('laundry'); say(t('laundryTo')); },
+  c2back: () => { go('c2hall'); say(t('back2')); },
+  mat: () => openNote('sam'),
+  poster: () => openModal(t('posterTitle'), t('poster')),
+  chute: () => { Sound.squeak(); say(t('chute')); },
+  cart: () => { if (!S.f.cartNote) { S.f.cartNote = true; openNote('cleaner'); say(t('cart')); } else say(t('cartAgain')); },
+  washer: () => { Sound.water(); if (!S.f.coin) { S.f.coin = true; give('coin'); say(t('washerCoin')); } else say(t('washerAgain')); },
+  lfcab: () => openLostFound(),
+  recdoor: () => { if (S.f.recOpen) { go('recep'); say(t('recTo')); } else say(t('recLocked')); },
+  pigeon: () => openPigeon(),
+  keys: () => openModal(t('keysTitle'), `<p>${t('keysBody')}</p>${keyBoard(true)}`),
+  cashdrawer: () => openCash(),
+  bell: () => { Sound.beep(); say(t('bell')); },
+  fuse: () => openFuse(),
+  vend: () => openVend(),
+  lift: () => {
+    if (!S.f.power) { Sound.nope(); say(t('liftDead')); }
+    else if (!S.f.cardUsed) say(t('liftNeedCard'));
+    else if (!S.f.liftOpen) openLiftPanel();
+    else { go('lift'); say(t('liftHere')); }
+  },
+  liftnote: () => openNote('lift'),
+  liftsock: () => say(t('sockEmpty')),
+});
+function useItem2(id, h) {
+  const f = S.f;
+  if (id === 'rkey' && h === 'recdoor') { take('rkey'); f.recOpen = true; Sound.unlock(); say(t('recOpened')); return true; }
+  if (id === 'coin' && h === 'vend') { take('coin'); f.coinIn = true; Sound.click(); say(t('vendCoin')); openVend(); return true; }
+  if (id === 'card' && h === 'lift') {
+    S.sel = null;
+    if (!f.power) { Sound.nope(); say(t('liftDark')); return true; }
+    f.cardUsed = true; Sound.unlock(); say(t('cardOk'));
+    if (!f.liftOpen) openLiftPanel(); else { go('lift'); }
+    return true;
+  }
+  if (id === 'button4' && h === 'liftsock') { take('button4'); f.btnPlaced = true; Sound.unlock(); say(t('btnPlaced')); setTimeout(escape2, 1400); return true; }
+  return false;
+}
+function escape2() {
+  if (!S || S.done || S.ch !== 2) return;
+  S.done = true; paused = true; Sound.win();
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best2 = Math.max(profile.best2 || 0, left);
+  profile.ch2done = true; saveProfile(); store.del(SAVE_KEY);
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win2EyebrowOver') : t('win2Eyebrow'), t('win2Title'), t('win2Text', mmss(left), S.hints, noteCount()), left, false);
+}
+function newGame2() { S = freshState2(); save(); begin(); say(t('start2')); }
+
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
   ['remote', () => S.f.remote], ['batteries', () => S.f.batteries], ['combine', () => S.f.remoteWorks], ['tv', () => S.f.tvOn],
@@ -866,11 +1278,15 @@ const GOALS = [
   ['melt', () => S.f.melted], ['wardrobe', () => S.f.wardrobeOpen], ['safe', () => S.f.safeOpen], ['handle', () => S.f.handleTaken],
   ['door', () => S.f.doorOpen], ['refresh', () => S.f.refreshed], ['exit', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const GOALS2 = [
+  ['c2_lf', () => S.f.lfSolved], ['c2_door', () => S.f.recOpen], ['c2_post', () => S.f.cardTaken], ['c2_power', () => S.f.power], ['c2_coin', () => S.f.coin || S.f.btn4],
+  ['c2_vend', () => S.f.btn4], ['c2_card', () => S.f.cardUsed], ['c2_bin', () => S.f.liftOpen], ['c2_place', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
 function openHints() {
-  const g = GOALS.find((x) => !x.done());
+  const g = (S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
-  const text = (h) => (typeof h === 'function' ? h(code().join('')) : h);
+  const text = (h) => (typeof h === 'function' ? h(g.id === 'c2_post' ? S.word : g.id === 'c2_bin' ? String(S.val) : code().join('')) : h);
   openModal(t('hintsTitle'), `<p>${t('hintsIntro')}</p><ol class="hints" id="hl">${g.hints.slice(0, seen).map((h) => `<li>${esc(text(h))}</li>`).join('')}</ol><div class="row" id="hr"></div>`, (b) => {
     const row = b.querySelector('#hr');
     if (seen < g.hints.length) act(row, 'hint', seen ? t('hintMore') : t('hintFirst'), () => { S.hintSeen[g.id] = seen + 1; S.hints++; S.left -= HINT_COST; save(); tickClock(); openHints(); }, 'btn');
@@ -903,7 +1319,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; $('endBest').textContent = profile.best ? mmss(profile.best) : '–';
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && S.ch !== 2); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -911,18 +1328,20 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  showEnd(t('upEyebrow'), t('upTitle'), t('upText'), 0, true);
+  showEnd(t(S.ch === 2 ? 'up2Eyebrow' : 'upEyebrow'), t(S.ch === 2 ? 'up2Title' : 'upTitle'), t(S.ch === 2 ? 'up2Text' : 'upText'), 0, true);
 }
 function escape() {
   S.done = true; paused = true; Sound.win();
   const left = S.overtime ? 0 : Math.floor(S.left);
-  if (!S.overtime) { profile.best = Math.max(profile.best, left); profile.escapes++; saveProfile(); }
+  if (!S.overtime) { profile.best = Math.max(profile.best, left); profile.escapes++; }
+  profile.ch1done = true; saveProfile();
   store.del(SAVE_KEY);
   showEnd(S.overtime ? t('winEyebrowOver') : t('winEyebrow', hotel()), t('winTitle'), S.overtime ? t('winTextOver') : t('winText', mmss(left), S.hints), left, false);
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => newGame());
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => newGame2());
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -936,6 +1355,12 @@ let armedNew = 0;
 $('btnNew').addEventListener('click', () => {
   if (store.get(SAVE_KEY, null) && Date.now() - armedNew > 4000) { armedNew = Date.now(); $('btnNew').textContent = t('confirmNew'); return; }
   armedNew = 0; newGame();
+});
+let armedCh2 = 0;
+$('btnCh2').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh2 > 4000) { armedCh2 = Date.now(); $('btnCh2').textContent = t('confirmNew'); return; }
+  armedCh2 = 0; newGame2();
 });
 $('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say(t('back')); });
 $('btnMenu').addEventListener('click', () => { paused = true; save(); showStart(); });
@@ -957,6 +1382,7 @@ function showStart() {
   const saved = store.get(SAVE_KEY, null);
   $('btnContinue').hidden = !saved || saved.done;
   $('btnNew').textContent = saved && !saved.done ? t('newGame') : t('checkIn'); armedNew = 0;
+  $('btnCh2').hidden = !profile.ch1done; $('btnCh2').textContent = t('ch2Btn'); armedCh2 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
