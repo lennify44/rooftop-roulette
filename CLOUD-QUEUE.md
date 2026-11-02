@@ -1,6 +1,6 @@
 # Cloud task queue (top first; tick when done: `- [x] … — 2026-11-04: what changed`)
 
-- [ ] **Room 404, chapter 2 + story.** Players (German): "mehr Levels, längere, schwierigere Games, maybe eine
+- [~] (in progress since 2026-11-02 19:24 UTC) **Room 404, chapter 2 + story.** Players (German): "mehr Levels, längere, schwierigere Games, maybe eine
   Geschichte dahinter". After escaping room 404 the player lands in the corridor of the hotel floor that "does not
   exist" (chapter 2: 4–6 new puzzles, harder than chapter 1, new SVG scenes in the same style). Add a short story told
   through notes/objects (who trapped you, why the 4th floor is missing). Chapter select or "continue to chapter 2" after

@@ -45,6 +45,9 @@ nothing sexist or gendered; characters anyone can be.
   and `git push origin main`. If the push is rejected, pull/rebase again and retry.
 
 ## Rules
+- **Claim before you start:** change your task's `- [ ]` to `- [~] (in progress since <UTC date time>)`, commit and push
+  that one line right away. Skip tasks marked `[~]` that were claimed less than 3 hours ago (another run is on them);
+  an older claim is stale, take it over. When done, turn `[~]` into `[x]` with the date and summary.
 - One task per run, done well. If a task is too big for one run, finish a playable part, push it, and split the rest
   into new unticked sub-tasks right below it.
 - Tick the task in `CLOUD-QUEUE.md` with the date and one line on what changed.
