@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Weather Machine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -118,8 +119,10 @@ body {
 .tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
 @media (max-height: 520px) { .logo { font-size: clamp(42px, 8vw, 64px); } .lede { font-size: 14px; } .btn { font-size: 22px; } .tool { height: 54px; } .tool span { font-size: 22px; } .score { font-size: 24px; } }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="stage">
   <canvas id="game" aria-label="The town and its sky"></canvas>
   <div class="hud" id="hud" hidden>
@@ -830,6 +833,7 @@ renderMute(); showStart();
 requestAnimationFrame(frame);
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>

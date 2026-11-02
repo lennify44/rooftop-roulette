@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Pigeon Revenge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,8 +111,10 @@ body {
 .lb-row input { width: 12em; max-width: 100%; min-height: 40px; padding: 6px 8px; border: 1.5px solid rgba(255, 255, 255, 0.4); background: rgba(0, 0, 0, 0.3); color: inherit; font: 600 16px system-ui, sans-serif; }
 .lb-note { margin: 6px 0 0; font-size: 14px; }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="stage">
   <canvas id="game" aria-label="Pigeon Revenge game"></canvas>
   <div class="hud" id="hud" hidden>
@@ -728,6 +731,7 @@ requestAnimationFrame(frame);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>

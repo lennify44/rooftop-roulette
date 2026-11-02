@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Rooftop Roulette</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -392,8 +393,10 @@ summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; lette
 }
 @media (prefers-reduced-motion: reduce) { .wheel-o { animation: none; } .zones { transition: none; } }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="stage">
   <canvas id="game" aria-label="Rooftop Roulette game"></canvas>
   <div class="annoy" id="annoy"></div>
@@ -4154,6 +4157,7 @@ requestAnimationFrame(frame);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
+<!-- /source:body -->
 <script src="feedback.js" defer></script>
 </body>
 </html>

@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Time-Loop Bakery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,8 +153,10 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { #app.rewinding, .cust { animation: none; } }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="app">
   <header class="top">
     <div class="clock" id="clock">7:00</div>
@@ -530,6 +533,7 @@ game.day = DAYS[0]; resetLoop(); renderNotes();
 requestAnimationFrame(frame);
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>

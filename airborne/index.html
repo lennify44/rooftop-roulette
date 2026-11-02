@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Airborne</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,8 +96,10 @@ body {
 .icon-btn:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
 @media (max-height: 520px) { .logo { font-size: clamp(44px, 9vw, 70px); } .lede { font-size: 15px; } .btn { font-size: 26px; min-height: 48px; } .pad button { width: 64px; height: 64px; } .pad button.jump { width: 84px; height: 84px; } }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="stage">
   <canvas id="game" aria-label="Floating islands in the sky"></canvas>
   <div class="hud" id="hud" hidden>
@@ -573,6 +576,7 @@ renderMute(); showStart();
 requestAnimationFrame(frame);
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>

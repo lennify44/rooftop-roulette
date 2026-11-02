@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Elevator Roulette</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -240,8 +241,10 @@ details.how summary { cursor: pointer; font-family: var(--font-mono); font-size:
 .pumpline { position: absolute; left: -10px; right: -10px; border-top: 3px dashed #5fe0a8; }
 .pumpline.hi { border-top-color: #ff6b5b; }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="app">
   <header class="panel">
     <div class="floor" id="floorBox"><span class="arrow" aria-hidden="true">▲</span><b id="floorNum">00</b><small id="floorTag">LOBBY</small></div>
@@ -1180,6 +1183,7 @@ renderLobby();
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>

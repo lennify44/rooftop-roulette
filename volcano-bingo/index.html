@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Volcano Bingo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,8 +107,10 @@ body {
 .tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
 @media (max-height: 520px) { .logo { font-size: clamp(44px, 8vw, 66px); } .lede { font-size: 14px; } .btn { font-size: 24px; } .pick b { font-size: 24px; } }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="stage">
   <canvas id="game" aria-label="Volcano Bingo playfield"></canvas>
   <div id="safe"></div>
@@ -740,6 +743,7 @@ requestAnimationFrame(frame);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>

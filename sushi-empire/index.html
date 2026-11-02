@@ -18,6 +18,7 @@ body { margin: 0; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 </style>
+<!-- source:head -->
 <title>Sushi Empire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,8 +107,10 @@ body { margin: 0; min-height: 100%; background: radial-gradient(ellipse at 50% -
 .lb input { min-height: 40px; padding: 6px 8px; border: 1.5px solid rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.25); color: var(--chalk); font: 600 16px var(--font-body); width: 12em; max-width: 100%; }
 button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--chalk); outline-offset: 2px; }
 </style>
+<!-- /source:head -->
 </head>
 <body>
+<!-- source:body -->
 <div id="app">
   <div class="top">
     <div>
@@ -393,6 +396,7 @@ if (location.hash === '#bot') window.__game = { S: () => S, STORES, buyStore, ta
 renderMute(); renderAll(); requestAnimationFrame(tick);
 })();
 </script>
+<!-- /source:body -->
 <script src="../feedback.js" defer></script>
 </body>
 </html>
