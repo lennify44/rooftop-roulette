@@ -5,8 +5,8 @@
   exist" (chapter 2: 4–6 new puzzles, harder than chapter 1, new SVG scenes in the same style). Add a short story told
   through notes/objects (who trapped you, why the 4th floor is missing). Chapter select or "continue to chapter 2" after
   the escape; saves keep working; every text in English and German. — 2026-11-02: chapter 2 "The Missing Floor" added (service corridor, laundry, reception, lift: 5 new puzzles incl. logic grid, post-date cipher, lights-out fuses, binary key board, price deduction), 5 story notes (Sam the night porter, the CONCIERGE booking system, the Manager), chapter 2 button on the start screen after escaping, own 40-min clock and save, EN+DE; also fixed the grid overflowing at 390 px.
-- [~] (in progress since 2026-11-02 20:21 UTC) **Room 404, chapter 3 + ending.** The manager's office / the finale; the story resolves; a final time and a
-  "true ending" for finishing all chapters without hints. Bilingual.
+- [x] **Room 404, chapter 3 + ending.** The manager's office / the finale; the story resolves; a final time and a
+  "true ending" for finishing all chapters without hints. Bilingual. — 2026-11-02: chapter 3 "The Manager's Office" added (executive corridor, office, CONCIERGE archive: portrait-wall door code, fish-count cipher wheel password, CONCIERGE terminal, two overlay films, 4×4 pipe patch panel, net + master key + lever), 5 story notes that resolve it (Sam booked you on purpose, the Manager's purge), "On to chapter 3" after chapter 2 and a chapter 3 start button, final time across all three chapters, golden "true ending" for finishing all three without hints, EN+DE.
 - [ ] **Airborne: playtest and tune.** First runs should last 45–90 s for a normal player; make islands, enemies and
   backgrounds more colourful; unlock hero colours by best score (localStorage); make sure nothing is unfair.
 - [ ] **Skybreaker: more to come back for.** Unlockable suits and dash trails by best score; one new enemy (for

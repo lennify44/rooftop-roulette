@@ -71,7 +71,7 @@ body {
 .inv .empty { align-self: center; color: var(--haze); font-size: 13px; }
 .item { flex: 0 0 auto; width: 64px; height: 64px; display: grid; place-items: center; align-content: center; gap: 0; padding: 4px; border: 2px solid rgba(243, 236, 224, 0.2); border-radius: 10px; background: var(--panel); color: var(--chalk); cursor: pointer; font-family: var(--font-body); }
 .item span { font-size: 26px; line-height: 1.1; }
-.item small { font-size: 10px; line-height: 1.1; color: var(--haze); text-align: center; }
+.item small { font-size: 10px; line-height: 1.1; color: var(--haze); text-align: center; overflow-wrap: anywhere; }
 .item[aria-pressed="true"] { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass); }
 .item.new { animation: pop 0.5s; }
 @keyframes pop { 0% { transform: scale(0.4); } 70% { transform: scale(1.15); } }
@@ -152,6 +152,29 @@ body {
 .vend small { font-size: 12px; color: var(--haze); }
 .letters { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 .wordin { width: 9em; text-align: center; letter-spacing: 0.3em; font: 600 24px var(--font-mono); text-transform: uppercase; padding: 8px; border-radius: 8px; border: 1.5px solid rgba(243, 236, 224, 0.4); background: #0b0910; color: var(--chalk); }
+.portraits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.portraits svg, .panel .pipe svg { width: 100%; height: auto; display: block; }
+.wheel { display: grid; gap: 2px; justify-content: center; font-family: var(--font-mono); }
+.wrow { display: grid; grid-template-columns: repeat(13, 22px); text-align: center; font-weight: 600; font-size: 16px; }
+.wrow span { padding: 2px 0; }
+.wrow.low { color: #c8a2ff; background: #2a2233; border-radius: 6px; margin-bottom: 8px; }
+.wrow.low span.hit { color: var(--night); background: var(--brass); border-radius: 4px; }
+.display.enc, b.enc { font-family: var(--font-mono); letter-spacing: 0.25em; }
+#wl, #wr { width: 56px; }
+.pipes { --pp: 56px; display: grid; grid-template-columns: 40px repeat(4, var(--pp)) 40px; gap: 4px; justify-content: center; align-items: center; }
+.pipe { width: var(--pp); height: var(--pp); padding: 0; border: 0; background: none; cursor: pointer; border-radius: 8px; }
+.pipe.lit svg { filter: drop-shadow(0 0 6px #6fdca8); }
+.pipe:focus-visible { outline: 3px solid var(--brass); }
+.plug { font-family: var(--font-mono); font-weight: 600; font-size: 10px; line-height: 1.2; text-align: center; color: var(--brass); }
+.plug.ok { color: var(--good); }
+.fish { animation: swim 3.2s ease-in-out infinite; }
+@keyframes swim { 50% { transform: translate(10px, -3px); } }
+.glint { animation: blink 1.2s steps(2) infinite; }
+.blink { animation: blink 0.9s steps(2) infinite; }
+.screen.golden { background: radial-gradient(ellipse at 70% 30%, #6a5220 0%, #120e18 70%); }
+.screen.golden .logo { color: #ffd23f; text-shadow: 0 0 24px rgba(255, 210, 63, 0.6); }
+@media (max-height: 520px) { .pipes { --pp: 46px; } .wrow { grid-template-columns: repeat(13, 20px); font-size: 14px; } .portraits { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .fish, .glint, .blink { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .clock.low b, .item.new { animation: none; } }
 </style>
 <!-- /source:head -->
@@ -189,6 +212,7 @@ body {
           <button class="btn" id="btnContinue" type="button" data-i18n="continue" hidden>Continue</button>
           <button class="btn" id="btnNew" type="button">Check in</button>
           <button class="btn" id="btnCh2" type="button" data-i18n="ch2Btn" hidden>Chapter 2</button>
+          <button class="btn" id="btnCh3" type="button" data-i18n="ch3Btn" hidden>Chapter 3</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -236,7 +260,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0 }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -596,6 +620,157 @@ TXT.en.lfClues = ['Ash and Dune each lost something worn on the head or on the f
 TXT.en.lfItems = ['hat', 'umbrella', 'scarf', 'sunglasses'];
 TXT.de.lfClues = ['Ash und Dune haben jeweils etwas verloren, das man auf dem Kopf oder im Gesicht trägt.', 'Birch und Cedar haben jeweils etwas verloren, das man weder auf dem Kopf noch im Gesicht trägt.', 'Was Dune verloren hat, ist nicht die Sonnenbrille.', 'Nichts, was Cedar verloren hat, trägt man in der Hand.'];
 TXT.de.lfItems = ['Hut', 'Regenschirm', 'Schal', 'Sonnenbrille'];
+// ---------- chapter 3 texts (English and German)
+Object.assign(TXT.en, {
+  ch3Btn: 'Chapter 3: The Manager’s Office', nextCh3: 'On to chapter 3', look: '🔍 Look closer', keyWord: 'Key',
+  start3: 'The lift doors open onto a corridor that smells of leather and money. One desk lamp, a long red carpet, a wall of framed portraits and, at the end, a door with a gold plate: MANAGER. The lift closes behind you and goes back down without asking. The clock says 03:20. Somewhere a printer chatters: PURGE AT 04:00.',
+  up3Eyebrow: '04:00 · purge', up3Title: 'Deleted', up3Text: 'The clock hits four. CONCIERGE says “Purge complete” in a very polite voice, and floor 4, with everyone on it, becomes a rumour again. (Or keep searching in overtime.)',
+  win3Eyebrow: 'Chapter 3 complete · the story is over', win3EyebrowOver: 'Chapter 3 complete, in overtime', win3Title: 'Floor 4 is back', true3Title: 'The true ending',
+  win3Text: (left, h, n) => `You turn the master key and pull the lever. Deep in the walls, CONCIERGE says: “Restoring floor 4.” Lights come on behind every door from 401 to 407. The trombone stops. The snoring stops. Seven very confused guests step out into a corridor that exists again, and the lift gets its brass 4 for good. Nothing is purged at 04:00. At 06:00 the morning paper prints: HOTEL FINDS MISSING FLOOR. Down at reception, Sam is waving. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  trueText: 'One more thing: CONCIERGE prints a last reservation, typo-free this time: “THE MANAGER · ROOM 404 · checkout 12:00.” Somewhere, a door without a handle clicks shut.',
+  trueMiss: 'Finish all three chapters without hints for the true ending.',
+  finalTime: (tm, h) => `Final time for all three chapters: ${tm} (hints: ${h}).`,
+  finalPartial: 'Play chapters 1 and 2 again to get a final time for the whole story.',
+  c3lift: 'The lift has already gone back down. It does not like this floor either.',
+  toOffice: 'The Manager’s office. A leather chair, a humming terminal, a fish tank, and nobody home.',
+  toArchive: 'The archive is cold and blue and full of humming machines. This is where CONCIERGE lives.',
+  back3: 'The corridor. The portraits are watching you. They are paintings, they cannot. Probably.',
+  backOff: 'Back in the office. The fish pretend they did not see anything.',
+  mdoorTitle: 'The Manager’s door', mdoorBody: '<p>A heavy door with a gold plate and a keypad. Engraved below it:</p><div class="note">Visitors: the code is every month in which I was Employee of the Month, in calendar order.<br>Staff: you know it. — M.</div>',
+  mdoorOpened: 'The keypad plays a smug little tune. The Manager’s door swings open.',
+  codeWrong: ['BZZT. Wrong code.', 'The keypad blinks red. Nope.', 'Wrong. The keypad sounds disappointed in you.'],
+  portraitsTitle: 'Employee of the Month', portraitsBody: 'Nine golden frames, January to September. Some faces show up more than once…',
+  coatSay: 'A long dark coat on the stand. In the pocket: a transparent film strip and a folded letter.', coatAgain: 'The pockets are empty now. Just a cinema ticket for a film called “Profit”.',
+  plantSay: 'A plastic plant. Someone stuck a printout in the pot.',
+  window: 'The city sleeps below. On the hotel’s big neon sign, the 4 in “GRAND PARADOX 24/7” is dark.',
+  deskTitle: 'Desk drawer', deskBody: '<p>The top drawer is not even locked. The Manager trusts nobody, except this drawer.</p>', takeWheel: '🎡 Take the cipher wheel', tookWheel: 'A cipher wheel: two brass alphabet rings. Very spy, very old school.', readSticky: '📝 Read the sticky note',
+  stickyTitle: 'Sticky note', stickyBody: (w) => `<div class="note">CONCIERGE password, encrypted with the wheel, obviously: <b class="enc">${w}</b><br>Key: as many as my fish. (The fish do not know.)</div>`,
+  termTitle: 'CONCIERGE terminal', termBody: '“CONCIERGE v4.04. Good night. Password, please.”', termWrong: 'PASSWORD NOT FOUND. Have you tried being the Manager?', termOk: 'ACCESS GRANTED. Welcome back, Manager. (CONCIERGE does not check faces.)',
+  termMenu: 'CONCIERGE v4.04 · logged in as THE MANAGER', termLog: '📜 Read the log', termCab: '🗄️ Unlock the filing cabinet', termCabDone: '🗄️ Filing cabinet: unlocked', termPurge: '⏳ Purge status',
+  purgeSay: (m) => `PURGE AT 04:00 · ${m} min left · approved by THE MANAGER · to cancel: master lever in the archive, with PLAN connected to FLOOR 4.`, cabUnlocked: 'Somewhere in the room a lock goes clunk. The filing cabinet is open.',
+  cabLocked: 'The filing cabinet has no keyhole, only a little red light: “Controlled by CONCIERGE”.',
+  cabTitle: 'Filing cabinet', cabBody: '<p>Drawers full of reservations that “could not be found”. Hundreds of them.</p>', takeFilmA: '🎞️ Take the film strip', tookFilmA: 'A transparent film strip with dots on it, filed under F for film. Of course.', readFile: '🗂️ Read the staff file', cabEmpty: 'Nothing else useful. Just a lot of people nobody looked for.',
+  tankTitle: 'Fish tank', tankBody: '<p>A big tank with bubbles, a little castle and some fish. Inside the castle, something gold is shining.</p>', tankBodyEmpty: '<p>A big tank with bubbles, a little castle and some fish. The castle is empty now.</p>',
+  tankReach: 'Something gold shines inside the little castle. You reach in, every fish turns to stare at you, and you decide you need a tool.', tankKey: 'You fish around the castle with the net. Out comes a heavy gold key with an M on it. The fish look relieved.', tankEmpty: 'The fish swim in circles. The castle is empty now.',
+  adoorTitle: 'Archive door', adoorBody: '<p>A steel door: ARCHIVE · CONCIERGE · AUTHORISED STAFF ONLY. A keypad with four digits. Someone wrote on the frame in pencil: “code on the films”.</p>', adoorOpened: 'Clunk. The steel door slides into the wall. Cold air and blue light.',
+  wheelTitle: 'Cipher wheel', wheelBody: 'Turn the inner ring to the key. Find each letter of the secret word in the lower row and read the letter above it.',
+  filmATitle: 'Film A', filmBTitle: 'Film B', filmsTitle: 'Stacked films', filmBody: 'Held up to the light: just dots.', filmsBody: 'Held up to the lamp, the two films line up perfectly. Where the dots overlap, they shine white.',
+  filmsCombined: 'You lay one film on top of the other. Where the dots overlap, four white digits appear!',
+  patchTitle: 'Patch panel', patchBody: 'Tap a tile to turn it. Connect PLAN on the left to FLOOR 4 on the right. The glowing pipe shows how far the signal gets.', patchDone: 'The signal flows all the way through. On the big screen: “PLAN ↔ FLOOR 4: connected.”',
+  netSay: 'A small green fish net on a hook, labelled “for the fish, my only friends”. You take it.', netGone: 'An empty hook.',
+  racks: 'Rows of machines hum and blink. One of them is called CONCIERGE, and it is blinking at you, a bit nervously.',
+  screenSay: (m) => `The big screen: PURGE FLOOR 4 IN ${m} MIN. Below, smaller: “Cancel: master key + lever, with PLAN connected.”`,
+  leverLocked: 'A big red lever labelled MASTER. A gold keyhole with an M keeps it locked.', leverNoPlan: 'The key turns and the lever moves, then sticks. The screen says: PLAN NOT CONNECTED TO FLOOR 4.',
+  leverGo: 'The key turns. You pull the lever all the way down.',
+});
+Object.assign(TXT.en.views, { c3hall: 'Executive corridor', office: 'The Manager’s office', archive: 'CONCIERGE archive' });
+Object.assign(TXT.en.svg, { manager: 'MANAGER', mgrPlate: 'THE MANAGER', archive: 'ARCHIVE', concierge: 'CONCIERGE', plan: 'PLAN', floor4: 'FLOOR 4', purge: 'PURGE IN', min: 'MIN', backOffice: '⟵ back to the office', eotm: 'EMPLOYEE OF THE MONTH', months: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'], lever: 'MASTER' });
+Object.assign(TXT.en.aria, { c3Scene: 'The executive corridor', officeScene: 'The Manager’s office', archScene: 'The CONCIERGE archive', mdoor: 'The Manager’s door', portraits: 'Portrait wall', coat: 'Coat stand', plant: 'Potted plant with a printout', c3lift: 'Lift', window: 'Window', mdesk: 'Desk drawer', terminal: 'CONCIERGE terminal', tank: 'Fish tank', cabinet: 'Filing cabinet', adoor: 'Archive door', c3back: 'Back to the corridor', patch: 'Patch panel', net: 'Net on a hook', lever: 'Master lever', screen: 'CONCIERGE screen', racks: 'Server racks', a3back: 'Back to the office', confess: 'Note taped to the lever', tile: (n, lit) => `Tile ${n}${lit ? ', glowing' : ''}` });
+Object.assign(TXT.en.items, {
+  wheel: ['Cipher wheel', '', 'Two brass rings with the alphabet on them. Turn the inner ring to decode a secret word.'],
+  filmA: ['Film A', '', 'A transparent film strip with scattered dots. Half of something.'],
+  filmB: ['Film B', '', 'Another transparent strip with dots. It means nothing on its own.'],
+  films: ['Films', 'stacked', 'Both film strips, one on top of the other. Now the dots line up.'],
+  net: ['Fish net', '', 'A small green net for the fish tank.'],
+  mkey: ['Master key', '', 'A heavy gold key with an M on it. Slightly wet.'],
+});
+Object.assign(TXT.en.notes, {
+  purge: ['Printout in the plant pot', 'CONCIERGE · NIGHTLY REPORT. Unresolved reservations on floor 4: 7 (rooms 401–407). New today: 1 (room 404). Action at 04:00: PURGE. Status: approved by THE MANAGER. Have a pleasant night.'],
+  coat: ['Letter in the coat pocket', 'Dear Board, floor 4 saved us 1.2 million this year: no cleaning, no taxes, no refunds. The guests do not complain, because officially they do not exist. I suggest we delete floor 4 completely tonight and celebrate. I have already ordered the cake. — The Manager'],
+  log: ['CONCIERGE log', '23:58 New reservation: ROOM 404. Created by: staff 0417. Note field: “Someone who is not in the system can walk through it.” 23:59 Warning: room 404 does not exist. 00:00 Guest checked in anyway.'],
+  file: ['Staff file', 'STAFF LIST, night shift. 0415 Dani, housekeeping. 0416 Robin, kitchen. 0417 Sam, night porter. A sticky note on the front, in the Manager’s handwriting: “Sam keeps asking questions. Add Sam to tonight’s purge list?”'],
+  confess: ['Note taped to the lever', 'Yes, it was me. I booked you into room 404 on purpose. Staff cards stop at floor 3, and the system watches every one of us. But a guest who does not exist? The system cannot see you. I am sorry I dragged you into this. Turn the key, pull the lever, bring them all back. I will be at reception. — Sam'],
+});
+Object.assign(TXT.en.hints, {
+  c3_door: ['The Manager’s door wants four digits. Read the plate on the door.', 'Look at the portrait wall: in which months was the Manager Employee of the Month? Turn the months into numbers (JAN = 1).', (c) => `The code is ${c}.`],
+  c3_wheel: ['Look through the Manager’s desk.', 'The desk drawer is not even locked.', 'Tap the desk in the office and take the cipher wheel. Read the sticky note too.'],
+  c3_pass: ['The terminal wants a password. The sticky note in the desk drawer has it, encrypted.', 'The key is the number of fish in the tank (a snail is not a fish). Select the cipher wheel, tap “Look closer” and set the key.', (w) => `The password is ${w}.`],
+  c3_cab: ['The filing cabinet is controlled by CONCIERGE.', 'Use the terminal menu.', 'Tap the terminal, choose “Unlock the filing cabinet”, then tap the cabinet and take the film strip.'],
+  c3_filmB: ['There is a second film strip. Who would carry one around?', 'The Manager left a coat in the corridor.', 'Tap the coat stand in the corridor.'],
+  c3_films: ['Two transparent films, each with half a picture.', 'Combine them: tap one film, then the other.', 'Tap Film A, then Film B. Then tap the stacked films and “Look closer”.'],
+  c3_arch: ['The archive door wants four digits.', 'The pencil note says: code on the films. Look closer at the stacked films: the white dots are the digits.', (c) => `The code is ${c}.`],
+  c3_patch: ['The patch panel in the archive must connect PLAN to FLOOR 4.', 'Tap tiles to turn them. The glowing pipe shows how far the signal gets from the left.', 'Work from the PLAN socket: turn the next tile until the glow flows into it, then the next one, until the glow reaches FLOOR 4.'],
+  c3_net: ['Something gold shines in the fish tank, but you need a tool.', 'Look around the archive.', 'Tap the net on the hook in the archive.'],
+  c3_key: ['You have a fish net.', 'Use it on the fish tank in the office.', 'Select the net and tap the fish tank.'],
+  c3_lever: ['The master lever in the archive has a keyhole with an M.', 'The patch panel must be connected first, then use the master key.', 'Select the master key and tap the big red lever.'],
+});
+
+Object.assign(TXT.de, {
+  ch3Btn: 'Kapitel 3: Das Büro der Direktion', nextCh3: 'Weiter zu Kapitel 3', look: '🔍 Genauer ansehen', keyWord: 'Schlüssel',
+  start3: 'Die Aufzugtüren öffnen sich zu einem Flur, der nach Leder und Geld riecht. Eine Schreibtischlampe, ein langer roter Teppich, eine Wand voller gerahmter Porträts und am Ende eine Tür mit goldenem Schild: DIREKTION. Der Aufzug schließt sich hinter dir und fährt ungefragt wieder nach unten. Die Uhr zeigt 03:20. Irgendwo rattert ein Drucker: LÖSCHUNG UM 04:00.',
+  up3Eyebrow: '04:00 · Löschung', up3Title: 'Gelöscht', up3Text: 'Die Uhr schlägt vier. CONCIERGE sagt sehr höflich „Löschung abgeschlossen“, und der 4. Stock wird mitsamt allen darauf wieder zum Gerücht. (Oder du suchst in der Nachspielzeit weiter.)',
+  win3Eyebrow: 'Kapitel 3 geschafft · die Geschichte ist zu Ende', win3EyebrowOver: 'Kapitel 3 geschafft, in der Nachspielzeit', win3Title: 'Der 4. Stock ist zurück', true3Title: 'Das wahre Ende',
+  win3Text: (left, h, n) => `Du drehst den Generalschlüssel und ziehst den Hebel. Tief in den Wänden sagt CONCIERGE: „Stelle 4. Stock wieder her.“ Hinter jeder Tür von 401 bis 407 geht das Licht an. Die Posaune verstummt. Das Schnarchen verstummt. Sieben sehr verwirrte Gäste treten in einen Flur, den es wieder gibt, und der Aufzug bekommt seine Messing-4 für immer. Um 04:00 wird nichts gelöscht. Um 06:00 titelt die Morgenzeitung: HOTEL FINDET VERSCHWUNDENES STOCKWERK. Unten an der Rezeption winkt Sam. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  trueText: 'Und noch etwas: CONCIERGE druckt eine letzte Reservierung, diesmal ohne Tippfehler: „DIE DIREKTION · ZIMMER 404 · Check-out 12:00.“ Irgendwo klickt eine Tür ohne Klinke ins Schloss.',
+  trueMiss: 'Schaffe alle drei Kapitel ohne Tipps für das wahre Ende.',
+  finalTime: (tm, h) => `Gesamtzeit für alle drei Kapitel: ${tm} (Tipps: ${h}).`,
+  finalPartial: 'Spiel Kapitel 1 und 2 nochmal, um eine Gesamtzeit für die ganze Geschichte zu bekommen.',
+  c3lift: 'Der Aufzug ist schon wieder unten. Er mag dieses Stockwerk auch nicht.',
+  toOffice: 'Das Büro der Direktion. Ein Ledersessel, ein brummendes Terminal, ein Aquarium, und niemand da.',
+  toArchive: 'Das Archiv ist kalt und blau und voller brummender Maschinen. Hier wohnt CONCIERGE.',
+  back3: 'Der Flur. Die Porträts beobachten dich. Es sind Bilder, das können sie nicht. Wahrscheinlich.',
+  backOff: 'Zurück im Büro. Die Fische tun so, als hätten sie nichts gesehen.',
+  mdoorTitle: 'Tür der Direktion', mdoorBody: '<p>Eine schwere Tür mit goldenem Schild und Tastenfeld. Darunter eingraviert:</p><div class="note">Besuch: Der Code sind alle Monate, in denen ich Mitarbeitende des Monats war, in Kalenderreihenfolge.<br>Personal: Ihr kennt ihn. — D.</div>',
+  mdoorOpened: 'Das Tastenfeld spielt eine selbstgefällige kleine Melodie. Die Tür der Direktion schwingt auf.',
+  codeWrong: ['BZZT. Falscher Code.', 'Das Tastenfeld blinkt rot. Nein.', 'Falsch. Das Tastenfeld klingt enttäuscht von dir.'],
+  portraitsTitle: 'Mitarbeitende des Monats', portraitsBody: 'Neun goldene Rahmen, Januar bis September. Manche Gesichter tauchen mehr als einmal auf …',
+  coatSay: 'Ein langer dunkler Mantel am Ständer. In der Tasche: ein durchsichtiger Folienstreifen und ein gefalteter Brief.', coatAgain: 'Die Taschen sind jetzt leer. Nur eine Kinokarte für einen Film namens „Profit“.',
+  plantSay: 'Eine Plastikpflanze. Jemand hat einen Ausdruck in den Topf gesteckt.',
+  window: 'Unten schläft die Stadt. Auf der großen Leuchtreklame des Hotels ist die 4 in „GRAND PARADOX 24/7“ dunkel.',
+  deskTitle: 'Schreibtischschublade', deskBody: '<p>Die oberste Schublade ist nicht mal abgeschlossen. Die Direktion traut niemandem, außer dieser Schublade.</p>', takeWheel: '🎡 Chiffrierscheibe nehmen', tookWheel: 'Eine Chiffrierscheibe: zwei Alphabetringe aus Messing. Sehr Spion, sehr altmodisch.', readSticky: '📝 Klebezettel lesen',
+  stickyTitle: 'Klebezettel', stickyBody: (w) => `<div class="note">CONCIERGE-Passwort, natürlich mit der Scheibe verschlüsselt: <b class="enc">${w}</b><br>Schlüssel: so viele wie meine Fische. (Die Fische wissen nichts davon.)</div>`,
+  termTitle: 'CONCIERGE-Terminal', termBody: '„CONCIERGE v4.04. Gute Nacht. Passwort, bitte.“', termWrong: 'PASSWORT NICHT GEFUNDEN. Schon mal versucht, die Direktion zu sein?', termOk: 'ZUGRIFF ERLAUBT. Willkommen zurück, Direktion. (CONCIERGE prüft keine Gesichter.)',
+  termMenu: 'CONCIERGE v4.04 · angemeldet als DIE DIREKTION', termLog: '📜 Protokoll lesen', termCab: '🗄️ Aktenschrank entriegeln', termCabDone: '🗄️ Aktenschrank: entriegelt', termPurge: '⏳ Löschstatus',
+  purgeSay: (m) => `LÖSCHUNG UM 04:00 · noch ${m} Min. · genehmigt von DER DIREKTION · Abbruch: Haupthebel im Archiv, wenn PLAN mit 4. STOCK verbunden ist.`, cabUnlocked: 'Irgendwo im Raum macht ein Schloss klonk. Der Aktenschrank ist offen.',
+  cabLocked: 'Der Aktenschrank hat kein Schlüsselloch, nur ein kleines rotes Licht: „Gesteuert von CONCIERGE“.',
+  cabTitle: 'Aktenschrank', cabBody: '<p>Schubladen voller Reservierungen, die „nicht gefunden werden konnten“. Hunderte.</p>', takeFilmA: '🎞️ Folienstreifen nehmen', tookFilmA: 'Ein durchsichtiger Folienstreifen mit Punkten, abgelegt unter F wie Folie. Natürlich.', readFile: '🗂️ Personalakte lesen', cabEmpty: 'Sonst nichts Nützliches. Nur viele Menschen, nach denen niemand gesucht hat.',
+  tankTitle: 'Aquarium', tankBody: '<p>Ein großes Becken mit Blubberblasen, einer kleinen Burg und ein paar Fischen. In der Burg glänzt etwas Goldenes.</p>', tankBodyEmpty: '<p>Ein großes Becken mit Blubberblasen, einer kleinen Burg und ein paar Fischen. Die Burg ist jetzt leer.</p>',
+  tankReach: 'In der kleinen Burg glänzt etwas Goldenes. Du greifst hinein, alle Fische starren dich an, und du beschließt, dass du ein Werkzeug brauchst.', tankKey: 'Du fischst mit dem Kescher um die Burg herum. Heraus kommt ein schwerer goldener Schlüssel mit einem M. Die Fische wirken erleichtert.', tankEmpty: 'Die Fische schwimmen im Kreis. Die Burg ist jetzt leer.',
+  adoorTitle: 'Archivtür', adoorBody: '<p>Eine Stahltür: ARCHIV · CONCIERGE · NUR BEFUGTES PERSONAL. Ein Tastenfeld mit vier Ziffern. Jemand hat mit Bleistift an den Rahmen geschrieben: „Code auf den Folien“.</p>', adoorOpened: 'Klonk. Die Stahltür gleitet in die Wand. Kalte Luft und blaues Licht.',
+  wheelTitle: 'Chiffrierscheibe', wheelBody: 'Dreh den inneren Ring auf den Schlüssel. Such jeden Buchstaben des Geheimworts in der unteren Reihe und lies den Buchstaben darüber.',
+  filmATitle: 'Folie A', filmBTitle: 'Folie B', filmsTitle: 'Folienstapel', filmBody: 'Gegen das Licht gehalten: nur Punkte.', filmsBody: 'Gegen die Lampe gehalten, liegen die beiden Folien genau aufeinander. Wo sich die Punkte überlagern, leuchten sie weiß.',
+  filmsCombined: 'Du legst eine Folie auf die andere. Wo sich die Punkte überlagern, erscheinen vier weiße Ziffern!',
+  patchTitle: 'Steckfeld', patchBody: 'Tippe auf ein Feld, um es zu drehen. Verbinde PLAN links mit 4. STOCK rechts. Die leuchtende Leitung zeigt, wie weit das Signal kommt.', patchDone: 'Das Signal fließt ganz durch. Auf dem großen Bildschirm: „PLAN ↔ 4. STOCK: verbunden.“',
+  netSay: 'Ein kleiner grüner Kescher an einem Haken, beschriftet: „Für die Fische, meine einzigen Freunde.“ Du nimmst ihn.', netGone: 'Ein leerer Haken.',
+  racks: 'Reihen von Maschinen brummen und blinken. Eine davon heißt CONCIERGE und blinkt dich an, ein bisschen nervös.',
+  screenSay: (m) => `Der große Bildschirm: LÖSCHUNG 4. STOCK IN ${m} MIN. Darunter, kleiner: „Abbruch: Generalschlüssel + Hebel, wenn PLAN verbunden ist.“`,
+  leverLocked: 'Ein großer roter Hebel mit der Aufschrift HAUPT. Ein goldenes Schlüsselloch mit einem M hält ihn fest.', leverNoPlan: 'Der Schlüssel dreht sich, der Hebel bewegt sich und bleibt stecken. Der Bildschirm sagt: PLAN NICHT MIT 4. STOCK VERBUNDEN.',
+  leverGo: 'Der Schlüssel dreht sich. Du ziehst den Hebel ganz nach unten.',
+});
+Object.assign(TXT.de.views, { c3hall: 'Direktionsflur', office: 'Büro der Direktion', archive: 'CONCIERGE-Archiv' });
+Object.assign(TXT.de.svg, { manager: 'DIREKTION', mgrPlate: 'DIREKTION', archive: 'ARCHIV', concierge: 'CONCIERGE', plan: 'PLAN', floor4: '4. STOCK', purge: 'LÖSCHUNG IN', min: 'MIN', backOffice: '⟵ zurück ins Büro', eotm: 'MITARBEITENDE DES MONATS', months: ['JAN', 'FEB', 'MÄR', 'APR', 'MAI', 'JUN', 'JUL', 'AUG', 'SEP'], lever: 'HAUPT' });
+Object.assign(TXT.de.aria, { c3Scene: 'Der Direktionsflur', officeScene: 'Das Büro der Direktion', archScene: 'Das CONCIERGE-Archiv', mdoor: 'Tür der Direktion', portraits: 'Porträtwand', coat: 'Garderobenständer', plant: 'Topfpflanze mit Ausdruck', c3lift: 'Aufzug', window: 'Fenster', mdesk: 'Schreibtischschublade', terminal: 'CONCIERGE-Terminal', tank: 'Aquarium', cabinet: 'Aktenschrank', adoor: 'Archivtür', c3back: 'Zurück in den Flur', patch: 'Steckfeld', net: 'Kescher am Haken', lever: 'Haupthebel', screen: 'CONCIERGE-Bildschirm', racks: 'Serverschränke', a3back: 'Zurück ins Büro', confess: 'Zettel am Hebel', tile: (n, lit) => `Feld ${n}${lit ? ', leuchtet' : ''}` });
+Object.assign(TXT.de.items, {
+  wheel: ['Chiffrierscheibe', '', 'Zwei Messingringe mit dem Alphabet. Dreh den inneren Ring, um ein Geheimwort zu entschlüsseln.'],
+  filmA: ['Folie A', '', 'Ein durchsichtiger Folienstreifen mit verstreuten Punkten. Die Hälfte von irgendwas.'],
+  filmB: ['Folie B', '', 'Noch ein durchsichtiger Streifen mit Punkten. Allein ergibt er keinen Sinn.'],
+  films: ['Folien', 'gestapelt', 'Beide Folien übereinander. Jetzt liegen die Punkte genau aufeinander.'],
+  net: ['Kescher', '', 'Ein kleiner grüner Kescher fürs Aquarium.'],
+  mkey: ['Generalschlüssel', '', 'Ein schwerer goldener Schlüssel mit einem M. Leicht nass.'],
+});
+Object.assign(TXT.de.notes, {
+  purge: ['Ausdruck im Blumentopf', 'CONCIERGE · NACHTBERICHT. Ungeklärte Reservierungen im 4. Stock: 7 (Zimmer 401–407). Neu heute: 1 (Zimmer 404). Maßnahme um 04:00: LÖSCHUNG. Status: genehmigt von DER DIREKTION. Angenehme Nacht.'],
+  coat: ['Brief in der Manteltasche', 'Sehr geehrter Aufsichtsrat, der 4. Stock hat uns dieses Jahr 1,2 Millionen gespart: keine Reinigung, keine Steuern, keine Rückerstattungen. Die Gäste beschweren sich nicht, denn offiziell gibt es sie nicht. Ich schlage vor, den 4. Stock heute Nacht ganz zu löschen und zu feiern. Die Torte ist schon bestellt. — Die Direktion'],
+  log: ['CONCIERGE-Protokoll', '23:58 Neue Reservierung: ZIMMER 404. Angelegt von: Personal 0417. Notizfeld: „Jemand, der nicht im System ist, kann hindurchgehen.“ 23:59 Warnung: Zimmer 404 existiert nicht. 00:00 Gast trotzdem eingecheckt.'],
+  file: ['Personalakte', 'PERSONALLISTE, Nachtschicht. 0415 Dani, Hauswirtschaft. 0416 Robin, Küche. 0417 Sam, Nachtportier. Vorne klebt ein Zettel in der Handschrift der Direktion: „Sam stellt zu viele Fragen. Sam heute Nacht mit auf die Löschliste?“'],
+  confess: ['Zettel am Hebel', 'Ja, das war ich. Ich habe dich mit Absicht in Zimmer 404 gebucht. Personalkarten enden im 3. Stock, und das System beobachtet jeden von uns. Aber einen Gast, den es nicht gibt? Den sieht das System nicht. Es tut mir leid, dass ich dich da hineingezogen habe. Dreh den Schlüssel, zieh den Hebel, hol sie alle zurück. Ich warte an der Rezeption. — Sam'],
+});
+Object.assign(TXT.de.hints, {
+  c3_door: ['Die Tür der Direktion will vier Ziffern. Lies das Schild an der Tür.', 'Schau dir die Porträtwand an: In welchen Monaten war die Direktion „Mitarbeitende des Monats“? Mach aus den Monaten Zahlen (JAN = 1).', (c) => `Der Code lautet ${c}.`],
+  c3_wheel: ['Durchsuch den Schreibtisch der Direktion.', 'Die Schreibtischschublade ist nicht mal abgeschlossen.', 'Tippe im Büro auf den Schreibtisch und nimm die Chiffrierscheibe. Lies auch den Klebezettel.'],
+  c3_pass: ['Das Terminal will ein Passwort. Es steht verschlüsselt auf dem Klebezettel in der Schreibtischschublade.', 'Der Schlüssel ist die Zahl der Fische im Aquarium (eine Schnecke ist kein Fisch). Wähle die Chiffrierscheibe, tippe auf „Genauer ansehen“ und stell den Schlüssel ein.', (w) => `Das Passwort lautet ${w}.`],
+  c3_cab: ['Der Aktenschrank wird von CONCIERGE gesteuert.', 'Benutze das Menü des Terminals.', 'Tippe auf das Terminal, wähle „Aktenschrank entriegeln“, dann tippe auf den Schrank und nimm den Folienstreifen.'],
+  c3_filmB: ['Es gibt einen zweiten Folienstreifen. Wer trägt so etwas mit sich herum?', 'Die Direktion hat im Flur einen Mantel hängen lassen.', 'Tippe im Flur auf den Garderobenständer.'],
+  c3_films: ['Zwei durchsichtige Folien, jede mit einem halben Bild.', 'Kombiniere sie: tippe auf eine Folie, dann auf die andere.', 'Tippe auf Folie A, dann auf Folie B. Dann tippe auf die gestapelten Folien und auf „Genauer ansehen“.'],
+  c3_arch: ['Die Archivtür will vier Ziffern.', 'Die Bleistiftnotiz sagt: Code auf den Folien. Sieh dir die gestapelten Folien genau an: Die weißen Punkte sind die Ziffern.', (c) => `Der Code lautet ${c}.`],
+  c3_patch: ['Das Steckfeld im Archiv muss PLAN mit 4. STOCK verbinden.', 'Tippe auf Felder, um sie zu drehen. Die leuchtende Leitung zeigt, wie weit das Signal von links kommt.', 'Arbeite dich von der PLAN-Buchse aus vor: Dreh das nächste Feld, bis das Leuchten hineinfließt, dann das nächste, bis das Leuchten 4. STOCK erreicht.'],
+  c3_net: ['Im Aquarium glänzt etwas Goldenes, aber du brauchst ein Werkzeug.', 'Schau dich im Archiv um.', 'Tippe im Archiv auf den Kescher am Haken.'],
+  c3_key: ['Du hast einen Kescher.', 'Benutze ihn am Aquarium im Büro.', 'Wähle den Kescher und tippe auf das Aquarium.'],
+  c3_lever: ['Der Haupthebel im Archiv hat ein Schlüsselloch mit einem M.', 'Zuerst muss das Steckfeld verbunden sein, dann brauchst du den Generalschlüssel.', 'Wähle den Generalschlüssel und tippe auf den großen roten Hebel.'],
+});
+// chapter 2 now leads straight into chapter 3
+TXT.en.win2Text = (left, h, n) => `The brass 4 clicks into the panel and the whole lift hums. For the first time in years, floor 4 has a button. You press M. The lift climbs through the walls, the doors open, and you see a corridor lit by one desk lamp and a door with a gold plate: MANAGER. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5. Chapter 3 is waiting behind that door.`;
+TXT.de.win2Text = (left, h, n) => `Die Messing-4 rastet im Tableau ein, und der ganze Aufzug brummt. Zum ersten Mal seit Jahren hat der 4. Stock einen Knopf. Du drückst M. Der Aufzug klettert durch die Wände, die Türen öffnen sich, und vor dir liegt ein Flur, den nur eine Schreibtischlampe beleuchtet, und eine Tür mit goldenem Schild: DIREKTION. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5. Kapitel 3 wartet hinter dieser Tür.`;
 // language: ?lang=de|en in the link, then the last choice, then the phone's language
 let lang = (() => {
   const q = (/[?&]lang=(de|en)\b/.exec(location.search || '') || [])[1];
@@ -666,7 +841,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch === 2) { const m2 = 180 - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch === 2 || S.ch === 3) { const m2 = (S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -785,12 +960,16 @@ function tapItem(id) {
   Sound.init();
   if (S.sel === id) { S.sel = null; say(esc(item(id).desc)); }
   else if (S.sel) { combine(S.sel, id); }
-  else { S.sel = id; say(`${esc(item(id).desc)} ${t('useWhere')}`); Sound.click(); }
+  else {
+    S.sel = id; say(`${esc(item(id).desc)} ${t('useWhere')}${VIEW[id] ? ` <button class="link-btn" id="lookBtn" type="button" data-act="look">${esc(t('look'))}</button>` : ''}`); Sound.click();
+    if (VIEW[id]) $('lookBtn').addEventListener('click', () => VIEW[id]());
+  }
   renderInv();
 }
 function combine(a, b) {
   const pair = [a, b].sort().join('+');
   if (pair === 'batteries+remoteDead') { take('batteries'); take('remoteDead'); give('remote'); S.f.remoteWorks = true; S.sel = null; say(t('combined')); }
+  else if (pair === 'filmA+filmB') { take('filmA'); take('filmB'); give('films'); S.f.films = true; S.sel = null; Sound.unlock(); say(t('filmsCombined')); openFilm(3); }
   else if (a === 'chocolate' || b === 'chocolate') { S.sel = null; say(t('chocCombine')); Sound.nope(); }
   else { S.sel = null; say(t('combineFail')); Sound.nope(); }
   save();
@@ -877,6 +1056,7 @@ const HOTS = {
 
 function useItem(id, h) {
   if (S.ch === 2) return useItem2(id, h);
+  if (S.ch === 3) return useItem3(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -1265,11 +1445,366 @@ function escape2() {
   S.done = true; paused = true; Sound.win();
   const left = S.overtime ? 0 : Math.floor(S.left);
   if (!S.overtime) profile.best2 = Math.max(profile.best2 || 0, left);
-  profile.ch2done = true; saveProfile(); store.del(SAVE_KEY);
+  profile.ch2done = true; recordRun(); store.del(SAVE_KEY);
   $('lbPost').hidden = true; $('lbResult').textContent = '';
   showEnd(S.overtime ? t('win2EyebrowOver') : t('win2Eyebrow'), t('win2Title'), t('win2Text', mmss(left), S.hints, noteCount()), left, false);
 }
 function newGame2() { S = freshState2(); save(); begin(); say(t('start2')); }
+
+// ---------- chapter 3: the Manager's office (the finale)
+const TOTAL3 = 40 * 60;
+Object.assign(ICONS, { wheel: '🎡', filmA: '🎞️', filmB: '🎞️', films: '🎞️', net: '🥅', mkey: '🗝️' });
+const noteIds3 = ['purge', 'coat', 'log', 'file', 'confess'];
+// pipes: a tile is a bitmask of open sides, N=1 E=2 S=4 W=8; r = how often it has been turned clockwise
+const rot1 = (m) => ((m << 1) | (m >> 3)) & 15;
+const rotN = (m, k) => { for (let i = 0; i < k; i++) m = rot1(m); return m; };
+const DIRS = [[1, -1, 0], [2, 0, 1], [4, 1, 0], [8, 0, -1]];
+function tracePipes(P) {
+  // follow the signal from the PLAN socket (west of row sr) through the tiles; every tile has exactly two open sides
+  let r = P.sr, c = 0, from = 8; const lit = [];
+  for (let n = 0; n < 16; n++) {
+    const i = r * 4 + c, m = rotN(P.t[i].m, P.t[i].r);
+    if (!(m & from) || lit.includes(i)) break;
+    lit.push(i);
+    const out = m & ~from;
+    if (r === P.er && c === 3 && (out & 2)) return { lit, ok: true };
+    const d = DIRS.find(([b]) => out & b); if (!d) break;
+    r += d[1]; c += d[2]; from = rot1(rot1(d[0]));
+    if (r < 0 || r > 3 || c < 0 || c > 3) break;
+  }
+  return { lit, ok: false };
+}
+function makePipes() {
+  for (let tries = 0; tries < 400; tries++) {
+    const sr = Math.floor(Math.random() * 4), er = Math.floor(Math.random() * 4), seen = new Set();
+    let path = null;
+    const dfs = (r, c, acc) => {
+      acc.push([r, c]); seen.add(r * 4 + c);
+      if (r === er && c === 3) { if (acc.length >= 9) path = acc.slice(); }
+      else for (const [, dr, dc] of shuffle(DIRS)) { const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < 4 && cc >= 0 && cc < 4 && !seen.has(rr * 4 + cc)) dfs(rr, cc, acc); if (path) break; }
+      acc.pop(); seen.delete(r * 4 + c);
+    };
+    dfs(sr, 0, []);
+    if (!path) continue;
+    const tiles = Array.from({ length: 16 }, () => ({ m: pick([5, 3, 3]), r: 0 }));
+    const bitTo = (a, b) => DIRS.find(([, dr, dc]) => a[0] + dr === b[0] && a[1] + dc === b[1])[0];
+    path.forEach((p, k) => { tiles[p[0] * 4 + p[1]] = { m: (k === 0 ? 8 : bitTo(p, path[k - 1])) | (k === path.length - 1 ? 2 : bitTo(p, path[k + 1])), r: 0 }; });
+    tiles.forEach((x) => { x.r = Math.floor(Math.random() * 4); });
+    const P = { sr, er, t: tiles };
+    if (tracePipes(P).ok || (tracePipes(P).lit.length > 1 && tries < 399)) continue;   // start properly scrambled
+    return P;
+  }
+  return null;
+}
+// the two films: where both have a dot, the digits of the archive code shine through; 16 x 5 dots
+const FONT = ['111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001', '111100111001111', '111100111101111', '111001010010010', '111101111101111', '111101111001111'];
+function makeFilm(code) {
+  const on = Array(80).fill(false);
+  code.split('').forEach((d, k) => { for (let i = 0; i < 15; i++) if (FONT[+d][i] === '1') on[Math.floor(i / 3) * 16 + k * 4 + (i % 3)] = true; });
+  return on.map((x) => (x ? 3 : Math.random() < 0.38 ? 1 : Math.random() < 0.62 ? 2 : 0));   // 1 = only on A, 2 = only on B, 3 = on both
+}
+const FISH_SLOTS = [[38, 46], [88, 38], [140, 50], [192, 40], [42, 92], [96, 86], [148, 96], [202, 82], [46, 130], [102, 134]];
+const FISH_COL = ['#ff8a1f', '#ffd23f', '#ff6b6b', '#8ad0ff', '#c79bff', '#7bd88f'];
+function freshState3() {
+  const months = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 4).sort((a, b) => a - b);
+  const names = shuffle(['Sam', 'Dani', 'Robin', 'Kai', 'Noor', 'Alex', 'Jo', 'Mika', 'Ari']);
+  let n = 0; const staff = Array.from({ length: 9 }, (_, i) => (months.includes(i + 1) ? '' : names[n++]));
+  const pw = pick(['HOTEL', 'RADIO', 'PIANO', 'LOTUS', 'OPERA', 'TANGO', 'KOALA']);
+  const fish = 3 + Math.floor(Math.random() * 7);   // 3..9 fish: the key of the cipher
+  const enc = pw.split('').map((ch) => String.fromCharCode(65 + ((ch.charCodeAt(0) - 65 + fish) % 26))).join('');
+  const dcode = months.join('');
+  let acode; do { acode = String(1000 + Math.floor(Math.random() * 9000)); } while (acode === dcode);
+  const fishes = shuffle(FISH_SLOTS).slice(0, fish).map((p, i) => ({ x: p[0], y: p[1], c: i % 6, d: Math.random() < 0.5 ? 1 : -1 }));
+  return { v: 1, ch: 3, started: Date.now(), left: TOTAL3, ot: 0, hints: 0, hintSeen: {}, view: 'c3hall', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    dcode, staff, faces: Array.from({ length: 9 }, () => Math.floor(Math.random() * 6)), pw, fish, enc, fishes, acode, film: makeFilm(acode), pipes: makePipes(), wkey: 0 };
+}
+const noteCount3 = () => noteIds3.filter((n) => S.f['note_' + n]).length;
+
+// ----- pictures
+const P3 = { skin: ['#f2c9a0', '#d9a07a', '#a8714f', '#7a4e33', '#ffd9b8', '#c58c62'], hair: ['#2a1a10', '#d9a74a', '#8a3a1a', '#1a1a2a', '#c0c0c8', '#5a2a6a'], bg: ['#3c8a66', '#2f6a9a', '#9a3c5a', '#6a4a9a', '#2f7a76', '#c0752f'], shirt: ['#ffd23f', '#ff7aa8', '#8ad0ff', '#7bd88f', '#ff8a1f', '#c79bff'] };
+function portrait(i) {   // a 100 x 130 frame
+  const mgr = !S.staff[i], k = S.faces[i], hc = P3.hair[(k + i) % 6];
+  const hair = mgr ? '<path d="M31 50 q19 -34 38 0 q-19 -12 -38 0z" fill="#1a1a2a"/>' : [
+    `<path d="M31 52 q19 -36 38 0 l0 -10 q-19 -18 -38 0z" fill="${hc}"/>`,
+    `<circle cx="50" cy="30" r="9" fill="${hc}"/><path d="M32 50 q18 -30 36 0 q-18 -14 -36 0z" fill="${hc}"/>`,
+    `<path d="M30 72 q-4 -42 20 -42 q24 0 20 42 l-6 0 q2 -24 -14 -28 q-16 4 -14 28z" fill="${hc}"/>`][(k + i) % 3];
+  return `<rect width="100" height="130" fill="#d9a74a" stroke="#6b4a10" stroke-width="5"/><rect x="9" y="9" width="82" height="82" fill="${mgr ? '#5a1f3a' : P3.bg[k]}"/>
+  <path d="M22 91 q28 -36 56 0z" fill="${mgr ? '#1a1a2a' : P3.shirt[(k + i) % 6]}"/>${mgr ? '<path d="M46 68 l4 14 l4 -14z" fill="#e8453c"/>' : ''}
+  <circle cx="50" cy="52" r="18" fill="${mgr ? '#f2c9a0' : P3.skin[k]}"/>${hair}
+  <circle cx="44" cy="52" r="2.2" fill="#1a1010"/><circle cx="56" cy="52" r="2.2" fill="#1a1010"/><path d="M44 60 q6 5 12 0" fill="none" stroke="#1a1010" stroke-width="2" stroke-linecap="round"/>
+  ${mgr ? '<circle cx="56" cy="52" r="5.5" fill="none" stroke="#ffd23f" stroke-width="2"/><path d="M36 31 l4 -14 l10 8 l10 -8 l4 14z" fill="#ffd23f" stroke="#6b4a10" stroke-width="2"/>' : ''}
+  <rect x="9" y="95" width="82" height="30" fill="#2a1a10"/><text x="50" y="107" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="10" fill="#d9a74a">${esc(T().svg.months[i])}</text><text x="50" y="121" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="${mgr ? 10.5 : 12}" fill="#fff6d8">${mgr ? W('mgrPlate') : esc(S.staff[i])}</text>`;
+}
+function tankSvg() {   // a 240 x 200 tank
+  const fish = S.fishes.map((p, i) => `<g transform="translate(${p.x} ${p.y}) scale(${p.d} 1)"><g class="fish" style="animation-delay:-${(i * 0.73).toFixed(2)}s"><path d="M-10 0 l-12 -9 l0 18z" fill="${FISH_COL[p.c]}" stroke="#10181c" stroke-width="1.5"/><ellipse rx="15" ry="9" fill="${FISH_COL[p.c]}" stroke="#10181c" stroke-width="1.5"/><circle cx="8" cy="-2" r="2.2" fill="#10181c"/></g></g>`).join('');
+  return `<rect width="240" height="200" rx="6" fill="#1f6f9a" stroke="#10181c" stroke-width="6"/><rect x="6" y="6" width="228" height="22" fill="#8ad0ff" opacity="0.35"/>
+  <path d="M6 168 q30 -12 60 0 t60 0 t60 0 t48 0 V194 H6Z" fill="#e0bd62"/>
+  <path d="M30 168 q-8 -30 4 -60 M36 168 q10 -26 -2 -50" fill="none" stroke="#3fae6a" stroke-width="6" stroke-linecap="round"/>
+  <g transform="translate(150 112)"><rect width="56" height="56" fill="#b8a0c8" stroke="#10181c" stroke-width="3"/><path d="M0 0 v-12 h10 v8 h8 v-8 h10 v8 h8 v-8 h10 v8 h10 v-8 h0 v12z" fill="#b8a0c8" stroke="#10181c" stroke-width="3"/><path d="M18 56 v-22 a10 10 0 0 1 20 0 v22z" fill="#10181c"/>${S.f.mkey ? '' : '<circle class="glint" cx="28" cy="46" r="5" fill="#ffd23f"/><path d="M28 36 v20 M18 46 h20" stroke="#fff6d8" stroke-width="2" class="glint"/>'}</g>
+  <g transform="translate(78 164)"><ellipse cx="10" cy="2" rx="14" ry="4" fill="#9a8a70"/><circle cx="6" cy="-6" r="9" fill="#c0752f" stroke="#10181c" stroke-width="1.5"/><path d="M6 -6 m-4 0 a4 4 0 1 1 4 4" fill="none" stroke="#10181c" stroke-width="1.5"/><path d="M18 0 l4 -10 M21 0 l6 -8" stroke="#9a8a70" stroke-width="2"/></g>
+  ${fish}${[[60, 120], [64, 90], [70, 60], [180, 70], [176, 40]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${3 + (i % 2)}" fill="none" stroke="#cfeefc" stroke-width="1.5"/>`).join('')}`;
+}
+function filmSvg(which) {   // 1 = film A, 2 = film B, 3 = both stacked
+  let dots = '';
+  S.film.forEach((v, idx) => {
+    const x = 30 + (idx % 16) * 20, y = 34 + Math.floor(idx / 16) * 20;
+    if (which === 3) { if (v === 3) dots += `<circle cx="${x}" cy="${y}" r="8" fill="#fff" filter="url(#fglow)"/>`; else if (v) dots += `<circle cx="${x}" cy="${y}" r="4.5" fill="${v === 1 ? '#3fd0e0' : '#ff5ab4'}" opacity="0.6"/>`; }
+    else if (v & which) dots += `<circle cx="${x}" cy="${y}" r="7" fill="${which === 1 ? '#3fd0e0' : '#ff5ab4'}"/>`;
+  });
+  const holes = Array.from({ length: 12 }, (_, i) => `<rect x="${12 + i * 28}" y="4" width="14" height="8" rx="2" fill="#0b0910"/><rect x="${12 + i * 28}" y="132" width="14" height="8" rx="2" fill="#0b0910"/>`).join('');
+  return `<svg viewBox="0 0 350 144" width="100%" aria-hidden="true"><defs><filter id="fglow"><feGaussianBlur stdDeviation="2"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="350" height="144" rx="6" fill="${which === 3 ? '#2a2440' : '#3a3550'}"/>${holes}<rect x="12" y="18" width="326" height="108" fill="#ffffff" opacity="0.08"/>${dots}</svg>`;
+}
+function pipeSvg(m, lit) {
+  const col = lit ? '#6fdca8' : '#7d8a96', ends = { 1: [32, 0], 2: [64, 32], 4: [32, 64], 8: [0, 32] };
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="1" y="1" width="62" height="62" rx="8" fill="${lit ? '#16352c' : '#1a222c'}" stroke="#0b0910" stroke-width="2"/>${[1, 2, 4, 8].filter((b) => m & b).map((b) => `<line x1="32" y1="32" x2="${ends[b][0]}" y2="${ends[b][1]}" stroke="${col}" stroke-width="14"/>`).join('')}<circle cx="32" cy="32" r="10" fill="${col}"/></svg>`;
+}
+
+// ----- scenes
+function sceneC3Hall() {
+  const f = S.f;
+  const frames = Array.from({ length: 9 }, (_, i) => `<g transform="translate(${262 + (i % 3) * 58} ${118 + Math.floor(i / 3) * 74}) scale(0.5)">${portrait(i)}</g>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('c3Scene')}">
+  <defs><pattern id="ewp" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="#1d3a4a"/><path d="M22 6 l8 16 -8 16 -8 -16z" fill="#244657"/><circle cx="0" cy="0" r="3" fill="#d9a74a" opacity="0.5"/></pattern>
+  <radialGradient id="lglow3" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd58a" stop-opacity="0.5"/><stop offset="1" stop-color="#ffd58a" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1000" height="470" fill="url(#ewp)"/><rect y="440" width="1000" height="30" fill="#5d3f2a"/><rect y="470" width="1000" height="130" fill="#3a1a24"/>
+  <path d="M300 600 L420 470 L700 470 L820 600Z" fill="#c0392b"/><path d="M330 600 L432 470 L688 470 L790 600Z" fill="none" stroke="#d9a74a" stroke-width="4"/>
+  <circle cx="530" cy="330" r="190" fill="url(#lglow3)"/>
+  ${hot('c3lift', `<rect x="30" y="130" width="190" height="340" fill="#6b5424" stroke="#10181c" stroke-width="6"/><rect x="44" y="144" width="80" height="326" fill="#e0bd62"/><rect x="126" y="144" width="80" height="326" fill="#d2ad50"/><rect x="85" y="96" width="80" height="28" rx="4" fill="#0b0910"/><text x="125" y="117" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="18" fill="#ff5a4e">▼ 3</text>`)}
+  <text x="378" y="104" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="15" fill="#ffd23f">${W('eotm')}</text>
+  ${hot('portraits', `<rect x="252" y="110" width="186" height="232" fill="#000" opacity="0"/>${frames}`)}
+  ${hot('plant', `<rect x="470" y="340" width="110" height="30" fill="#5d3f2a" stroke="#2a1a10" stroke-width="3"/><rect x="480" y="370" width="10" height="70" fill="#4b3324"/><rect x="560" y="370" width="10" height="70" fill="#4b3324"/>
+    <path d="M492 340 l4 -40 h48 l4 40z" fill="#c0752f" stroke="#2a1a10" stroke-width="3"/><path d="M520 300 q-40 -40 -20 -90 M520 300 q10 -60 40 -80 M520 300 q-6 -50 -2 -110 M520 300 q30 -30 50 -30" fill="none" stroke="#3fae6a" stroke-width="12" stroke-linecap="round"/>
+    <rect x="532" y="262" width="34" height="44" fill="#efe6d2" stroke="#6b5f4a" stroke-width="2" transform="rotate(12 549 284)"/><path d="M538 274 h22 M538 284 h18 M538 294 h20" stroke="#6b5f4a" stroke-width="2" transform="rotate(12 549 284)"/>`)}
+  ${hot('mdoor', `<rect x="610" y="120" width="180" height="350" fill="${f.mdoorOpen ? '#0b0910' : '#7a2a3a'}" stroke="#10181c" stroke-width="6"/>${f.mdoorOpen ? '<path d="M610 120 L676 140 L676 452 L610 470Z" fill="#7a2a3a"/><rect x="690" y="300" width="90" height="170" fill="#ffd58a" opacity="0.18"/>' : '<rect x="632" y="150" width="136" height="130" fill="none" stroke="#5a1f2a" stroke-width="5"/><rect x="632" y="300" width="136" height="140" fill="none" stroke="#5a1f2a" stroke-width="5"/><circle cx="765" cy="300" r="9" fill="#d9a74a"/>'}
+    <rect x="640" y="84" width="120" height="30" rx="4" fill="#d9a74a" stroke="#6b4a10" stroke-width="2"/><text x="700" y="105" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="16" fill="#2a1a10">${W('manager')}</text>
+    <rect x="806" y="260" width="34" height="50" rx="4" fill="#10181c" stroke="#d9a74a" stroke-width="2"/>${[0, 1, 2].map((r) => [0, 1].map((c) => `<rect x="${812 + c * 12}" y="${266 + r * 12}" width="9" height="9" fill="${f.mdoorOpen ? '#6fdca8' : '#ffb300'}"/>`).join('')).join('')}`)}
+  ${hot('coat', `<rect x="905" y="120" width="10" height="340" fill="#4b3324"/><path d="M880 460 h60" stroke="#4b3324" stroke-width="10" stroke-linecap="round"/><path d="M895 128 l15 -10 l15 10" fill="none" stroke="#4b3324" stroke-width="6"/>
+    <path d="M880 140 q30 -14 60 0 l14 210 h-88z" fill="#2a2a3a" stroke="#10181c" stroke-width="4"/><path d="M910 140 l-8 60 l8 10 l8 -10z" fill="#e8453c"/><rect x="928" y="250" width="22" height="30" rx="3" fill="#1a1a2a"/>${f.coat ? '' : '<rect x="932" y="240" width="14" height="18" fill="#3fd0e0" opacity="0.8"/>'}`)}
+  </svg>`;
+}
+function sceneOffice() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('officeScene')}">
+  <defs><pattern id="wood3" width="60" height="470" patternUnits="userSpaceOnUse"><rect width="60" height="470" fill="#6b3a1e"/><rect width="4" height="470" fill="#4a2512"/><path d="M20 0 q10 120 0 240 t0 230" fill="none" stroke="#7a4626" stroke-width="3"/></pattern></defs>
+  <rect width="1000" height="470" fill="url(#wood3)"/><rect y="470" width="1000" height="130" fill="#2c4a3a"/><rect y="462" width="1000" height="10" fill="#2a1408"/>
+  ${hot('window', `<rect x="300" y="50" width="330" height="200" fill="#16213f" stroke="#2a1408" stroke-width="10"/><circle cx="570" cy="100" r="26" fill="#fff3b0"/><circle cx="582" cy="92" r="24" fill="#16213f"/>
+    ${[[320, 150, 50, 100], [380, 120, 40, 130], [430, 170, 60, 80], [500, 140, 45, 110], [555, 180, 60, 70]].map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#0d1428"/>${Array.from({ length: 6 }, (_, j) => `<rect x="${x + 8 + (j % 2) * 18}" y="${y + 10 + Math.floor(j / 2) * 22}" width="8" height="10" fill="#ffd23f" opacity="${j % 3 ? 0.9 : 0.3}"/>`).join('')}`).join('')}
+    <line x1="465" y1="50" x2="465" y2="250" stroke="#2a1408" stroke-width="8"/>`)}
+  ${hot('tank', `<rect x="30" y="420" width="250" height="50" fill="#2a1408"/><g transform="translate(35 222)">${tankSvg()}</g>`)}
+  ${hot('terminal', `<rect x="420" y="200" width="170" height="140" rx="12" fill="#c8c0a8" stroke="#10181c" stroke-width="5"/><rect x="436" y="214" width="138" height="96" rx="8" fill="#0b1a10"/>
+    <text x="505" y="246" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="15" fill="#6fdca8">${W('concierge')}</text><text x="505" y="276" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="#6fdca8">${f.termOk ? '&gt; OK_' : '&gt; ****_'}</text>
+    <rect x="470" y="324" width="70" height="14" fill="#a89f88"/>`)}
+  ${hot('mdesk', `<rect x="310" y="338" width="390" height="24" fill="#8a4a24" stroke="#2a1408" stroke-width="4"/><rect x="320" y="362" width="370" height="108" fill="#5a2e14" stroke="#2a1408" stroke-width="4"/>
+    <rect x="336" y="376" width="160" height="34" fill="#7a4020" stroke="#2a1408" stroke-width="3"/><rect x="396" y="388" width="40" height="8" rx="3" fill="#d9a74a"/><rect x="336" y="420" width="160" height="38" fill="#7a4020" stroke="#2a1408" stroke-width="3"/>
+    <rect x="590" y="314" width="40" height="26" rx="3" fill="#ffd23f" transform="rotate(-8 610 327)"/>`)}
+  ${hot('cabinet', `<rect x="720" y="220" width="100" height="250" fill="#8a949a" stroke="#10181c" stroke-width="5"/>${[0, 1, 2, 3].map((k) => `<rect x="730" y="${232 + k * 58}" width="80" height="48" fill="#a8b4ba" stroke="#10181c" stroke-width="3"/><rect x="755" y="${246 + k * 58}" width="30" height="8" rx="3" fill="#10181c"/>`).join('')}
+    <circle cx="806" cy="228" r="6" fill="${f.cabUnlocked ? '#6fdca8' : '#ff5a4e'}"/>`)}
+  ${hot('adoor', `<rect x="840" y="110" width="145" height="360" fill="${f.archOpen ? '#0e2a4a' : '#9aa8b0'}" stroke="#10181c" stroke-width="6"/>${f.archOpen ? '<rect x="846" y="116" width="133" height="348" fill="#2f6aff" opacity="0.25"/>' : '<path d="M846 420 l30 -30 h20 l-30 30z M886 420 l30 -30 h20 l-30 30z M926 420 l30 -30 h20 l-30 30z" fill="#ffd23f"/>'}
+    <rect x="852" y="130" width="121" height="30" rx="4" fill="#10181c"/><text x="912" y="151" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="15" fill="#8ad0ff">${W('archive')}</text>
+    <rect x="945" y="250" width="30" height="44" rx="4" fill="#10181c"/><circle cx="960" cy="264" r="6" fill="${f.archOpen ? '#6fdca8' : '#ff5a4e'}"/>`)}
+  ${hot('c3back', `<rect x="300" y="510" width="400" height="60" rx="12" fill="#1c2430" opacity="0.8"/><text x="500" y="549" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('backCorr')}</text>`)}
+  </svg>`;
+}
+function sceneArchive() {
+  const f = S.f, P = S.pipes, tr = tracePipes(P);
+  const mini = P.t.map((x, i) => { const m = rotN(x.m, x.r), cx = 410 + (i % 4) * 50, cy = 278 + Math.floor(i / 4) * 40, lit = tr.lit.includes(i), col = lit ? '#6fdca8' : '#5a6a7a', e = { 1: [0, -20], 2: [25, 0], 4: [0, 20], 8: [-25, 0] };
+    return [1, 2, 4, 8].filter((b) => m & b).map((b) => `<line x1="${cx}" y1="${cy}" x2="${cx + e[b][0]}" y2="${cy + e[b][1]}" stroke="${col}" stroke-width="8"/>`).join('') + `<circle cx="${cx}" cy="${cy}" r="6" fill="${col}"/>`; }).join('');
+  const racks = [40, 130, 220].map((x, k) => `<rect x="${x}" y="90" width="80" height="380" fill="#1a2438" stroke="#0b0910" stroke-width="4"/>${Array.from({ length: 12 }, (_, j) => `<rect x="${x + 8}" y="${102 + j * 30}" width="64" height="22" fill="#24324a"/><circle class="${(j + k) % 3 ? '' : 'blink'}" cx="${x + 18}" cy="${113 + j * 30}" r="4" fill="${['#6fdca8', '#ffd23f', '#ff5a4e', '#8ad0ff'][(j * 3 + k) % 4]}"/>`).join('')}`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('archScene')}">
+  <rect width="1000" height="470" fill="#0e1a2e"/><rect y="470" width="1000" height="130" fill="#1a2a40"/>${Array.from({ length: 10 }, (_, i) => `<line x1="${i * 110}" y1="470" x2="${i * 110 - 60}" y2="600" stroke="#24364f" stroke-width="3"/>`).join('')}
+  <rect y="0" width="1000" height="26" fill="#2f6aff" opacity="0.35"/>
+  ${hot('racks', racks)}
+  ${hot('screen', `<rect x="340" y="40" width="330" height="170" rx="10" fill="#0b0910" stroke="#3a4a6a" stroke-width="6"/><text x="505" y="86" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="20" fill="#8ad0ff">${W('concierge')}</text>
+    <text x="505" y="132" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="22" fill="${f.patched ? '#6fdca8' : '#ff5a4e'}">${f.patched ? `${W('plan')} ↔ ${W('floor4')}` : W('purge')}</text>
+    <text x="505" y="180" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="34" fill="#ff5a4e">${S.overtime ? '00' : Math.ceil(S.left / 60)} ${W('min')}</text>`)}
+  ${hot('patch', `<rect x="370" y="240" width="270" height="200" rx="8" fill="#2a3448" stroke="#0b0910" stroke-width="5"/>${mini}
+    <rect x="352" y="${266 + P.sr * 40}" width="26" height="24" rx="4" fill="#d9a74a"/><rect x="632" y="${266 + P.er * 40}" width="26" height="24" rx="4" fill="${f.patched ? '#6fdca8' : '#d9a74a'}"/>`)}
+  ${hot('net', f.net ? '<path d="M720 150 q10 -16 20 0" fill="none" stroke="#a8b4ba" stroke-width="5"/>' : '<path d="M720 150 q10 -16 20 0" fill="none" stroke="#a8b4ba" stroke-width="5"/><rect x="726" y="150" width="8" height="120" fill="#c0752f"/><ellipse cx="730" cy="300" rx="34" ry="40" fill="none" stroke="#3fae6a" stroke-width="6"/><path d="M706 280 l48 40 M754 280 l-48 40 M700 300 h60" stroke="#3fae6a" stroke-width="2"/>')}
+  ${hot('lever', `<rect x="820" y="400" width="140" height="70" rx="8" fill="#ffd23f" stroke="#10181c" stroke-width="5"/><path d="M830 400 l20 -20 h20 l-20 20z M870 400 l20 -20 h20 l-20 20z M910 400 l20 -20 h20 l-20 20z" fill="#10181c"/>
+    <rect x="874" y="${f.lever ? 380 : 180}" width="18" height="${f.lever ? 40 : 220}" fill="#8a949a" stroke="#10181c" stroke-width="3"/><circle cx="883" cy="${f.lever ? 380 : 170}" r="30" fill="#e8453c" stroke="#10181c" stroke-width="5"/>
+    <rect x="910" y="420" width="36" height="30" rx="4" fill="#10181c"/><text x="928" y="442" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="18" fill="#d9a74a">M</text>
+    <text x="890" y="494" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="16" fill="#ffd23f">${W('lever')}</text>`)}
+  ${hot('confess', '<rect x="790" y="300" width="64" height="50" fill="#efe6d2" stroke="#b8a98a" stroke-width="2" transform="rotate(-8 822 325)"/><path d="M798 314 h46 M798 326 h40 M798 338 h44" stroke="#6b5f4a" stroke-width="3" transform="rotate(-8 822 325)"/>')}
+  ${hot('a3back', `<rect x="300" y="520" width="400" height="56" rx="12" fill="#0b0910" opacity="0.7"/><text x="500" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('backOffice')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { c3hall: sceneC3Hall, office: sceneOffice, archive: sceneArchive });
+
+// ----- close-ups
+function openCodePad(title, html, answer, onOk) {
+  openModal(title, `${html}<div class="row"><div class="display" id="cd"></div></div><div class="keypad" id="ck"></div><p class="tip" id="cMsg"></p>`, (b) => {
+    let typed = ''; const n = answer.length, pad = b.querySelector('#ck'), msg = b.querySelector('#cMsg');
+    const show = (ok) => { const d = b.querySelector('#cd'); d.textContent = (typed + '-'.repeat(n)).slice(0, n); d.classList.toggle('ok', !!ok); };
+    for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK']) {
+      const btn = mk('button', `key${k === 'C' || k === 'OK' ? ' wide' : ''}`, k); btn.setAttribute('data-key', k);
+      btn.addEventListener('click', () => {
+        Sound.click();
+        if (k === 'C') typed = '';
+        else if (k === 'OK') { if (typed === answer) { show(true); Sound.unlock(); onOk(msg); save(); return; } Sound.nope(); msg.textContent = t('codeWrong'); typed = ''; }
+        else if (typed.length < n) typed += k;
+        show();
+      });
+      pad.appendChild(btn);
+    }
+    show();
+  });
+}
+function openPortraits() {
+  openModal(t('portraitsTitle'), `<p>${t('portraitsBody')}</p><div class="portraits">${Array.from({ length: 9 }, (_, i) => `<svg viewBox="-4 -4 108 138" aria-hidden="true">${portrait(i)}</svg>`).join('')}</div>`);
+}
+function openMDoor() {
+  openCodePad(t('mdoorTitle'), t('mdoorBody'), S.dcode, (msg) => {
+    S.f.mdoorOpen = true; Sound.door(); msg.textContent = t('mdoorOpened'); say(t('mdoorOpened'));
+    setTimeout(() => { if (!$('modal').hidden) { closeModal(); go('office'); say(t('toOffice')); } }, 1100);
+  });
+}
+function openADoor() {
+  openCodePad(t('adoorTitle'), t('adoorBody'), S.acode, (msg) => {
+    S.f.archOpen = true; Sound.door(); msg.textContent = t('adoorOpened'); say(t('adoorOpened'));
+    setTimeout(() => { if (!$('modal').hidden) { closeModal(); go('archive'); say(t('toArchive')); } }, 1100);
+  });
+}
+function openDesk3() {
+  openModal(t('deskTitle'), `${t('deskBody')}<div class="chips" id="dk"></div>`, (b) => {
+    const box = b.querySelector('#dk');
+    if (!S.f.wheelTaken) act(box, 'wheel', t('takeWheel'), (c) => { S.f.wheelTaken = true; give('wheel'); c.remove(); say(t('tookWheel')); }, 'chip take');
+    act(box, 'sticky', t('readSticky'), () => { S.f.stickyRead = true; save(); Sound.click(); openModal(t('stickyTitle'), t('stickyBody', S.enc)); });
+  });
+}
+function openWheel() {
+  openModal(t('wheelTitle'), `<p>${t('wheelBody')}</p>${S.f.stickyRead ? `<div class="row"><div class="display enc">${S.enc}</div></div>` : ''}<div class="wheel" id="wh"></div><div class="row"><button class="key" type="button" id="wl" data-act="wl" aria-label="−1">‹</button><div class="display" id="wk" style="min-width:150px;font-size:22px"></div><button class="key" type="button" id="wr" data-act="wr" aria-label="+1">›</button></div>`, (b) => {
+    const draw = () => {
+      const k = S.wkey, half = (a) => `<div class="wrow">${Array.from({ length: 13 }, (_, i) => `<span>${String.fromCharCode(65 + a + i)}</span>`).join('')}</div><div class="wrow low">${Array.from({ length: 13 }, (_, i) => { const L = String.fromCharCode(65 + ((a + i + k) % 26)); return `<span class="${S.f.stickyRead && S.enc.includes(L) ? 'hit' : ''}">${L}</span>`; }).join('')}</div>`;
+      b.querySelector('#wh').innerHTML = half(0) + half(13);
+      b.querySelector('#wk').textContent = `${t('keyWord')} ${k}`;
+    };
+    b.querySelector('#wl').addEventListener('click', () => { S.wkey = (S.wkey + 25) % 26; Sound.click(); draw(); save(); });
+    b.querySelector('#wr').addEventListener('click', () => { S.wkey = (S.wkey + 1) % 26; Sound.click(); draw(); save(); });
+    draw();
+  });
+}
+function openFilm(which) {
+  openModal(t(which === 3 ? 'filmsTitle' : which === 1 ? 'filmATitle' : 'filmBTitle'), `${filmSvg(which)}<p>${esc(t(which === 3 ? 'filmsBody' : 'filmBody'))}</p>`);
+}
+const VIEW = { wheel: openWheel, filmA: () => openFilm(1), filmB: () => openFilm(2), films: () => openFilm(3) };
+function openTerminal() {
+  if (!S.f.termOk) {
+    openModal(t('termTitle'), `<div class="tvscreen">${esc(t('termBody'))}</div><div class="row"><input class="wordin" id="pw" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="${esc(t('termTitle'))}"></div><div class="row"><button class="btn" id="pwgo" type="button" data-act="pw">${esc(t('tryBtn'))}</button></div><p class="tip" id="pwmsg"></p>`, (b) => {
+      const inp = b.querySelector('#pw'), msg = b.querySelector('#pwmsg');
+      const go3 = () => {
+        if (inp.value.trim().toUpperCase() === S.pw) { S.f.termOk = true; Sound.unlock(); msg.textContent = t('termOk'); say(t('termOk')); save(); setTimeout(() => { if (!$('modal').hidden) openTerminal(); }, 900); }
+        else { Sound.nope(); msg.textContent = t('termWrong'); }
+      };
+      b.querySelector('#pwgo').addEventListener('click', go3);
+      inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); go3(); } });
+    });
+    return;
+  }
+  openModal(t('termTitle'), `<div class="tvscreen">${esc(t('termMenu'))}</div><div class="chips" id="tm"></div><p class="tip" id="tmMsg"></p>`, (b) => {
+    const box = b.querySelector('#tm'), msg = b.querySelector('#tmMsg');
+    act(box, 'log', t('termLog'), () => openNote('log'));
+    if (!S.f.cabUnlocked) act(box, 'cab', t('termCab'), (c) => { S.f.cabUnlocked = true; Sound.unlock(); c.textContent = t('termCabDone'); c.disabled = true; msg.textContent = t('cabUnlocked'); say(t('cabUnlocked')); save(); }, 'chip take');
+    else box.appendChild(mk('span', 'chip', esc(t('termCabDone'))));
+    act(box, 'purge', t('termPurge'), () => { Sound.beep(); msg.textContent = t('purgeSay', Math.ceil(S.left / 60)); });
+  });
+}
+function openCabinet() {
+  openModal(t('cabTitle'), `${t('cabBody')}<div class="chips" id="cb"></div>`, (b) => {
+    const box = b.querySelector('#cb');
+    if (!S.f.filmATaken) act(box, 'filmA', t('takeFilmA'), (c) => { S.f.filmATaken = true; give('filmA'); c.remove(); say(t('tookFilmA')); }, 'chip take');
+    act(box, 'file', t('readFile'), () => openNote('file'));
+    if (S.f.filmATaken) box.appendChild(mk('span', '', esc(t('cabEmpty'))));
+  });
+}
+function openTank() {
+  openModal(t('tankTitle'), `<svg viewBox="-4 -4 248 208" aria-hidden="true">${tankSvg()}</svg>${S.f.mkey ? t('tankBodyEmpty') : t('tankBody')}`);
+}
+function openPatch() {
+  openModal(t('patchTitle'), `<p>${t('patchBody')}</p><div class="pipes" id="pp"></div><p class="tip" id="ppMsg"></p>`, (b) => {
+    const grid = b.querySelector('#pp'), msg = b.querySelector('#ppMsg'), P = S.pipes;
+    let best = tracePipes(P).lit.length;
+    const draw = () => {
+      const tr = tracePipes(P); grid.innerHTML = '';
+      for (let r = 0; r < 4; r++) {
+        grid.appendChild(mk('span', 'plug', r === P.sr ? `${W('plan')}<br>▶` : ''));
+        for (let c = 0; c < 4; c++) {
+          const i = r * 4 + c, lit = tr.lit.includes(i), btn = mk('button', `pipe${lit ? ' lit' : ''}`, pipeSvg(rotN(P.t[i].m, P.t[i].r), lit));
+          btn.setAttribute('data-pipe', String(i)); btn.setAttribute('aria-label', T().aria.tile(i + 1, lit));
+          btn.addEventListener('click', () => turn(i)); grid.appendChild(btn);
+        }
+        grid.appendChild(mk('span', `plug${S.f.patched ? ' ok' : ''}`, r === P.er ? `▶<br>${W('floor4')}` : ''));
+      }
+    };
+    const turn = (i) => {
+      if (S.f.patched) return;
+      P.t[i].r = (P.t[i].r + 1) % 4; Sound.click();
+      const tr = tracePipes(P);
+      if (tr.ok) { S.f.patched = true; Sound.unlock(); Sound.win(); msg.textContent = t('patchDone'); say(t('patchDone')); }
+      else if (tr.lit.length > best) Sound.tone(300 + tr.lit.length * 70, 0.12, 'triangle', 0.08);
+      best = tr.lit.length; save(); draw();
+    };
+    draw(); if (S.f.patched) msg.textContent = t('patchDone');
+  });
+}
+
+Object.assign(HOTS, {
+  c3lift: () => { Sound.nope(); say(t('c3lift')); },
+  portraits: () => openPortraits(),
+  plant: () => { say(t('plantSay')); openNote('purge'); },
+  mdoor: () => { if (S.f.mdoorOpen) { go('office'); say(t('toOffice')); } else openMDoor(); },
+  coat: () => { if (!S.f.coat) { S.f.coat = true; give('filmB'); say(t('coatSay')); openNote('coat'); } else say(t('coatAgain')); },
+  c3back: () => { go('c3hall'); say(t('back3')); },
+  a3back: () => { go('office'); say(t('backOff')); },
+  window: () => say(t('window')),
+  tank: () => { if (!S.f.mkey) say(t('tankReach')); openTank(); },
+  terminal: () => openTerminal(),
+  mdesk: () => openDesk3(),
+  cabinet: () => { if (!S.f.cabUnlocked) { Sound.nope(); say(t('cabLocked')); } else openCabinet(); },
+  adoor: () => { if (S.f.archOpen) { go('archive'); say(t('toArchive')); } else openADoor(); },
+  racks: () => { Sound.tv(); say(t('racks')); },
+  screen: () => { Sound.beep(); say(t('screenSay', Math.ceil(S.left / 60))); },
+  patch: () => openPatch(),
+  net: () => { if (!S.f.net) { S.f.net = true; give('net'); say(t('netSay')); } else say(t('netGone')); },
+  lever: () => { if (!S.f.lever) { Sound.nope(); say(t('leverLocked')); } },
+  confess: () => openNote('confess'),
+});
+function useItem3(id, h) {
+  const f = S.f;
+  if (id === 'wheel' && (h === 'mdesk' || h === 'terminal')) { S.sel = null; openWheel(); return true; }
+  if (id === 'net' && h === 'tank') { take('net'); f.mkey = true; give('mkey'); Sound.water(); say(t('tankKey')); return true; }
+  if (id === 'mkey' && h === 'lever') {
+    S.sel = null;
+    if (!f.patched) { Sound.nope(); say(t('leverNoPlan')); return true; }
+    take('mkey'); f.lever = true; Sound.door(); say(t('leverGo')); setTimeout(escape3, 1500); return true;
+  }
+  if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
+  return false;
+}
+const runTotal = (ch) => (ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+function recordRun() {
+  profile.runs = Object.assign({}, profile.runs);
+  profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
+  saveProfile();
+}
+const hms = (s) => (s >= 3600 ? `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}` : mmss(s));
+function escape3() {
+  if (!S || S.done || S.ch !== 3) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best3 = Math.max(profile.best3 || 0, left);
+  profile.ch3done = true; recordRun(); store.del(SAVE_KEY);
+  const R = profile.runs, all = [1, 2, 3].every((c) => R[c]);
+  const isTrue = all && [1, 2, 3].every((c) => R[c].hints === 0);
+  if (isTrue) profile.trueEnd = true;
+  saveProfile();
+  let text = t('win3Text', mmss(left), S.hints, noteCount3());
+  text += ' ' + (all ? t('finalTime', hms([1, 2, 3].reduce((a, c) => a + R[c].used, 0)), [1, 2, 3].reduce((a, c) => a + R[c].hints, 0)) : t('finalPartial'));
+  text += ' ' + (isTrue ? t('trueText') : t('trueMiss'));
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win3EyebrowOver') : t('win3Eyebrow'), isTrue ? t('true3Title') : t('win3Title'), text, left, false);
+  $('screenEnd').classList.toggle('golden', isTrue);
+}
+function newGame3() { S = freshState3(); save(); begin(); say(t('start3')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -1282,11 +1817,16 @@ const GOALS2 = [
   ['c2_lf', () => S.f.lfSolved], ['c2_door', () => S.f.recOpen], ['c2_post', () => S.f.cardTaken], ['c2_power', () => S.f.power], ['c2_coin', () => S.f.coin || S.f.btn4],
   ['c2_vend', () => S.f.btn4], ['c2_card', () => S.f.cardUsed], ['c2_bin', () => S.f.liftOpen], ['c2_place', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const GOALS3 = [
+  ['c3_door', () => S.f.mdoorOpen], ['c3_wheel', () => S.f.wheelTaken], ['c3_pass', () => S.f.termOk], ['c3_cab', () => S.f.filmATaken], ['c3_filmB', () => S.f.coat],
+  ['c3_films', () => S.f.films], ['c3_arch', () => S.f.archOpen], ['c3_patch', () => S.f.patched], ['c3_net', () => S.f.net || S.f.mkey], ['c3_key', () => S.f.mkey], ['c3_lever', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
-  const text = (h) => (typeof h === 'function' ? h(g.id === 'c2_post' ? S.word : g.id === 'c2_bin' ? String(S.val) : code().join('')) : h);
+  const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
   openModal(t('hintsTitle'), `<p>${t('hintsIntro')}</p><ol class="hints" id="hl">${g.hints.slice(0, seen).map((h) => `<li>${esc(text(h))}</li>`).join('')}</ol><div class="row" id="hr"></div>`, (b) => {
     const row = b.querySelector('#hr');
     if (seen < g.hints.length) act(row, 'hint', seen ? t('hintMore') : t('hintFirst'), () => { S.hintSeen[g.id] = seen + 1; S.hints++; S.left -= HINT_COST; save(); tickClock(); openHints(); }, 'btn');
@@ -1309,9 +1849,9 @@ function frame(now) {
   if (!S.overtime) {
     const before = Math.ceil(S.left / 60);
     S.left -= dt;
-    if (Math.ceil(S.left / 60) !== before) { tickClock(); if (S.view === 'bed' && $('modal').hidden) renderScene(); save(); }
+    if (Math.ceil(S.left / 60) !== before) { tickClock(); if ((S.view === 'bed' || S.view === 'archive') && $('modal').hidden) renderScene(); save(); }
     if (S.left <= 0) { S.left = 0; timeUp(); }
-  }
+  } else S.ot = (S.ot || 0) + dt;
   // steam builds while the shower runs and slowly fades when it is off
   const target = S.f.showerOn ? 1 : 0, old = S.steam;
   S.steam += (target - S.steam) * dt * (S.f.showerOn ? 0.45 : 0.12);
@@ -1319,8 +1859,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && S.ch !== 2); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 3); $('btnNextCh').textContent = t(S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -1328,20 +1868,21 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  showEnd(t(S.ch === 2 ? 'up2Eyebrow' : 'upEyebrow'), t(S.ch === 2 ? 'up2Title' : 'upTitle'), t(S.ch === 2 ? 'up2Text' : 'upText'), 0, true);
+  const u = S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
   S.done = true; paused = true; Sound.win();
   const left = S.overtime ? 0 : Math.floor(S.left);
   if (!S.overtime) { profile.best = Math.max(profile.best, left); profile.escapes++; }
-  profile.ch1done = true; saveProfile();
+  profile.ch1done = true; recordRun();
   store.del(SAVE_KEY);
   showEnd(S.overtime ? t('winEyebrowOver') : t('winEyebrow', hotel()), t('winTitle'), S.overtime ? t('winTextOver') : t('winText', mmss(left), S.hints), left, false);
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => newGame2());
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -1361,6 +1902,12 @@ $('btnCh2').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh2 > 4000) { armedCh2 = Date.now(); $('btnCh2').textContent = t('confirmNew'); return; }
   armedCh2 = 0; newGame2();
+});
+let armedCh3 = 0;
+$('btnCh3').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
+  armedCh3 = 0; newGame3();
 });
 $('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say(t('back')); });
 $('btnMenu').addEventListener('click', () => { paused = true; save(); showStart(); });
@@ -1383,6 +1930,7 @@ function showStart() {
   $('btnContinue').hidden = !saved || saved.done;
   $('btnNew').textContent = saved && !saved.done ? t('newGame') : t('checkIn'); armedNew = 0;
   $('btnCh2').hidden = !profile.ch1done; $('btnCh2').textContent = t('ch2Btn'); armedCh2 = 0;
+  $('btnCh3').hidden = !profile.ch2done; $('btnCh3').textContent = t('ch3Btn'); armedCh3 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
