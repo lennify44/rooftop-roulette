@@ -125,7 +125,7 @@ body {
   <div class="hud" id="hud" hidden>
     <div>
       <div class="pts"><span id="pts">0</span> <small>pts</small></div>
-      <div class="sub">🎞 <span id="film">12</span> · <span id="dist">0</span> m · <span id="district">Market</span></div>
+      <div class="sub">⏱ <span id="deadline">40</span>s · 🎞 <span id="film">12</span> · <span id="dist">0</span> m · <span id="district">Market</span></div>
       <div class="focus" aria-label="Focus"><i id="focusBar"></i></div>
     </div>
     <div class="hud-btns">
@@ -153,7 +153,7 @@ body {
           <li>📷 <b>Hold the left half</b> to raise the camera (time slows while focus lasts), <b>let go</b> to take the photo.</li>
           <li>🎯 Points for a centred subject, its best moment (wings spread, firework at its peak) and for shooting in mid-air.</li>
           <li>🦘 <b>Right half</b> jumps, hold for higher. Jumping also lifts the viewfinder to high subjects.</li>
-          <li>🧺 Don’t jump into washing lines, jump over skylights. Bumps cost film. Out of film? Run to the newsroom roof.</li>
+          <li>⏱ The deadline runs: good photos add seconds, empty frames cost 2 s. Out of film? Run to the newsroom roof.</li>
         </ul>
         <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
         <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
@@ -263,7 +263,7 @@ const districtAt = (m) => DISTRICTS[Math.min(DISTRICTS.length - 1, Math.floor(m 
 const UPGRADES = [
   { id: 'wide', name: 'Wide lens', price: 200, desc: 'A viewfinder a quarter bigger.' },
   { id: 'grip', name: 'Steady grip', price: 250, desc: 'Focus lasts 40 % longer.' },
-  { id: 'film', name: 'Extra film', price: 300, desc: 'Twenty frames per run instead of fifteen.' },
+  { id: 'film', name: 'Extra film', price: 300, desc: 'Thirty frames per run instead of twenty-four.' },
   { id: 'fast', name: 'Fast film', price: 400, desc: 'No motion blur even without slowing time.' },
 ];
 const has = (id) => !!profile.up[id];
@@ -381,10 +381,10 @@ function spawnSub() {
 
 // ---------- flow
 function newRunner() { return { x: 0, y: 420, vx: 300, vy: 0, ground: true, jumpHeld: false, holdT: 0, buffer: 0, coyote: 0, alive: true }; }
-const maxFilm = () => (has('film') ? 20 : 15);
+const maxFilm = () => (has('film') ? 30 : 24);
 function startRun() {
   Sound.init();
-  Object.assign(game, { id: game.id + 1, running: true, paused: false, ended: false, t: 0, run: newRunner(), roofs: [], items: [], subs: [], genX: 0, film: maxFilm(), pts: 0, shots: [], focus: 1, aiming: false, slow: false, district: 0, nextSub: 1.2, gust: 0, gustT: 8, deliver: null, flash: 0, parts: [], floats: [], camX: -200, stumble: 0, inv: 0 });
+  Object.assign(game, { id: game.id + 1, running: true, paused: false, ended: false, t: 0, run: newRunner(), roofs: [], items: [], subs: [], genX: 0, film: maxFilm(), pts: 0, shots: [], deadline: 40, streak: 0, call: null, shake: 0, focus: 1, aiming: false, slow: false, district: 0, nextSub: 1.2, gust: 0, gustT: 8, deliver: null, flash: 0, parts: [], floats: [], camX: -200, stumble: 0, inv: 0 });
   gen(4000);
   ['screenStart', 'screenOver', 'screenPause', 'screenShop', 'screenAlbum'].forEach((id) => { $(id).hidden = true; });
   $('hud').hidden = false; $('zones').hidden = false; $('zones').classList.remove('fade'); clearTimeout(zoneTimer); zoneTimer = setTimeout(() => $('zones').classList.add('fade'), 5000);
@@ -399,7 +399,7 @@ function endRun(why) {
   const total = Math.round(game.pts * (why === 'delivered' ? 1.2 : 1)), fee = Math.round(total / 10);
   const isBest = total > profile.best;
   profile.best = Math.max(profile.best, total); profile.bestDistrict = Math.max(profile.bestDistrict, dNo); profile.bank += fee; saveProfile();
-  const WHY = { delivered: ['Front page!', 'photos delivered (+20 %)'], fall: ['Missed the roof', 'fell between the roofs'], glass: ['Through the glass', 'crashed through a skylight'], quit: ['Run over', 'ended the run'] };
+  const WHY = { deadline: ['Deadline missed', 'the paper went to print without you'], delivered: ['Front page!', 'photos delivered (+20 %)'], fall: ['Missed the roof', 'fell between the roofs'], glass: ['Through the glass', 'crashed through a skylight'], quit: ['Run over', 'ended the run'] };
   if (why === 'delivered') Sound.win();
   const best = game.shots.slice().sort((a, b) => b.pts - a.pts)[0];
   $('overEyebrow').textContent = `${districtAt(m).name} · ${WHY[why][1]}`;
@@ -413,7 +413,7 @@ function pause(on) { if (!game.running) return; game.paused = on; pointers.clear
 let toastTimer = 0;
 function toast(title, text) { const el = $('toast'); el.textContent = title; if (text) { const s = mk('span'); s.textContent = text; el.appendChild(s); } el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2200); }
 function updateHud() {
-  $('pts').textContent = fmt(game.pts); $('film').textContent = game.film; $('dist').textContent = fmt(metres()); $('district').textContent = DISTRICTS[game.district].name;
+  $('pts').textContent = fmt(game.pts); $('film').textContent = game.film; $('deadline').textContent = Math.max(0, Math.ceil(game.deadline)); $('dist').textContent = fmt(metres()); $('district').textContent = DISTRICTS[game.district].name;
   $('focusBar').style.width = `${Math.round(game.focus * 100)}%`;
 }
 function floatText(t, x, y, c) { game.floats.push({ t, x, y, c, life: 1 }); }
@@ -446,16 +446,25 @@ function snap() {
     hits.push({ s, p, why: { kind: s.kind, centre: +centre.toFixed(2), pose: +pose(s).toFixed(2), air: +air.toFixed(2), steady, crop, again: s.shot } });
   }
   if (!game.film) outOfFilm();
-  if (!hits.length) { showPolaroid('🌫️', 0, 'Nothing in the frame'); updateHud(); return; }
+  if (!hits.length) { game.deadline -= 2; game.streak = 0; showPolaroid('🌫️', 0, 'Nothing in the frame · −2 s'); updateHud(); return; }
   hits.sort((a, b) => b.p - a.p);
   game.lastShot = hits[0].why;
-  const main = hits[0], total = Math.round(main.p + hits.slice(1).reduce((a, h) => a + h.p * 0.3, 0));
+  const main = hits[0], raw = main.p + hits.slice(1).reduce((a, h) => a + h.p * 0.3, 0);
+  // pressure and reward (player feedback): good shots buy time and build a streak multiplier
+  const q = raw / (SUBJECTS[main.s.kind].base * 1.4);
+  game.streak = q >= 0.45 ? game.streak + 1 : 0;
+  const smult = 1 + Math.min(game.streak, 8) * 0.25, total = Math.round(raw * smult);
+  const gain = q >= 0.65 ? 11 : q >= 0.45 ? 8 : q >= 0.25 ? 5 : 3; game.deadline = Math.min(60, game.deadline + gain);
+  const CALLS = { 2: 'GREAT SHOT!', 4: 'FRONT PAGE!', 6: 'COVER STORY!', 8: 'PULITZER!' };
+  if (CALLS[game.streak]) { game.call = { text: CALLS[game.streak], t: 0 }; Sound.great(); }
+  if (gain) floatText(`+${gain} s`, game.run.x + 120, game.run.y - 140, '#7dffb2');
   for (const h of hits) h.s.shot = true;
   game.pts += total; game.shots.push({ kind: main.s.kind, pts: total });
   const S = SUBJECTS[main.s.kind], prev = profile.album[main.s.kind] || 0;
   if (total > prev) { profile.album[main.s.kind] = total; saveProfile(); }
   const st = starsFor(main.s.kind, total);
-  showPolaroid(S.emoji, total, `${S.name}${hits.length > 1 ? ` +${hits.length - 1}` : ''} ${'★'.repeat(st)}${total > prev ? ' · new best' : ''}`);
+  showPolaroid(S.emoji, total, `${S.name}${hits.length > 1 ? ` +${hits.length - 1}` : ''} ${'★'.repeat(st)}${game.streak >= 2 ? ` · ×${smult}` : ''}${total > prev ? ' · new best' : ''}`);
+  game.shake = Math.max(game.shake, 4 + st * 3);
   if (st === 3) Sound.great();
   updateHud();
 }
@@ -470,6 +479,9 @@ function update(dtReal) {
   const drain = has('grip') ? 0.36 : 0.5;
   if (game.aiming && game.focus > 0) { game.focus = Math.max(0, game.focus - drain * dtReal); game.slow = game.focus > 0; } else { game.slow = false; if (!game.aiming) game.focus = Math.min(1, game.focus + 0.35 * dtReal); }
   const dt = dtReal * (game.slow ? SLOW : 1), r = game.run;
+  game.deadline -= dtReal * (game.slow ? 0.5 : 1);
+  if (game.deadline <= 0) { endRun('deadline'); return; }
+  game.shake = Math.max(0, (game.shake || 0) - dtReal * 30);
   game.t += dt;
   const m = metres(), di = Math.min(DISTRICTS.length - 1, Math.floor(m / DISTRICT_M));
   if (di > game.district) { game.district = di; Sound.district(); toast(DISTRICTS[di].name, DISTRICTS[di].hint); }
@@ -573,7 +585,8 @@ function drawFrame() {
   const oy = H / 2 - 360 * s;
   ctx.fillStyle = D.name === 'Fireworks' ? 'rgba(10,8,24,0.5)' : 'rgba(80,60,90,0.18)';
   for (let i = 0; i < 12; i++) { const bx = ((i * 157 - game.camX * 0.15) % (W + 160) + W + 160) % (W + 160) - 80, bh = 90 + (i * 47) % 150; ctx.fillRect(bx, H * 0.66 - bh, 60, bh + H); }
-  ctx.save(); ctx.translate(-game.camX * s, oy); ctx.scale(s, s);
+  const shk = game.shake || 0;
+  ctx.save(); ctx.translate(-game.camX * s + (shk ? (Math.random() - 0.5) * shk : 0), oy + (shk ? (Math.random() - 0.5) * shk : 0)); ctx.scale(s, s);
   // decorations behind the roofs
   for (const it of game.items) {
     if (!it.deco || it.x > game.camX + viewW + 100 || it.x + it.w < game.camX - 100) continue;
@@ -618,6 +631,8 @@ function drawFrame() {
   for (const fl of game.floats) { ctx.globalAlpha = clamp(fl.life * 1.5, 0, 1); ctx.font = '900 24px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(26,20,32,0.6)'; ctx.strokeText(fl.t, fl.x, fl.y); ctx.fillStyle = fl.c; ctx.fillText(fl.t, fl.x, fl.y); }
   ctx.globalAlpha = 1;
   ctx.restore();
+  if (game.running && game.deadline < 8) { ctx.fillStyle = `rgba(255,59,48,${0.12 + 0.1 * Math.sin(game.t * 12)})`; ctx.fillRect(0, 0, W, H); }
+  if (game.call) { game.call.t += 1 / 60; const c = game.call, a = clamp(1.4 - c.t, 0, 1), sc = 1 + Math.max(0, 0.25 - c.t) * 3; ctx.save(); ctx.translate(W / 2, H * 0.34); ctx.scale(sc, sc); ctx.rotate(-0.05); ctx.globalAlpha = a; ctx.font = `900 ${Math.round(Math.min(58, W / 8))}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 8; ctx.strokeStyle = '#1a1420'; ctx.strokeText(c.text, 0, 0); ctx.fillStyle = '#ffb84d'; ctx.fillText(c.text, 0, 0); ctx.restore(); ctx.globalAlpha = 1; if (c.t > 1.4) game.call = null; }
   if (game.slow) { const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.7); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(26,20,32,0.45)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
   if (game.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${game.flash * 4})`; ctx.fillRect(0, 0, W, H); }
 }

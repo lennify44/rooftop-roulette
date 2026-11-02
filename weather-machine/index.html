@@ -297,6 +297,7 @@ const Sound = {
     s.connect(f); f.connect(g); g.connect(this.master); s.start();
   },
   drop(kind) { if (kind === 'rain' || kind === 'snow') this.noise(0.8, 0.08, kind === 'snow' ? 600 : 2500); else if (kind === 'sun') [523, 659, 784].forEach((f, i) => this.tone(f, 0.25, 'sine', 0.06, 0, i * 0.05)); else if (kind === 'gust') this.noise(0.6, 0.14, 700); else if (kind === 'bolt') { this.noise(0.5, 0.35, 3000); this.tone(80, 0.6, 'sawtooth', 0.12, -40); } },
+  fanfare() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.18, 'square', 0.06, 0, i * 0.07)); },
   happy(streak) { const b = 660 * (1 + Math.min(streak, 10) * 0.04); this.tone(b, 0.12, 'triangle', 0.1); this.tone(b * 1.5, 0.18, 'triangle', 0.08, 0, 0.08); },
   grumpy() { this.tone(190, 0.3, 'sawtooth', 0.07, -50); },
   fire() { this.noise(0.9, 0.12, 900); this.tone(300, 0.4, 'square', 0.05, 200); },
@@ -356,11 +357,16 @@ function spawnRequest() {
 function fulfill(b) {
   const r = b.req; b.req = null;
   game.streak++; game.bestStreak = Math.max(game.bestStreak, game.streak); game.done++;
-  const pts = Math.round(10 * game.season.mult * (1 + Math.min(game.streak, 10) * 0.1) * (0.5 + 0.5 * clamp(r.time / r.max, 0, 1)) * (r.wedding ? 3 : r.fire ? 1.5 : 1));
+  const pts = Math.round(10 * game.season.mult * (1 + Math.min(game.streak, 10) * 0.1) * (0.5 + 0.5 * clamp(r.time / r.max, 0, 1)) * (r.wedding ? 3 : r.fire ? 1.5 : 1) * (game.festival > 0 ? 2 : 1));
   game.score += pts; mood(r.wedding ? 12 : 3); b.happyT = 1.2;
   Sound.happy(game.streak);
-  floatText(`+${pts}`, b.x, L.ground - 70, '#ffe08a', 1, 1.1);
-  burst(b.x, L.ground - 40, ['#ffe08a', '#ff8fb0', '#ffffff'], 14, 160);
+  floatText(`+${pts}`, b.x, L.ground - 70, game.festival > 0 ? '#ff8fd8' : '#ffe08a', 1, 1.1 + Math.min(game.streak, 10) * 0.06);
+  burst(b.x, L.ground - 40, ['#ffe08a', '#ff8fb0', '#ffffff'], 22, 220);
+  // more reward (player feedback "not enough dopamine"): shake, streak calls, a festival when the town is overjoyed
+  game.shake = Math.max(game.shake || 0, 4 + Math.min(game.streak, 10)); game.streakBump = 1;
+  const CALLS = { 3: 'NICE!', 6: 'WEATHER WIZARD!', 10: 'STORM BOSS!', 15: 'SKY LEGEND!', 20: 'GOD OF WEATHER!' };
+  if (CALLS[game.streak] || (game.streak > 20 && game.streak % 5 === 0)) { game.call = { text: CALLS[game.streak] || `STREAK ${game.streak}!`, t: 0 }; game.flash = Math.max(game.flash, 0.15); Sound.fanfare(); }
+  if (game.mood >= 96 && !(game.festival > 0)) { game.festival = 9; game.call = { text: '🎉 FESTIVAL! ×2', t: 0 }; Sound.fanfare(); burst(L.W / 2, L.ground - 120, ['#ff8fd8', '#ffe08a', '#7fe3ff', '#7dffb2'], 60, 420); }
   if (game.streak > 0 && game.streak % 6 === 0 && !game.rainbow) { game.rainbow = 1; toast('🌈 Rainbow ready!'); renderTools(); }
   if (game.hint === 1 || game.hint === 2) { game.hint = 0; profile.tutorial = true; saveProfile(); }
 }
@@ -418,7 +424,7 @@ function hated(b, kind) {
 function startSeason(season) {
   Sound.init();
   game.season = season;
-  Object.assign(game, { id: game.id + 1, hates: 0, running: true, paused: false, t: 0, timeLeft: season.endless ? Infinity : 150, score: 0, mood: 70, streak: 0, bestStreak: 0, done: 0, failed: 0, weather: [], parts: [], floats: [], cooldown: {}, selected: null, wind: 0, windTarget: 0, nextWind: 0, nextReq: 1.2, nextEvent: rnd(18, 28), rainbow: has('rainbow') ? 1 : 0, flash: 0, ended: false });
+  Object.assign(game, { id: game.id + 1, hates: 0, running: true, paused: false, t: 0, timeLeft: season.endless ? Infinity : 150, score: 0, mood: 70, streak: 0, bestStreak: 0, done: 0, failed: 0, weather: [], parts: [], floats: [], cooldown: {}, selected: null, wind: 0, windTarget: 0, nextWind: 0, nextReq: 1.2, nextEvent: rnd(18, 28), rainbow: has('rainbow') ? 1 : 0, flash: 0, ended: false, festival: 0, call: null, shake: 0, streakBump: 0 });
   game.town = makeTown(season);
   game.hint = profile.tutorial ? 0 : 1;
   ['screenStart', 'screenSeasons', 'screenOver', 'screenPause', 'screenShop'].forEach((id) => { $(id).hidden = true; });
@@ -494,6 +500,8 @@ function update(dt) {
   if (!game.running || game.paused) return;
   const S = game.season;
   game.t += dt;
+  if (game.festival > 0) { game.festival -= dt; if (Math.random() < 0.3) burst(Math.random() * L.W, -10, ['#ff8fd8', '#ffe08a', '#7fe3ff', '#7dffb2'], 2, 60); }
+  game.shake = Math.max(0, (game.shake || 0) - dt * 40);
   if (!S.endless) { game.timeLeft -= dt; if (game.timeLeft <= 0) { endSeason('time'); return; } }
   for (const k in game.cooldown) game.cooldown[k] = Math.max(0, game.cooldown[k] - dt);
   game.flash = Math.max(0, game.flash - dt);
@@ -659,7 +667,8 @@ function drawHint() {
   ctx.fillStyle = '#14213a'; ctx.fillText(text, L.W / 2, y + 1, L.W - 30);
 }
 function drawFrame() {
-  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  const shk = game.shake > 0 ? game.shake : 0;
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, shk ? (Math.random() - 0.5) * shk * L.dpr : 0, shk ? (Math.random() - 0.5) * shk * L.dpr : 0);
   drawSky(); drawGround();
   for (const b of game.town) drawBuilding(b);
   drawWeather();
@@ -672,6 +681,14 @@ function drawFrame() {
   }
   ctx.globalAlpha = 1;
   drawGhost(); drawHint();
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  // streak meter, calls and festival banner
+  if (game.running && game.streak >= 2) {
+    game.streakBump = Math.max(0, (game.streakBump || 0) - 1 / 30); const sc = 1 + game.streakBump * 0.3, y = Math.max(96, L.H * 0.16);
+    ctx.save(); ctx.translate(L.W / 2, y); ctx.scale(sc, sc); ctx.font = '900 28px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(20,33,58,0.7)';
+    const txt = `STREAK ${game.streak}  ×${(1 + Math.min(game.streak, 10) * 0.1).toFixed(1)}${game.festival > 0 ? '  ×2' : ''}`; ctx.strokeText(txt, 0, 0); ctx.fillStyle = game.festival > 0 ? '#ff8fd8' : game.streak >= 10 ? '#ffe08a' : '#fff'; ctx.fillText(txt, 0, 0); ctx.restore();
+  }
+  if (game.call) { game.call.t += 1 / 60; const c = game.call, a = clamp(1.4 - c.t, 0, 1), sc = 1 + Math.max(0, 0.25 - c.t) * 3; ctx.save(); ctx.translate(L.W / 2, L.H * 0.36); ctx.scale(sc, sc); ctx.rotate(-0.05); ctx.globalAlpha = a; ctx.font = `900 ${Math.round(Math.min(58, L.W / 8))}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 8; ctx.strokeStyle = '#14213a'; ctx.strokeText(c.text, 0, 0); ctx.fillStyle = '#ffe08a'; ctx.fillText(c.text, 0, 0); ctx.restore(); ctx.globalAlpha = 1; if (c.t > 1.4) game.call = null; }
   if (game.flash > 0) { ctx.fillStyle = `rgba(255,255,240,${game.flash * 1.2})`; ctx.fillRect(0, 0, L.W, L.H); }
 }
 
