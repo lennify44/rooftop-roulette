@@ -229,6 +229,16 @@ details.how summary { cursor: pointer; font-family: var(--font-mono); font-size:
 }
 @media (orientation: landscape) and (max-height: 520px) { .pads { grid-template-columns: repeat(4, minmax(52px, 80px)); } .mash { width: 100px; height: 100px; } .react { min-height: 90px; } }
 @media (prefers-reduced-motion: reduce) { .door, .pad, .reel, .carx, .walker { transition: none; } #app.shake { animation: none; } .doors.moving .lights { animation: none; } }
+/* new mini-games (player feedback: more mini-games) */
+.whack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: min(92%, 330px); }
+.hatch { aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--steel-hi); background: #0c0b14; font-size: 40px; display: grid; place-items: center; cursor: pointer; color: inherit; }
+.stackbox { position: relative; width: min(94%, 420px); height: 210px; border-bottom: 3px solid var(--steel-hi); overflow: hidden; }
+.bag { position: absolute; height: 24px; border-radius: 5px; background: var(--amber); border: 2px solid #0c0b14; }
+.ink { font-family: var(--font-display, sans-serif); font-weight: 900; font-size: 64px; letter-spacing: 0.04em; margin: 4px 0 10px; }
+.pumpwrap { position: relative; width: 140px; height: 200px; }
+.pumpball { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 50% 50% 46% 46%; background: radial-gradient(circle at 35% 30%, #fff, #ff5aa8 35%, #a8236a); }
+.pumpline { position: absolute; left: -10px; right: -10px; border-top: 3px dashed #5fe0a8; }
+.pumpline.hi { border-top-color: #ff6b5b; }
 </style>
 </head>
 <body>
@@ -817,6 +827,79 @@ const GAMES = {
       return () => { live = false; };
     },
   },
+  whack: {
+    name: 'Whack the gremlin', title: 'Tap the gremlins, not the guests',
+    play(lv, done) {
+      const need = 5 + Math.ceil(lv * 0.5), up = Math.max(0.55, 1.1 - lv * 0.05); let got = 0, live = true;
+      arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="wh">0 / ${need}</p><div class="whack" id="wg">${Array.from({ length: 9 }, (_, i) => `<button type="button" class="hatch" data-i="${i}" aria-label="Hatch"></button>`).join('')}</div>`;
+      const cells = [...arena.querySelectorAll('.hatch')], state = cells.map(() => null);
+      cells.forEach((c, i) => onTap(c, () => {
+        if (!live || !state[i]) return;
+        if (state[i] === 'guest') { live = false; c.textContent = '😵'; done(false); return; }
+        state[i] = null; c.textContent = '💥'; Sound.tap(); got++; $('wh').textContent = `${got} / ${need}`; setTimeout(() => { if (!state[i]) c.textContent = ''; }, 150);
+        if (got >= need) { live = false; done(true); }
+      }));
+      const pop = () => {
+        if (!live) return;
+        const free = state.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0); if (!free.length) return setTimeout(pop, 200);
+        const i = pick(free), guest = Math.random() < 0.28; state[i] = guest ? 'guest' : 'gremlin'; cells[i].textContent = guest ? pick(['🧑‍💼', '👵', '🧒']) : '👹';
+        setTimeout(() => { if (state[i]) { state[i] = null; cells[i].textContent = ''; } }, up * 1000);
+        setTimeout(pop, Math.max(260, 620 - lv * 35));
+      };
+      setTimeout(pop, 300);
+      timer(8, () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  stack: {
+    name: 'Stack the luggage', title: 'Drop each bag onto the pile',
+    play(lv, done) {
+      const need = 4 + Math.ceil(lv * 0.35); let n = 0, live = true, w = 46, base = 27, x = 0, dir = 1, last = performance.now();
+      const speed = 60 + lv * 9;
+      arena.innerHTML = `<p class="title">${this.title}</p><p class="hint" id="sk">0 / ${need} · tap to drop</p><div class="stackbox" id="sb"><div class="bag" style="left:${base}%;width:${w}%;bottom:0"></div></div>`;
+      const sb = $('sb'); let cur = mk('div', 'bag'); cur.style.width = `${w}%`; cur.style.bottom = `${(n + 1) * 26}px`; sb.appendChild(cur);
+      const step = (now) => { if (!live) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; x += dir * speed * dt; if (x > 100 - w) { x = 100 - w; dir = -1; } if (x < 0) { x = 0; dir = 1; } cur.style.left = `${x}%`; requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+      const off = onTap(arena, () => {
+        if (!live) return;
+        const l = Math.max(x, base), r = Math.min(x + w, base + w);
+        if (r - l < 4) { live = false; cur.style.background = '#ff6b5b'; done(false); return; }
+        cur.style.left = `${l}%`; cur.style.width = `${r - l}%`; base = l; w = r - l; n++; Sound.tap(); $('sk').textContent = `${n} / ${need} · tap to drop`;
+        if (n >= need) { live = false; done(true); return; }
+        cur = mk('div', 'bag'); cur.style.width = `${w}%`; cur.style.bottom = `${(n + 1) * 26}px`; sb.appendChild(cur); x = dir > 0 ? 0 : 100 - w;
+      });
+      timer(10, () => { live = false; done(false); });
+      return () => { live = false; off(); };
+    },
+  },
+  ink: {
+    name: 'Ink colour', title: 'Tap the COLOUR of the word, not the word',
+    play(lv, done) {
+      const C = [['RED', '#ff5b5b'], ['BLUE', '#4c9bff'], ['GREEN', '#3fd28a'], ['YELLOW', '#ffd23f']], need = 4 + Math.ceil(lv * 0.4); let n = 0, live = true;
+      const round = () => {
+        const word = pick(C), ink = pick(C.filter((c) => c !== word));
+        arena.innerHTML = `<p class="title">${this.title}</p><p class="hint">${n} / ${need}</p><p class="ink" style="color:${ink[1]}">${word[0]}</p><div class="choices">${shuffle(C.slice()).map((c) => `<button type="button" class="choice" data-c="${c[0]}" style="color:${c[1]}">${c[0]}</button>`).join('')}</div>`;
+        arena.querySelectorAll('.choice').forEach((b) => onTap(b, () => { if (!live) return; if (b.getAttribute('data-c') !== ink[0]) { live = false; done(false); return; } n++; Sound.tap(); if (n >= need) { live = false; done(true); } else round(); }));
+      };
+      round();
+      timer(Math.max(6, 9 - lv * 0.2), () => { live = false; done(false); });
+      return () => { live = false; };
+    },
+  },
+  pump: {
+    name: 'Pump the balloon', title: 'Hold to pump, let go in the green',
+    play(lv, done) {
+      const lo = rnd(45, 70), band = Math.max(8, 16 - lv), hi = lo + band, rate = 32 + lv * 4; let size = 10, holding = false, live = true, last = performance.now();
+      arena.innerHTML = `<p class="title">${this.title}</p><div class="pumpwrap"><div class="pumpball" id="pb"></div><div class="pumpline" style="bottom:${lo * 2}px"></div><div class="pumpline hi" style="bottom:${hi * 2}px"></div></div><p class="hint">Green line: big enough · red line: pop!</p>`;
+      const pb = $('pb');
+      const step = (now) => { if (!live) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; if (holding) size += rate * dt * (1 + size / 120); pb.style.width = `${size * 1.3}px`; pb.style.height = `${size * 2}px`; if (size > hi) { live = false; pb.style.background = 'none'; pb.textContent = '💥'; Sound.nope && Sound.nope(); done(false); return; } requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+      const downF = (e) => { e.preventDefault(); holding = true; }, upF = () => { if (!holding || !live) return; holding = false; live = false; done(size >= lo && size <= hi); };
+      arena.addEventListener('pointerdown', downF); addEventListener('pointerup', upF);
+      timer(7, () => { live = false; done(false); });
+      return () => { live = false; arena.removeEventListener('pointerdown', downF); removeEventListener('pointerup', upF); };
+    },
+  }
 };
 const GAME_KEYS = Object.keys(GAMES);
 $('gameList').textContent = `${GAME_KEYS.length} mini-games: ` + GAME_KEYS.map((k) => GAMES[k].name).join(' · ');
