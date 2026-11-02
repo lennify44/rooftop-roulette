@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Airborne, Skybreaker, Shutter Run, Echo Run, Ghost Relay, Crane Climb, Time-Loop Bakery, Weather Machine, Sushi Belt Poker, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
+<meta name="description" content="All games by Lennify44 in one place: Rooftop Roulette, Airborne, Skybreaker, Shutter Run, Echo Run, Ghost Relay, Crane Climb, Time-Loop Bakery, Weather Machine, Sushi Empire, Rogue Ball, Volcano Bingo, Room 404, Elevator Roulette, Pigeon Revenge.">
 <meta name="theme-color" content="#110e22">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +114,10 @@ const ART = {
   volcano: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
     <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
     ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>`,
+  empire: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><radialGradient id="a16" cx="0.5" cy="0" r="1"><stop offset="0" stop-color="#5a2a6a"/><stop offset="1" stop-color="#1b1030"/></radialGradient></defs><rect width="320" height="160" fill="url(#a16)"/>
+    <circle cx="96" cy="82" r="52" fill="#fff"/><circle cx="96" cy="82" r="52" fill="none" stroke="#c8bedd" stroke-width="8"/><text x="96" y="100" text-anchor="middle" font-size="52">🍣</text>
+    ${[['🥢', 210, 40], ['🏮', 250, 40], ['🍱', 290, 40], ['🏬', 210, 90], ['🌃', 250, 90], ['🚀', 290, 90]].map(([e, x, y], i) => `<rect x="${x - 18}" y="${y - 20}" width="36" height="36" rx="8" fill="${i < 4 ? '#2a1a48' : '#2a1a4888'}" stroke="#ffffff22"/><text x="${x}" y="${y + 6}" text-anchor="middle" font-size="20" opacity="${i < 4 ? 1 : 0.5}">${e}</text>`).join('')}
+    <text x="200" y="146" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="26" fill="#ffd23f">$12.4M</text><text x="300" y="146" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="11" fill="#46e0a4">+$8.1K/s</text></svg>`,
   air: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a15" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58b8ff"/><stop offset="1" stop-color="#c8f0ff"/></linearGradient></defs><rect width="320" height="160" fill="url(#a15)"/>
     <rect x="0" y="0" width="22" height="160" fill="#5a1e7a" opacity="0.55"/>
     ${[[40, 112, 110], [190, 86, 90], [270, 124, 60]].map(([x, y, w]) => `<path d="M${x} ${y + 6} L${x + w} ${y + 6} L${x + w * 0.75} ${y + 30} L${x + w * 0.45} ${y + 42} L${x + w * 0.2} ${y + 26}Z" fill="#9a6a3a" stroke="#1a1238" stroke-width="2.5"/><rect x="${x - 3}" y="${y - 3}" width="${w + 6}" height="11" rx="5" fill="#5fcf6a" stroke="#1a1238" stroke-width="2.5"/>`).join('')}
@@ -198,6 +202,10 @@ const GAMES = [
     pitch: 'Freerun across the rooftops while roulette wheels change the rules. Pests and bosses can’t be beaten, only outrun.',
     best: () => { const b = read('rooftop-roulette-best'); return b && b.score ? [`$${fmt(b.score)}`, `${fmt(b.dist)} m`] : null; },
     world: (e) => [`$${fmt(e.score)}`, `${fmt(e.dist)} m`] },
+  { id: 'empire', name: 'Sushi <span>Empire</span>', url: 'sushi-empire/', accent: '#ff7a59', board: 'empire', badge: 'New · idle', tags: ['idle', 'business', 'numbers go up'],
+    pitch: 'Roll sushi, open storefronts from a market stall to a space station, hire managers and franchise for Michelin stars.',
+    best: () => { const p = read('sushi-empire-save'); return p && p.lifetime ? [`$${p.lifetime >= 1e6 ? (p.lifetime / 1e6).toFixed(1) + 'M' : Math.floor(p.lifetime)}`, `${p.stars || 0} ⭐`] : null; },
+    world: (e) => [`${Math.floor((e.score - e.dist * 5) / 100)} zeros`, `${e.dist} ⭐`] },
   { id: 'air', name: 'Air<span>borne</span>', url: 'airborne/', accent: '#ffb52e', board: 'air', badge: 'New · air parkour', tags: ['parkour', 'platformer', 'stomp combos'],
     pitch: 'The sky keeps scrolling. Run and jump across floating islands, stomp drones to bounce higher and never let the storm catch you.',
     best: () => { const p = read('airborne-profile'); return p && p.best ? [fmt(p.best), `${fmt(p.bestDist)} m`] : null; },
@@ -229,10 +237,6 @@ const GAMES = [
     pitch: 'Be the weather above a tiny hill town. Gardens want rain, laundry wants sun, and they all live next door to each other.',
     best: () => { const p = read('weather-machine-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [`${fmt(b)} ☀`, `${st} ★`] : null; },
     world: (e) => [`${fmt(e.score)} ☀`, ['', 'Spring', 'Summer', 'Autumn', 'Winter', 'Chaos'][e.dist] || ''] },
-  { id: 'sushi', name: 'Sushi Belt <span>Poker</span>', url: 'sushi-belt-poker/', accent: '#e05a4f', board: 'sushi', badge: 'New', tags: ['cards', 'timing', 'restaurants'],
-    pitch: 'Grab card plates off a sushi conveyor and serve the poker hands your customers order. Every plate costs money.',
-    best: () => { const p = read('sushi-belt-poker-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [`$${fmt(b)}`, `${st} ★`] : null; },
-    world: (e) => [`$${fmt(e.score)}`, ['', 'Lunch', 'Night Market', 'Royal', 'Omakase'][e.dist] || ''] },
   { id: 'rogue', name: 'Rogue <span>Ball</span>', url: 'rogue-ball/', accent: '#e8b64c', board: 'rogueball', badge: 'New', tags: ['timing', 'casino', 'one tap'],
     pitch: 'You are the roulette ball. Drop into the called pocket, but win quietly or security throws you out.',
     best: () => { const p = read('rogue-ball-profile'); return p && p.best ? [`◉ ${fmt(p.best)}`, 'peak stack'] : null; },

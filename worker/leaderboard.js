@@ -22,6 +22,7 @@ const GAMES = {
   sky: { prefix: 'sky:', maxScore: 2000000, maxDist: 100000 },         // Skybreaker score, height in metres
   pigeon: { prefix: 'pigeon:', maxScore: 10000000, maxDist: 1000000 }, // Pigeon Revenge loot $, distance m
   air: { prefix: 'air:', maxScore: 5000000, maxDist: 1000000 },        // Airborne score, distance m
+  empire: { prefix: 'empire:', maxScore: 100000, maxDist: 100000 },     // Sushi Empire: 100 per tenfold earned + 5 per star, stars
 };
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
