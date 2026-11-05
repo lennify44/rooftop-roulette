@@ -275,6 +275,7 @@ const Sound = {
   thunder() { this.noise(1.4, 0.35, 160); },
   fall() { this.tone(520, 0.8, 'sine', 0.08, -440); },
   district() { [392, 523, 659].forEach((f, i) => this.tone(f, 0.3, 'triangle', 0.07, 0, i * 0.12)); },
+  close() { this.tone(900, 0.08, 'triangle', 0.06, 500); },
 };
 function renderMute() {
   $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
@@ -328,7 +329,7 @@ const roofAt = (x) => game.roofs.find((r) => x >= r.x0 && x <= r.x1) || null;
 function newRunner() { return { x: 0, y: 400, vx: 320, vy: 0, ground: true, jumpHeld: false, holdT: 0, buffer: 0, coyote: 0, alive: true }; }
 function startRun() {
   Sound.init();
-  Object.assign(game, { id: game.id + 1, running: true, paused: false, ended: false, t: 0, run: newRunner(), roofs: [], items: [], rings: [], genX: 0, hearts: has('heart') ? 4 : 3, letters: 0, breath: maxBreath(), breathT: 0, glow: has('jar') ? 6 : 0, district: 0, flash: 0, bellT: 9, boltT: 5, rainT: 0, parts: [], floats: [], camX: -200, stumble: 0, inv: 0 });
+  Object.assign(game, { id: game.id + 1, running: true, paused: false, ended: false, t: 0, run: newRunner(), roofs: [], items: [], rings: [], genX: 0, hearts: has('heart') ? 4 : 3, letters: 0, breath: maxBreath(), breathT: 0, glow: has('jar') ? 6 : 0, district: 0, flash: 0, bellT: 9, boltT: 5, rainT: 0, parts: [], floats: [], camX: -200, stumble: 0, inv: 0, streak: 0, call: null, shake: 0 });
   gen(4000);
   ['screenStart', 'screenOver', 'screenPause', 'screenShop'].forEach((id) => { $(id).hidden = true; });
   $('hud').hidden = false; $('zones').hidden = false; $('zones').classList.remove('fade'); clearTimeout(zoneTimer); zoneTimer = setTimeout(() => $('zones').classList.add('fade'), 5000);
@@ -361,6 +362,12 @@ function updateHud() {
   for (let i = 0; i < mb; i++) box.children[i].classList.toggle('full', i < game.breath);
 }
 function floatText(t, x, y, c) { game.floats.push({ t, x, y, c, life: 1 }); }
+// clean landings in a row build a streak (player feedback: more dopamine); letters pay more with it
+function cleanLanding() {
+  game.streak++;
+  const CALLS = { 5: 'CLEAN!', 10: 'SMOOTH!', 20: 'NIGHT RUNNER!', 30: 'ECHO MASTER!', 50: 'GHOST OF THE ROOFS!' };
+  if (CALLS[game.streak] || (game.streak > 50 && game.streak % 25 === 0)) { game.call = { text: CALLS[game.streak] || `STREAK ${game.streak}!`, t: 0 }; game.flash = Math.max(game.flash, 0.5); Sound.district(); }
+}
 
 // ---------- echoes
 function clap() {
@@ -382,7 +389,7 @@ function update(dt) {
   const r = game.run;
   game.t += dt;
   const m = metres(), di = Math.min(DISTRICTS.length - 1, Math.floor(m / DISTRICT_M));
-  if (di > game.district) { game.district = di; Sound.district(); const maxH = has('heart') ? 4 : 3, healed = game.hearts < maxH; if (healed) game.hearts++; toast(DISTRICTS[di].name, (healed ? '♥ +1 · ' : '') + DISTRICTS[di].hint); if (has('jar')) game.glow = 6; game.bellT = 3; game.boltT = 2; }
+  if (di > game.district) { game.district = di; Sound.district(); game.call = { text: DISTRICTS[di].name.toUpperCase(), t: 0, big: true }; game.flash = 1.4; game.shake = 10; lightAll(1); const maxH = has('heart') ? 4 : 3, healed = game.hearts < maxH; if (healed) game.hearts++; toast(DISTRICTS[di].name, (healed ? '♥ +1 · ' : '') + DISTRICTS[di].hint); if (has('jar')) game.glow = 6; game.bellT = 3; game.boltT = 2; }
   gen(r.x + 3000);
   // breath refills one pip at a time
   if (game.breath < maxBreath()) { game.breathT += dt; if (game.breathT >= 0.6) { game.breathT = 0; game.breath++; updateHud(); } }
@@ -400,7 +407,7 @@ function update(dt) {
   if (D.name === 'Rain Quarter') { game.rainT -= dt; if (game.rainT <= 0) { game.rainT = 0.07; lightAround(r.x + rnd(-100, 700), rnd(250, 520), 45, 0.6); } }
   if (D.name === 'Bell Hill') { game.bellT -= dt; if (game.bellT <= 0) { game.bellT = 9; Sound.bell(); game.flash = 0.35; lightAll(1); } }
   if (D.name === 'Storm') { game.boltT -= dt; if (game.boltT <= 0) { game.boltT = rnd(3, 7); Sound.thunder(); game.flash = 0.6; lightAll(1); } }
-  game.flash = Math.max(0, game.flash - dt);
+  game.flash = Math.max(0, game.flash - dt); game.shake = Math.max(0, (game.shake || 0) - dt * 30);
   // cats patrol toward the runner and stop at roof edges
   for (const it of game.items) if (it.kind === 'cat' && !it.hit) { it.x += it.v * dt; if (it.x < it.roof.x0 + 10) { it.x = it.roof.x0 + 10; it.v = Math.abs(it.v); } }
   stepRunner(dt);
@@ -427,16 +434,17 @@ function stepRunner(dt) {
   for (const rf of game.roofs) if (r.x + HW <= rf.x0 + 0.5 && nx + HW > rf.x0 && ny > rf.y + 8) { r.vx = 0; r.x = rf.x0 - HW; if (!r.walled) { r.walled = true; floatText('Wall!', r.x, r.y - 50, '#ff6b6b'); Sound.hit(); } break; }
   if (r.vx > 0) r.x = nx;
   const wasGround = r.ground; r.ground = false;
-  if (r.vy >= 0) for (const rf of game.roofs) if (r.x + HW > rf.x0 && r.x - HW * 0.4 < rf.x1 && r.y <= rf.y + 8 && ny >= rf.y) { ny = rf.y; if (!wasGround && r.vy > 500) Sound.land(); r.vy = 0; r.ground = true; break; }
+  if (r.vy >= 0) for (const rf of game.roofs) if (r.x + HW > rf.x0 && r.x - HW * 0.4 < rf.x1 && r.y <= rf.y + 8 && ny >= rf.y) { ny = rf.y; if (!wasGround && r.vy > 500) { Sound.land(); cleanLanding(); } r.vy = 0; r.ground = true; break; }
   r.y = ny;
   // hazards
   for (const it of game.items) {
     if (it.hit) continue;
     const over = r.x + HW > it.x && r.x - HW < it.x + it.w;
     if (!over) continue;
-    if (it.kind === 'letter' && Math.abs(r.y - 20 - it.y) < 34) { it.hit = true; game.letters++; Sound.letter(); continue; }
+    if (it.kind === 'letter' && Math.abs(r.y - 20 - it.y) < 34) { it.hit = true; const n = 1 + Math.floor(game.streak / 5); game.letters += n; Sound.letter(); if (n > 1) floatText(`+${n} ✉`, r.x, r.y - 70, '#ffd666'); continue; }
     if (it.kind === 'firefly' && Math.abs(r.y - 20 - it.y) < 50) { it.hit = true; game.glow = 6; Sound.firefly(); floatText('Firefly!', r.x, r.y - 60, '#7dffb2'); continue; }
     if (it.kind === 'skylight' && r.ground && r.x > it.x + 4 && r.x < it.x + it.w - 4 && Math.abs(r.y - it.y) < 1) { it.hit = true; Sound.glass(); for (let i = 0; i < 14; i++) game.parts.push({ x: r.x, y: r.y, vx: rnd(-200, 200), vy: rnd(-300, -50), c: '#9fe8ff', life: 0.8 }); r.alive = false; endRun('glass'); return; }
+    if (!it.close && !r.ground && (it.kind === 'chimney' || it.kind === 'tower' || it.kind === 'cat' || it.kind === 'skylight') && r.y <= it.y - it.h + 2 && r.y > it.y - it.h - 34) { it.close = true; game.letters += 2; game.shake = Math.max(game.shake || 0, 5); Sound.close(); floatText('CLOSE! +2 ✉', r.x, r.y - 80, '#ff9ad5'); }
     if (game.inv > 0) continue;
     if ((it.kind === 'chimney' || it.kind === 'tower' || it.kind === 'cat') && r.y > it.y - it.h + 2) hurt(it);
     else if (it.kind === 'wire' && r.y - BH < it.y - 52 && r.y > it.y - 52) hurt(it);
@@ -444,6 +452,8 @@ function stepRunner(dt) {
   if (r.y > 900) { Sound.fall(); r.alive = false; endRun('fall'); }
 }
 function hurt(it) {
+  if (game.streak >= 5) floatText(`streak ×${game.streak} lost`, game.run.x, game.run.y - 90, '#ff6b6b');
+  game.streak = 0;
   it.hit = true; game.hearts--; game.inv = 0.8; game.stumble = 0.6; Sound.hit();
   floatText(it.kind === 'wire' ? 'Wire!' : it.kind === 'cat' ? 'Mrrow!' : 'Ouch!', game.run.x, game.run.y - 60, '#ff6b6b');
   for (let i = 0; i < 8; i++) game.parts.push({ x: game.run.x, y: game.run.y - 20, vx: rnd(-150, 150), vy: rnd(-250, -50), c: '#ff6b6b', life: 0.6 });
@@ -463,7 +473,8 @@ function drawFrame() {
   // stars and a dead skyline far away
   ctx.fillStyle = 'rgba(255,255,255,0.35)'; for (let i = 0; i < 40; i++) { const x = ((i * 211 - game.camX * 0.05) % W + W) % W, y = (i * 97) % (H * 0.5); ctx.fillRect(x, y, 1.5, 1.5); }
   ctx.fillStyle = 'rgba(40,50,70,0.14)'; for (let i = 0; i < 12; i++) { const bx = ((i * 157 - game.camX * 0.15) % (W + 160) + W + 160) % (W + 160) - 80, bh = 90 + (i * 47) % 140; ctx.fillRect(bx, H * 0.62 - bh, 60, bh + H); }
-  ctx.save(); ctx.translate(-game.camX * s, oy); ctx.scale(s, s);
+  const shk = game.shake || 0;
+  ctx.save(); ctx.translate(-game.camX * s + (shk ? rnd(-shk, shk) : 0), oy + (shk ? rnd(-shk, shk) : 0)); ctx.scale(s, s);
   const amb = D.moon + game.flash * 0.6;
   // roofs: sonar outlines per segment, plus the faint moonlight
   for (const rf of game.roofs) {
@@ -517,6 +528,9 @@ function drawFrame() {
   ctx.globalAlpha = 1;
   ctx.restore();
   if (game.flash > 0) { ctx.fillStyle = `rgba(220,230,255,${game.flash * 0.25})`; ctx.fillRect(0, 0, W, H); }
+  // streak meter and calls
+  if (game.running && game.streak >= 3) { ctx.font = '900 26px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(5,7,13,0.8)'; const t = `CLEAN ×${game.streak}${game.streak >= 5 ? `  ✉×${1 + Math.floor(game.streak / 5)}` : ''}`, y = Math.max(96, H * 0.14); ctx.strokeText(t, W / 2, y); ctx.fillStyle = game.streak >= 20 ? '#ff9ad5' : game.streak >= 10 ? '#ffd666' : '#5ff2ff'; ctx.fillText(t, W / 2, y); }
+  if (game.call) { game.call.t += 1 / 60; const c = game.call, a = Math.max(0, Math.min(1, 1.5 - c.t)), sc = 1 + Math.max(0, 0.25 - c.t) * 3; ctx.save(); ctx.translate(W / 2, H * 0.36); ctx.scale(sc, sc); ctx.globalAlpha = a; ctx.font = `900 ${Math.round(Math.min(c.big ? 70 : 54, W / (c.big ? 7 : 8)))}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 8; ctx.strokeStyle = '#05070d'; ctx.strokeText(c.text, 0, 0); ctx.fillStyle = c.big ? '#5ff2ff' : '#ffd666'; ctx.fillText(c.text, 0, 0); ctx.restore(); ctx.globalAlpha = 1; if (c.t > 1.5) game.call = null; }
 }
 
 // ---------- loop and input
