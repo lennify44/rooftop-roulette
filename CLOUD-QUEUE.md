@@ -17,5 +17,5 @@
   or slow-mo), clearer stage change moments. — 2026-11-05 (owner's server): floor streak with calls and a coin multiplier, coin bursts, jetpacks every 37 floors (6 floors up), big stage banners; fixed taps lost during hook rides.
 - [ ] **A new action game (not an autorunner)** built to the bar in CLOUD-BRIEF.md: write 3 short original pitches in
   this file, pick the strongest, build it fully, add an Arcade card, note the board and page in HOST-TODO.md.
-- [ ] **Arcade: show what's new.** "NEW"/"UPDATED" badges from a date field, newest first, a big banner for the
+- [x] **Arcade: show what's new.** "NEW"/"UPDATED" badges from a date field, newest first, a big banner for the — 2026-11-05 (owner's server): NEW/UPDATED badges from a DATES map (update it with each change), newest first, banner for the newest game.
   newest game.
