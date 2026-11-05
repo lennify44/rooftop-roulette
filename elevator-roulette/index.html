@@ -240,6 +240,17 @@ details.how summary { cursor: pointer; font-family: var(--font-mono); font-size:
 .pumpball { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 50% 50% 46% 46%; background: radial-gradient(circle at 35% 30%, #fff, #ff5aa8 35%, #a8236a); }
 .pumpline { position: absolute; left: -10px; right: -10px; border-top: 3px dashed #5fe0a8; }
 .pumpline.hi { border-top-color: #ff6b5b; }
+/* Bo the bellhop: cheers you on from the corner (player idea) */
+.bo { position: absolute; left: 8px; bottom: 26px; width: 72px; height: 72px; z-index: 4; pointer-events: none; transition: transform 0.25s; }
+.bo svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45)); }
+.bo.cheer { animation: boHop 0.42s ease-out 2; }
+.bo.hype { animation: boHop 0.3s ease-out 4; }
+.bo.sad { transform: translateY(8px) rotate(-8deg); }
+.bo.shock { animation: boShake 0.08s linear 8; }
+@keyframes boHop { 40% { transform: translateY(-16px) scale(1.08); } }
+@keyframes boShake { 50% { transform: translateX(4px) rotate(4deg); } }
+.bo .bub { position: absolute; left: 66px; bottom: 44px; width: max-content; max-width: 46vw; padding: 5px 10px; border-radius: 12px 12px 12px 2px; background: #fff; color: #1a1426; font-family: var(--font-display); font-weight: 900; font-size: 17px; letter-spacing: 0.02em; opacity: 0; transform: scale(0.6); transform-origin: left bottom; transition: opacity 0.15s, transform 0.15s; }
+.bo .bub.on { opacity: 1; transform: scale(1); }
 </style>
 <!-- /source:head -->
 </head>
@@ -263,6 +274,7 @@ details.how summary { cursor: pointer; font-family: var(--font-mono); font-size:
     <div class="doors" id="doors"><div class="door l"></div><div class="door r"></div><div class="lights"></div><div class="reel" id="reel">NEXT FLOOR<b id="reelText">…</b><span class="mod" id="reelMod"></span><span class="quip" id="quip"></span></div></div>
     <div class="timer"><i id="timerBar"></i></div>
     <div class="flash" id="flash"></div>
+    <div class="bo" id="bo" aria-hidden="true"><div class="bub" id="boBub"></div><div id="boFace"></div></div>
   </main>
   <footer class="controls" id="controls"></footer>
 
@@ -905,6 +917,7 @@ const GAMES = {
   }
 };
 const GAME_KEYS = Object.keys(GAMES);
+setTimeout(() => Bo.set('idle'), 0);
 $('gameList').textContent = `${GAME_KEYS.length} mini-games: ` + GAME_KEYS.map((k) => GAMES[k].name).join(' · ');
 
 // ---------- the ride loop
@@ -949,6 +962,7 @@ async function playFloor() {
   await wait(650);
   let finished = false;
   const lv = Math.min(10, ride.floor + (vip ? 2 : 0) + (mod.lv || 0));
+  Bo.go();
   ride.cleanup = g.play(lv, (win) => {
     if (finished) return; finished = true;
     stopTimer(); if (ride.cleanup) ride.cleanup(); ride.cleanup = null;
@@ -962,6 +976,32 @@ function rideButtons() {
   btns.push([`Cash out $${fmt(ride.pot)}`, 'good', () => endRide(true)]);
   setControls(btns);
 }
+// ---------- Bo the bellhop, the cheering face in the corner (player idea; an original character)
+const Bo = {
+  t: 0, bt: 0,
+  face(mood) {
+    const eyes = mood === 'sad' ? '<path d="M24 36 q6 -4 12 0 M44 36 q6 -4 12 0" stroke="#1a1426" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      : mood === 'cheer' || mood === 'hype' ? '<path d="M24 38 q6 -8 12 0 M44 38 q6 -8 12 0" stroke="#1a1426" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      : mood === 'shock' ? '<circle cx="30" cy="36" r="6" fill="#fff" stroke="#1a1426" stroke-width="3"/><circle cx="50" cy="36" r="6" fill="#fff" stroke="#1a1426" stroke-width="3"/><circle cx="30" cy="36" r="2.5" fill="#1a1426"/><circle cx="50" cy="36" r="2.5" fill="#1a1426"/>'
+      : '<circle cx="30" cy="36" r="4.5" fill="#1a1426"/><circle cx="50" cy="36" r="4.5" fill="#1a1426"/><circle cx="31.5" cy="34.5" r="1.5" fill="#fff"/><circle cx="51.5" cy="34.5" r="1.5" fill="#fff"/>';
+    const mouth = mood === 'sad' ? '<path d="M30 56 q10 -8 20 0" stroke="#1a1426" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      : mood === 'shock' ? '<ellipse cx="40" cy="55" rx="6" ry="8" fill="#1a1426"/>'
+      : mood === 'cheer' || mood === 'hype' ? '<path d="M27 49 q13 16 26 0 z" fill="#1a1426"/><path d="M33 55 q7 5 14 0" fill="#ff6b8a"/>'
+      : '<path d="M30 51 q10 8 20 0" stroke="#1a1426" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    const extra = mood === 'hype' ? '<text x="2" y="18" font-size="16">✨</text><text x="62" y="20" font-size="14">⭐</text>' : mood === 'sad' ? '<path d="M56 42 q3 6 0 9 q-3 -3 0 -9" fill="#6ac8ff"/>' : '';
+    return `<svg viewBox="0 0 80 80"><circle cx="40" cy="44" r="27" fill="#ffc48a" stroke="#1a1426" stroke-width="3"/><circle cx="20" cy="50" r="5" fill="#ff9a8a" opacity="0.7"/><circle cx="60" cy="50" r="5" fill="#ff9a8a" opacity="0.7"/>${eyes}${mouth}<rect x="22" y="9" width="36" height="16" rx="4" fill="#e8343c" stroke="#1a1426" stroke-width="3"/><rect x="22" y="19" width="36" height="5" fill="#ffc94d"/><circle cx="40" cy="8" r="4" fill="#ffc94d" stroke="#1a1426" stroke-width="2"/>${extra}</svg>`;
+  },
+  set(mood, text, ms = 1700) {
+    const el = $('bo'); if (!el) return;
+    $('boFace').innerHTML = this.face(mood);
+    el.className = 'bo ' + mood; void el.offsetWidth;
+    const b = $('boBub'); if (text) { b.textContent = text; b.classList.add('on'); clearTimeout(this.bt); this.bt = setTimeout(() => b.classList.remove('on'), ms); }
+    clearTimeout(this.t); if (mood !== 'idle') this.t = setTimeout(() => { $('boFace').innerHTML = this.face('idle'); el.className = 'bo'; }, ms + 200);
+  },
+  win(floor) { if (floor >= 3 && floor % 5 === 0) this.set('hype', pick(['VIP FLOOR!', 'UNSTOPPABLE!', 'LEGEND!'])); else if (floor >= 4) this.set('hype', pick(['ON FIRE!', 'Keep going!!', 'You are cooking!', 'Insane!'])); else this.set('cheer', pick(['Yes!', 'Nice one!', 'Easy!', 'Going up!', 'Let\'s gooo!'])); },
+  lose() { this.set('sad', pick(['Nooo…', 'So close!', 'Ouch.', 'Next time!'])); },
+  go() { this.set('cheer', pick(['You got this!', 'Focus!', 'Go go go!', 'Show them!']), 1100); },
+};
 function floorResult(win) {
   const mod = ride.mod || MODS[0];
   if (win) {
@@ -969,14 +1009,14 @@ function floorResult(win) {
     ride.pot = Math.round(before * (1 + (m - 1) * (mod.gain || 1)));
     let tip = 0;
     if (mod.id === 'tips') { tip = Math.max(25, Math.round(ride.pot * rnd(0.15, 0.35))); ride.pot += tip; }
-    Sound.good(); updatePanel();
+    Sound.good(); updatePanel(); Bo.win(ride.floor);
     const vip = ride.floor % 5 === 0;
     arena.innerHTML = `<p class="verdict ${vip || mod.id === 'jackpot' ? 'vip' : 'good'}">${mod.id === 'jackpot' ? 'Jackpot floor!' : `Floor ${ride.floor} cleared`}</p>`
       + `<p class="hint">Pot $${fmt(before)} → <b>$${fmt(ride.pot)}</b>${mod.gain && mod.id !== 'jackpot' ? ` (${mod.name})` : ''}${tip ? ` · tip +$${fmt(tip)}` : ''}</p>`
       + `<p class="hint">Next floor pays ${xs(multFor(ride.floor + 1))}${(ride.floor + 1) % 5 === 0 ? ' (VIP)' : ''}</p>`;
     rideButtons();
   } else {
-    Sound.bad();
+    Sound.bad(); Bo.lose();
     arena.innerHTML = `<p class="verdict bad">${pick(['Wrong floor', 'Doors closed on you', 'Elevator stuck', 'Out of order', 'The muzak got you'])}</p><p class="hint">The $${fmt(ride.pot)} pot is on the line.</p>`;
     if (profile.kit.second > 0) {
       setControls([
@@ -1009,7 +1049,7 @@ async function express() {
   rideButtons();
 }
 async function snap(why) {
-  stopTimer(); setControls([]); Sound.snap();
+  stopTimer(); setControls([]); Sound.snap(); Bo.set('shock', 'THE CABLE!!', 2200);
   const app = $('app'), fl = $('flash');
   app.classList.remove('shake'); void app.offsetWidth; app.classList.add('shake');
   fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 60);
@@ -1032,7 +1072,7 @@ function endRide(cashed, saved = 0, why = '') {
   if (ride.cleanup) { ride.cleanup(); ride.cleanup = null; }
   const floorReached = cashed ? ride.floor : Math.max(0, ride.floor - 1);
   profile.floor = Math.max(profile.floor, floorReached); profile.rides++;
-  if (cashed) { profile.bank += ride.pot; profile.best = Math.max(profile.best, ride.pot); Sound.cash(); }
+  if (cashed) { profile.bank += ride.pot; profile.best = Math.max(profile.best, ride.pot); Sound.cash(); Bo.set('hype', pick(['KA-CHING!', 'Smart move!', 'Rich!!']), 2400); } else Bo.lose();
   saveProfile();
   $('overEyebrow').textContent = cashed ? 'Ride over · cashed out' : 'Ride over · lost the pot';
   $('overTitle').textContent = cashed ? `+$${fmt(ride.pot)}` : 'Busted';
