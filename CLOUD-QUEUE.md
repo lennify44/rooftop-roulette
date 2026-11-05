@@ -13,8 +13,8 @@
   example a laser drone that sweeps a beam); give each boss a different attack pattern. — 2026-11-03: 7 suits (Ember … Void, with antenna/fin/horns/crown/halo) and 6 dash trails (ribbon, rainbow, fire, stardust, lightning, pixel) unlocked by best score (1k … 40k), pickers on the start screen, in-run "NEW SUIT/TRAIL" pop and auto-equip on the end screen; new laser drone (telegraphed beam that sweeps across you, dashing passes through, smash it to stop it); bosses rotate Warden (3 cores) → Spinner (two counter-rotating core rings + orb bursts) → Lancer (rotating beams with on/off windows) → Hive (homing mines), each with a name/tip banner, faster every lap.
 - [x] **Echo Run: dopamine.** Clean-landing streak with calls, near-miss bonus when jumping close over hazards,
   letter streak multiplier, a stronger "district reached" moment. — 2026-11-05 (owner's server): clean-landing streak with calls, letters ×(1+streak/5), CLOSE! near-miss bonus, big district banner + full reveal, screen shake.
-- [ ] **Crane Climb: dopamine.** Floor streak without hits with calls, coin bursts, a power-up (jetpack: 5 floors up,
-  or slow-mo), clearer stage change moments.
+- [x] **Crane Climb: dopamine.** Floor streak without hits with calls, coin bursts, a power-up (jetpack: 5 floors up,
+  or slow-mo), clearer stage change moments. — 2026-11-05 (owner's server): floor streak with calls and a coin multiplier, coin bursts, jetpacks every 37 floors (6 floors up), big stage banners; fixed taps lost during hook rides.
 - [ ] **A new action game (not an autorunner)** built to the bar in CLOUD-BRIEF.md: write 3 short original pitches in
   this file, pick the strongest, build it fully, add an Arcade card, note the board and page in HOST-TODO.md.
 - [ ] **Arcade: show what's new.** "NEW"/"UPDATED" badges from a date field, newest first, a big banner for the
