@@ -19,7 +19,8 @@ const GAMES = {
   ghost: { prefix: 'ghost:', maxScore: 60000, maxDist: 16 },           // stars x 1000 + par-time bonus, levels finished
   echo: { prefix: 'echo:', maxScore: 50000, maxDist: 5 },               // metres, district 1-5
   shutter: { prefix: 'shutter:', maxScore: 20000, maxDist: 5 },         // photo points of one run, district 1-5
-  sky: { prefix: 'sky:', maxScore: 2000000, maxDist: 100000 },         // Skybreaker score, height in metres
+  sky: { prefix: 'sky:', maxScore: 2000000, maxDist: 100000 },
+  deflect: { prefix: 'deflect:', maxScore: 50000000, maxDist: 500 },   // Deflector score, wave reached         // Skybreaker score, height in metres
   pigeon: { prefix: 'pigeon:', maxScore: 10000000, maxDist: 1000000 }, // Pigeon Revenge loot $, distance m
   air: { prefix: 'air:', maxScore: 5000000, maxDist: 1000000 },        // Airborne score, distance m
   empire: { prefix: 'empire:', maxScore: 100000, maxDist: 100000 },     // Sushi Empire: 100 per tenfold earned + 5 per star, stars
