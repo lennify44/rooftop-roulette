@@ -25,7 +25,7 @@ img { max-width: 100%; }
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root {
-  /* Layout: side-view rooftops on canvas; leg counter, timer and a level strip on top; hold left = stop, right = jump */
+  /* Layout: side-view rooftops on canvas; leg counter, timer and a level strip on top; ◀ ▶ + JUMP pad at the bottom */
   --night: #141b2e;
   --chalk: #f4f1ea;
   --haze: #a9b3c8;
@@ -57,8 +57,14 @@ body {
 .icon-btn svg { width: 18px; height: 18px; }
 .next-btn { height: 44px; padding: 0 14px; border: 2px solid var(--ghost); border-radius: 22px; background: rgba(20, 27, 46, 0.75); color: var(--ghost); cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; }
 .next-btn:disabled { opacity: 0.35; cursor: default; }
-.zones { position: absolute; inset: auto 0 0 0; height: 24%; display: grid; grid-template-columns: 1fr 1fr; pointer-events: none; transition: opacity 0.8s; }
-.zones.fade { opacity: 0; }
+.pad { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none;
+  padding: 0 max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.pad .grp { display: flex; gap: 12px; }
+.pad button { pointer-events: auto; touch-action: none; width: 78px; height: 78px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.55); background: rgba(20, 27, 46, 0.4); color: #fff; font-family: var(--font-display); font-weight: 900; font-size: 30px; display: grid; place-items: center; }
+.pad button.jump { width: 104px; height: 104px; font-size: 24px; letter-spacing: 0.06em; background: rgba(255, 179, 71, 0.45); border-color: rgba(255, 220, 140, 0.9); }
+.pad button.on { background: rgba(255, 255, 255, 0.35); transform: scale(0.94); }
+@media (orientation: portrait) { .toast { top: 20%; } }
+@media (max-height: 520px) { .pad button { width: 64px; height: 64px; } .pad button.jump { width: 84px; height: 84px; } }
 .zone { display: grid; place-content: end center; padding-block: 14px; font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: 0.12em; color: rgba(244, 241, 234, 0.9); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
 .zone-l { background: linear-gradient(0deg, rgba(255, 107, 91, 0.18), transparent); border-right: 1px dashed rgba(244, 241, 234, 0.3); }
 .zone-r { background: linear-gradient(0deg, rgba(127, 227, 255, 0.18), transparent); }
@@ -133,7 +139,10 @@ body {
       <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
     </div>
   </div>
-  <div class="zones" id="zones" hidden><div class="zone zone-l">◀ HOLD = STOP</div><div class="zone zone-r">JUMP ▶</div></div>
+  <div class="pad" id="pad" hidden>
+    <div class="grp"><button type="button" id="bLeft" aria-label="Run left">◀</button><button type="button" id="bRight" aria-label="Run right">▶</button></div>
+    <button type="button" class="jump" id="bJump" aria-label="Jump">JUMP</button>
+  </div>
   <div class="toast" id="toast" hidden></div>
 
   <section class="screen" id="screenStart" aria-label="Start">
@@ -141,14 +150,14 @@ body {
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Ghost<br><span>Relay</span></h1>
-        <p class="lede">A rooftop relay with your own ghosts. Your runner never stops running unless you hold them back. Doors need someone on the plate, walls need someone to climb on. Run a leg, then team up with its ghost.</p>
+        <p class="lede">A rooftop relay with your own ghosts. Doors need someone on the plate, walls need someone to climb on. Run a leg, then team up with its ghost.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button><button class="link-btn" id="btnLevels" type="button">Levels · <span id="starCount">0</span> ★</button></div>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">
         <h2 class="label">How it works</h2>
         <ul class="rules">
-          <li>🏃 The runner runs by themselves. <b>Hold the left half</b> to stop, <b>tap the right half</b> to jump (hold for higher).</li>
+          <li>🏃 <b>◀ ▶</b> to run, <b>JUMP</b> to jump (hold it for higher). Let go to stop.</li>
           <li>👻 Press <b>Next leg</b> and your run becomes a ghost that repeats it exactly, and keeps standing where you left it.</li>
           <li>🟦 Ghosts hold plates, press buttons and flip levers. A ghost standing still is a step you can climb on.</li>
           <li>⭐ Stars: reach the flag, use no more legs than par, beat the par time.</li>
@@ -226,46 +235,46 @@ function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.
 // ---------- levels: roofs are solid blocks [x0, x1, top]; everything else stands on the roof under its x
 // plates hold doors/lasers/lifts while someone stands on them; buttons open timed doors for 4 s; levers toggle bridges
 const WORLDS = [
-  { name: 'Rooftops', sky: ['#2b3a6b', '#e9a07a'] },
-  { name: 'Laundry Lines', sky: ['#24506b', '#9fd8c8'] },
-  { name: 'Clocktower', sky: ['#3a2b5b', '#d8a0c0'] },
-  { name: 'Storm', sky: ['#1a2238', '#5a6a88'] },
+  { name: 'Rooftops', sky: ['#2b3a6b', '#e9a07a'], sun: '#ffd27a', roof: ['#3b3f63', '#23263d'], edge: '#ff9a6b' },
+  { name: 'Laundry Lines', sky: ['#24506b', '#9fd8c8'], sun: '#fff3b0', roof: ['#2f5a68', '#1b3540'], edge: '#7fffd0' },
+  { name: 'Clocktower', sky: ['#3a2b5b', '#d8a0c0'], sun: '#ffc2e0', roof: ['#4a3a68', '#271d3d'], edge: '#ffb0e0' },
+  { name: 'Storm', sky: ['#1a2238', '#5a6a88'], sun: null, roof: ['#2e3650', '#161b2c'], edge: '#9ab8ff' },
 ];
 const LEVELS = [
-  { id: '1-1', name: 'First Leg', legs: 1, time: 6.1, flag: 1800, roofs: [[0, 520, 420], [640, 1000, 420], [1120, 1400, 370], [1520, 1950, 420]],
-    tip: 'Tap the right half to jump, hold it to jump further.' },
-  { id: '1-2', name: 'Hold the Door', legs: 2, time: 5.2, flag: 1520, roofs: [[0, 1000, 420], [1120, 1650, 420]], plates: [{ id: 'a', x: 320 }], doors: [{ x: 760, by: 'a' }],
-    tip: 'Hold the left half to stop on the plate, then press Next leg. Your ghost keeps holding it.' },
-  { id: '1-3', name: 'Step Up', legs: 2, time: 7.5, flag: 1900, roofs: [[0, 800, 420], [800, 1500, 190], [1640, 2050, 300]],
+  { id: '1-1', name: 'First Leg', legs: 1, time: 6.5, flag: 1800, roofs: [[0, 520, 420], [640, 1000, 420], [1120, 1400, 370], [1520, 1950, 420]],
+    tip: 'Hold ▶ to run, JUMP over the gaps. Hold JUMP to jump further.' },
+  { id: '1-2', name: 'Hold the Door', legs: 2, time: 5.6, flag: 1520, roofs: [[0, 1000, 420], [1120, 1650, 420]], plates: [{ id: 'a', x: 320 }], doors: [{ x: 760, by: 'a' }],
+    tip: 'Stop on the plate, then press Next leg. Your ghost keeps holding it.' },
+  { id: '1-3', name: 'Step Up', legs: 2, time: 7.9, flag: 1900, roofs: [[0, 800, 420], [800, 1500, 190], [1640, 2050, 300]],
     tip: 'Too high to jump. Run into the wall, press Next leg, then climb on your ghost.' },
-  { id: '1-4', name: 'Relay', legs: 3, time: 6.9, flag: 1700, roofs: [[0, 1100, 420], [1100, 1850, 190]], plates: [{ id: 'a', x: 300 }], doors: [{ x: 700, by: 'a' }],
+  { id: '1-4', name: 'Relay', legs: 3, time: 7.3, flag: 1700, roofs: [[0, 1100, 420], [1100, 1850, 190]], plates: [{ id: 'a', x: 300 }], doors: [{ x: 700, by: 'a' }],
     tip: 'One ghost for the door, one for the wall.' },
 
-  { id: '2-1', name: 'Quick Door', legs: 1, time: 6.0, flag: 1900, roofs: [[0, 1400, 420], [1520, 2000, 420]], buttons: [{ id: 'b', x: 300 }], doors: [{ x: 1000, by: 'b' }], belts: [{ x0: 1050, x1: 1400, k: 1.5 }],
+  { id: '2-1', name: 'Quick Door', legs: 1, time: 6.4, flag: 1900, roofs: [[0, 1400, 420], [1520, 2000, 420]], buttons: [{ id: 'b', x: 300 }], doors: [{ x: 1000, by: 'b' }], belts: [{ x0: 1050, x1: 1400, k: 1.5 }],
     tip: 'Buttons open their door for 4 seconds. Fast belts throw you further.' },
-  { id: '2-2', name: 'Too Far', legs: 2, time: 9.4, flag: 2200, roofs: [[0, 1600, 420], [1720, 2300, 420]], buttons: [{ id: 'b', x: 420 }], doors: [{ x: 2000, by: 'b' }], belts: [{ x0: 600, x1: 1500, k: 0.6 }],
+  { id: '2-2', name: 'Too Far', legs: 2, time: 9.8, flag: 2200, roofs: [[0, 1600, 420], [1720, 2300, 420]], buttons: [{ id: 'b', x: 420 }], doors: [{ x: 2000, by: 'b' }], belts: [{ x0: 600, x1: 1500, k: 0.6 }],
     tip: 'The door shuts before you get there. Who could press the button later?' },
-  { id: '2-3', name: 'Fast Lane', legs: 2, time: 9.7, flag: 2400, roofs: [[0, 1200, 420], [1200, 2000, 190], [2120, 2500, 300]], belts: [{ x0: 600, x1: 1200, k: 1.5 }, { x0: 1400, x1: 1880, k: 0.6 }], buttons: [{ id: 'b', x: 1340 }], doors: [{ x: 1920, by: 'b' }],
+  { id: '2-3', name: 'Fast Lane', legs: 2, time: 10.1, flag: 2400, roofs: [[0, 1200, 420], [1200, 2000, 190], [2120, 2500, 300]], belts: [{ x0: 600, x1: 1200, k: 1.5 }, { x0: 1400, x1: 1880, k: 0.6 }], buttons: [{ id: 'b', x: 1340 }], doors: [{ x: 1920, by: 'b' }],
     tip: 'A step at the end of a fast belt. Jump early.' },
-  { id: '2-4', name: 'Laundry Day', legs: 3, time: 10.1, flag: 2700, roofs: [[0, 1450, 420], [1570, 2300, 420], [2300, 2800, 190]], buttons: [{ id: 'b', x: 500 }], plates: [{ id: 'a', x: 1700 }], doors: [{ x: 1300, by: 'b' }, { x: 2050, by: 'a' }], belts: [{ x0: 2120, x1: 2300, k: 1.4 }],
+  { id: '2-4', name: 'Laundry Day', legs: 3, time: 10.5, flag: 2700, roofs: [[0, 1450, 420], [1570, 2300, 420], [2300, 2800, 190]], buttons: [{ id: 'b', x: 500 }], plates: [{ id: 'a', x: 1700 }], doors: [{ x: 1300, by: 'b' }, { x: 2050, by: 'a' }], belts: [{ x0: 2120, x1: 2300, k: 1.4 }],
     tip: 'A button, a plate and a wall. Three runners, three jobs.' },
 
-  { id: '3-1', name: 'Lever', legs: 1, time: 8.8, flag: 2600, roofs: [[0, 800, 420], [1200, 1900, 420], [2300, 2700, 420]], levers: [{ id: 'l', x: 450 }, { id: 'm', x: 1450 }], bridges: [{ x0: 800, x1: 1200, by: 'l', on: false }, { x0: 1900, x1: 2300, by: 'm', on: true }],
+  { id: '3-1', name: 'Lever', legs: 1, time: 9.2, flag: 2600, roofs: [[0, 800, 420], [1200, 1900, 420], [2300, 2700, 420]], levers: [{ id: 'l', x: 450 }, { id: 'm', x: 1450 }], bridges: [{ x0: 800, x1: 1200, by: 'l', on: false }, { x0: 1900, x1: 2300, by: 'm', on: true }],
     tip: 'Running into a lever flips it. Every touch flips it again: jump over the ones you don’t want.' },
-  { id: '3-2', name: 'Lift Off', legs: 2, time: 7.1, flag: 1700, roofs: [[0, 1000, 420], [1120, 1800, 190]], plates: [{ id: 'a', x: 320 }], lifts: [{ x0: 1000, x1: 1120, lo: 420, hi: 190, by: 'a' }],
+  { id: '3-2', name: 'Lift Off', legs: 2, time: 7.5, flag: 1700, roofs: [[0, 1000, 420], [1120, 1800, 190]], plates: [{ id: 'a', x: 320 }], lifts: [{ x0: 1000, x1: 1120, lo: 420, hi: 190, by: 'a' }],
     tip: 'The lift only rises while the plate is held. Be on it when it goes up.' },
-  { id: '3-3', name: 'Two Bridges', legs: 2, time: 7.1, flag: 2100, roofs: [[0, 700, 420], [1000, 1500, 420], [1800, 2200, 420]], levers: [{ id: 'l', x: 400 }], bridges: [{ x0: 700, x1: 1000, by: 'l', on: true }, { x0: 1500, x1: 1800, by: 'l', on: false }],
+  { id: '3-3', name: 'Two Bridges', legs: 2, time: 7.5, flag: 2100, roofs: [[0, 700, 420], [1000, 1500, 420], [1800, 2200, 420]], levers: [{ id: 'l', x: 400 }], bridges: [{ x0: 700, x1: 1000, by: 'l', on: true }, { x0: 1500, x1: 1800, by: 'l', on: false }],
     tip: 'One lever, two bridges. The flip has to happen while you are between them.' },
-  { id: '3-4', name: 'Clockwork', legs: 3, time: 9.2, flag: 2300, roofs: [[0, 1100, 420], [1220, 1800, 190], [2100, 2450, 190]], plates: [{ id: 'a', x: 300 }, { id: 'c', x: 950 }], doors: [{ x: 750, by: 'a' }], lifts: [{ x0: 1100, x1: 1220, lo: 420, hi: 190, by: 'c' }], levers: [{ id: 'l', x: 1500 }], bridges: [{ x0: 1800, x1: 2100, by: 'l', on: false }],
+  { id: '3-4', name: 'Clockwork', legs: 3, time: 9.6, flag: 2300, roofs: [[0, 1100, 420], [1220, 1800, 190], [2100, 2450, 190]], plates: [{ id: 'a', x: 300 }, { id: 'c', x: 950 }], doors: [{ x: 750, by: 'a' }], lifts: [{ x0: 1100, x1: 1220, lo: 420, hi: 190, by: 'c' }], levers: [{ id: 'l', x: 1500 }], bridges: [{ x0: 1800, x1: 2100, by: 'l', on: false }],
     tip: 'Door, lift, bridge. Time the lift for your last runner.' },
 
-  { id: '4-1', name: 'Laser Gate', legs: 2, time: 7.3, flag: 2100, roofs: [[0, 1200, 420], [1320, 1600, 420], [1600, 2250, 200]], plates: [{ id: 'a', x: 300 }], lasers: [{ x: 800, by: 'a' }], fans: [{ x0: 1400, x1: 1600 }],
+  { id: '4-1', name: 'Laser Gate', legs: 2, time: 7.7, flag: 2100, roofs: [[0, 1200, 420], [1320, 1600, 420], [1600, 2250, 200]], plates: [{ id: 'a', x: 300 }], lasers: [{ x: 800, by: 'a' }], fans: [{ x0: 1400, x1: 1600 }],
     tip: 'Lasers are off only while their plate is held. Fans blow you up.' },
-  { id: '4-2', name: 'Updraft', legs: 1, time: 8.1, flag: 2500, roofs: [[0, 1300, 420], [1450, 2000, 180], [2150, 2600, 300]], buttons: [{ id: 'b', x: 300 }], doors: [{ x: 1100, by: 'b' }], fans: [{ x0: 1250, x1: 1450 }], belts: [{ x0: 1500, x1: 1950, k: 1.5 }],
+  { id: '4-2', name: 'Updraft', legs: 1, time: 8.5, flag: 2500, roofs: [[0, 1300, 420], [1450, 2000, 180], [2150, 2600, 300]], buttons: [{ id: 'b', x: 300 }], doors: [{ x: 1100, by: 'b' }], fans: [{ x0: 1250, x1: 1450 }], belts: [{ x0: 1500, x1: 1950, k: 1.5 }],
     tip: 'Ride the wind, then mind the belt.' },
-  { id: '4-3', name: 'Three Hands', legs: 3, time: 10.2, flag: 2250, roofs: [[0, 1200, 420], [1200, 2350, 190]], plates: [{ id: 'a', x: 300 }], lasers: [{ x: 750, by: 'a' }], buttons: [{ id: 'b', x: 1350 }], doors: [{ x: 1950, by: 'b' }], belts: [{ x0: 1450, x1: 1900, k: 0.5 }],
+  { id: '4-3', name: 'Three Hands', legs: 3, time: 10.6, flag: 2250, roofs: [[0, 1200, 420], [1200, 2350, 190]], plates: [{ id: 'a', x: 300 }], lasers: [{ x: 750, by: 'a' }], buttons: [{ id: 'b', x: 1350 }], doors: [{ x: 1950, by: 'b' }], belts: [{ x0: 1450, x1: 1900, k: 0.5 }],
     tip: 'One ghost holds, one ghost steps, you run.' },
-  { id: '4-4', name: 'Eye of the Storm', legs: 3, time: 10.7, flag: 2900, roofs: [[0, 1000, 420], [1300, 1700, 420], [1820, 2400, 200], [2600, 3000, 260]], plates: [{ id: 'a', x: 250 }, { id: 'c', x: 1420 }], lasers: [{ x: 600, by: 'a' }], levers: [{ id: 'l', x: 800 }], bridges: [{ x0: 1000, x1: 1300, by: 'l', on: false }], lifts: [{ x0: 1700, x1: 1820, lo: 420, hi: 200, by: 'c' }], belts: [{ x0: 1900, x1: 2300, k: 1.4 }],
+  { id: '4-4', name: 'Eye of the Storm', legs: 3, time: 11.1, flag: 2900, roofs: [[0, 1000, 420], [1300, 1700, 420], [1820, 2400, 200], [2600, 3000, 260]], plates: [{ id: 'a', x: 250 }, { id: 'c', x: 1420 }], lasers: [{ x: 600, by: 'a' }], levers: [{ id: 'l', x: 800 }], bridges: [{ x0: 1000, x1: 1300, by: 'l', on: false }], lifts: [{ x0: 1700, x1: 1820, lo: 420, hi: 200, by: 'c' }], belts: [{ x0: 1900, x1: 2300, k: 1.4 }],
     tip: 'Everything at once. Watch who flips the lever first.' },
 ];
 const LINK_COLORS = ['#4dd8ff', '#ff5ad8', '#b6ff4d', '#ffb04d'];
@@ -279,7 +288,9 @@ const L = { W: 0, H: 0, dpr: 1, s: 1 };
 function layout() {
   const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-  Object.assign(L, { W, H, dpr, s: clamp(Math.min(H / 560, W / 760), 0.42, 1.6) });
+  // portrait: zoom in so the runner is big (the strip on top shows the whole level)
+  const portrait = H > W * 1.1;
+  Object.assign(L, { W, H, dpr, portrait, s: portrait ? clamp(W / 370, 0.42, 1.6) : clamp(Math.min(H / 520, W / 760), 0.42, 1.6) });
 }
 addEventListener('resize', layout);
 
@@ -336,24 +347,25 @@ const game = { mode: 'menu', paused: false, legs: [], leg: 0, t: 0, steps: 0, co
 function freshState() {
   return { held: {}, prevHeld: {}, timed: {}, toggles: {}, touch: {}, lifts: lv.lifts.map((f) => f.lo) };
 }
-function newRunner() { return { x: 60, y: roofTop(60), vx: RUN, vy: 0, ground: null, brake: false, jumpHeld: false, holdT: 0, coyote: 0, buffer: 0, alive: true }; }
+function newRunner() { return { x: 60, y: roofTop(60), vx: 0, vy: 0, ground: null, dir: 0, face: 1, sq: 0, jumpHeld: false, holdT: 0, coyote: 0, buffer: 0, alive: true }; }
 function startLevel(idx) {
   Sound.init(); clearTimeout(doneTimer); li = idx; buildLevel(idx);
   Object.assign(game, { mode: 'play', paused: false, legs: [], done: false });
   ['screenStart', 'screenLevels', 'screenPause', 'screenDone'].forEach((id) => { $(id).hidden = true; });
   $('hud').hidden = false; layout(); startLeg();
   showToast(`${lv.src.id} · ${lv.src.name}`, lv.src.tip, 3200);
-  $('zones').hidden = false; $('zones').classList.remove('fade'); clearTimeout(zoneTimer); zoneTimer = setTimeout(() => $('zones').classList.add('fade'), 4500);
+  $('pad').hidden = false;
 }
-let zoneTimer = 0;
 function startLeg() {
   Object.assign(game, { leg: game.legs.length, t: 0, steps: 0, count: 0.7, run: newRunner(), rec: [], state: freshState(), dead: 0, deadWhy: '', parts: [], floats: [] });
-  game.camX = 0; pointers.clear(); keys.brake = false; keys.jump = false; Sound.leg(); updateHud();
+  game.camX = 0; game.shake = 0; keys.jump = false; Sound.leg(); updateHud();
 }
 function nextLeg(auto) {
   if (game.mode !== 'play' || game.done || game.dead) return;
   if (game.legs.length + 1 >= LEGS) { if (!auto) showToast('Last runner', 'This one has to reach the flag. Pause → Redo previous leg to change a ghost.', 2200); return; }
-  game.legs.push({ frames: game.rec, alive: true }); Sound.ghost(); startLeg();
+  const r = game.run; game.legs.push({ frames: game.rec, alive: true }); Sound.ghost();
+  const ghostFx = r ? { x: r.x, y: r.y } : null; startLeg();
+  if (ghostFx) { burst(ghostFx.x, ghostFx.y - 24, game.legs.length === 1 ? '#7fe3ff' : '#b6a4ff', 16); floatText('GHOST!', ghostFx.x, ghostFx.y - 70, game.legs.length === 1 ? '#7fe3ff' : '#b6a4ff'); }
 }
 function undoLeg() { if (!game.legs.length) return; game.legs.pop(); startLeg(); }
 function updateHud() {
@@ -366,14 +378,15 @@ function updateHud() {
 let toastTimer = 0;
 function showToast(title, text, ms = 1600) { const el = $('toast'); el.textContent = ''; const b = mk('b'); b.textContent = title; el.appendChild(b); if (text) { const s = mk('span'); s.textContent = text; el.appendChild(s); } el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, ms); }
 function floatText(t, x, y, c) { game.floats.push({ t, x, y, c, life: 1 }); }
+function dust(x, y, n) { for (let i = 0; i < n; i++) game.parts.push({ x: x + (Math.random() - 0.5) * 20, y: y - 2, vx: (Math.random() - 0.5) * 160, vy: -Math.random() * 90, c: 'rgba(230,220,210,0.8)', life: 0.35 + Math.random() * 0.2 }); }
 function burst(x, y, c, n = 10) { for (let i = 0; i < n; i++) game.parts.push({ x, y, vx: (Math.random() - 0.5) * 260, vy: -Math.random() * 260, c, life: 0.5 + Math.random() * 0.3 }); }
 
 // ---------- bodies: the live runner plus every ghost at the current step
 function ghostAt(g, step) {
   const f = g.frames, n = f.length / 3;
-  if (step < n) { const i = step * 3, p = Math.max(0, step - 1) * 3; return { x: f[i], y: f[i + 1], ground: !!(f[i + 2] & 1), still: !!(f[i + 2] & 1) && Math.abs(f[i] - f[p]) < 0.3 && step > 0, gone: false }; }
+  if (step < n) { const i = step * 3, p = Math.max(0, step - 1) * 3; return { x: f[i], y: f[i + 1], ground: !!(f[i + 2] & 1), face: f[i + 2] & 2 ? -1 : 1, still: !!(f[i + 2] & 1) && Math.abs(f[i] - f[p]) < 0.3 && step > 0, gone: false }; }
   if (!g.alive || !n) return { gone: true };
-  const i = (n - 1) * 3; return { x: f[i], y: f[i + 1], ground: !!(f[i + 2] & 1), still: !!(f[i + 2] & 1), gone: false };
+  const i = (n - 1) * 3; return { x: f[i], y: f[i + 1], ground: !!(f[i + 2] & 1), face: f[i + 2] & 2 ? -1 : 1, still: !!(f[i + 2] & 1), gone: false };
 }
 function bodies() {
   const out = [];
@@ -386,11 +399,11 @@ const touchLever = (b, l) => Math.abs(b.x - l.x) < HW + 6 && b.y > l.y - 36 && b
 function updateWorld(dt) {
   const st = game.state, bs = bodies();
   // plates and buttons
-  for (const p of lv.plates) { const h = bs.some((b) => onPad(b, p)); if (h !== !!st.held[p.id]) Sound.plate(h); st.held[p.id] = h; }
-  for (const p of lv.buttons) { const h = bs.some((b) => onPad(b, p)); if (h && !st.prevHeld[p.id]) { st.timed[p.id] = game.t + 4; Sound.plate(true); } st.prevHeld[p.id] = h; }
+  for (const p of lv.plates) { const h = bs.some((b) => onPad(b, p)); if (h !== !!st.held[p.id]) { Sound.plate(h); if (h) burst(p.x, p.y - 4, p.c, 8); } st.held[p.id] = h; }
+  for (const p of lv.buttons) { const h = bs.some((b) => onPad(b, p)); if (h && !st.prevHeld[p.id]) { st.timed[p.id] = game.t + 4; Sound.plate(true); burst(p.x, p.y - 4, p.c, 10); } st.prevHeld[p.id] = h; }
   // levers flip once per body per touch
   for (const l of lv.levers) for (const b of bs) { const k = l.id + b.id, on = touchLever(b, l); if (on && !st.touch[k]) { st.toggles[l.id] = (st.toggles[l.id] || 0) + 1; Sound.lever(); burst(l.x, l.y - 30, l.c, 6); } st.touch[k] = on; }
-  for (const d of lv.doors) { const want = isOpen(d.by) ? 1 : 0; if (want && d.open === 0) Sound.door(); d.open = clamp(d.open + (want ? 4 : -4) * dt, 0, 1); }
+  for (const d of lv.doors) { const want = isOpen(d.by) ? 1 : 0; if (want && d.open === 0) { Sound.door(); burst(d.x, d.y - DOOR_H, d.c, 10); game.shake = Math.max(game.shake, 3); } d.open = clamp(d.open + (want ? 4 : -4) * dt, 0, 1); }
   lv.lifts.forEach((f, i) => { const target = st.held[f.by] ? f.hi : f.lo; const y = st.lifts[i]; st.lifts[i] = y > target ? Math.max(target, y - LIFT_V * dt) : Math.min(target, y + LIFT_V * dt); f.y = st.lifts[i]; });
 }
 function isOpen(by) { const st = game.state; return !!st.held[by] || (st.timed[by] || 0) > game.t; }
@@ -412,28 +425,32 @@ function stepRunner(dt) {
   const r = game.run; if (!r.alive) return;
   // ride lifts
   if (r.ground && r.ground.lift !== undefined) r.y = lv.lifts[r.ground.lift].y;
-  const braking = r.brake;
-  let target = braking ? 0 : RUN;
-  if (r.ground && !braking) for (const b of lv.belts) if (r.x >= b.x0 && r.x <= b.x1 && Math.abs(r.y - roofTop(r.x)) < 1) target = RUN * b.k;
-  const a = r.ground ? (target < r.vx ? BRAKE : ACC) : AIR;
+  let target = r.dir * RUN; if (r.dir) r.face = r.dir;
+  if (r.ground && r.dir > 0) for (const b of lv.belts) if (r.x >= b.x0 && r.x <= b.x1 && Math.abs(r.y - roofTop(r.x)) < 1) target = RUN * b.k;
+  const a = r.ground ? (Math.abs(target) < Math.abs(r.vx) || target * r.vx < 0 ? BRAKE : ACC) : AIR;
+  r.sq *= Math.pow(0.002, dt);
   r.vx = r.vx < target ? Math.min(target, r.vx + a * dt) : Math.max(target, r.vx - a * dt);
   // jump: buffered a moment before landing, coyote a moment after leaving an edge
   r.buffer = Math.max(0, r.buffer - dt); r.coyote = r.ground ? 0.08 : Math.max(0, r.coyote - dt);
-  if (r.buffer > 0 && (r.ground || r.coyote > 0)) { r.vy = -JUMP; r.ground = null; r.coyote = 0; r.buffer = 0; r.holdT = HOLD; Sound.jump(); }
+  if (r.buffer > 0 && (r.ground || r.coyote > 0)) { r.vy = -JUMP; r.ground = null; r.coyote = 0; r.buffer = 0; r.holdT = HOLD; r.sq = -0.35; Sound.jump(); dust(r.x, r.y, 6); }
   if (!r.jumpHeld) r.holdT = 0;
   let g = GRAV; if (r.holdT > 0 && r.vy < 0) { g *= 0.5; r.holdT -= dt; }
   let inFan = false; for (const f of lv.fans) if (r.x > f.x0 && r.x < f.x1) { g = GRAV - FAN_UP; inFan = true; }
   r.vy += g * dt; if (inFan) r.vy = Math.max(-640, r.vy);
   // x: run into walls and closed doors
   let nx = r.x + r.vx * dt; r.bumped = false;
-  for (const s of solids()) if (nx + HW > s.x0 && r.x - HW < s.x1 && r.y > s.top + 0.5 && r.y - BH < s.bottom && r.x + HW <= s.x0 + 0.5) { nx = Math.min(nx, s.x0 - HW); r.bumped = true; }
-  if (r.bumped && r.vx > 0) r.vx = 0;
-  r.x = nx;
+  for (const s of solids()) {
+    if (!(r.y > s.top + 0.5 && r.y - BH < s.bottom)) continue;
+    if (r.x + HW <= s.x0 + 0.5 && nx + HW > s.x0) { nx = Math.min(nx, s.x0 - HW); r.bumped = true; }
+    else if (r.x - HW >= s.x1 - 0.5 && nx - HW < s.x1) { nx = Math.max(nx, s.x1 + HW); r.bumped = true; }
+  }
+  if (r.bumped) r.vx = 0;
+  r.x = Math.max(HW + 2, nx);
   // y: land on roofs, bridges, lifts and still ghosts
   let ny = r.y + r.vy * dt, land = null;
   if (r.vy >= 0) for (const s of tops()) if (r.x + HW > s.x0 && r.x - HW < s.x1 && r.y <= s.top + 0.5 && ny >= s.top && (!land || s.top < land.top)) land = s;
   const wasGround = !!r.ground;
-  if (land) { ny = land.top; if (!wasGround && r.vy > 400) Sound.land(); r.vy = 0; r.ground = land; } else r.ground = null;
+  if (land) { ny = land.top; if (!wasGround && r.vy > 400) { Sound.land(); r.sq = Math.min(0.45, r.vy / 2200); dust(r.x, ny, 8); } r.vy = 0; r.ground = land; } else r.ground = null;
   r.y = ny;
   // lasers and falls end the leg
   for (const z of lv.lasers) if (laserOn(z) && r.x + HW > z.x - 4 && r.x - HW < z.x + 4 && r.y > z.y - DOOR_H && r.y - BH < z.y) return die('zap');
@@ -441,11 +458,14 @@ function stepRunner(dt) {
 }
 function die(why) {
   const r = game.run; r.alive = false; game.dead = 0.9; game.deadWhy = why;
+  game.shake = 12;
   if (why === 'zap') { Sound.zap(); burst(r.x, r.y - 20, '#ff4d5e', 18); } else Sound.fall();
   floatText(why === 'zap' ? 'Zapped!' : 'Fell!', r.x, r.y - 50, '#ff6b5b');
 }
 function finish() {
-  game.done = true; Sound.win(); burst(game.run.x, game.run.y - 20, '#ffd166', 24);
+  game.done = true; Sound.win(); game.shake = 8;
+  for (const c of ['#ffd166', '#7fe3ff', '#ff6b5b', '#b6a4ff', '#8aff9a']) burst(game.run.x, game.run.y - 30, c, 12);
+  floatText(game.legs.length ? 'RELAY COMPLETE!' : 'SOLO RUN!', game.run.x, game.run.y - 80, '#ffd166');
   const legs = game.legs.length + 1, time = game.t, src = lv.src;
   const stars = 1 + (legs <= src.legs ? 1 : 0) + (legs <= src.legs && time <= src.time ? 1 : 0);
   const prevStars = profile.stars[src.id] || 0, prevBest = profile.best[src.id];
@@ -458,18 +478,19 @@ function finish() {
 // ---------- update
 function update(dt) {
   if (game.mode !== 'play' || game.paused || game.done) return;
+  game.shake = Math.max(0, (game.shake || 0) - dt * 40);
   for (let i = game.parts.length - 1; i >= 0; i--) { const p = game.parts[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; if (p.life <= 0) game.parts.splice(i, 1); }
   for (let i = game.floats.length - 1; i >= 0; i--) { const f = game.floats[i]; f.life -= dt; f.y -= 40 * dt; if (f.life <= 0) game.floats.splice(i, 1); }
   if (game.count > 0) { game.count -= dt; return; }
   if (game.dead > 0) { game.dead -= dt; if (game.dead <= 0) startLeg(); return; }
   const r = game.run;
-  r.brake = keys.brake || [...pointers.values()].includes('brake');
-  r.jumpHeld = keys.jump || [...pointers.values()].includes('jump');
+  r.dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  r.jumpHeld = keys.jump;
   game.t += dt; game.steps++;
   updateWorld(dt);
   stepRunner(dt);
   if (!r.alive) return;
-  game.rec.push(r.x, r.y, r.ground ? 1 : 0);
+  game.rec.push(r.x, r.y, (r.ground ? 1 : 0) | (r.face < 0 ? 2 : 0));
   if (r.x >= lv.flag - 6) { finish(); return; }
   if (game.t >= MAX_LEG) { if (game.legs.length + 1 < LEGS) { showToast('Time!', 'This runner becomes a ghost.'); nextLeg(true); } else die('fall'); }
   $('timer').textContent = game.t.toFixed(1);
@@ -477,13 +498,29 @@ function update(dt) {
 
 // ---------- drawing
 function drawRunner(x, y, alpha, color, pose) {
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y);
+  const ghost = alpha < 1, ink = '#141b2e', sq = pose.sq || 0, face = pose.face || 1;
+  ctx.save(); ctx.translate(x, y); ctx.scale(face * (1 + sq * 0.3), 1 - sq * 0.3);
+  if (ghost) { const gl = ctx.createRadialGradient(0, -24, 2, 0, -24, 40); gl.addColorStop(0, color); gl.addColorStop(1, 'rgba(0,0,0,0)'); ctx.globalAlpha = 0.35; ctx.fillStyle = gl; ctx.fillRect(-40, -64, 80, 80); }
+  ctx.globalAlpha = alpha;
   const k = pose.air ? 0 : Math.sin(pose.t * 18) * (pose.still ? 0 : 1);
-  ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-7 + k * 6, -2); ctx.lineTo(-8 + k * 4, 0); ctx.moveTo(0, -18); ctx.lineTo(7 - k * 6, -2); ctx.lineTo(9 - k * 4, 0); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, -32); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(9 + k * 4, pose.air ? -38 : -22); ctx.moveTo(0, -30); ctx.lineTo(-8 - k * 4, pose.air ? -36 : -24); ctx.stroke();
-  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(1, -38, 6, 0, Math.PI * 2); ctx.fill();
+  const pants = ghost ? color : '#2d3a6b', hood = ghost ? color : '#ffb347', skin = ghost ? color : '#c98a5e', cap = ghost ? color : '#ff5b6b';
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // legs: dark outline under a coloured stroke, shoes at the ends
+  const legs = pose.air ? [[-6, -4, -10, -10], [7, -6, 4, -2]] : [[-4 + k * 7, -4, -6 + k * 9, 0], [4 - k * 7, -4, 6 - k * 9, 0]];
+  for (const [kx, ky, fx, fy] of legs) { for (const [w, c] of [[9, ink], [6, pants]]) { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(kx, ky - 4); ctx.lineTo(fx, fy - 2); ctx.stroke(); } ctx.fillStyle = ghost ? color : '#ffffff'; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(fx + 3, fy - 2, 6, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  // back arm
+  ctx.strokeStyle = ink; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-2, -30); ctx.lineTo(-9 - k * 5, pose.air ? -40 : -20); ctx.stroke(); ctx.strokeStyle = hood; ctx.lineWidth = 5; ctx.stroke();
+  // hoodie torso
+  const tg = ctx.createLinearGradient(-10, -34, 10, -14); tg.addColorStop(0, ghost ? color : '#ffd27a'); tg.addColorStop(1, hood);
+  ctx.fillStyle = tg; ctx.strokeStyle = ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-9, -33); ctx.quadraticCurveTo(0, -38, 9, -33); ctx.lineTo(8, -15); ctx.quadraticCurveTo(0, -12, -8, -15); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (!ghost) { ctx.fillStyle = '#ff5b6b'; ctx.fillRect(-8, -24, 16, 3); }
+  // head, cap with a visor pointing where they run, eye
+  ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(1, -42, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = cap; ctx.beginPath(); ctx.arc(1, -44, 7.8, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(6, -45); ctx.lineTo(14, -44); ctx.lineTo(8, -42); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = ghost ? '#ffffff' : ink; ctx.beginPath(); ctx.arc(5, -41, 1.6, 0, Math.PI * 2); ctx.fill();
+  // front arm with the relay baton
+  ctx.strokeStyle = ink; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(2, -30); ctx.lineTo(10 + k * 5, pose.air ? -44 : -21); ctx.stroke(); ctx.strokeStyle = hood; ctx.lineWidth = 5; ctx.stroke();
+  if (!ghost) { ctx.save(); ctx.translate(10 + k * 5, pose.air ? -44 : -21); ctx.rotate(-0.6); ctx.fillStyle = '#ffe14d'; ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.fillRect(-2, -8, 4, 12); ctx.strokeRect(-2, -8, 4, 12); ctx.restore(); }
   ctx.restore();
 }
 function drawFrame() {
@@ -492,19 +529,30 @@ function drawFrame() {
   const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, world.sky[0]); g.addColorStop(1, world.sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   if (!lv) return;
   const r = game.run;
-  const viewW = W / s, target = clamp((r ? r.x : 0) - viewW * 0.32, -40, Math.max(-40, lv.end - viewW + 40));
-  game.camX += (target - game.camX) * 0.18;
-  const oy = H / 2 - 390 * s;
+  const viewW = W / s, lead = r && r.face < 0 ? 0.62 : 0.32, target = clamp((r ? r.x : 0) - viewW * lead, -40, Math.max(-40, lv.end - viewW + 40));
+  game.camX += (target - game.camX) * 0.12;
+  const oy = H * (L.portrait ? 0.58 : 0.52) - 390 * s;
+  if (world.sun) { const sx = W * 0.72 - game.camX * s * 0.04, sy = H * 0.3, sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 160 * s + 60); sg.addColorStop(0, world.sun); sg.addColorStop(0.25, world.sun); sg.addColorStop(0.26, 'rgba(255,240,200,0.35)'); sg.addColorStop(1, 'rgba(255,240,200,0)'); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = 'rgba(255,255,255,0.18)'; for (let i = 0; i < 6; i++) { const cx = ((i * 260 - game.camX * s * 0.12 + game.t * 8) % (W + 300) + W + 300) % (W + 300) - 150, cy = H * (0.12 + (i % 3) * 0.09); for (const [dx, dy, rr] of [[0, 0, 26], [28, -8, 32], [60, 0, 24], [30, 8, 26]]) { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, rr, 0, Math.PI * 2); ctx.fill(); } }
+  const shk = game.shake || 0, shx = shk ? (Math.random() - 0.5) * shk : 0, shy = shk ? (Math.random() - 0.5) * shk : 0;
   // far skyline
   ctx.fillStyle = 'rgba(10,14,30,0.25)'; for (let i = 0; i < 14; i++) { const bx = ((i * 173 - game.camX * 0.3) % (W + 200) + W + 200) % (W + 200) - 100, bh = 120 + (i * 53) % 160; ctx.fillRect(bx, H - bh * s - oy * 0.2, 70, bh * s + 400); }
-  ctx.save(); ctx.translate(-game.camX * s, oy); ctx.scale(s, s);
+  ctx.save(); ctx.translate(-game.camX * s + shx, oy + shy); ctx.scale(s, s);
   if (world.name === 'Storm') { ctx.fillStyle = 'rgba(200,210,255,0.25)'; for (let i = 0; i < 40; i++) { const x = game.camX + ((i * 97 + game.t * 300) % (viewW + 100)), y = ((i * 61 + game.t * 900) % 800) - 100; ctx.fillRect(x, y, 2, 14); } }
   // roofs
-  for (const rf of lv.roofs) {
-    ctx.fillStyle = '#2a2f45'; ctx.fillRect(rf[0], rf[2], rf[1] - rf[0], 900);
-    ctx.fillStyle = '#4a4f6a'; ctx.fillRect(rf[0], rf[2], rf[1] - rf[0], 8);
+  lv.roofs.forEach((rf, ri) => {
+    const rg = ctx.createLinearGradient(0, rf[2], 0, rf[2] + 500); rg.addColorStop(0, world.roof[0]); rg.addColorStop(1, world.roof[1]);
+    ctx.fillStyle = rg; ctx.fillRect(rf[0], rf[2], rf[1] - rf[0], 900);
+    ctx.strokeStyle = '#141b2e'; ctx.lineWidth = 3; ctx.strokeRect(rf[0], rf[2], rf[1] - rf[0], 900);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(rf[0] + 3, rf[2] + 10, 6, 890);
+    // props on the roof (decor only): vents, an antenna, a water tank
+    const w = rf[1] - rf[0], kind = ri % 3, px = rf[0] + w * (0.25 + (ri * 37 % 40) / 100);
+    if (w > 220 && kind === 0) { ctx.fillStyle = '#5a6080'; ctx.fillRect(px, rf[2] - 26, 40, 26); ctx.strokeRect(px, rf[2] - 26, 40, 26); ctx.fillStyle = '#2a2f45'; for (let i = 0; i < 4; i++) ctx.fillRect(px + 5 + i * 9, rf[2] - 21, 4, 16); }
+    if (w > 220 && kind === 1) { ctx.strokeStyle = '#141b2e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px, rf[2]); ctx.lineTo(px, rf[2] - 70); ctx.moveTo(px - 12, rf[2] - 56); ctx.lineTo(px + 12, rf[2] - 56); ctx.stroke(); ctx.fillStyle = Math.sin(game.t * 4) > 0 ? '#ff4d5e' : '#7a2030'; ctx.beginPath(); ctx.arc(px, rf[2] - 72, 4, 0, Math.PI * 2); ctx.fill(); }
+    if (w > 300 && kind === 2) { ctx.fillStyle = '#7a5a40'; ctx.strokeStyle = '#141b2e'; ctx.lineWidth = 2.5; ctx.fillRect(px - 2, rf[2] - 20, 4, 20); ctx.fillRect(px + 34, rf[2] - 20, 4, 20); ctx.beginPath(); ctx.ellipse(px + 18, rf[2] - 46, 26, 30, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#5a4030'; ctx.fillRect(px - 8, rf[2] - 50, 52, 4); }
+    ctx.fillStyle = world.edge; ctx.fillRect(rf[0], rf[2], rf[1] - rf[0], 5); ctx.fillStyle = 'rgba(20,27,46,0.5)'; ctx.fillRect(rf[0], rf[2] + 5, rf[1] - rf[0], 4);
     ctx.fillStyle = 'rgba(255,214,120,0.35)'; for (let x = rf[0] + 24; x < rf[1] - 30; x += 60) for (let y = rf[2] + 40; y < rf[2] + 400; y += 70) if ((x * 7 + y * 3) % 5 < 2) ctx.fillRect(x, y, 18, 26);
-  }
+  });
   // belts
   for (const b of lv.belts) { const y = roofTop(b.x0 + 1); ctx.fillStyle = b.k > 1 ? '#3a8a5a' : '#8a5a3a'; ctx.fillRect(b.x0, y - 2, b.x1 - b.x0, 8); ctx.fillStyle = 'rgba(255,255,255,0.5)'; const off = (game.t * 120 * (b.k > 1 ? 1 : -1)) % 30; for (let x = b.x0 + ((off + 30) % 30); x < b.x1 - 8; x += 30) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 8, y + 3); ctx.lineTo(x, y + 6); ctx.fill(); } }
   // fans
@@ -513,7 +561,7 @@ function drawFrame() {
   for (const b of lv.bridges) { if (bridgeOn(b)) { ctx.fillStyle = '#9a6a3a'; ctx.fillRect(b.x0, b.y, b.x1 - b.x0, 12); ctx.fillStyle = b.c; ctx.fillRect(b.x0, b.y + 10, b.x1 - b.x0, 3); } else { ctx.strokeStyle = b.c; ctx.globalAlpha = 0.5; ctx.setLineDash([8, 8]); ctx.strokeRect(b.x0, b.y, b.x1 - b.x0, 12); ctx.setLineDash([]); ctx.globalAlpha = 1; } }
   for (const f of lv.lifts) { ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.x0 + 10, 0); ctx.lineTo(f.x0 + 10, f.y); ctx.moveTo(f.x1 - 10, 0); ctx.lineTo(f.x1 - 10, f.y); ctx.stroke(); ctx.fillStyle = '#7a8098'; ctx.fillRect(f.x0, f.y, f.x1 - f.x0, 14); ctx.fillStyle = f.c; ctx.fillRect(f.x0, f.y + 12, f.x1 - f.x0, 3); ctx.strokeStyle = f.c; ctx.globalAlpha = 0.35; ctx.setLineDash([4, 6]); ctx.strokeRect(f.x0, f.hi, f.x1 - f.x0, 14); ctx.setLineDash([]); ctx.globalAlpha = 1; }
   // plates, buttons, levers
-  for (const p of lv.plates) { const on = game.state && game.state.held[p.id]; ctx.fillStyle = p.c; ctx.globalAlpha = on ? 1 : 0.6; ctx.fillRect(p.x - p.w, p.y - (on ? 2 : 5), p.w * 2, on ? 2 : 5); ctx.globalAlpha = 1; if (on) { ctx.fillStyle = p.c; ctx.globalAlpha = 0.2; ctx.fillRect(p.x - p.w, p.y - 60, p.w * 2, 58); ctx.globalAlpha = 1; } }
+  for (const p of lv.plates) { const on = game.state && game.state.held[p.id]; ctx.fillStyle = p.c; ctx.globalAlpha = on ? 1 : 0.6; ctx.fillRect(p.x - p.w, p.y - (on ? 2 : 5), p.w * 2, on ? 2 : 5); ctx.globalAlpha = 1; if (on) { const pg = ctx.createLinearGradient(0, p.y, 0, p.y - 70); pg.addColorStop(0, p.c); pg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = pg; ctx.globalAlpha = 0.35; ctx.fillRect(p.x - p.w, p.y - 70, p.w * 2, 68); ctx.globalAlpha = 1; } }
   for (const p of lv.buttons) { const left = game.state ? (game.state.timed[p.id] || 0) - game.t : 0; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.w * 0.8, Math.PI, 0); ctx.fill(); if (left > 0) { ctx.strokeStyle = p.c; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y - 36, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (left / 4)); ctx.stroke(); } }
   for (const l of lv.levers) { const flipped = game.state && (game.state.toggles[l.id] || 0) % 2 === 1; ctx.strokeStyle = '#ddd'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + (flipped ? 14 : -14), l.y - 32); ctx.stroke(); ctx.fillStyle = l.c; ctx.beginPath(); ctx.arc(l.x + (flipped ? 14 : -14), l.y - 32, 6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#556'; ctx.fillRect(l.x - 8, l.y - 4, 16, 4); }
   // doors and lasers
@@ -527,10 +575,10 @@ function drawFrame() {
     const b = ghostAt(gh, game.steps); const color = gi === 0 ? '#7fe3ff' : '#b6a4ff';
     const f = gh.frames, n = Math.min(f.length / 3, game.steps); ctx.strokeStyle = color; ctx.globalAlpha = 0.18; ctx.lineWidth = 3; ctx.beginPath();
     for (let i = Math.max(0, n - 90); i < n; i += 3) { if (i === Math.max(0, n - 90)) ctx.moveTo(f[i * 3], f[i * 3 + 1] - 20); else ctx.lineTo(f[i * 3], f[i * 3 + 1] - 20); } ctx.stroke(); ctx.globalAlpha = 1;
-    if (!b.gone) { drawRunner(b.x, b.y, 0.55, color, { t: game.t, air: !b.ground, still: b.still }); if (b.still) { ctx.fillStyle = color; ctx.globalAlpha = 0.5; ctx.fillRect(b.x - HW, b.y - BH - 2, HW * 2, 3); ctx.globalAlpha = 1; } }
+    if (!b.gone) { drawRunner(b.x, b.y, 0.6, color, { t: game.t, air: !b.ground, still: b.still, face: b.face }); if (b.still) { ctx.fillStyle = color; ctx.globalAlpha = 0.5; ctx.fillRect(b.x - HW, b.y - BH - 2, HW * 2, 3); ctx.globalAlpha = 1; } }
   });
-  if (r && r.alive) drawRunner(r.x, r.y, 1, '#ffb347', { t: game.t, air: !r.ground, still: r.vx < 20 });
-  for (const p of game.parts) { ctx.globalAlpha = clamp(p.life * 2, 0, 1); ctx.fillStyle = p.c; ctx.fillRect(p.x - 3, p.y - 3, 6, 6); }
+  if (r && r.alive) drawRunner(r.x, r.y, 1, '#ffb347', { t: game.t, air: !r.ground, still: Math.abs(r.vx) < 20, face: r.face, sq: r.sq });
+  for (const p of game.parts) { ctx.globalAlpha = clamp(p.life * 2, 0, 1); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); ctx.fill(); }
   ctx.globalAlpha = 1;
   for (const fl of game.floats) { ctx.globalAlpha = clamp(fl.life * 1.5, 0, 1); ctx.font = '900 26px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,27,46,0.7)'; ctx.strokeText(fl.t, fl.x, fl.y); ctx.fillStyle = fl.c; ctx.fillText(fl.t, fl.x, fl.y); }
   ctx.globalAlpha = 1;
@@ -560,24 +608,25 @@ function frame(now) {
   acc += dt; while (acc >= STEP) { update(STEP); acc -= STEP; }
   drawFrame();
 }
-const pointers = new Map(), keys = { brake: false, jump: false };
+const keys = { left: false, right: false, jump: false };
 function pressJump() { const r = game.run; if (r && r.alive && game.mode === 'play' && !game.paused) r.buffer = 0.1; }
-cv.addEventListener('pointerdown', (e) => {
-  e.preventDefault(); Sound.init(); if (game.mode !== 'play' || game.paused) return;
-  const rc = cv.getBoundingClientRect(), side = e.clientX - rc.left < rc.width / 2 ? 'brake' : 'jump';
-  pointers.set(e.pointerId, side); if (side === 'jump') pressJump();
-});
-const release = (e) => { pointers.delete(e.pointerId); };
-cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release); cv.addEventListener('pointerleave', release);
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); Sound.init(); });
+function bindHold(id, key) {
+  const el = $(id), set = (v) => { keys[key] = v; el.classList.toggle('on', v); };
+  el.addEventListener('pointerdown', (e) => { e.preventDefault(); Sound.init(); if (el.setPointerCapture) el.setPointerCapture(e.pointerId); set(true); if (key === 'jump') pressJump(); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, () => set(false));
+}
+bindHold('bLeft', 'left'); bindHold('bRight', 'right'); bindHold('bJump', 'jump');
+function releaseAll() { keys.left = keys.right = keys.jump = false; for (const id of ['bLeft', 'bRight', 'bJump']) $(id).classList.remove('on'); }
+const KEYMAP = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ' ': 'jump', ArrowUp: 'jump', w: 'jump' };
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.repeat) return;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.brake = true;
-  if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'w') { keys.jump = true; pressJump(); e.preventDefault(); }
+  const k = KEYMAP[e.key]; if (k) { keys[k] = true; if (k === 'jump') { pressJump(); e.preventDefault(); } }
   if (e.key === 'n') nextLeg();
 });
-addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft' || e.key === 'a') keys.brake = false; if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'w') keys.jump = false; });
+addEventListener('keyup', (e) => { const k = KEYMAP[e.key]; if (k) keys[k] = false; });
 $('btnNext').addEventListener('click', () => nextLeg());
-function pause(on) { if (game.mode !== 'play' || game.done) return; game.paused = on; pointers.clear(); $('screenPause').hidden = !on; updateHud(); }
+function pause(on) { if (game.mode !== 'play' || game.done) return; game.paused = on; releaseAll(); $('screenPause').hidden = !on; updateHud(); }
 $('btnPause').addEventListener('click', () => pause(true));
 $('btnResume').addEventListener('click', () => { pause(false); last = 0; });
 $('btnUndo').addEventListener('click', () => { pause(false); undoLeg(); });
@@ -592,9 +641,9 @@ const worldStars = (w) => LEVELS.slice(w * 4, w * 4 + 4).reduce((a, l) => a + (p
 function levelOpen(i) { if (i === 0) return true; if (i % 4 === 0) return worldStars(i / 4 - 1) >= 6 && !!profile.stars[LEVELS[i - 1].id]; return !!profile.stars[LEVELS[i - 1].id]; }
 function firstOpenUnfinished() { for (let i = 0; i < LEVELS.length; i++) if (levelOpen(i) && !profile.stars[LEVELS[i].id]) return i; let i = LEVELS.length - 1; while (i > 0 && !levelOpen(i)) i--; return i; }
 function score() { let s = totalStars() * 1000; for (const l of LEVELS) if (profile.best[l.id] !== undefined) s += Math.max(0, Math.round((l.time - profile.best[l.id]) * 10)); return s; }
-function showStart() { ['screenLevels', 'screenDone', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('hud').hidden = true; $('zones').hidden = true; game.mode = 'menu'; $('starCount').textContent = totalStars(); $('screenStart').hidden = false; renderLeaderboard(); layout(); }
+function showStart() { ['screenLevels', 'screenDone', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('hud').hidden = true; $('pad').hidden = true; game.mode = 'menu'; $('starCount').textContent = totalStars(); $('screenStart').hidden = false; renderLeaderboard(); layout(); }
 function showLevels() {
-  ['screenStart', 'screenDone', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('hud').hidden = true; $('zones').hidden = true; game.mode = 'menu';
+  ['screenStart', 'screenDone', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('hud').hidden = true; $('pad').hidden = true; game.mode = 'menu';
   const box = $('worlds'); box.textContent = '';
   WORLDS.forEach((w, wi) => {
     const sec = mk('div', 'world'); const h = mk('h3'); h.textContent = w.name; const sm = mk('small'); sm.textContent = `${worldStars(wi)} / 12 ★`; h.appendChild(sm); sec.appendChild(h);
@@ -610,7 +659,7 @@ function showLevels() {
   $('screenLevels').hidden = false;
 }
 function showDone(stars, legs, time, prevStars) {
-  game.mode = 'menu'; $('hud').hidden = true; $('zones').hidden = true;
+  game.mode = 'menu'; $('hud').hidden = true; $('pad').hidden = true;
   const src = lv.src;
   $('doneEyebrow').textContent = `${src.id} · ${src.name}`;
   $('doneTitle').textContent = stars === 3 ? 'Perfect relay!' : stars > prevStars ? 'Baton in!' : 'Made it!';
