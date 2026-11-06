@@ -283,7 +283,9 @@ const L = { W: 0, H: 0, dpr: 1, s: 1 };
 function layout() {
   const W = cv.clientWidth || innerWidth, H = cv.clientHeight || innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-  Object.assign(L, { W, H, dpr, s: clamp(Math.min(H / 600, W / 860), 0.45, 1.5) });
+  // portrait: zoom in and keep the runner near the left edge; the viewfinder ahead still fits (wide lens included)
+  const portrait = H > W * 1.1;
+  Object.assign(L, { W, H, dpr, portrait, s: portrait ? clamp(W / 500, 0.45, 1.5) : clamp(Math.min(H / 600, W / 860), 0.45, 1.5) });
 }
 addEventListener('resize', layout);
 
@@ -578,14 +580,34 @@ function drawSub(s) {
       break;
   }
 }
+// the runner: a photographer in a jacket and beanie, outlined, drawn a quarter bigger than the hitbox for readability
+function drawPhotographer(r, k) {
+  const ink = '#1a1420', air = !r.ground, aim = game.aiming;
+  ctx.save(); ctx.translate(r.x, r.y); ctx.scale(1.25, 1.25); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const legs = air ? [[-6, -4, -10, -10], [7, -6, 4, -2]] : [[-4 + k * 7, -4, -6 + k * 9, 0], [4 - k * 7, -4, 6 - k * 9, 0]];
+  for (const [kx, ky, fx, fy] of legs) { for (const [w, c] of [[9, ink], [6, '#30406a']]) { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(kx, ky - 4); ctx.lineTo(fx, fy - 2); ctx.stroke(); } ctx.fillStyle = '#ffffff'; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(fx + 3, fy - 2, 6, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  ctx.strokeStyle = ink; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-2, -30); ctx.lineTo(aim ? 6 : -9 - k * 5, aim ? -38 : air ? -40 : -20); ctx.stroke(); ctx.strokeStyle = '#2bb5a0'; ctx.lineWidth = 5; ctx.stroke();
+  const tg = ctx.createLinearGradient(-10, -34, 10, -14); tg.addColorStop(0, '#5fe0c8'); tg.addColorStop(1, '#2bb5a0');
+  ctx.fillStyle = tg; ctx.strokeStyle = ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-9, -33); ctx.quadraticCurveTo(0, -38, 9, -33); ctx.lineTo(8, -15); ctx.quadraticCurveTo(0, -12, -8, -15); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#e8763a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, -33); ctx.lineTo(6, -18); ctx.stroke();
+  ctx.fillStyle = '#b07850'; ctx.strokeStyle = ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(1, -42, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e8763a'; ctx.beginPath(); ctx.arc(1, -44, 7.8, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(1, -52, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  if (!aim) { ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(5, -41, 1.6, 0, Math.PI * 2); ctx.fill(); }
+  // the camera: on the chest while running, up at the eye while aiming
+  const cx = aim ? 9 : 4, cy = aim ? -43 : -25;
+  ctx.fillStyle = '#2a2a33'; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.fillRect(cx - 6, cy - 5, 12, 9); ctx.strokeRect(cx - 6, cy - 5, 12, 9);
+  ctx.fillStyle = '#8fd8ff'; ctx.beginPath(); ctx.arc(cx + 7, cy, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = ink; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(2, -30); ctx.lineTo(aim ? cx - 2 : 10 + k * 5, aim ? cy + 4 : air ? -44 : -21); ctx.stroke(); ctx.strokeStyle = '#2bb5a0'; ctx.lineWidth = 5; ctx.stroke();
+  ctx.restore();
+}
 function drawFrame() {
   const { W, H, s } = L, D = DISTRICTS[game.district];
   ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
   const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, D.sky[0]); g.addColorStop(1, D.sky[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   if (!game.run) return;
   const r = game.run, viewW = W / s;
-  game.camX += (r.x - viewW * 0.22 - game.camX) * 0.2;
-  const oy = H / 2 - 360 * s;
+  game.camX += (r.x - viewW * (L.portrait ? 0.1 : 0.22) - game.camX) * 0.2;
+  const oy = H * (L.portrait ? 0.6 : 0.5) - 360 * s;
   ctx.fillStyle = D.name === 'Fireworks' ? 'rgba(10,8,24,0.5)' : 'rgba(80,60,90,0.18)';
   for (let i = 0; i < 12; i++) { const bx = ((i * 157 - game.camX * 0.15) % (W + 160) + W + 160) % (W + 160) - 80, bh = 90 + (i * 47) % 150; ctx.fillRect(bx, H * 0.66 - bh, 60, bh + H); }
   const shk = game.shake || 0;
@@ -614,12 +636,7 @@ function drawFrame() {
   if (r.alive) {
     const k = r.ground ? Math.sin(game.t * 20) : 0, blink = game.inv > 0 && Math.floor(game.t * 16) % 2;
     if (!blink) {
-      ctx.save(); ctx.translate(r.x, r.y); ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(-7 + k * 7, 0); ctx.moveTo(0, -18); ctx.lineTo(7 - k * 7, 0); ctx.moveTo(0, -18); ctx.lineTo(2, -32); ctx.stroke();
-      ctx.beginPath(); if (game.aiming) { ctx.moveTo(2, -30); ctx.lineTo(12, -38); ctx.moveTo(2, -30); ctx.lineTo(10, -34); } else { ctx.moveTo(2, -30); ctx.lineTo(11 + k * 4, r.ground ? -22 : -40); ctx.moveTo(2, -30); ctx.lineTo(-8 - k * 4, r.ground ? -24 : -38); } ctx.stroke();
-      ctx.fillStyle = '#1a1420'; ctx.beginPath(); ctx.arc(3, -38, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#e8763a'; ctx.fillRect(game.aiming ? 8 : -2, game.aiming ? -42 : -30, 11, 8);
-      ctx.restore();
+      drawPhotographer(r, k);
     }
   }
   // the viewfinder
