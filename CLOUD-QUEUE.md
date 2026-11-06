@@ -15,7 +15,7 @@
   letter streak multiplier, a stronger "district reached" moment. — 2026-11-05 (owner's server): clean-landing streak with calls, letters ×(1+streak/5), CLOSE! near-miss bonus, big district banner + full reveal, screen shake.
 - [x] **Crane Climb: dopamine.** Floor streak without hits with calls, coin bursts, a power-up (jetpack: 5 floors up,
   or slow-mo), clearer stage change moments. — 2026-11-05 (owner's server): floor streak with calls and a coin multiplier, coin bursts, jetpacks every 37 floors (6 floors up), big stage banners; fixed taps lost during hook rides.
-- [ ] **A new action game (not an autorunner)** built to the bar in CLOUD-BRIEF.md: write 3 short original pitches in
+- [x] **A new action game (not an autorunner)** (done on the host 2026-11-06: Deflector) built to the bar in CLOUD-BRIEF.md: write 3 short original pitches in
   this file, pick the strongest, build it fully, add an Arcade card, note the board and page in HOST-TODO.md.
 - [x] **Arcade: show what's new.** "NEW"/"UPDATED" badges from a date field, newest first, a big banner for the — 2026-11-05 (owner's server): NEW/UPDATED badges from a DATES map (update it with each change), newest first, banner for the newest game.
   newest game.
