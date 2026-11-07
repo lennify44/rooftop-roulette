@@ -421,6 +421,29 @@ function drawHazard(kind, x, y, speed) {
 const wallX = (side) => (side === 0 ? L.wallL + 26 : L.wallR - 26);
 let camF = 0;
 function fy(f) { return L.H * 0.62 - (f - camF) * L.fh; }
+// the climber: a construction worker in a hi-vis vest, outlined, sized to the floor height (bigger in portrait)
+function drawClimber(x, y, flip, pose) {
+  const ink = '#1b1f2e', sc = clamp(L.fh / 48, 0.8, 1.45), wig = Math.sin(game.t * 10) * 2;
+  ctx.save(); ctx.translate(x, y); ctx.scale(flip * sc, sc); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const limb = (x0, y0, x1, y1, x2, y2, c) => { for (const [w, col] of [[8, ink], [5, c]]) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); } };
+  const blob = (bx, by, r, c) => { ctx.fillStyle = c; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); };
+  // legs and boots
+  const legs = pose === 'jump' ? [[-3, -8, -9, 0, -14, 4], [3, -8, 8, -2, 12, 6]] : [[-3, -8, -6, -1, -9, 6], [3, -8, 8, -1, 10, 5]];
+  for (const [x0, y0, x1, y1, x2, y2] of legs) { limb(x0, y0, x1, y1, x2, y2, '#3a5a9a'); ctx.fillStyle = '#5a3a20'; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x2 + 2, y2, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  // arms: reaching up to grip, spread mid-jump, both up on a crane hook
+  const arms = pose === 'ride' ? [[-5, -24, -4, -36, -2, -46], [5, -24, 4, -36, 2, -46]] : pose === 'jump' ? [[-6, -24, -15, -28, -22, -34], [6, -24, 15, -30, 21, -38]] : [[-6, -24, -12, -32, -15, -40 + wig], [6, -24, 12, -30, 15, -36 - wig]];
+  for (const [x0, y0, x1, y1, x2, y2] of arms) { limb(x0, y0, x1, y1, x2, y2, '#4a7ad0'); blob(x2, y2, 3.6, '#ffd23f'); }
+  // torso: shirt under an orange hi-vis vest with reflective stripes
+  ctx.fillStyle = '#ff8a3d'; ctx.strokeStyle = ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-8, -27); ctx.quadraticCurveTo(0, -31, 8, -27); ctx.lineTo(7, -8); ctx.quadraticCurveTo(0, -5, -7, -8); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#eef6ff'; ctx.fillRect(-7, -20, 14, 2.5); ctx.fillRect(-7, -14, 14, 2.5);
+  ctx.fillStyle = '#4a7ad0'; ctx.fillRect(-1.5, -28, 3, 20);
+  // head and hard hat (gold while the hard-hat upgrade still has a hit left)
+  blob(0, -34, 7, '#e0b088');
+  ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(3, -34, 1.4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = game.helmet ? '#ffd23f' : '#d8dde6'; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -37, 8.5, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillRect(-11, -38, 22, 3); ctx.strokeRect(-11, -38, 22, 3); ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(-4, -44, 3, 5);
+  ctx.restore();
+}
 function drawFrame() {
   const { W, H } = L, S = game.stage;
   ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
@@ -471,12 +494,7 @@ function drawFrame() {
   let cx = wallX(game.side), cy = fy(game.floor);
   if (game.moveT > 0 && game.from) { const k = 1 - game.moveT / MOVE_T; cx = wallX(game.from.side) + (wallX(game.side) - wallX(game.from.side)) * k; cy = fy(game.from.floor + (game.floor - game.from.floor) * k) - Math.sin(k * Math.PI) * 20; }
   if (game.riding) { const hk = game.riding.hook; cx = L.wallL + (L.wallR - L.wallL) * clamp(hk.x, 0.1, 0.9); cy = fy(game.floor) + 10; }
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(game.side === 0 && game.moveT <= 0 ? -1 : 1, 1);
-  ctx.fillStyle = '#ff8a3d'; ctx.fillRect(-8, -26, 16, 18);
-  ctx.strokeStyle = '#1b1f2e'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-4, -8); ctx.lineTo(-8, 6); ctx.moveTo(4, -8); ctx.lineTo(10, 4); ctx.moveTo(-6, -22); ctx.lineTo(-14, -34); ctx.moveTo(6, -22); ctx.lineTo(14, -32); ctx.stroke();
-  ctx.fillStyle = '#f0c8a0'; ctx.beginPath(); ctx.arc(0, -32, 7, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = game.helmet ? '#ffd23f' : '#888'; ctx.beginPath(); ctx.arc(0, -35, 8, Math.PI, 0); ctx.fill();
-  ctx.restore();
+  drawClimber(cx, cy, game.side === 0 && game.moveT <= 0 ? -1 : 1, game.riding ? 'ride' : game.moveT > 0 ? 'jump' : 'cling');
   // the dust storm
   const sy = fy(game.storm);
   const sg = ctx.createLinearGradient(0, sy - 60, 0, sy + 40); sg.addColorStop(0, 'rgba(190,160,120,0)'); sg.addColorStop(0.5, 'rgba(190,160,120,0.85)'); sg.addColorStop(1, 'rgba(150,120,90,1)');
