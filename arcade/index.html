@@ -106,7 +106,12 @@ const read = (k) => { try { const v = localStorage.getItem(k); return v === null
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 // one simple drawing per game, in that game's colours (viewBox 320 x 160)
+function fmtShort(n) { const u = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi']; let i = 0; while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; } return (n >= 100 ? n.toFixed(0) : n.toFixed(1)) + u[i]; }
 const ART = {
+  layer: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a22" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1f6a"/><stop offset="1" stop-color="#0f0b1e"/></linearGradient></defs><rect width="320" height="160" fill="url(#a22)"/>
+    ${[['#ffc93c', '🪙', 118], ['#3ef2ff', '💎', 84], ['#d4ff3b', '⚡', 50], ['#ff4fa3', '🧪', 16]].map(([c, e, y], i) => `<g transform="translate(${70 + i * 10} ${y})"><rect width="${180 - i * 20}" height="30" rx="8" fill="${c}" opacity="${0.9 - i * 0.12}" stroke="#0f0b1e" stroke-width="3"/><text x="14" y="22" font-size="18">${e}</text></g>`).join('')}
+    <path d="M268 120 L268 30 M258 42 L268 28 L278 42" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <text x="300" y="150" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="18" fill="#ff4fa3">LAYER UP!</text></svg>`,
   fire: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a21" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14162a"/><stop offset="1" stop-color="#3a2a3a"/></linearGradient></defs><rect width="320" height="160" fill="url(#a21)"/>
     <circle cx="270" cy="34" r="16" fill="#f4e6b8" opacity="0.85"/>
     <rect x="70" y="10" width="150" height="160" fill="#2a2c3c" stroke="#0c0d16" stroke-width="3"/>
@@ -238,6 +243,10 @@ const GAMES = [
     pitch: 'The sky keeps scrolling. Run and jump across floating islands, stomp drones to bounce higher and never let the storm catch you.',
     best: () => { const p = read('airborne-profile'); return p && p.best ? [fmt(p.best), `${fmt(p.bestDist)} m`] : null; },
     world: (e) => [fmt(e.score), `${fmt(e.dist)} m`] },
+  { id: 'layer', name: 'Layer <span>Up</span>', url: 'layer-up/', accent: '#ff4fa3', board: null, badge: 'New · idle', tags: ['incremental', 'idle', 'layers'],
+    pitch: 'Machines make coins, coins become gems, gems open a mine, the mine powers a capacitor. Every new currency is a new game. More layers coming.',
+    best: () => { const p = read('layer-up-save'); return p && p.life ? [`${['🪙', '💎', '⚡'][p.top || 0]} layer ${(p.top || 0) + 1}`, `${fmtShort(p.life)} coins ever`] : null; },
+    world: () => null },
   { id: 'fire', name: 'Fire <span>Escape</span>', url: 'fire-escape/', accent: '#ffd23f', board: null, badge: 'New · platformer', tags: ['platformer', 'hard', 'wall-jump'],
     pitch: 'The tower comes down tonight and you are still on the top floor. Run, wall-jump and dash down 24 floors to the river.',
     best: () => { const p = read('fire-escape-progress-v1'); if (!p) return null; const hats = p.hats ? p.hats.filter(Boolean).length : 0; return [`floor ${(p.reached | 0) + 1} of 24`, `${hats} hard hat${hats === 1 ? '' : 's'}`]; },
@@ -266,9 +275,6 @@ const GAMES = [
     pitch: 'Wall-jump up a skyscraper under construction. Dodge falling tools, ride crane hooks and stay ahead of the dust storm.',
     best: () => { const p = read('crane-climb-profile'); return p && p.best ? [`floor ${fmt(p.best)}`, ['', 'Foundations', 'Steel', 'Glass', 'Wind', 'Spire'][p.bestStage] || ''] : null; },
     world: (e) => [`floor ${fmt(e.score)}`, ['', 'Foundations', 'Steel', 'Glass', 'Wind', 'Spire'][e.dist] || ''] },
-  { id: 'bakery', name: 'Time-Loop <span>Bakery</span>', url: 'time-loop-bakery/', accent: '#ffb347', board: null, badge: 'New', tags: ['time loop', 'planning', 'puzzle'],
-    pitch: 'The same morning keeps repeating. Learn who orders what and when, then bake ahead for one perfect morning.',
-    best: () => { const p = read('time-loop-bakery-profile'); const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; const days = p && p.stars ? Object.keys(p.stars).length : 0; return st ? [`${st} ★`, `${days} of 5 mornings`] : null; } },
   { id: 'weather', name: 'Weather <span>Machine</span>', url: 'weather-machine/', accent: '#ffc93c', board: 'weather', badge: 'New', tags: ['aiming', 'juggling', 'seasons'],
     pitch: 'Be the weather above a tiny hill town. Gardens want rain, laundry wants sun, and they all live next door to each other.',
     best: () => { const p = read('weather-machine-profile'); const b = p && p.best ? Math.max(0, ...Object.values(p.best)) : 0; const st = p && p.stars ? Object.values(p.stars).reduce((a, n) => a + n, 0) : 0; return b ? [`${fmt(b)} ☀`, `${st} ★`] : null; },
@@ -302,7 +308,7 @@ function link(a, url) {
   if (!onSite) { a.target = '_blank'; a.rel = 'noopener'; }   // same tab on the public site, a new tab inside previews
 }
 // what's new: badges come from the dates, newest games first, the newest one gets the big banner
-const DATES = { rooftop: ['2026-09-01', '2026-09-20'], fire: ['2026-11-08', '2026-11-08'], deflect: ['2026-11-06', '2026-11-06'], empire: ['2026-11-02', '2026-11-08'], air: ['2026-11-02', '2026-11-03'], sky: ['2026-11-01', '2026-11-08'], shutter: ['2026-10-31', '2026-11-06'], echo: ['2026-10-31', '2026-11-06'], ghost: ['2026-10-31', '2026-11-06'], crane: ['2026-10-31', '2026-11-07'], bakery: ['2026-10-30', '2026-10-30'], weather: ['2026-10-30', '2026-11-02'], rogue: ['2026-10-28', '2026-11-08'], volcano: ['2026-10-28', '2026-11-02'], room404: ['2026-10-28', '2026-11-03'], elevator: ['2026-10-27', '2026-11-05'], pigeon: ['2026-10-20', '2026-11-02'] };
+const DATES = { rooftop: ['2026-09-01', '2026-09-20'], layer: ['2026-11-08', '2026-11-08'], fire: ['2026-11-08', '2026-11-08'], deflect: ['2026-11-06', '2026-11-06'], empire: ['2026-11-02', '2026-11-08'], air: ['2026-11-02', '2026-11-03'], sky: ['2026-11-01', '2026-11-08'], shutter: ['2026-10-31', '2026-11-06'], echo: ['2026-10-31', '2026-11-06'], ghost: ['2026-10-31', '2026-11-06'], crane: ['2026-10-31', '2026-11-07'], bakery: ['2026-10-30', '2026-10-30'], weather: ['2026-10-30', '2026-11-02'], rogue: ['2026-10-28', '2026-11-08'], volcano: ['2026-10-28', '2026-11-02'], room404: ['2026-10-28', '2026-11-03'], elevator: ['2026-10-27', '2026-11-05'], pigeon: ['2026-10-20', '2026-11-02'] };
 const DAY = 86400000, NOW = Date.now(), ageOf = (d) => (NOW - Date.parse(d + 'T12:00:00Z')) / DAY;
 for (const g of GAMES) {
   const [added, updated] = DATES[g.id] || ['2026-01-01', '2026-01-01'], genre = (g.badge || '').split('·')[1];
