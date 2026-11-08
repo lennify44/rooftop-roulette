@@ -32,8 +32,9 @@ const fbRecent = new Map(), fbBlocked = new Map();   // over the limit: blocked 
 // player feedback from any game page: rating 1-5 and up to 500 characters, kept 180 days, read only through the
 // Cloudflare API (rooftop-leaderboard feedback); no IP or name is stored with it. Spam guard (2026-11-08, a script
 // posted every 16 s): per sender 1 per minute and 4 per day, counted under a hash of IP + date that expires after a
-// day; at most 30 per hour overall. Over the limit the request still gets {ok:true} but nothing is stored.
+// day; at most 30 per hour overall. Over the limit: 429 with Retry-After, nothing stored.
 const FB_PER_DAY = 4, FB_PER_HOUR_ALL = 30;
+const limited = (msg, secs, origin) => { const r = json({ error: 'rate limited: ' + msg }, 429, origin); r.headers.set('Retry-After', String(secs)); return r; };
 async function senderKey(ip) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${ip}|${new Date().toISOString().slice(0, 10)}|fb`));
   return [...new Uint8Array(d)].slice(0, 10).map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -45,13 +46,14 @@ async function feedback(req, env, origin) {
   const game = String(b.game || ''), rating = Number(b.rating);
   if (!/^[a-z0-9-]{2,30}$/.test(game) || !Number.isInteger(rating) || rating < 1 || rating > 5) return json({ error: 'invalid feedback' }, 400, origin);
   const ip = req.headers.get('CF-Connecting-IP') || '', now = Date.now();
-  if ((fbBlocked.get(ip) || 0) > now || now - (fbRecent.get(ip) || 0) < 60000) return json({ ok: true }, 200, origin);   // free: no storage touched
+  if ((fbBlocked.get(ip) || 0) > now) return limited('daily feedback limit reached, try again tomorrow', 86400, origin);   // no storage touched
+  if (now - (fbRecent.get(ip) || 0) < 60000) return limited('one feedback per minute', 60, origin);
   fbRecent.set(ip, now); if (fbRecent.size > 5000) fbRecent.clear();
   const sk = `rl:fb:${await senderKey(ip)}`, hk = `rl:fbh:${new Date(now).toISOString().slice(0, 13)}`;
   const [sn, hn] = await Promise.all([env.SCORES.get(sk), env.SCORES.get(hk)]);
-  if (Number(sn || 0) >= FB_PER_DAY || Number(hn || 0) >= FB_PER_HOUR_ALL) { fbBlocked.set(ip, now + 86400000); if (fbBlocked.size > 5000) fbBlocked.clear(); return json({ ok: true }, 200, origin); }
+  if (Number(sn || 0) >= FB_PER_DAY || Number(hn || 0) >= FB_PER_HOUR_ALL) { fbBlocked.set(ip, now + 86400000); if (fbBlocked.size > 5000) fbBlocked.clear(); return limited('feedback limit reached, try again later', 3600, origin); }
   const clean = (v, n) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
-  if (/^\s*\[test\]/i.test(String(b.text || ''))) return json({ ok: true }, 200, origin);   // the 2026-11-08 spam script
+  if (/^\s*\[test\]/i.test(String(b.text || ''))) return limited('test posts are not accepted', 86400, origin);   // the 2026-11-08 spam script
   const entry = { game, rating, text: clean(b.text, 500), best: clean(b.best, 40), lang: b.lang === 'de' ? 'de' : 'en', t: new Date(now).toISOString() };
   await Promise.all([
     env.SCORES.put(`feedback:${game}:${now}:${Math.random().toString(36).slice(2, 8)}`, JSON.stringify(entry), { expirationTtl: 180 * 86400 }),
