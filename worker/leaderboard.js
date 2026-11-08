@@ -28,7 +28,7 @@ const GAMES = {
 const TOP = 50, SHOW = 20, DAILY_TTL = 8 * 86400;
 const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
 const recent = new Map();   // best-effort per-isolate rate limit by IP
-const fbRecent = new Map();
+const fbRecent = new Map(), fbBlocked = new Map();   // over the limit: blocked in memory for a day, no storage reads
 // player feedback from any game page: rating 1-5 and up to 500 characters, kept 180 days, read only through the
 // Cloudflare API (rooftop-leaderboard feedback); no IP or name is stored with it. Spam guard (2026-11-08, a script
 // posted every 16 s): per sender 1 per minute and 4 per day, counted under a hash of IP + date that expires after a
@@ -45,11 +45,11 @@ async function feedback(req, env, origin) {
   const game = String(b.game || ''), rating = Number(b.rating);
   if (!/^[a-z0-9-]{2,30}$/.test(game) || !Number.isInteger(rating) || rating < 1 || rating > 5) return json({ error: 'invalid feedback' }, 400, origin);
   const ip = req.headers.get('CF-Connecting-IP') || '', now = Date.now();
-  if (now - (fbRecent.get(ip) || 0) < 60000) return json({ ok: true }, 200, origin);
+  if ((fbBlocked.get(ip) || 0) > now || now - (fbRecent.get(ip) || 0) < 60000) return json({ ok: true }, 200, origin);   // free: no storage touched
   fbRecent.set(ip, now); if (fbRecent.size > 5000) fbRecent.clear();
   const sk = `rl:fb:${await senderKey(ip)}`, hk = `rl:fbh:${new Date(now).toISOString().slice(0, 13)}`;
   const [sn, hn] = await Promise.all([env.SCORES.get(sk), env.SCORES.get(hk)]);
-  if (Number(sn || 0) >= FB_PER_DAY || Number(hn || 0) >= FB_PER_HOUR_ALL) return json({ ok: true }, 200, origin);
+  if (Number(sn || 0) >= FB_PER_DAY || Number(hn || 0) >= FB_PER_HOUR_ALL) { fbBlocked.set(ip, now + 86400000); if (fbBlocked.size > 5000) fbBlocked.clear(); return json({ ok: true }, 200, origin); }
   const clean = (v, n) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
   if (/^\s*\[test\]/i.test(String(b.text || ''))) return json({ ok: true }, 200, origin);   // the 2026-11-08 spam script
   const entry = { game, rating, text: clean(b.text, 500), best: clean(b.best, 40), lang: b.lang === 'de' ? 'de' : 'en', t: new Date(now).toISOString() };
