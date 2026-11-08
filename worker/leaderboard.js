@@ -51,6 +51,7 @@ async function feedback(req, env, origin) {
   const [sn, hn] = await Promise.all([env.SCORES.get(sk), env.SCORES.get(hk)]);
   if (Number(sn || 0) >= FB_PER_DAY || Number(hn || 0) >= FB_PER_HOUR_ALL) return json({ ok: true }, 200, origin);
   const clean = (v, n) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
+  if (/^\s*\[test\]/i.test(String(b.text || ''))) return json({ ok: true }, 200, origin);   // the 2026-11-08 spam script
   const entry = { game, rating, text: clean(b.text, 500), best: clean(b.best, 40), lang: b.lang === 'de' ? 'de' : 'en', t: new Date(now).toISOString() };
   await Promise.all([
     env.SCORES.put(`feedback:${game}:${now}:${Math.random().toString(36).slice(2, 8)}`, JSON.stringify(entry), { expirationTtl: 180 * 86400 }),
