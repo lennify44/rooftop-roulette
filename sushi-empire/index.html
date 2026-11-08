@@ -81,6 +81,21 @@ body { margin: 0; min-height: 100%; background: radial-gradient(ellipse at 50% -
 .buy:disabled { background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.45); cursor: default; }
 .mgr { grid-column: 2 / 4; justify-self: start; min-height: 34px; padding: 4px 12px; border-radius: 10px; border: 2px solid var(--mint); background: transparent; color: var(--mint); font-family: var(--font-display); font-weight: 900; font-size: 15px; cursor: pointer; }
 .mgr:disabled { opacity: 0.4; cursor: default; }
+.orders h2 { margin: 0 0 2px; font-family: var(--font-display); font-weight: 900; font-size: 24px; text-transform: uppercase; }
+.orders .note { margin: 0 0 10px; font-size: 13px; color: var(--haze); }
+.scooter, .deal { display: grid; gap: 8px; padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); }
+.scooter .hd, .deal .hd { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 900; font-size: 19px; text-transform: uppercase; }
+.scooter .hd small, .deal .hd small { font-family: var(--font-mono); font-weight: 600; font-size: 11px; color: var(--haze); text-transform: none; margin-left: auto; }
+.routes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.route { min-height: 52px; padding: 4px 8px; border: 2px solid rgba(255, 255, 255, 0.18); border-radius: 12px; background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 15px; line-height: 1.1; }
+.route small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--mint); }
+.collect { min-height: 52px; border: 0; border-radius: 12px; background: var(--gold); color: #1b1030; cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 20px; animation: glow 0.9s ease-in-out infinite alternate; }
+@keyframes glow { to { box-shadow: 0 0 22px rgba(255, 210, 63, 0.7); transform: scale(1.02); } }
+.deal .row2 { display: flex; align-items: center; gap: 10px; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--haze); }
+.deal.rush { border: 2px solid var(--salmon); }
+.deal .take { min-height: 44px; padding: 4px 14px; border: 0; border-radius: 12px; background: var(--mint); color: #1b1030; cursor: pointer; font-family: var(--font-display); font-weight: 900; font-size: 16px; }
+.deal .take:disabled { opacity: 0.4; cursor: default; }
+.deal .bar, .scooter .bar { grid-column: auto; cursor: default; }
 .qty { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
 .qty button { min-height: 36px; min-width: 52px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.2); background: transparent; color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 16px; cursor: pointer; }
 .qty button[aria-pressed="true"] { background: var(--chalk); color: #1b1030; }
@@ -120,9 +135,12 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
     </div>
     <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
   </div>
-  <div class="plate-wrap"><button class="plate" id="plate" type="button" aria-label="Make sushi">🍣</button><div class="plate-label" id="plateLabel">tap to roll sushi</div></div>
   <div id="boost"></div>
   <section id="tabStores"><div class="qty" id="qty"><button type="button" data-q="1" aria-pressed="true">×1</button><button type="button" data-q="10" aria-pressed="false">×10</button><button type="button" data-q="max" aria-pressed="false">MAX</button></div><div class="list" id="stores"></div></section>
+  <section id="tabOrders" class="orders" hidden>
+    <div class="panel"><h2>🛵 Delivery fleet</h2><p class="note">Send a scooter out with food. Longer routes pay more per minute and keep driving while you are away.</p><div id="fleet"></div><button class="mgr" id="btnScooter" type="button"></button></div>
+    <div class="panel"><h2>🎉 Catering</h2><p class="note">Big orders: the store cooks that many batches in time. Pays on top of normal sales, +5 % reputation each (until you franchise). Rush orders pay more but need a faster store.</p><div id="deals"></div></div>
+  </section>
   <section id="tabUpgrades" hidden><div class="list" id="upgrades"></div></section>
   <section id="tabFranchise" hidden>
     <div class="panel">
@@ -140,7 +158,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
     <div class="foot"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
   </section>
 </div>
-<nav class="tabs" aria-label="Sections"><button type="button" data-tab="Stores" aria-pressed="true">Stores</button><button type="button" data-tab="Upgrades" aria-pressed="false">Upgrades<i class="dot" id="upDot" hidden></i></button><button type="button" data-tab="Franchise" aria-pressed="false">Franchise</button></nav>
+<nav class="tabs" aria-label="Sections"><button type="button" data-tab="Stores" aria-pressed="true">Stores</button><button type="button" data-tab="Orders" aria-pressed="false">Orders<i class="dot" id="ordDot" hidden></i></button><button type="button" data-tab="Upgrades" aria-pressed="false">Upgrades<i class="dot" id="upDot" hidden></i></button><button type="button" data-tab="Franchise" aria-pressed="false">Franchise</button></nav>
 <div class="fx" id="fx"></div>
 
 <script>
@@ -170,20 +188,34 @@ const MILESTONES = [25, 50, 100, 200, 300, 400, 500];
 // upgrades: multipliers bought with money
 const UPGRADES = [];
 STORES.forEach((st, i) => { [3, 3, 3].forEach((m, k) => UPGRADES.push({ id: `${st.id}${k}`, store: st.id, mult: m, cost: st.cost * Math.pow(1000, k + 1) * 3, name: [`Sharper knives`, `Fresh fish delivery`, `Celebrity chef`][k], icon: ['🔪', '🐟', '👨‍🍳'][k] })); });
-UPGRADES.push({ id: 'tap1', tap: 5, cost: 500, name: 'Rice paddle', icon: '🍚' }, { id: 'tap2', tap: 10, cost: 5e5, name: 'Golden paddle', icon: '✨' }, { id: 'tap3', tap: 10, cost: 5e9, name: 'Robot arm', icon: '🦾' });
+UPGRADES.push({ id: 'escoot', fx: 'Deliveries 30 % faster', cost: 2e4, name: 'Electric scooters', icon: '🛵' }, { id: 'van', fx: 'Two catering orders at once', cost: 2e5, name: 'Catering van', icon: '🚐' },
+  { id: 'thermo', fx: 'Deliveries pay ×2', cost: 3e6, name: 'Thermo boxes', icon: '🧊' }, { id: 'planner', fx: 'Catering pays ×2', cost: 5e8, name: 'Event planner', icon: '📋' }, { id: 'drone', fx: 'Deliveries pay ×3', cost: 2e11, name: 'Delivery drones', icon: '🚁' });
+// deliveries: a scooter takes a route and comes back with a fixed payout (a share of your income for that long)
+const ROUTES = [
+  { id: 'block', name: 'Around the block', icon: '🏘️', secs: 30, share: 0.4 },
+  { id: 'town', name: 'Across town', icon: '🏙️', secs: 180, share: 0.5 },
+  { id: 'airport', name: 'Airport run', icon: '✈️', secs: 1200, share: 0.65 },
+  { id: 'coast', name: 'Overnight to the coast', icon: '🌊', secs: 7200, share: 0.9 },
+];
+const SCOOTER_COST = [0, 2000, 50000, 2e6, 1e8, 5e9];
+const CLIENTS = ['Office lunch', 'Wedding', 'Birthday party', 'Film crew', 'Football club', 'Tech launch', 'School trip', 'Hotel buffet', 'Concert backstage', 'Gaming tournament'];
 UPGRADES.push({ id: 'all1', all: 3, cost: 2e8, name: 'TV cooking show', icon: '📺' }, { id: 'all2', all: 3, cost: 2e11, name: 'Sushi app', icon: '📱' }, { id: 'all3', all: 5, cost: 5e13, name: 'World tour', icon: '🌍' });
 UPGRADES.sort((a, b) => a.cost - b.cost);
 
 // ---------- save
 const SAVE = 'sushi-empire-save';
-const fresh = () => ({ money: 0, earned: 0, lifetime: 0, stars: 0, taps: 0, stores: Object.fromEntries(STORES.map((s, i) => [s.id, { lvl: i === 0 ? 1 : 0, prog: 0, mgr: false, running: false }])), ups: {}, last: Date.now(), muted: false, name: '', deviceId: '', qty: '1', posted: 0 });
+const fresh = () => ({ fleet: [{ route: null, end: 0, pay: 0 }], deals: [], active: [], dealT: 0, rep: 0, money: 0, earned: 0, lifetime: 0, stars: 0, taps: 0, stores: Object.fromEntries(STORES.map((s, i) => [s.id, { lvl: i === 0 ? 1 : 0, prog: 0, mgr: false, running: false }])), ups: {}, last: Date.now(), muted: false, name: '', deviceId: '', qty: '1', posted: 0 });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 for (const st of STORES) if (!S.stores[st.id]) S.stores[st.id] = { lvl: 0, prog: 0, mgr: false, running: false };
+// stores cook by themselves now (no tapping): every open store runs
+for (const st of STORES) if (S.stores[st.id].lvl > 0) S.stores[st.id].running = true;
+if (!Array.isArray(S.fleet) || !S.fleet.length) S.fleet = [{ route: null, end: 0, pay: 0 }];
+for (const k of ['deals', 'active']) if (!Array.isArray(S[k])) S[k] = [];
 if (!S.name) S.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const save = () => { S.last = Date.now(); store.set(SAVE, S); };
 
 // ---------- numbers
-const starMult = () => 1 + S.stars * 0.1;
+const starMult = () => (1 + S.stars * 0.1) * (1 + (S.rep || 0) * 0.05);
 let boostMult = 1, boostT = 0;
 function storeMult(id) {
   let m = starMult() * boostMult;
@@ -191,11 +223,11 @@ function storeMult(id) {
   for (const u of UPGRADES) if (S.ups[u.id] && (u.store === id || u.all)) m *= u.mult || u.all;
   return m;
 }
-function speedOf(id) { const st = S.stores[id]; let sp = 1; for (const ms of MILESTONES) if (st.lvl >= ms) sp *= 1.5; return sp; }
+function speedOf(id) { const st = S.stores[id]; let sp = st.mgr ? 2 : 1; for (const ms of MILESTONES) if (st.lvl >= ms) sp *= 1.5; return sp; }
 const cycleOf = (s) => s.time / speedOf(s.id);
 const payOf = (s) => s.pay * S.stores[s.id].lvl * storeMult(s.id);
-function incomePerSec() { let r = 0; for (const s of STORES) { const st = S.stores[s.id]; if (st.lvl > 0 && st.mgr) r += payOf(s) / cycleOf(s); } return r; }
-function tapValue() { let v = 1 + incomePerSec() * 0.03; for (const u of UPGRADES) if (S.ups[u.id] && u.tap) v *= u.tap; return v * starMult() * boostMult; }
+function incomePerSec() { let r = 0; for (const s of STORES) { const st = S.stores[s.id]; if (st.lvl > 0) r += payOf(s) / cycleOf(s); } return r; }
+
 function costOf(s, n) { const lvl = S.stores[s.id].lvl; const a = s.cost * Math.pow(s.grow, lvl); return a * (Math.pow(s.grow, n) - 1) / (s.grow - 1); }
 function maxBuy(s) { const lvl = S.stores[s.id].lvl, a = s.cost * Math.pow(s.grow, lvl); return Math.max(0, Math.floor(Math.log(S.money * (s.grow - 1) / a + 1) / Math.log(s.grow))); }
 const starsFor = (lifetime) => Math.floor(Math.sqrt(lifetime / 1e9));
@@ -225,15 +257,6 @@ function earn(v) { S.money += v; S.earned += v; S.lifetime += v; }
 
 // ---------- tapping the plate
 const SUSHI = ['🍣', '🍙', '🍤', '🥟', '🍥', '🍱'];
-$('plate').addEventListener('pointerdown', (e) => {
-  e.preventDefault(); Sound.init();
-  const v = tapValue(); earn(v); S.taps++;
-  const r = $('plate').getBoundingClientRect(), x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
-  popAt(x, y, '+' + money(v)); crumbs(x, y, 6, ['#ff7a59', '#fff3dc', '#46e0a4']); Sound.tap(S.taps);
-  const p = $('plate'); p.classList.add('hit'); setTimeout(() => p.classList.remove('hit'), 70);
-  if (S.taps % 25 === 0) p.textContent = SUSHI[(S.taps / 25) % SUSHI.length];
-  renderTop(true);
-});
 
 // ---------- stores
 function storeCard(s, i) {
@@ -245,17 +268,16 @@ function storeCard(s, i) {
     <div><div class="nm">${s.name}</div><div class="info" data-k="info"></div></div>
     <button class="buy" type="button" data-k="buy"></button>
     <div class="bar" data-k="bar"><i data-k="fill"></i><span data-k="bartxt"></span></div>
-    ${MANAGERS[s.id] && !st.mgr && unlocked ? `<button class="mgr" type="button" data-k="mgr">Hire manager · ${money(MANAGERS[s.id])}</button>` : ''}`;
+    ${MANAGERS[s.id] && !st.mgr && unlocked ? `<button class="mgr" type="button" data-k="mgr">Hire head chef · ×2 speed · ${money(MANAGERS[s.id])}</button>` : ''}`;
   el.querySelector('[data-k=buy]').addEventListener('click', () => buyStore(s));
-  el.querySelector('[data-k=bar]').addEventListener('click', () => { if (st.lvl > 0 && !st.running && !st.mgr) { st.running = true; st.prog = 0; Sound.tap(1); } });
-  const mg = el.querySelector('[data-k=mgr]'); if (mg) mg.addEventListener('click', () => { if (S.money < MANAGERS[s.id]) return; S.money -= MANAGERS[s.id]; st.mgr = true; st.running = true; Sound.big(); toast(`${s.name} runs itself now`, 'Managers keep the store busy, even while you are away'); renderStores(); save(); });
+  const mg = el.querySelector('[data-k=mgr]'); if (mg) mg.addEventListener('click', () => { if (S.money < MANAGERS[s.id]) return; S.money -= MANAGERS[s.id]; st.mgr = true; st.running = true; Sound.big(); toast(`${s.name}: head chef hired`, 'it cooks twice as fast'); renderStores(); save(); });
   return el;
 }
 function buyStore(s) {
   const st = S.stores[s.id]; let n = S.qty === 'max' ? maxBuy(s) : Number(S.qty); if (S.qty === 'max' && n < 1) n = 1;
   const c = costOf(s, n); if (S.money < c || n < 1) return;
   const before = st.lvl; S.money -= c; st.lvl += n; Sound.buy();
-  if (before === 0) { st.running = true; toast(`${s.name} is open!`, 'Tap its bar to cook, or hire a manager'); Sound.big(); }
+  if (before === 0) { st.running = true; toast(`${s.name} is open!`, 'it cooks and sells by itself'); Sound.big(); }
   for (const ms of MILESTONES) if (before < ms && st.lvl >= ms) { toast(`${s.name} level ${ms}!`, '×2 money and ×1.5 speed'); Sound.big(); const r = document.querySelector(`[data-store=${s.id}]`); if (r) { const b = r.getBoundingClientRect(); crumbs(b.left + 30, b.top + 30, 24, ['#ffd23f', '#ff7a59', '#46e0a4']); } }
   renderStores(); save();
 }
@@ -269,7 +291,7 @@ function refreshStores() {
     el.querySelector('[data-k=info]').textContent = st.lvl ? `${money(payOf(s))} every ${cycleOf(s) < 1 ? cycleOf(s).toFixed(2) : cycleOf(s).toFixed(1)} s${next ? ` · ×2 at ${next}` : ''}` : `opens for ${money(s.cost)}`;
     const k = st.lvl ? (cycleOf(s) < 0.25 && st.running ? 1 : st.prog) : 0;
     el.querySelector('[data-k=fill]').style.width = `${Math.round(k * 100)}%`;
-    el.querySelector('[data-k=bartxt]').textContent = !st.lvl ? '' : st.mgr ? 'manager cooking' : st.running ? 'cooking…' : 'tap to cook';
+    el.querySelector('[data-k=bartxt]').textContent = !st.lvl ? '' : st.mgr ? 'head chef cooking · ×2' : 'cooking';
     el.querySelector('.lvl').textContent = st.lvl;
     const mg = el.querySelector('[data-k=mgr]'); if (mg) mg.disabled = S.money < MANAGERS[s.id];
   }
@@ -284,7 +306,7 @@ function renderUpgrades() {
   for (const u of open) {
     const st = u.store && STORES.find((s) => s.id === u.store), el = document.createElement('div'); el.className = 'up';
     el.innerHTML = `<div class="ico">${u.icon}</div><div><div class="nm"></div><div class="info"></div></div><button class="buy" type="button"></button>`;
-    el.querySelector('.nm').textContent = u.name; el.querySelector('.info').textContent = u.tap ? `Taps ×${u.tap}` : u.all ? `All stores ×${u.all}` : `${st.name} ×${u.mult}`;
+    el.querySelector('.nm').textContent = u.name; el.querySelector('.info').textContent = u.fx ? u.fx : u.all ? `All stores ×${u.all}` : `${st.name} ×${u.mult}`;
     const b = el.querySelector('.buy'); b.innerHTML = `Buy<small>${money(u.cost)}</small>`; b.disabled = S.money < u.cost;
     b.addEventListener('click', () => { if (S.money < u.cost) return; S.money -= u.cost; S.ups[u.id] = true; Sound.big(); toast(`${u.name}!`, el.querySelector('.info').textContent); renderUpgrades(); save(); });
     box.appendChild(el);
@@ -303,8 +325,95 @@ $('btnFranchise').addEventListener('click', () => {
   if (!$('btnFranchise').dataset.sure) { $('btnFranchise').dataset.sure = '1'; $('btnFranchise').textContent = 'Tap again to franchise'; setTimeout(() => { delete $('btnFranchise').dataset.sure; $('btnFranchise').textContent = 'Franchise'; }, 3000); return; }
   delete $('btnFranchise').dataset.sure; $('btnFranchise').textContent = 'Franchise';
   const keep = { stars: S.stars + gain, lifetime: S.lifetime, muted: S.muted, name: S.name, deviceId: S.deviceId, qty: S.qty, posted: S.posted, taps: S.taps };
-  S = Object.assign(fresh(), keep); Sound.big(); toast(`⭐ ${S.stars} Michelin stars`, `everything earns +${S.stars * 10} %`); save(); renderAll(); lbPostNow();
+  const fleetN = S.fleet.length; S = Object.assign(fresh(), keep); S.fleet = Array.from({ length: fleetN }, () => ({ route: null, end: 0, pay: 0 })); Sound.big(); toast(`⭐ ${S.stars} Michelin stars`, `everything earns +${S.stars * 10} %`); save(); renderAll(); lbPostNow();
 });
+
+// ---------- orders: the delivery fleet and catering contracts (money from decisions, not taps)
+const hasUp = (id) => !!S.ups[id];
+const routeSecs = (r) => r.secs * (hasUp('escoot') ? 0.7 : 1);
+const routePay = (r) => Math.max(15, incomePerSec()) * r.secs * r.share * (hasUp('thermo') ? 2 : 1) * (hasUp('drone') ? 3 : 1);
+const dealSlots = () => (hasUp('van') ? 2 : 1);
+const fmtT = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min` : sec >= 60 ? `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}` : `${Math.ceil(sec)} s`);
+function makeDeal() {
+  const open = STORES.filter((s) => S.stores[s.id].lvl > 0); if (!open.length) return null;
+  const s = open[Math.max(0, open.length - 1 - (Math.random() < 0.35 ? 1 : 0))];   // your best stores, so it is worth it
+  const rush = Math.random() < 0.3, limit = [60, 120, 180, 240][Math.floor(Math.random() * 4)];
+  const need = Math.max(3, Math.ceil(limit / cycleOf(s) * (rush ? 1 + Math.random() * 0.4 : 0.5 + Math.random() * 0.3)));
+  return { id: Math.random().toString(36).slice(2, 8), client: CLIENTS[Math.floor(Math.random() * CLIENTS.length)], store: s.id, need, limit, rush, offerEnd: Date.now() + 180000 };
+}
+function dealReward(d) { const s = STORES.find((x) => x.id === d.store); return payOf(s) * d.need * (d.rush ? 5 : 3) * (hasUp('planner') ? 2 : 1); }
+function sendScooter(i, r) {
+  const sc = S.fleet[i]; if (!sc || sc.route) return;
+  sc.route = r.id; sc.end = Date.now() + routeSecs(r) * 1000; sc.pay = routePay(r); Sound.buy(); ordersKey = ''; renderOrders(); save();
+}
+function collectScooter(i, btn) {
+  const sc = S.fleet[i]; if (!sc || !sc.route || Date.now() < sc.end) return;
+  earn(sc.pay); Sound.gold(); const r = btn ? btn.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0 };
+  crumbs(r.left + r.width / 2, r.top, 24, ['#ffd23f', '#fff6b0', '#46e0a4']); popAt(r.left + r.width / 2, r.top, '+' + money(sc.pay), '#ffd23f');
+  sc.route = null; sc.pay = 0; ordersKey = ''; renderOrders(); renderTop(true); save();
+}
+function takeDeal(id) {
+  const d = S.deals.find((x) => x.id === id); if (!d || S.active.length >= dealSlots()) return;
+  S.deals = S.deals.filter((x) => x !== d); Object.assign(d, { done: 0, end: Date.now() + d.limit * 1000, reward: dealReward(d) }); S.active.push(d);
+  Sound.buy(); toast(`${d.client} accepted`, `${d.need} batches from your ${STORES.find((x) => x.id === d.store).name} in ${fmtT(d.limit)}`); ordersKey = ''; renderOrders(); save();
+}
+function tickOrders(dt) {
+  const now = Date.now();
+  // catering: finished or failed orders, fresh offers
+  for (const d of S.active.slice()) {
+    if (d.done >= d.need) { S.active = S.active.filter((x) => x !== d); earn(d.reward); S.rep = (S.rep || 0) + 1; Sound.big(); toast(`${d.client} is happy! +${money(d.reward)}`, `reputation +5 % (now +${S.rep * 5} %)`); crumbs(innerWidth / 2, innerHeight / 3, 30, ['#46e0a4', '#ffd23f', '#ff7a59']); ordersKey = ''; save(); }
+    else if (now > d.end) { S.active = S.active.filter((x) => x !== d); Sound.lose ? Sound.lose() : null; toast(`${d.client} order missed`, 'too slow this time: no pay'); ordersKey = ''; save(); }
+  }
+  S.deals = S.deals.filter((d) => d.offerEnd > now);
+  S.dealT = (S.dealT || 0) - dt;
+  if (S.deals.length < 3 && S.dealT <= 0) { const d = makeDeal(); if (d) { S.deals.push(d); ordersKey = ''; } S.dealT = 20; }
+  const ready = S.fleet.some((sc) => sc.route && now >= sc.end) || S.fleet.some((sc) => !sc.route);
+  $('ordDot').hidden = !ready || !$('tabOrders').hidden;
+  if (!$('tabOrders').hidden) renderOrders();
+}
+let ordersKey = '';
+function renderOrders() {
+  const now = Date.now();
+  const key = JSON.stringify([S.fleet.map((sc) => [sc.route, sc.route && now >= sc.end]), S.deals.map((d) => d.id), S.active.map((d) => d.id), S.fleet.length, Object.keys(S.ups).length]);
+  if (key !== ordersKey) {
+    ordersKey = key;
+    const fl = $('fleet'); fl.textContent = '';
+    S.fleet.forEach((sc, i) => {
+      const el = document.createElement('div'); el.className = 'scooter'; el.setAttribute('data-sc', i);
+      const r = sc.route && ROUTES.find((x) => x.id === sc.route);
+      el.innerHTML = `<div class="hd">🛵 Scooter ${i + 1}<small data-k="st"></small></div>`;
+      if (!r) {
+        const box = document.createElement('div'); box.className = 'routes';
+        for (const rt of ROUTES) { const b = document.createElement('button'); b.type = 'button'; b.className = 'route'; b.innerHTML = `${rt.icon} ${rt.name}<small>${fmtT(routeSecs(rt))} · ${money(routePay(rt))}</small>`; b.addEventListener('click', () => sendScooter(i, rt)); box.appendChild(b); }
+        el.appendChild(box);
+      } else if (now >= sc.end) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'collect'; b.textContent = `Collect ${money(sc.pay)}`; b.addEventListener('click', () => collectScooter(i, b)); el.appendChild(b);
+      } else {
+        const bar = document.createElement('div'); bar.className = 'bar'; bar.innerHTML = '<i data-k="fill"></i><span data-k="txt"></span>'; el.appendChild(bar);
+      }
+      fl.appendChild(el);
+    });
+    const n = S.fleet.length, cost = SCOOTER_COST[n];
+    $('btnScooter').hidden = cost === undefined; if (cost !== undefined) $('btnScooter').textContent = `Buy scooter ${n + 1} · ${money(cost)}`;
+    const box = $('deals'); box.textContent = '';
+    for (const d of S.active) { const el = document.createElement('div'); el.className = 'deal' + (d.rush ? ' rush' : ''); el.setAttribute('data-deal', d.id); const st = STORES.find((x) => x.id === d.store); el.innerHTML = `<div class="hd">${st.icon} ${d.client}${d.rush ? ' · RUSH' : ''}<small data-k="left"></small></div><div class="bar"><i data-k="fill"></i><span data-k="txt"></span></div><div class="row2"><span>${st.name}</span><span>pays ${money(d.reward)}</span></div>`; box.appendChild(el); }
+    for (const d of S.deals) {
+      const st = STORES.find((x) => x.id === d.store), el = document.createElement('div'); el.className = 'deal' + (d.rush ? ' rush' : '');
+      el.innerHTML = `<div class="hd">${st.icon} ${d.client}${d.rush ? ' · RUSH' : ''}<small>offer ends in <b data-k="oe"></b></small></div><div class="row2"><span>${d.need} batches from ${st.name} in ${fmtT(d.limit)}<br>pays ${money(dealReward(d))}${d.rush ? ' · needs more speed' : ''}</span><button class="take" type="button">Take it</button></div>`;
+      el.setAttribute('data-offer', d.id); const b = el.querySelector('.take'); b.disabled = S.active.length >= dealSlots(); b.addEventListener('click', () => takeDeal(d.id)); box.appendChild(el);
+    }
+    if (!S.active.length && !S.deals.length) box.innerHTML = '<p class="note">New orders come in every few seconds…</p>';
+  }
+  // light refresh: bars, timers, scooter price
+  S.fleet.forEach((sc, i) => { const el = document.querySelector(`[data-sc="${i}"]`); if (!el) return; const r = sc.route && ROUTES.find((x) => x.id === sc.route); const stt = el.querySelector('[data-k=st]');
+    if (r && now < sc.end) { const tot = routeSecs(r) * 1000, k = 1 - (sc.end - now) / tot; el.querySelector('[data-k=fill]').style.width = `${Math.round(clampN(k) * 100)}%`; el.querySelector('[data-k=txt]').textContent = `${r.icon} ${r.name} · back in ${fmtT((sc.end - now) / 1000)} · ${money(sc.pay)}`; stt.textContent = 'out driving'; }
+    else stt.textContent = r ? 'back!' : 'ready'; });
+  for (const d of S.active) { const el = document.querySelector(`[data-deal="${d.id}"]`); if (!el) continue; el.querySelector('[data-k=fill]').style.width = `${Math.round(clampN(d.done / d.need) * 100)}%`; el.querySelector('[data-k=txt]').textContent = `${Math.min(d.done, d.need)} / ${d.need} batches`; el.querySelector('[data-k=left]').textContent = `${fmtT(Math.max(0, (d.end - now) / 1000))} left`; }
+  for (const d of S.deals) { const el = document.querySelector(`[data-offer="${d.id}"] [data-k=oe]`); if (el) el.textContent = fmtT(Math.max(0, (d.offerEnd - now) / 1000)); }
+  const cost = SCOOTER_COST[S.fleet.length]; if (cost !== undefined) $('btnScooter').disabled = S.money < cost;
+}
+const clampN = (v) => Math.max(0, Math.min(1, v));
+$('btnScooter').addEventListener('click', () => { const cost = SCOOTER_COST[S.fleet.length]; if (cost === undefined || S.money < cost) return; S.money -= cost; S.fleet.push({ route: null, end: 0, pay: 0 }); Sound.big(); toast(`Scooter ${S.fleet.length} on the road`, 'send it out from the Orders tab'); ordersKey = ''; renderOrders(); save(); });
 
 // ---------- golden plates and rush hour
 let nextGold = 25 + Math.random() * 30;
@@ -314,7 +423,7 @@ function spawnGold() {
   b.addEventListener('pointerdown', (e) => {
     e.preventDefault(); Sound.init(); Sound.gold(); const r = b.getBoundingClientRect(); crumbs(r.left + 39, r.top + 39, 30, ['#ffd23f', '#fff6b0', '#ff7a59']); b.remove();
     if (Math.random() < 0.5) { boostMult = 7; boostT = 25; toast('RUSH HOUR! ×7', 'everything earns seven times as much for 25 s'); }
-    else { const v = Math.max(50, incomePerSec() * 120 + tapValue() * 40); earn(v); toast(`Big order! +${money(v)}`, 'a golden plate'); popAt(r.left + 20, r.top, '+' + money(v), '#ffd23f'); }
+    else { const v = Math.max(50, incomePerSec() * 150); earn(v); toast(`Big order! +${money(v)}`, 'a golden plate'); popAt(r.left + 20, r.top, '+' + money(v), '#ffd23f'); }
   });
   setTimeout(() => b.remove(), 7200);
 }
@@ -329,12 +438,13 @@ function tick(now) {
     st.prog += dt / cycleOf(s);
     if (st.prog >= 1) {
       const cycles = Math.floor(st.prog); st.prog -= cycles; const v = payOf(s) * cycles; earn(v);
-      if (!st.mgr) { st.running = false; st.prog = 0; }
-      const el = document.querySelector(`[data-store=${s.id}] .ico`); if (el && cycleOf(s) > 0.6) { const r = el.getBoundingClientRect(); popAt(r.left + 10, r.top, '+' + money(v), '#46e0a4'); if (!st.mgr) Sound.coin(); }
+      for (const d of S.active) if (d.store === s.id) d.done += cycles;
+      const el = document.querySelector(`[data-store=${s.id}] .ico`); if (el && cycleOf(s) > 0.6) { const r = el.getBoundingClientRect(); popAt(r.left + 10, r.top, '+' + money(v), '#46e0a4'); }
     }
   }
   if (boostT > 0) { boostT -= dt; if (boostT <= 0) { boostMult = 1; } }
   $('boost').innerHTML = boostT > 0 ? `<div class="boost">🔥 RUSH HOUR ×7 · ${Math.ceil(boostT)} s</div>` : '';
+  tickOrders(dt);
   nextGold -= dt; if (nextGold <= 0) { nextGold = 40 + Math.random() * 50; spawnGold(); }
   saveT += dt; if (saveT > 5) { saveT = 0; save(); }
   upT += dt; if (upT > 0.25) { upT = 0; refreshStores(); $('upDot').hidden = !UPGRADES.some((u) => !S.ups[u.id] && (!u.store || S.stores[u.store].lvl > 0) && S.money >= u.cost); if (!$('tabUpgrades').hidden) renderUpgradesLight(); }
@@ -344,15 +454,15 @@ function renderUpgradesLight() { $('upgrades').querySelectorAll('.up').forEach((
 let shown = -1;
 function renderTop(bump) {
   const m = money(S.money); if (m !== shown) { $('money').textContent = m; shown = m; if (bump) { const el = $('money'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } }
-  $('rate').textContent = `${money(incomePerSec())} / s · tap ${money(tapValue())}`;
+  $('rate').textContent = `${money(incomePerSec())} / s${S.rep ? ` · reputation +${S.rep * 5} %` : ''}`;
   $('stars').textContent = S.stars ? `⭐ ${S.stars} Michelin stars · +${S.stars * 10} %` : '';
 }
-function renderAll() { renderStores(); renderUpgrades(); renderFranchise(); renderTop(false); }
+function renderAll() { renderStores(); renderUpgrades(); renderFranchise(); ordersKey = ''; renderOrders(); renderTop(false); }
 document.querySelector('.tabs').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return; const tab = b.getAttribute('data-tab');
   document.querySelectorAll('.tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-  for (const t of ['Stores', 'Upgrades', 'Franchise']) $('tab' + t).hidden = t !== tab;
-  if (tab === 'Upgrades') renderUpgrades(); if (tab === 'Franchise') renderFranchise();
+  for (const t of ['Stores', 'Orders', 'Upgrades', 'Franchise']) $('tab' + t).hidden = t !== tab;
+  if (tab === 'Upgrades') renderUpgrades(); if (tab === 'Franchise') renderFranchise(); if (tab === 'Orders') { ordersKey = ''; renderOrders(); }
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 addEventListener('pagehide', save);
@@ -360,7 +470,7 @@ addEventListener('pagehide', save);
 // ---------- offline earnings: managers keep cooking while you are away (up to 4 hours)
 (function offline() {
   const away = Math.min(4 * 3600, (Date.now() - (S.last || Date.now())) / 1000);
-  if (away > 30) { const v = incomePerSec() * away * 0.8; if (v > 1) { earn(v); setTimeout(() => { toast(`While you were away: +${money(v)}`, `${Math.round(away / 60)} min of managers cooking`); Sound.big(); }, 400); } }
+  if (away > 30) { const v = incomePerSec() * away * 0.8; if (v > 1) { earn(v); setTimeout(() => { toast(`While you were away: +${money(v)}`, `${Math.round(away / 60)} min of your stores cooking`); Sound.big(); }, 400); } }
 })();
 
 // ---------- world leaderboard: score = how big your empire got (10 points per tenfold)
@@ -392,7 +502,7 @@ $('lbName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.prev
 
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('qty').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x.getAttribute('data-q') === S.qty)));
-if (location.hash === '#bot') window.__game = { S: () => S, STORES, buyStore, tapValue, incomePerSec, money, save };
+if (location.hash === '#bot') window.__game = { S: () => S, STORES, buyStore, incomePerSec, money, save, sendScooter, takeDeal, ROUTES };
 renderMute(); renderAll(); requestAnimationFrame(tick);
 })();
 </script>
