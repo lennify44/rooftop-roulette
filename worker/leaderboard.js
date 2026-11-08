@@ -30,7 +30,14 @@ const NAME_RE = /^[\p{L}\p{N} _.\-]{1,16}$/u;
 const recent = new Map();   // best-effort per-isolate rate limit by IP
 const fbRecent = new Map();
 // player feedback from any game page: rating 1-5 and up to 500 characters, kept 180 days, read only through the
-// Cloudflare API (rooftop-leaderboard feedback); no IP or name is stored
+// Cloudflare API (rooftop-leaderboard feedback); no IP or name is stored with it. Spam guard (2026-11-08, a script
+// posted every 16 s): per sender 1 per minute and 4 per day, counted under a hash of IP + date that expires after a
+// day; at most 30 per hour overall. Over the limit the request still gets {ok:true} but nothing is stored.
+const FB_PER_DAY = 4, FB_PER_HOUR_ALL = 30;
+async function senderKey(ip) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${ip}|${new Date().toISOString().slice(0, 10)}|fb`));
+  return [...new Uint8Array(d)].slice(0, 10).map((x) => x.toString(16).padStart(2, '0')).join('');
+}
 async function feedback(req, env, origin) {
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405, origin);
   if (!ORIGINS.includes(origin)) return json({ error: 'origin not allowed' }, 403, origin);
@@ -38,11 +45,18 @@ async function feedback(req, env, origin) {
   const game = String(b.game || ''), rating = Number(b.rating);
   if (!/^[a-z0-9-]{2,30}$/.test(game) || !Number.isInteger(rating) || rating < 1 || rating > 5) return json({ error: 'invalid feedback' }, 400, origin);
   const ip = req.headers.get('CF-Connecting-IP') || '', now = Date.now();
-  if (now - (fbRecent.get(ip) || 0) < 15000) return json({ error: 'too fast' }, 429, origin);
+  if (now - (fbRecent.get(ip) || 0) < 60000) return json({ ok: true }, 200, origin);
   fbRecent.set(ip, now); if (fbRecent.size > 5000) fbRecent.clear();
+  const sk = `rl:fb:${await senderKey(ip)}`, hk = `rl:fbh:${new Date(now).toISOString().slice(0, 13)}`;
+  const [sn, hn] = await Promise.all([env.SCORES.get(sk), env.SCORES.get(hk)]);
+  if (Number(sn || 0) >= FB_PER_DAY || Number(hn || 0) >= FB_PER_HOUR_ALL) return json({ ok: true }, 200, origin);
   const clean = (v, n) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
   const entry = { game, rating, text: clean(b.text, 500), best: clean(b.best, 40), lang: b.lang === 'de' ? 'de' : 'en', t: new Date(now).toISOString() };
-  await env.SCORES.put(`feedback:${game}:${now}:${Math.random().toString(36).slice(2, 8)}`, JSON.stringify(entry), { expirationTtl: 180 * 86400 });
+  await Promise.all([
+    env.SCORES.put(`feedback:${game}:${now}:${Math.random().toString(36).slice(2, 8)}`, JSON.stringify(entry), { expirationTtl: 180 * 86400 }),
+    env.SCORES.put(sk, String(Number(sn || 0) + 1), { expirationTtl: 86400 }),
+    env.SCORES.put(hk, String(Number(hn || 0) + 1), { expirationTtl: 7200 }),
+  ]);
   return json({ ok: true }, 200, origin);
 }
 
