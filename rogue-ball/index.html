@@ -57,6 +57,23 @@ body {
 .heat .row { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
 .meter { width: 130px; height: 14px; border: 2px solid rgba(243, 238, 229, 0.5); border-radius: 8px; background: rgba(0, 0, 0, 0.4); overflow: hidden; }
 .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd27a, var(--heat), #ff3b3b); transition: width 0.4s; }
+.goal { margin-top: 6px; display: grid; gap: 3px; }
+.goal .meter { width: 170px; height: 12px; }
+.goal .meter i { background: linear-gradient(90deg, #5fe0a8, #e8b64c); }
+.goal small { font-family: var(--font-mono); font-size: 12px; color: var(--chalk, #f3eee5); }
+.streak { color: #ff9a3b; font-weight: 700; }
+.charms { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(8, 22, 16, 0.88); }
+.charms .box { width: 100%; max-width: 760px; text-align: center; }
+.charms h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: clamp(34px, 8vw, 56px); text-transform: uppercase; color: #e8b64c; }
+.charms p { margin: 0 0 14px; color: var(--haze); }
+.charms .row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.charm { min-height: 112px; padding: 14px; border-radius: 16px; border: 3px solid #e8b64c; background: linear-gradient(160deg, #1c5a40, #0e2f22); color: #f3eee5; cursor: pointer; text-align: left; display: grid; gap: 4px; align-content: start; animation: pop 0.25s ease-out backwards; }
+.charm:nth-child(2) { animation-delay: 0.06s; } .charm:nth-child(3) { animation-delay: 0.12s; }
+@keyframes pop { from { transform: scale(0.7); opacity: 0; } }
+.charm b { font-family: var(--font-display); font-weight: 900; font-size: 24px; text-transform: uppercase; line-height: 1; }
+.charm span { font-size: 14px; color: var(--haze); }
+.charm i { font-style: normal; font-size: 28px; }
+.charm:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .heat small { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--haze); }
 .heat small.warn { color: var(--heat); }
 .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.45); cursor: pointer; }
@@ -135,7 +152,9 @@ body {
   <div class="hud" id="hud" hidden>
     <div>
       <div class="chips"><small>◉</small> <span id="chips">100</span></div>
-      <div class="sub">Peak <b id="peak">100</b> · Spin <b id="spinNo">0</b>/25</div>
+      <div class="sub"><span id="casinoName">Corner Bar</span> · <b id="spinNo">0</b>/<b id="spinMax">8</b> <span class="streak" id="streak"></span></div>
+      <div class="goal"><div class="meter" aria-label="Bank target"><i id="goalBar"></i></div><small id="goalText">Break the bank: 300</small></div>
+      <span id="peak" hidden>100</span>
     </div>
     <div class="heat">
       <div class="row"><div class="meter" aria-label="Heat"><i id="heatBar"></i></div>
@@ -149,7 +168,7 @@ body {
     <div class="stakes" id="stakes" role="radiogroup" aria-label="Stake">
       <button class="stake" type="button" role="radio" data-s="0.1" aria-checked="true">Small<small id="s1">10</small></button>
       <button class="stake" type="button" role="radio" data-s="0.25" aria-checked="false">Big<small id="s2">25</small></button>
-      <button class="stake allin" type="button" role="radio" data-s="1" aria-checked="false">All in<small id="s3">100</small></button>
+      <button class="stake allin" type="button" role="radio" data-s="1" aria-checked="false">Max bet<small id="s3">100</small></button>
     </div>
     <div class="row"><button class="btn" id="btnSpin" type="button"><span>Spin</span></button><button class="link-btn" id="btnBribe" type="button">Bribe</button></div>
     <p class="hint" id="hint">Pick a stake, then spin.</p>
@@ -160,7 +179,7 @@ body {
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Rogue<br><span>Ball</span></h1>
-        <p class="lede">For once, you are the ball. The croupier calls a pocket, you pick the moment to drop into the spinning wheel. Win big, but quietly: when the heat reaches the top, security throws you out.</p>
+        <p class="lede">For once, you are the ball, and you want out. Break the bank in five casinos to buy your freedom. The croupier calls a pocket, you pick the moment to drop into the spinning wheel. Win big, but quietly: when the heat reaches the top, security throws you out.</p>
         <div class="row" style="justify-content:flex-start"><button class="btn" id="btnStart" type="button"><span>Roll in</span></button></div>
         <div class="sub-row">
           <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
@@ -171,10 +190,12 @@ body {
         <h2 class="label">How it works</h2>
         <dl class="pairs">
           <div><dt>Drop</dt><dd>The ball circles one way, the wheel spins the other. Tap to drop. The faint dot shows where you would land on the ring, but the called pocket keeps moving while you fall.</dd></div>
-          <div><dt>Payouts</dt><dd>Bullseye ×6 · next to it ×2.5 · two away ×1.5 · same colour: stake back · otherwise you lose the stake.</dd></div>
+          <div><dt>Payouts</dt><dd>Bullseye ×6 · next to it ×2 · two away ×1.5 · same colour: stake back · otherwise you lose the stake.</dd></div>
           <div><dt>House pocket</dt><dd>The green H takes double, but the casino stops watching you so closely.</dd></div>
           <div><dt>Heat</dt><dd>Wins draw attention, big stakes even more. It cools down a little every spin, and a lot when the house pocket wins. Up to three bribes, each pricier. At 100%: thrown out.</dd></div>
-          <div><dt>Closing time</dt><dd>The casino closes after 25 spins.</dd></div>
+          <div><dt>Break the bank</dt><dd>Every casino has a chip target. Reach it within 8 spins and you move on to a bigger casino with a faster wheel. Miss it and the bank holds: game over. Five casinos buy your freedom; after that, the high-roller tables never end.</dd></div>
+          <div><dt>Table limit</dt><dd>Every casino caps your bet at a fifth of its bank target: no single lucky spin breaks it.</dd></div>
+          <div><dt>Charms and streaks</dt><dd>After every broken bank, pick one of three ball charms. Wins in a row heat up: each one pays a quarter more, up to double.</dd></div>
           <div><dt>Score</dt><dd>Your peak chip stack.</dd></div>
         </dl>
         <h2 class="label" style="margin-top:8px">World leaderboard <span id="lbWho"></span></h2>
@@ -183,6 +204,8 @@ body {
       </div>
     </div>
   </section>
+
+  <div class="charms" id="charms" hidden><div class="box"><h2 id="charmTitle">Bank broken!</h2><p id="charmText">Pick a charm for your ball</p><div class="row3" id="charmRow"></div></div></div>
 
   <section class="screen" id="screenOver" aria-label="Game over" hidden>
     <div class="menu">
@@ -193,7 +216,7 @@ body {
         <div class="row" style="justify-content:flex-start"><button class="btn" id="btnAgain" type="button"><span>Roll again</span></button><button class="link-btn" id="btnMenu" type="button">Menu</button></div>
         <dl class="stats">
           <div><dt>Peak stack</dt><dd id="overPeak">0</dd></div>
-          <div><dt>Spins</dt><dd id="overSpins">0</dd></div>
+          <div><dt>Banks broken</dt><dd id="overSpins">0</dd></div>
           <div><dt>Best</dt><dd id="overBest">0</dd></div>
         </dl>
       </div>
@@ -235,10 +258,33 @@ function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.
 const POCKETS = ['H', 7, 19, 3, 22, 11, 15, 2, 24, 9, 17, 5, 20, 13, 1, 18, 8, 23, 4, 14, 10, 21, 6, 16, 12];
 const N = POCKETS.length, PA = TAU / N;
 const colorOf = (i) => (i === 0 ? 'house' : i % 2 ? 'red' : 'black');
-const PAY = { 0: 6, 1: 2.5, 2: 1.5 };
+const PAY = { 0: 6, 1: 2, 2: 1.5 };
 const HEAT = { 0: 30, 1: 14, 2: 6, same: 2, lose: -5, house: -35 };
 const STAKE_HEAT = { 0.1: 1, 0.25: 1.5, 1: 2.2 };
-const MAX_BRIBES = 3, CLOSING = 25;   // the casino closes after 25 spins
+const MAX_BRIBES = 3, SPINS_PER = 8, TABLE_LIMIT = 0.2;   // bribes and spins per casino; max bet = a quarter of the target
+// five casinos to buy your freedom, then endless high-roller tables; every casino spins its wheel faster
+const CASINOS = [
+  { name: 'Corner Bar', target: 300, wheel: 1 },
+  { name: 'Riverboat', target: 1500, wheel: 1.1 },
+  { name: 'Grand Hotel', target: 6000, wheel: 1.2 },
+  { name: 'Neon Palace', target: 25000, wheel: 1.32 },
+  { name: 'The Golden Wheel', target: 120000, wheel: 1.45 },
+];
+const casinoAt = (i) => (i < CASINOS.length ? CASINOS[i] : { name: `High Roller ${i - CASINOS.length + 1}`, target: Math.round(120000 * Math.pow(6, i - CASINOS.length + 1)), wheel: Math.min(3, 1.45 + 0.15 * (i - CASINOS.length + 1)) });
+const CHARMS = [
+  { id: 'steady', icon: '🧊', name: 'Steady wheel', desc: 'The wheel turns a fifth slower: easier to lead the call.' },
+  { id: 'lucky', icon: '🍀', name: 'Lucky groove', desc: 'A bullseye pays ×8 instead of ×6.' },
+  { id: 'wide', icon: '↔️', name: 'Wide pockets', desc: 'Two pockets away pays ×2, like next door.' },
+  { id: 'sticky', icon: '🍯', name: 'Sticky ball', desc: 'Half as much rattling after you land.' },
+  { id: 'magnet', icon: '🧲', name: 'Magnet core', desc: 'Land next to the call and it often pulls you in.' },
+  { id: 'cool', icon: '😎', name: 'Cool customer', desc: 'Wins make a third less heat.' },
+  { id: 'insure', icon: '🛟', name: 'Insurance', desc: 'Once per casino, a miss gives your stake back.' },
+  { id: 'extra', icon: '🦉', name: 'Night owl', desc: '+2 spins in every casino.' },
+  { id: 'friend', icon: '🤝', name: 'Pit boss pal', desc: 'Bribes cost half.' },
+];
+const hasCharm = (id) => !!game.charms[id];
+const spinsPer = () => SPINS_PER + (hasCharm('extra') ? 2 : 0);
+const tableMax = () => Math.round(casinoAt(game.cas).target * TABLE_LIMIT);
 const MODS = [
   { id: 'golden', name: 'GOLDEN POCKET', text: 'A bullseye pays ×15 this spin.' },
   { id: 'reverse', name: 'REVERSE', text: 'The wheel spins the other way.' },
@@ -293,19 +339,20 @@ addEventListener('resize', layout);
 // ---------- game state
 const game = {
   id: 0, running: false, phase: 'idle', chips: 100, peak: 100, heat: 0, spins: 0, bribes: 0, stakeK: 0.1, stake: 10, target: 1, mod: null,
+  cas: 0, cspins: 0, cleared: 0, streak: 0, charms: {}, insured: false,
   wheelA: 0, wheelW: 0, land0: 0, hopIdx: 0, ballA: 0, ballW: 0, ballR: 1, k: 0.24, dropT: 0, dropDur: 0.55, deflected: false, landed: -1, rattle: [], settleT: 0,
   result: null, msg: '', msgT: 0, floats: [], parts: [], trail: [], t: 0, face: 'calm', guards: 0, tickAcc: 0,
 };
 const DIAMONDS = Array.from({ length: 8 }, (_, i) => (i + 0.5) * (TAU / 8));
 const R_TRACK = 0.9, R_DIAMOND = 0.76, R_POCKET = 0.6;
-const stakeFor = (k) => (k >= 1 ? game.chips : Math.max(10, Math.min(game.chips, Math.round(game.chips * k))));
+const stakeFor = (k) => Math.min(tableMax(), k >= 1 ? game.chips : Math.max(10, Math.min(game.chips, Math.round(game.chips * k))));
 function ghostOffset() { return game.ballW * (1 - Math.exp(-game.k * game.dropDur)) / game.k; }
 function pocketAt(absAngle) { return Math.floor(wrap(absAngle - game.wheelA) / PA) % N; }
 function pocketCenterAbs(i) { return game.wheelA + (i + 0.5) * PA; }
 function ringDist(a, b) { const d = Math.abs(a - b) % N; return Math.min(d, N - d); }
 
 function newRound() {
-  game.spins++;
+  game.spins++; game.cspins++;
   game.heat = Math.max(0, game.heat - 2);
   let t; do { t = 1 + Math.floor(Math.random() * (N - 1)); } while (t === game.target && Math.random() < 0.7);
   game.target = t;
@@ -319,7 +366,7 @@ function spin() {
   game.stake = stakeFor(game.stakeK);
   if (game.stake > game.chips || game.chips < 10) return;
   const dir = game.mod && game.mod.id === 'reverse' ? -1 : 1, turbo = game.mod && game.mod.id === 'turbo' ? 1.6 : 1;
-  game.wheelW = dir * TAU * (0.28 + Math.min(0.2, game.spins * 0.008)) * turbo;
+  game.wheelW = dir * TAU * (0.28 + Math.min(0.12, game.cspins * 0.012)) * turbo * casinoAt(game.cas).wheel * (hasCharm('steady') ? 0.8 : 1);
   game.ballW = -TAU * rnd(1.5, 2.1);
   game.ballR = R_TRACK; game.phase = 'spin'; game.trail = [];
   renderPanel();
@@ -334,10 +381,10 @@ function land() {
   let p = pocketAt(game.ballA);
   game.land0 = p; game.hopIdx = 0;
   // a little rattle before it settles: usually none, sometimes one pocket, rarely two
-  const r = Math.random(), hops = r < 0.62 ? 0 : r < 0.92 ? 1 : 2, dir = Math.random() < 0.5 ? -1 : 1;
+  const r = Math.random(), sticky = hasCharm('sticky'), hops = r < (sticky ? 0.81 : 0.62) ? 0 : r < (sticky ? 0.96 : 0.92) ? 1 : 2, dir = Math.random() < 0.5 ? -1 : 1;
   game.rattle = [];
   for (let i = 0; i < hops; i++) { p = (p + dir + N) % N; game.rattle.push(p); }
-  if (game.mod && game.mod.id === 'magnet' && ringDist(p, game.target) === 1 && Math.random() < 0.6) { p = game.target; game.rattle.push(p); }
+  if (((game.mod && game.mod.id === 'magnet') || hasCharm('magnet')) && ringDist(p, game.target) === 1 && Math.random() < 0.6) { p = game.target; game.rattle.push(p); }
   game.landed = p; game.phase = 'settle'; game.settleT = 0; Sound.clack();
 }
 function resolve() {
@@ -345,12 +392,16 @@ function resolve() {
   let win = 0, heat = 0, text, color, kind;
   if (p === 0) { win = -Math.min(game.chips, stake * 2); heat = HEAT.house; text = 'HOUSE! The casino takes double'; color = '#5fe0a8'; kind = 'house'; }
   else if (d <= 2) {
-    const mult = d === 0 && game.mod && game.mod.id === 'golden' ? 15 : PAY[d];
-    win = Math.round(stake * mult) - stake; heat = HEAT[d] * sk;
-    text = d === 0 ? `BULLSEYE ×${mult}` : d === 1 ? 'NEXT DOOR ×2.5' : 'CLOSE ×1.5'; color = d === 0 ? '#e8b64c' : '#f3eee5'; kind = d === 0 ? 'bull' : 'win';
+    const mult = d === 0 ? (game.mod && game.mod.id === 'golden' ? 15 : hasCharm('lucky') ? 8 : PAY[0]) : d === 2 && hasCharm('wide') ? PAY[1] : PAY[d];
+    // hot streak: every win in a row pays a quarter more, up to double
+    game.streak++; const hot = 1 + 0.25 * Math.min(4, game.streak - 1);
+    win = Math.round((stake * mult - stake) * hot); heat = HEAT[d] * sk * (hasCharm('cool') ? 0.67 : 1);
+    text = (d === 0 ? `BULLSEYE ×${mult}` : d === 1 || mult === PAY[1] ? 'NEXT DOOR ×2' : 'CLOSE ×1.5') + (hot > 1 ? ` · 🔥 ×${hot}` : ''); color = d === 0 ? '#e8b64c' : '#f3eee5'; kind = d === 0 ? 'bull' : 'win';
     if (d === 0) profile.bullseyes++;
   } else if (colorOf(p) === colorOf(game.target)) { win = 0; heat = HEAT.same * sk; text = 'Same colour · stake back'; color = '#a9b8ad'; kind = 'push'; }
-  else { win = -stake; heat = HEAT.lose; text = 'Missed'; color = '#e5484d'; kind = 'lose'; }
+  else if (hasCharm('insure') && !game.insured) { game.insured = true; game.streak = 0; win = 0; heat = HEAT.lose; text = 'Insured! Stake back'; color = '#7fd8ff'; kind = 'push'; }
+  else { win = -stake; heat = HEAT.lose; text = 'Missed'; color = '#e5484d'; kind = 'lose'; game.streak = 0; }
+  if (kind === 'house') game.streak = 0;
   game.chips += win; game.peak = Math.max(game.peak, game.chips); game.heat = clamp(game.heat + heat, 0, 100);
   game.result = { p, d, win, kind };
   game.face = kind === 'bull' || kind === 'win' ? 'grin' : kind === 'lose' || kind === 'house' ? 'sad' : 'calm';
@@ -362,14 +413,15 @@ function resolve() {
   const id = game.id;
   setTimeout(() => {
     if (game.id !== id || !game.running) return;
-    if (game.heat >= 100) thrownOut();
+    if (game.chips >= casinoAt(game.cas).target) bankBroken();
+    else if (game.heat >= 100) thrownOut();
     else if (game.chips < 10) broke();
-    else if (game.spins >= CLOSING) endGame('closed');
+    else if (game.cspins >= spinsPer()) endGame('closed');
     else newRound();
   }, 1700);
 }
 // every bribe costs more than the last (25%, 50%, 75% of your chips) and the pit boss takes three at most
-const bribeCost = () => Math.max(20, Math.round(game.chips * 0.25 * (game.bribes + 1)));
+const bribeCost = () => Math.max(20, Math.round(game.chips * 0.25 * (game.bribes + 1) * (hasCharm('friend') ? 0.5 : 1)));
 function bribe() {
   if (game.phase !== 'bet' || game.heat < 35 || game.bribes >= MAX_BRIBES) return;
   const cost = bribeCost();
@@ -377,6 +429,31 @@ function bribe() {
   game.chips -= cost; game.bribes++; game.heat = Math.max(0, game.heat - 40); Sound.coin();
   floatText(`Pit boss bribed −${fmt(cost)}`, L.cx, L.cy, '#e8b64c', 1.4, 0.9);
   updateHud(); renderPanel();
+}
+// a broken bank: celebrate, pick a charm, move on to the next casino
+function bankBroken() {
+  const c = casinoAt(game.cas); game.cleared++; game.phase = 'picking';
+  Sound.win(true); setTimeout(() => Sound.win(true), 260);
+  for (const col of [['#e8b64c', '#fff3b0'], ['#5fe0a8', '#ffffff'], ['#e5484d', '#ffd27a']]) burst(L.cx, L.cy, col, 30);
+  floatText(game.cas === CASINOS.length - 1 ? 'FREEDOM BOUGHT!' : 'BANK BROKEN!', L.cx, L.cy - L.R * 0.3, '#e8b64c', 2, 1.6);
+  const open = CHARMS.filter((ch) => !hasCharm(ch.id)), pickN = [];
+  while (pickN.length < 3 && open.length) pickN.push(open.splice(Math.floor(Math.random() * open.length), 1)[0]);
+  if (!pickN.length) pickN.push({ id: 'cash', icon: '💰', name: 'Cash out a little', desc: '+25 % chips right now.' });
+  $('charmTitle').textContent = game.cas === CASINOS.length - 1 ? 'Freedom bought!' : `${c.name}: bank broken!`;
+  $('charmText').textContent = game.cas === CASINOS.length - 1 ? 'You beat all five casinos. The high-roller tables are open: pick a charm and keep rolling.' : `Next: ${casinoAt(game.cas + 1).name}, break ${fmt(casinoAt(game.cas + 1).target)} in ${spinsPer()} spins. Pick a charm for your ball.`;
+  const row = $('charmRow'); row.textContent = '';
+  for (const ch of pickN) { const b = mk('button', 'charm'); b.setAttribute('data-charm', ch.id); const i = mk('i'); i.textContent = ch.icon; const n = mk('b'); n.textContent = ch.name; const d = mk('span'); d.textContent = ch.desc; b.append(i, n, d); b.addEventListener('click', () => takeCharm(ch.id)); row.appendChild(b); }
+  const id = game.id; setTimeout(() => { if (game.id === id && game.running) { $('charms').hidden = false; updateHud(); } }, 1400);
+}
+function takeCharm(id) {
+  if (game.phase !== 'picking') return;
+  if (id === 'cash') game.chips = Math.round(game.chips * 1.25); else game.charms[id] = true;
+  $('charms').hidden = true; Sound.coin();
+  game.cas++; game.cspins = 0; game.bribes = 0; game.insured = false; game.heat = Math.round(game.heat * 0.3);
+  const c = casinoAt(game.cas);
+  floatText(`${c.name.toUpperCase()}`, L.cx, L.cy - L.R * 0.2, '#e8b64c', 2.2, 1.4);
+  floatText(`Break ${fmt(c.target)} in ${spinsPer()} spins`, L.cx, L.cy + L.R * 0.05, '#f3eee5', 2.2, 0.9);
+  newRound();
 }
 function thrownOut() { game.phase = 'out'; game.guards = 0.001; Sound.siren(); setTimeout(() => endGame('out'), 2200); }
 function broke() { endGame('broke'); }
@@ -386,19 +463,21 @@ function endGame(why) {
   const isBest = game.peak > profile.best;
   profile.best = Math.max(profile.best, game.peak); profile.games++; saveProfile();
   $('overEyebrow').textContent = isBest ? 'New best peak' : 'Game over';
-  $('overTitle').textContent = why === 'out' ? 'Thrown out' : why === 'closed' ? 'Closing time' : 'Broke';
-  $('overText').textContent = why === 'out'
-    ? `Security carried you out of the casino after ${game.spins} spins. You left ${fmt(game.chips)} chips on the table, but your peak stack counts.`
-    : why === 'closed' ? `The casino closes its doors after ${CLOSING} spins. You roll out with ${fmt(game.chips)} chips, and nobody suspects a thing.`
-    : `Out of chips after ${game.spins} spins. The house always wins. Usually.`;
-  $('overPeak').textContent = fmt(game.peak); $('overSpins').textContent = game.spins; $('overBest').textContent = fmt(profile.best);
+  profile.bestCasino = Math.max(profile.bestCasino || 0, game.cleared); saveProfile();
+  const c = casinoAt(game.cas), where = `${c.name} (casino ${game.cas + 1}${game.cas < CASINOS.length ? ' of 5' : ''})`;
+  $('overTitle').textContent = why === 'out' ? 'Thrown out' : why === 'closed' ? 'The bank held' : 'Broke';
+  $('overText').textContent = (why === 'out'
+    ? `Security carried you out of the ${where}.`
+    : why === 'closed' ? `The ${where} closed with ${fmt(game.chips)} of ${fmt(c.target)} chips: the bank held.`
+    : `Out of chips in the ${where}. The house always wins. Usually.`) + (game.cleared >= CASINOS.length ? ' But you had already bought your freedom.' : ` ${CASINOS.length - game.cleared} more bank${CASINOS.length - game.cleared === 1 ? '' : 's'} to freedom.`);
+  $('overPeak').textContent = fmt(game.peak); $('overSpins').textContent = game.cleared; $('overBest').textContent = fmt(profile.best);
   $('hud').hidden = true; $('panel').hidden = true; $('screenOver').hidden = false; layout();
-  lbAfterGame(game.peak, game.spins);
+  lbAfterGame(game.peak, game.cleared);
 }
 function startGame() {
   Sound.init();
-  Object.assign(game, { id: game.id + 1, running: true, chips: 100, peak: 100, heat: 0, spins: 0, bribes: 0, stakeK: 0.1, floats: [], parts: [], trail: [], guards: 0, ballR: R_TRACK, ballW: 0 });
-  $('screenStart').hidden = true; $('screenOver').hidden = true; $('hud').hidden = false; $('panel').hidden = false;
+  Object.assign(game, { id: game.id + 1, running: true, chips: 100, peak: 100, heat: 0, spins: 0, bribes: 0, stakeK: 0.1, floats: [], parts: [], trail: [], guards: 0, ballR: R_TRACK, ballW: 0, cas: 0, cspins: 0, cleared: 0, streak: 0, charms: {}, insured: false });
+  $('charms').hidden = true; $('screenStart').hidden = true; $('screenOver').hidden = true; $('hud').hidden = false; $('panel').hidden = false;
   layout(); newRound();
 }
 
@@ -419,10 +498,13 @@ function renderPanel() {
   $('btnBribe').textContent = `Bribe the pit boss (−${fmt(cost)}, heat −40 · ${MAX_BRIBES - game.bribes} left)`;
   $('btnBribe').disabled = cost > game.chips - 10;
   $('hint').innerHTML = game.phase === 'spin' ? '<b>Tap anywhere</b> to drop. Lead the called pocket: it keeps moving while you fall.'
-    : game.phase === 'bet' ? (game.heat >= 60 ? 'Too hot? Drop into the <b>green H</b> on purpose: it takes double, but cools you down a lot.' : game.spins >= CLOSING - 3 ? `Last call: the casino closes after spin ${CLOSING}.` : 'Pick a stake, then spin.') : ' ';
+    : game.phase === 'bet' ? (game.heat >= 60 ? 'Too hot? Drop into the <b>green H</b> on purpose: it takes double, but cools you down a lot.' : game.cspins >= spinsPer() - 1 ? `Last spin here: you need ${fmt(Math.max(0, casinoAt(game.cas).target - game.chips))} more chips. Time to go big?` : `Pick a stake, then spin. Table limit ${fmt(tableMax())}.`) : ' ';
 }
 function updateHud() {
-  $('chips').textContent = fmt(game.chips); $('peak').textContent = fmt(game.peak); $('spinNo').textContent = game.spins;
+  const c = casinoAt(game.cas);
+  $('chips').textContent = fmt(game.chips); $('peak').textContent = fmt(game.peak); $('spinNo').textContent = game.cspins; $('spinMax').textContent = spinsPer();
+  $('casinoName').textContent = c.name; $('streak').textContent = game.streak >= 2 ? `🔥 ×${1 + 0.25 * Math.min(4, game.streak)}` : '';
+  $('goalBar').style.width = `${clamp(game.chips / c.target * 100, 0, 100)}%`; $('goalText').textContent = `🏦 ${fmt(game.chips)} / ${fmt(c.target)}`;
   $('heatBar').style.width = `${game.heat}%`;
   const h = game.heat, el = $('heatText');
   el.textContent = h >= 75 ? 'Heat · security is on the radio' : h >= 50 ? 'Heat · the pit boss is watching' : h >= 25 ? 'Heat · a dealer frowned' : 'Heat · nobody is watching';
@@ -456,7 +538,7 @@ function update(dt) {
       if (hit) { game.deflected = true; game.ballW += rnd(-1, 1) * (0.42 / (game.dropDur - mid)); Sound.tock(); burst(L.cx + Math.cos(game.ballA) * L.R * R_DIAMOND, L.cy + Math.sin(game.ballA) * L.R * R_DIAMOND, ['#e8b64c', '#fff'], 8); }
     }
     if (game.dropT >= game.dropDur) land();
-  } else if (game.phase === 'settle' || game.phase === 'result' || game.phase === 'out') {
+  } else if (game.phase === 'settle' || game.phase === 'result' || game.phase === 'out' || game.phase === 'picking') {
     // the ball rides along in its pocket; during the rattle it hops from pocket to pocket
     const hopDur = 0.22;
     if (game.phase === 'settle') {
@@ -601,7 +683,7 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
 // ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
 const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
 const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/rogue-ball/';
-const GAME_ID = 'rogueball';
+const GAME_ID = 'rogue2';   // v2 (casinos): a fresh board, dist = banks broken
 const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
 const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -629,16 +711,16 @@ async function renderLeaderboard(force) {
   rows.forEach((r, i) => {
     const li = mk('li', r.id === profile.deviceId ? 'me' : '');
     const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank);
-    for (const text of [r.name, `◉ ${fmt(r.score)}`, `${r.dist} spins`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); }
+    for (const text of [r.name, `◉ ${fmt(r.score)}`, `${r.dist} bank${r.dist === 1 ? '' : 's'}`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); }
     list.appendChild(li);
   });
 }
 $('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
 let lbLast = null;
-function lbAfterGame(score, spins) {
+function lbAfterGame(score, banks) {
   const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true;
   if (!lbReachable() || score <= 0) return;
-  lbLast = { game: GAME_ID, score, dist: spins, daily: true, date: todayKey() };
+  lbLast = { game: GAME_ID, score, dist: banks, daily: true, date: todayKey() };
   $('lbName').value = profile.name; box.hidden = false;
   if (profile.name) lbSend();
 }
@@ -664,6 +746,7 @@ function showStart() {
   $('screenStart').hidden = false; $('hud').hidden = true; $('panel').hidden = true; layout(); renderLeaderboard();
   game.wheelW = TAU * 0.12;   // idle spin behind the menu
 }
+if (location.hash === '#bot') window.__game = { game, bankBroken, takeCharm, endGame, spin };
 renderMute(); layout(); showStart();
 requestAnimationFrame(frame);
 // the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)

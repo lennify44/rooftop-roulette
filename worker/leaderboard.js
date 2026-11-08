@@ -10,6 +10,7 @@ const GAMES = {
   elevator: { prefix: 'elevator:', maxScore: 1e12, maxDist: 1000 },   // cash-out, floor
   volcano: { prefix: 'volcano:', maxScore: 1e8, maxDist: 10000 },     // points, bingos
   rogueball: { prefix: 'rogueball:', maxScore: 1e10, maxDist: 10000 }, // chips, spins
+  rogue2: { prefix: 'rogue2:', maxScore: 1e15, maxDist: 1000 },       // Rogue Ball v2: peak chips, banks broken
   room404: { prefix: 'room404:', maxScore: 2701, maxDist: 100 },        // seconds left at the escape, hints used
   sushi: { prefix: 'sushi:', maxScore: 1e7, maxDist: 10 },              // earnings of one service, restaurant 1-4
   weather: { prefix: 'weather:', maxScore: 1e7, maxDist: 10 },          // season score, season 1-5
