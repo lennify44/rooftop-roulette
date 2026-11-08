@@ -107,6 +107,16 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 // one simple drawing per game, in that game's colours (viewBox 320 x 160)
 const ART = {
+  fire: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><linearGradient id="a21" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14162a"/><stop offset="1" stop-color="#3a2a3a"/></linearGradient></defs><rect width="320" height="160" fill="url(#a21)"/>
+    <circle cx="270" cy="34" r="16" fill="#f4e6b8" opacity="0.85"/>
+    <rect x="70" y="10" width="150" height="160" fill="#2a2c3c" stroke="#0c0d16" stroke-width="3"/>
+    ${Array.from({ length: 12 }, (_, i) => `<rect x="${84 + (i % 4) * 32}" y="${22 + Math.floor(i / 4) * 34}" width="18" height="16" fill="${i === 5 ? '#ffb02e' : '#151726'}"/>`).join('')}
+    <path d="M220 30 h40 l-40 34 h40 l-40 34 h40 l-40 34" fill="none" stroke="#8a8fa8" stroke-width="4"/>
+    <path d="M60 128 l8 -12 l8 12 l8 -12 l8 12 l8 -12 l8 12" fill="#e5484d" stroke="#0c0d16" stroke-width="2"/>
+    <rect x="92" y="110" width="52" height="20" rx="3" fill="#1fb46a" stroke="#0c0d16" stroke-width="2"/><text x="118" y="125" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="15" fill="#eafff2">EXIT</text>
+    <path d="M70 70 h150" stroke="#ffd23f" stroke-width="5" stroke-dasharray="14 10"/>
+    <g transform="translate(244 74) rotate(-12)"><path d="M-20 4 h-24" stroke="#ffd23f" stroke-width="4" stroke-linecap="round" opacity="0.6"/><rect x="-8" y="-14" width="16" height="18" rx="5" fill="#ffd23f" stroke="#0c0d16" stroke-width="2.5"/><circle cx="2" cy="-21" r="7" fill="#e0b088" stroke="#0c0d16" stroke-width="2.5"/><path d="M-6 4 l-6 12 M6 4 l8 10" stroke="#0c0d16" stroke-width="5" stroke-linecap="round"/></g>
+    <text x="300" y="150" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="20" fill="#ffd23f">24 FLOORS</text></svg>`,
   deflect: `<svg viewBox="0 0 320 160" aria-hidden="true"><defs><radialGradient id="a20" cx="0.5" cy="0.55" r="0.7"><stop offset="0" stop-color="#3a1a78"/><stop offset="1" stop-color="#0c0618"/></radialGradient></defs><rect width="320" height="160" fill="url(#a20)"/>
     ${Array.from({ length: 26 }, (_, i) => `<rect x="${(i * 97) % 320}" y="${(i * 53) % 160}" width="2" height="2" fill="#fff" opacity="${0.3 + (i % 4) * 0.15}"/>`).join('')}
     <ellipse cx="160" cy="84" rx="140" ry="64" fill="none" stroke="#ff4fa3" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
@@ -228,6 +238,10 @@ const GAMES = [
     pitch: 'The sky keeps scrolling. Run and jump across floating islands, stomp drones to bounce higher and never let the storm catch you.',
     best: () => { const p = read('airborne-profile'); return p && p.best ? [fmt(p.best), `${fmt(p.bestDist)} m`] : null; },
     world: (e) => [fmt(e.score), `${fmt(e.dist)} m`] },
+  { id: 'fire', name: 'Fire <span>Escape</span>', url: 'fire-escape/', accent: '#ffd23f', board: null, badge: 'New · platformer', tags: ['platformer', 'hard', 'wall-jump'],
+    pitch: 'The tower comes down tonight and you are still on the top floor. Run, wall-jump and dash down 24 floors to the river.',
+    best: () => { const p = read('fire-escape-progress-v1'); if (!p) return null; const hats = p.hats ? p.hats.filter(Boolean).length : 0; return [`floor ${(p.reached | 0) + 1} of 24`, `${hats} hard hat${hats === 1 ? '' : 's'}`]; },
+    world: () => null },
   { id: 'deflect', name: 'De<span>flector</span>', url: 'deflector/', accent: '#3ef2ff', board: 'deflect', badge: 'New · action', tags: ['action', 'reflex', 'bosses'],
     pitch: 'Bots circle your core and fire. Swing the shield, bounce their shots back and blow them up. Perfect parries fire straight back.',
     best: () => { const p = read('deflector-profile'); return p && p.best ? [fmt(p.best), `wave ${p.bestWave}`] : null; },
@@ -288,7 +302,7 @@ function link(a, url) {
   if (!onSite) { a.target = '_blank'; a.rel = 'noopener'; }   // same tab on the public site, a new tab inside previews
 }
 // what's new: badges come from the dates, newest games first, the newest one gets the big banner
-const DATES = { rooftop: ['2026-09-01', '2026-09-20'], deflect: ['2026-11-06', '2026-11-06'], empire: ['2026-11-02', '2026-11-02'], air: ['2026-11-02', '2026-11-03'], sky: ['2026-11-01', '2026-11-08'], shutter: ['2026-10-31', '2026-11-06'], echo: ['2026-10-31', '2026-11-06'], ghost: ['2026-10-31', '2026-11-06'], crane: ['2026-10-31', '2026-11-07'], bakery: ['2026-10-30', '2026-10-30'], weather: ['2026-10-30', '2026-11-02'], rogue: ['2026-10-28', '2026-11-08'], volcano: ['2026-10-28', '2026-11-02'], room404: ['2026-10-28', '2026-11-03'], elevator: ['2026-10-27', '2026-11-05'], pigeon: ['2026-10-20', '2026-11-02'] };
+const DATES = { rooftop: ['2026-09-01', '2026-09-20'], fire: ['2026-11-08', '2026-11-08'], deflect: ['2026-11-06', '2026-11-06'], empire: ['2026-11-02', '2026-11-02'], air: ['2026-11-02', '2026-11-03'], sky: ['2026-11-01', '2026-11-08'], shutter: ['2026-10-31', '2026-11-06'], echo: ['2026-10-31', '2026-11-06'], ghost: ['2026-10-31', '2026-11-06'], crane: ['2026-10-31', '2026-11-07'], bakery: ['2026-10-30', '2026-10-30'], weather: ['2026-10-30', '2026-11-02'], rogue: ['2026-10-28', '2026-11-08'], volcano: ['2026-10-28', '2026-11-02'], room404: ['2026-10-28', '2026-11-03'], elevator: ['2026-10-27', '2026-11-05'], pigeon: ['2026-10-20', '2026-11-02'] };
 const DAY = 86400000, NOW = Date.now(), ageOf = (d) => (NOW - Date.parse(d + 'T12:00:00Z')) / DAY;
 for (const g of GAMES) {
   const [added, updated] = DATES[g.id] || ['2026-01-01', '2026-01-01'], genre = (g.badge || '').split('·')[1];
