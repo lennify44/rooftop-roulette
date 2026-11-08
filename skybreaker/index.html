@@ -49,6 +49,8 @@ body {
   padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
 .score { font-family: var(--font-display); font-weight: 900; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; }
 .sub { margin-top: 2px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hpbar { margin-top: 6px; width: 88px; height: 12px; border: 2px solid rgba(255, 255, 255, 0.6); border-radius: 8px; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+.hpbar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff3b5c, #ffd23f 60%, #8aff6a); transition: width 0.25s; }
 .hud-btns { display: flex; gap: 8px; pointer-events: auto; }
 .icon-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.3); cursor: pointer; }
 .icon-btn svg { width: 18px; height: 18px; }
@@ -111,6 +113,7 @@ body {
     <div>
       <div class="score" id="score">0</div>
       <div class="sub"><span id="height">0</span> m · best <span id="bestHud">0</span></div>
+      <div class="hpbar" aria-label="Health"><i id="hpBar"></i></div>
     </div>
     <div class="hud-btns">
       <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
@@ -124,7 +127,7 @@ body {
       <div>
         <p class="eyebrow">Lennify Arcade</p>
         <h1 class="logo">Sky<br><span>breaker</span></h1>
-        <p class="lede">Tap to dash. Smash a drone and your dash comes back. Chain them into the sky before the storm eats you.</p>
+        <p class="lede">Tap to dash. Smash a drone and your dash comes back. Chain them into the sky before the storm eats you. Watch your health: flankers on the edges only die to the one shot an aim bubble gives you.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
         <p class="best" id="bestStart"></p>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
@@ -209,7 +212,11 @@ const KINDS = {
   boss: { r: 66, pts: 600, col: '#ff4fa3', ring: '#7a1050' },
   core: { r: 17, pts: 40, col: '#ffe14a', ring: '#c8901a' },
   laser: { r: 25, pts: 45, col: '#d4ff3b', ring: '#6a8a10' },
+  bubble: { r: 26, pts: 0, col: '#7fe3ff', ring: '#2a8aa8' },
 };
+// health (2026-11-08 feedback "it is hard to lose"): hits now cost HP; flankers ride the screen edges and shoot,
+// only an aim bubble's single shot can destroy them
+const HP_MAX = 100, DMG = { mine: 25, orb: 15, zap: 25, bolt: 20 }, BOLT_V = 560, SHOT_V = 1500;
 const LASER_LEN = 230;
 // bosses take turns; every lap of four they get faster
 const BOSSES = [
@@ -302,14 +309,14 @@ function renderMute() {
 $('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
 
 // ---------- state (world y grows downward; height = start y − y)
-const game = { dying: 0, bossAt: 0, bossN: 0, unlocks: [], running: false, paused: false, ended: false, t: 0, hero: null, foes: [], parts: [], pops: [], rings: [], camY: 0, storm: 0, key: null, score: 0, kills: 0, combo: 0, comboT: 0, bestCombo: 0, maxH: 0, shake: 0, freeze: 0, slow: 0, flash: 0, bolt: 0, boltT: 4, hintT: 0 };
+const game = { flank: [], bolts: [], shots: [], flankT: 6, cause: 'storm', dying: 0, bossAt: 0, bossN: 0, unlocks: [], running: false, paused: false, ended: false, t: 0, hero: null, foes: [], parts: [], pops: [], rings: [], camY: 0, storm: 0, key: null, score: 0, kills: 0, combo: 0, comboT: 0, bestCombo: 0, maxH: 0, shake: 0, freeze: 0, slow: 0, flash: 0, bolt: 0, boltT: 4, hintT: 0 };
 const heightM = () => Math.max(0, Math.floor((game.hero ? -game.hero.y : 0) / 10));
 const mult = () => Math.min(10, 1 + Math.floor(game.combo / 3));
-function newHero() { return { x: 210, y: 0, vx: 0, vy: 0, hover: true, regen: 0, charges: 1, dash: 0, dx: 0, dy: 0, trail: [], hurtT: 0, face: 1, squash: 0 }; }
+function newHero() { return { x: 210, y: 0, vx: 0, vy: 0, hover: true, regen: 0, charges: 1, dash: 0, dx: 0, dy: 0, trail: [], hurtT: 0, face: 1, squash: 0, hp: HP_MAX, aim: false }; }
 function startRun() {
   Sound.init(); layout();
   Object.assign(game, { running: true, paused: false, ended: false, t: 0, hero: newHero(), dying: 0, bossAt: 0, bossN: 0, unlocks: [...SUITS.map((k) => ({ ...k, what: 'SUIT' })), ...TRAILS.map((k) => ({ ...k, what: 'TRAIL' }))].filter((k) => k.need > profile.best).sort((a, b) => a.need - b.need), foes: [], parts: [], pops: [], rings: [], camY: -L.H / L.s * 0.6, storm: 520, key: { x: L.PW / 2, y: -60 }, score: 0, kills: 0, combo: 0, comboT: 0, bestCombo: 0, maxH: 0, shake: 0, freeze: 0, slow: 0, flash: 0, bolt: 0, boltT: 4, hintT: 4 });
-  game.hero.x = L.PW / 2;
+  game.hero.x = L.PW / 2; game.flank = []; game.bolts = []; game.shots = []; game.flankT = 6; game.bubbleT = 0; game.cause = 'storm';
   spawnUpTo(game.camY - 600);
   ['screenStart', 'screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; });
   $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade'); updateHud();
@@ -325,16 +332,17 @@ function endRun() {
   const next = [...SUITS.map((k) => ({ ...k, w: 'suit' })), ...TRAILS.map((k) => ({ ...k, w: 'trail' }))].filter((k) => k.need > Math.max(old, sc)).sort((a, b) => a.need - b.need)[0];
   $('overUnlock').textContent = fresh.length ? `Unlocked: ${fresh.join(' + ')}! You are wearing it now.` : next ? `Next: ${next.name} ${next.w} at ${fmt(next.need)} points` : 'Every suit and trail unlocked. Respect.';
   profile.best = Math.max(profile.best, sc); profile.bestHeight = Math.max(profile.bestHeight, h); profile.runs++; saveProfile();
-  $('overEyebrow').textContent = isBest && sc > 0 ? 'New best score!' : 'The storm got you';
+  $('overEyebrow').textContent = isBest && sc > 0 ? 'New best score!' : game.cause === 'hp' ? 'Shot down' : 'The storm got you';
   $('overTitle').textContent = fmt(sc);
   $('overHeight').textContent = `${fmt(h)} m`; $('overKills').textContent = game.kills; $('overCombo').textContent = `×${game.bestCombo}`; $('overBest').textContent = fmt(profile.best);
-  $('overTip').textContent = game.kills < 5 ? 'Aim for the drones above you: each smash gives your dash back.' : game.bestCombo < 10 ? 'Chain smashes fast: every 3 in a row raise the multiplier.' : 'Gold drones give two dashes. Never touch the red mines.';
+  $('overTip').textContent = game.cause === 'hp' ? 'Dash into a crosshair bubble, then tap a flanker: one shot kills it and heals you.' : game.kills < 5 ? 'Aim for the drones above you: each smash gives your dash back.' : game.bestCombo < 10 ? 'Chain smashes fast: every 3 in a row raise the multiplier.' : 'Gold drones give two dashes. Never touch the red mines.';
   $('hud').hidden = true; $('hint').hidden = true;
   $('screenOver').hidden = false;
   lbAfterGame(sc, h);
 }
 function pause(on) { if (!game.running) return; game.paused = on; $('screenPause').hidden = !on; if (on) Sound.stopBeat(); else if (!game.hero.hover) Sound.startBeat(); }
-function updateHud() { $('score').textContent = fmt(game.score); $('height').textContent = fmt(heightM()); $('bestHud').textContent = fmt(profile.best); }
+function updateHud() { $('score').textContent = fmt(game.score); $('height').textContent = fmt(heightM()); $('bestHud').textContent = fmt(profile.best); if (game.hero) $('hpBar').style.width = `${Math.max(0, game.hero.hp) / HP_MAX * 100}%`; }
+function heal(n, why) { const h = game.hero; if (!h || h.hp >= HP_MAX) return; h.hp = Math.min(HP_MAX, h.hp + n); pop(`+${n} HP${why ? ' · ' + why : ''}`, h.x, h.y - 70, '#8aff6a', 0.9, 0.9); updateHud(); }
 
 // ---------- spawning: a chain of reachable "key" drones guarantees a way up; mines and extras make it interesting
 function spawnUpTo(top) {
@@ -350,6 +358,7 @@ function spawnUpTo(top) {
     if (lvl > 0.22 && Math.random() < 0.1 + 0.2 * lvl) { const tx = Math.random() < 0.5 ? rnd(40, 120) : rnd(L.PW - 120, L.PW - 40), ty = y - rnd(20, 100); if (Math.hypot(tx - x, ty - y) > 110) addFoe('turret', tx, ty, { drift: 6 }); }
     // laser drones sit off the path and sweep a beam; dashing passes through it, smashing them ends it
     if (lvl > 0.12 && Math.random() < 0.07 + 0.16 * lvl) { const lx = Math.random() < 0.5 ? rnd(50, 140) : rnd(L.PW - 140, L.PW - 50), ly = y - rnd(40, 120); if (Math.hypot(lx - x, ly - y) > 120 && !game.foes.some((o) => o.kind === 'laser' && Math.abs(o.y - ly) < 380)) addFoe('laser', lx, ly, { drift: rnd(8, 20) }); }
+    if (lvl > 0.1 && Math.random() < 0.1 + 0.12 * lvl + (game.flank && game.flank.length ? 0.12 : 0)) { const bx = rnd(50, L.PW - 50), by = y - rnd(30, 110); if (Math.hypot(bx - x, by - y) > 90) addFoe('bubble', bx, by, { drift: rnd(8, 20) }); }
     if (Math.floor(h / 500) > Math.floor(game.bossAt / 500)) { game.bossAt = h; spawnBoss(L.PW / 2, y - 260); game.key = { x: L.PW / 2, y: y - 420 }; continue; }
     // extras: zippers to chase for points, mines to dodge (never on the line between key drones)
     if (Math.random() < 0.18 + 0.2 * lvl) addFoe('zipper', rnd(40, L.PW - 40), y - rnd(40, 120), { vx: (Math.random() < 0.5 ? -1 : 1) * rnd(90, 150 + 120 * lvl) });
@@ -383,6 +392,11 @@ function segDist(px, py, ax, ay, bx, by) { const dx = bx - ax, dy = by - ay, l2 
 function tapAt(sx, sy) {
   if (!game.running || game.paused) return;
   const h = game.hero, wx = (sx - L.ox) / L.s, wy = game.camY + sy / L.s;
+  if (h.aim) {   // the bubble's one shot: fires where you tap, kills anything it touches
+    const a = Math.atan2(wy - h.y, wx - h.x); h.aim = false; game.slow = 0;
+    game.shots.push({ x: h.x, y: h.y, vx: Math.cos(a) * SHOT_V, vy: Math.sin(a) * SHOT_V, life: 0.7, trail: [] });
+    Sound.zap(); game.shake = Math.min(18, game.shake + 8); game.flash = 0.12; return;
+  }
   if (h.charges <= 0 || h.dash > 0) { if (h.charges <= 0) { Sound.empty(); pop('no dash', h.x, h.y - 40, '#c7b8e8', 0.7); } return; }
   let dx = wx - h.x, dy = wy - h.y; const d = Math.hypot(dx, dy) || 1, len = Math.min(DASH_MAX, d);
   dx /= d; dy /= d;
@@ -400,6 +414,7 @@ function smash(f) {
   h.vy = Math.min(h.vy, -320); h.dash = Math.min(h.dash, 0.02);
   game.freeze = 0.05; game.shake = Math.min(18, game.shake + 6 + m * 0.6); game.flash = 0.08;
   f.kind === 'gold' ? Sound.gold() : Sound.smash(game.combo);
+  if (f.kind === 'gold') heal(10); else if (game.combo % 10 === 0) heal(10, `COMBO ${game.combo}`);
   game.rings.push({ x: f.x, y: f.y, r: f.r, max: f.r * 3.2, life: 0.35, c: K.col });
   for (let i = 0; i < 16; i++) { const a = rnd(0, Math.PI * 2), v = rnd(120, 420); game.parts.push({ x: f.x, y: f.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.35, 0.7), max: 0.7, c: i % 3 ? K.col : '#ffffff', r: rnd(2.5, 5.5), g: 500 }); }
   if (f.kind === 'splitter') for (const dir of [-1, 1]) addFoe('mini', f.x, f.y, { vx: dir * 260, vy: -80 });
@@ -414,10 +429,12 @@ function bounce(f, why) {
   game.shake = Math.min(18, game.shake + 8); Sound.clank(); pop(why, f.x, f.y - f.r - 14, '#c7b8e8', 0.8);
   game.rings.push({ x: h.x, y: h.y, r: 10, max: 50, life: 0.25, c: '#ffffff' });
 }
-function hurt(f) { if (game.hero.hurtT > 0) return; f.dead = true; hurtAt(f.x, f.y); }
-function hurtAt(fx, fy, why) {
+function hurt(f) { if (game.hero.hurtT > 0) return; f.dead = true; hurtAt(f.x, f.y, '', f.kind === 'mine' ? DMG.mine : DMG.orb); }
+function hurtAt(fx, fy, why, dmg = DMG.zap) {
   const h = game.hero, f = { x: fx, y: fy };
-  if (h.hurtT > 0) return;
+  if (h.hurtT > 0 || game.dying) return;
+  h.hp -= dmg; updateHud(); pop(`-${dmg}`, h.x + 30, h.y - 30, '#ff3b5c', 0.7, 0.9);
+  if (h.hp <= 0) { game.cause = 'hp'; die('SHOT DOWN!'); return; }
   if (why) pop(why, h.x, h.y - 80, '#ff2a6a', 0.9, 1.2);
   h.hurtT = 0.8; h.dash = 0; h.charges = 0; h.regen = 0.35; h.vy = 180; h.vx *= 0.3;
   if (game.combo >= 3) pop('combo lost', h.x, h.y - 50, '#ff3b5c', 1);
@@ -425,14 +442,76 @@ function hurtAt(fx, fy, why) {
   game.rings.push({ x: f.x, y: f.y, r: 10, max: 90, life: 0.4, c: '#ff3b5c' });
   for (let i = 0; i < 20; i++) { const a = rnd(0, Math.PI * 2), v = rnd(150, 450); game.parts.push({ x: f.x, y: f.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, c: i % 2 ? '#ff3b5c' : '#ffb03b', r: rnd(3, 6), g: 400 }); }
 }
+function popBubble(f) {
+  const h = game.hero; f.dead = true; h.aim = true; h.charges = Math.max(h.charges, 1); h.regen = 0;
+  game.slow = 1.2; Sound.slowmo(); game.rings.push({ x: f.x, y: f.y, r: f.r, max: f.r * 4, life: 0.4, c: '#7fe3ff' });
+  pop('AIM! TAP TO FIRE', L.PW / 2, h.y - 90, '#7fe3ff', 1.4, 1.1);
+}
+// flankers: armoured pods on the screen edges; they track you with a red line, then fire a bolt
+function updateFlank(dt, h) {
+  const lvl = level(), viewH = L.H / L.s, want = lvl < 0.12 || game.hero.hover ? 0 : lvl < 0.45 ? 1 : 2;
+  game.flankT -= dt;
+  if (game.flank.length < want && game.flankT <= 0) {
+    const side = game.flank.length && game.flank[0].side === -1 ? 1 : game.flank.length ? -1 : (Math.random() < 0.5 ? -1 : 1);
+    game.flank.push({ side, yf: rnd(0.25, 0.55), slide: 0, aimT: 0, fireT: 2.2, r: 30, t: 0, x: 0, y: 0 });
+    pop(side < 0 ? '◀ FLANKER' : 'FLANKER ▶', side < 0 ? 90 : L.PW - 90, game.camY + viewH * 0.3, '#ff3b5c', 1.2, 1); Sound.boss();
+    game.flankT = 9 - 4 * lvl;
+  }
+  for (const fl of game.flank) {
+    fl.t += dt; fl.slide = Math.min(1, fl.slide + dt * 1.5); fl.yf = clamp(fl.yf + Math.sin(fl.t * 0.7) * 0.04 * dt, 0.18, 0.62);
+    fl.x = fl.side < 0 ? -30 + 52 * fl.slide : L.PW + 30 - 52 * fl.slide; fl.y = game.camY + viewH * fl.yf;
+    if (game.dying) continue;
+    if (fl.aimT > 0) {
+      fl.aimT -= dt; fl.aimA = Math.atan2(h.y - fl.y, h.x - fl.x);
+      if (fl.aimT <= 0) { game.bolts.push({ x: fl.x + Math.cos(fl.aimA) * 30, y: fl.y + Math.sin(fl.aimA) * 30, vx: Math.cos(fl.aimA) * BOLT_V, vy: Math.sin(fl.aimA) * BOLT_V, life: 1.4 }); Sound.shoot(); fl.fireT = 3.2 - 1.4 * lvl; }
+    } else { fl.fireT -= dt; if (fl.fireT <= 0 && fl.slide >= 1) { fl.aimT = 0.8; Sound.charge(); } }
+    // dashing into a flanker just bounces off its armour
+    if (h.dash > 0 && Math.hypot(fl.x - h.x, fl.y - h.y) < 30 + HERO_R) bounce(fl, 'ARMORED · use a bubble');
+  }
+  for (const b of game.bolts) {
+    b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+    if (Math.hypot(b.x - h.x, b.y - h.y) < HERO_R * 0.8 + 7) { b.life = 0; hurtAt(b.x, b.y, 'SHOT!', DMG.bolt); }
+  }
+  game.bolts = game.bolts.filter((b) => b.life > 0);
+  for (const sh of game.shots) {
+    const ox = sh.x, oy = sh.y; sh.x += sh.vx * dt; sh.y += sh.vy * dt; sh.life -= dt; sh.trail.push([sh.x, sh.y]); if (sh.trail.length > 8) sh.trail.shift();
+    for (const fl of game.flank) if (!fl.dead && segDist(fl.x, fl.y, ox, oy, sh.x, sh.y) < 34) {
+      fl.dead = true; const pts = 150 * mult(); game.score += pts; game.kills++; heal(25, 'FLANKER DOWN');
+      pop(`FLANKER DOWN! +${pts}`, clamp(fl.x, 120, L.PW - 120), fl.y - 40, '#ffd23f', 1.4, 1.4); Sound.gold(); game.shake = 24; game.freeze = 0.1; game.flash = 0.25;
+      game.rings.push({ x: fl.x, y: fl.y, r: 20, max: 140, life: 0.5, c: '#ff3b5c' });
+      for (let i = 0; i < 40; i++) { const a = rnd(0, Math.PI * 2), v = rnd(150, 650); game.parts.push({ x: fl.x, y: fl.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.4, 0.9), max: 0.9, c: ['#ff3b5c', '#ffd23f', '#ffffff'][i % 3], r: rnd(3, 6), g: 300 }); }
+      game.flankT = Math.max(game.flankT, 6 - 3 * level());
+    }
+    for (const f of game.foes) if (!f.dead && f.kind !== 'boss' && f.kind !== 'bubble' && segDist(f.x, f.y, ox, oy, sh.x, sh.y) < f.r + 6) { f.dead = true; game.score += (KINDS[f.kind].pts || 5) * mult(); puff(f.x, f.y, KINDS[f.kind].col); }
+  }
+  game.shots = game.shots.filter((sh) => sh.life > 0);
+  game.flank = game.flank.filter((fl) => !fl.dead);
+}
+function drawFlank() {
+  for (const fl of game.flank) {
+    ctx.save(); ctx.translate(fl.x, fl.y);
+    if (fl.aimT > 0) { ctx.strokeStyle = `rgba(255,40,70,${0.35 + 0.5 * Math.abs(Math.sin(game.t * 20))})`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(fl.aimA) * 900, Math.sin(fl.aimA) * 900); ctx.stroke(); ctx.setLineDash([]); }
+    const a = fl.aimA !== undefined ? fl.aimA : (fl.side < 0 ? 0 : Math.PI);
+    ctx.save(); ctx.rotate(a); ctx.fillStyle = '#2a1030'; ctx.strokeStyle = '#120818'; ctx.lineWidth = 3; ctx.fillRect(10, -7, 34, 14); ctx.strokeRect(10, -7, 34, 14); ctx.restore();
+    const g = ctx.createRadialGradient(-6, -8, 3, 0, 0, 30); g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#8a8aa8'); g.addColorStop(1, '#2a2a40');
+    ctx.fillStyle = g; ctx.strokeStyle = '#120818'; ctx.lineWidth = 4; ctx.beginPath(); for (let i = 0; i < 6; i++) { const k = (i / 6) * Math.PI * 2 + Math.PI / 6; ctx.lineTo(Math.cos(k) * 30, Math.sin(k) * 30); } ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#120818'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = fl.aimT > 0 ? '#ff2a4a' : '#ff8a3b'; ctx.beginPath(); ctx.arc(Math.cos(a) * 4, Math.sin(a) * 4, fl.aimT > 0 ? 8 : 6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  for (const b of game.bolts) { ctx.fillStyle = 'rgba(255,40,70,0.35)'; ctx.beginPath(); ctx.arc(b.x, b.y, 16, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#ff2a4a'; ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI * 2); ctx.fill(); }
+  for (const sh of game.shots) { ctx.strokeStyle = '#7fe3ff'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); sh.trail.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.stroke(); }
+  const h = game.hero;
+  if (h && h.aim && !game.dying) { ctx.strokeStyle = '#7fe3ff'; ctx.lineWidth = 3; const r = 44 + Math.sin(game.t * 10) * 4; ctx.beginPath(); ctx.arc(h.x, h.y, r, 0, Math.PI * 2); ctx.stroke(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + game.t * 2; ctx.beginPath(); ctx.moveTo(h.x + Math.cos(a) * (r - 8), h.y + Math.sin(a) * (r - 8)); ctx.lineTo(h.x + Math.cos(a) * (r + 10), h.y + Math.sin(a) * (r + 10)); ctx.stroke(); } }
+}
 function puff(x, y, c) { for (let i = 0; i < 10; i++) { const a = rnd(0, Math.PI * 2), v = rnd(60, 220); game.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.4, max: 0.4, c, r: rnd(2, 4) }); } }
 function pop(t, x, y, c, life = 0.9, size = 1) { game.pops.push({ t, x: clamp(x, 40 + 30 * size, L.PW - 40 - 30 * size), y, c, life, max: life, size }); }
 
 // ---------- update
-function die() {
+function die(word = 'STORMED!') {
   const h = game.hero; game.dying = 1.1; game.shake = 26; game.flash = 0.35; Sound.over(); Sound.stopBeat();
   for (let i = 0; i < 36; i++) { const a = rnd(0, Math.PI * 2), v = rnd(100, 520); game.parts.push({ x: h.x, y: h.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.6, 1.2), max: 1.2, c: ['#ff7a2f', '#ffffff', '#3ef2ff', '#ff4fa3'][i % 4], r: rnd(3, 7), g: 200 }); }
-  pop('STORMED!', h.x, h.y - 60, '#ff3b5c', 1.2, 1.8);
+  pop(word, h.x, h.y - 60, '#ff3b5c', 1.2, 1.8);
 }
 function update(dtReal) {
   if (!game.running || game.paused) return;
@@ -478,7 +557,7 @@ function update(dtReal) {
       // idle → charge (thin flickering line shows where it starts and which way it sweeps) → fire (sweeps across you)
       f.lt -= dt;
       if (f.lt <= 0) { f.lp = (f.lp + 1) % 3; f.lt = [rnd(1.4, 2.2) - level() * 0.5, 0.9, 1.5][f.lp]; if (f.lp === 1) { f.sd = Math.random() < 0.5 ? -1 : 1; f.beamA = Math.atan2(h.y - f.y, h.x - f.x) - f.sd * 0.8; Sound.charge(); } if (f.lp === 2) Sound.zap(); }
-      if (f.lp === 2) { f.beamA += f.sd * (1.6 / 1.5) * dt; if (beamHits(f, f.beamA, LASER_LEN)) hurtAt(h.x, h.y, 'ZAPPED!'); }
+      if (f.lp === 2) { f.beamA += f.sd * (1.6 / 1.5) * dt; if (beamHits(f, f.beamA, LASER_LEN)) hurtAt(h.x, h.y, 'ZAPPED!', DMG.zap); }
     }
     if (f.kind === 'boss' && onScr) {
       if (!f.announced) { f.announced = true; Sound.boss(); pop(f.name, L.PW / 2, f.y + 205, '#ffffff', 2.4, 1.7); pop(f.tip, L.PW / 2, f.y + 238, '#ffe14a', 2.6, 0.85); game.shake = Math.max(game.shake, 10); }
@@ -493,6 +572,7 @@ function update(dtReal) {
     if (f.kind === 'turret' && f.y > game.camY - 40 && f.y < game.camY + L.H / L.s) { f.fireT -= dt; if (f.fireT <= 0) { f.fireT = rnd(1.8, 2.6) - level() * 0.6; const a = Math.atan2(h.y - f.y, h.x - f.x), v = 150 + 80 * level(); addFoe('orb', f.x + Math.cos(a) * 30, f.y + Math.sin(a) * 30, { vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 4 }); Sound.shoot(); } }
     const hit = h.dash > 0 || game.slow > 0 && h.dash > 0 ? segDist(f.x, f.y, px, py, h.x, h.y) : Math.hypot(f.x - h.x, f.y - h.y);
     if (hit < f.r + HERO_R * 0.85) {
+      if (f.kind === 'bubble') { if (h.dash > 0 || hit < f.r + HERO_R * 0.6) popBubble(f); continue; }
       if (f.kind === 'mine' || (f.kind === 'orb' && h.dash <= 0)) hurt(f);
       else if (h.dash > 0) {
         if (f.kind === 'boss' && game.foes.some((c) => c.kind === 'core' && c.parent === f && !c.dead)) { bounce(f, 'cores first!'); continue; }
@@ -502,6 +582,7 @@ function update(dtReal) {
     }
   }
   game.foes = game.foes.filter((f) => !f.dead && f.y < game.storm + 200);
+  updateFlank(dt, h);
   // combo timer
   if (game.comboT > 0) { game.comboT -= dt; if (game.comboT <= 0 && game.combo >= 3) pop(`×${mult()} chain ended`, h.x, h.y - 50, '#c7b8e8', 0.8); if (game.comboT <= 0) game.combo = 0; }
   // height score, camera, storm
@@ -549,6 +630,12 @@ function drawFoe(f) {
     ctx.lineWidth = 3; ctx.strokeStyle = '#5a0a1a'; ctx.stroke();
     ctx.fillStyle = '#ffd0d8'; ctx.beginPath(); ctx.arc(0, 0, f.r * 0.32, 0, Math.PI * 2); ctx.fill();
     ctx.restore(); ctx.globalAlpha = 1; return;
+  }
+  if (f.kind === 'bubble') {
+    const pr = f.r * (1 + Math.sin(f.t * 4) * 0.06), g = ctx.createRadialGradient(-pr * 0.35, -pr * 0.35, 2, 0, 0, pr); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.4, 'rgba(127,227,255,0.35)'); g.addColorStop(1, 'rgba(127,227,255,0.15)');
+    ctx.fillStyle = g; ctx.strokeStyle = '#7fe3ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, pr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, pr * 0.45, 0, Math.PI * 2); ctx.moveTo(-pr * 0.75, 0); ctx.lineTo(-pr * 0.2, 0); ctx.moveTo(pr * 0.2, 0); ctx.lineTo(pr * 0.75, 0); ctx.moveTo(0, -pr * 0.75); ctx.lineTo(0, -pr * 0.2); ctx.moveTo(0, pr * 0.2); ctx.lineTo(0, pr * 0.75); ctx.stroke();
+    ctx.restore(); return;
   }
   if (f.kind === 'orb') { ctx.fillStyle = 'rgba(255,176,59,0.3)'; ctx.beginPath(); ctx.arc(0, 0, f.r * 2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#ffb03b'; ctx.beginPath(); ctx.arc(0, 0, f.r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff3c0'; ctx.beginPath(); ctx.arc(-3, -3, f.r * 0.4, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
   if (f.kind === 'boss') { const guarded = game.foes.some((c) => c.kind === 'core' && c.parent === f && !c.dead); ctx.strokeStyle = guarded ? 'rgba(255,225,74,0.5)' : 'rgba(255,79,163,0.8)'; ctx.lineWidth = 4; ctx.setLineDash([10, 10]); ctx.beginPath(); ctx.arc(0, 0, 120, game.t, game.t + Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); if (guarded) { ctx.fillStyle = 'rgba(255,225,74,0.18)'; ctx.beginPath(); ctx.arc(0, 0, f.r + 14, 0, Math.PI * 2); ctx.fill(); } }
@@ -663,6 +750,7 @@ function drawFrame() {
   for (const p of game.parts) { ctx.globalAlpha = clamp(p.life / p.max * 1.5, 0, 1); ctx.fillStyle = p.c; if (p.sq) ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); else if (p.star) starPath(ctx, p.x, p.y, p.r * 1.6, p.life * 6); else { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); } }
   ctx.globalAlpha = 1;
   if (!game.dying) drawHero(h);
+  drawFlank();
   // the storm: dark churning clouds with lightning
   const sy = game.storm, viewBottom = game.camY + H / s;
   if (sy < viewBottom + 120) {
@@ -775,7 +863,7 @@ $('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key 
 // the game browser link opens in the same tab on the public site (keeps a home-screen app in one window)
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 // test hook for the screenshot tool (#bot in the address): exposes the state, changes nothing
-if (location.hash === '#bot') window.__game = { game, tapAt, L, KINDS, addFoe, spawnBoss, profile, renderPicks };
+if (location.hash === '#bot') window.__game = { game, tapAt, L, KINDS, addFoe, spawnBoss, profile, renderPicks, popBubble };
 renderMute(); showStart();
 requestAnimationFrame(frame);
 })();
