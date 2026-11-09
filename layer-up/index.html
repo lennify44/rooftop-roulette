@@ -25,9 +25,11 @@ img { max-width: 100%; }
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root {
-  /* Layout: a stack of currency layers on top (the layer map), the active layer's screen below, Layer Up button at the bottom */
-  --night: #0f0b1e; --card: #1d1636; --chalk: #fff7ee; --haze: #b8aed8;
-  --coin: #ffc93c; --gem: #3ef2ff; --volt: #d4ff3b; --pink: #ff4fa3;
+  /* Layout: the layer map on top (one colour per layer), the active layer's upgrade tree below, the income breakdown
+     under the big counter, Layer Up button pinned to the bottom */
+  --night: #0f0b1e; --chalk: #fff7ee; --haze: #c4bce0;
+  --coin: #ffc93c; --gem: #3ef2ff; --volt: #b6ff3b; --lab: #ff4fa3;
+  --acc: var(--coin);
   --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
   --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -35,59 +37,73 @@ img { max-width: 100%; }
 }
 html { background: var(--night); }
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% -10%, #3a1f6a, var(--night) 60%); color: var(--chalk); font-family: var(--font-body); font-size: 15px; -webkit-tap-highlight-color: transparent; }
-#app { max-width: 720px; margin: 0 auto; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 120px max(12px, env(safe-area-inset-left)); }
+body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--font-body); font-size: 15px; -webkit-tap-highlight-color: transparent;
+  background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--acc) 38%, #1a0f3a), var(--night) 62%); transition: background 0.6s; }
+#app { max-width: 760px; margin: 0 auto; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 120px max(12px, env(safe-area-inset-left)); }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-.big { font-family: var(--font-display); font-weight: 900; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
-.rate { font-family: var(--font-mono); font-size: 13px; color: var(--haze); }
-.icon-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--chalk); font-size: 18px; cursor: pointer; }
+.big { font-family: var(--font-display); font-weight: 900; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--acc); text-shadow: 0 0 22px color-mix(in srgb, var(--acc) 50%, transparent); }
+.big.bump { animation: bump 0.25s ease-out; }
+@keyframes bump { 40% { transform: scale(1.12); } }
+.rate { font-family: var(--font-mono); font-size: 13px; color: var(--chalk); margin-top: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.chip { padding: 2px 7px; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: #120c22; background: var(--c); }
+.icon-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.12); color: var(--chalk); font-size: 18px; cursor: pointer; }
 .map { display: flex; gap: 6px; margin: 12px 0; overflow-x: auto; padding-bottom: 4px; }
-.lay { flex: 1 0 96px; min-height: 64px; padding: 6px 8px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.12); background: var(--card); color: var(--chalk); text-align: left; cursor: pointer; font-family: var(--font-body); }
-.lay b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 18px; text-transform: uppercase; }
-.lay small { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
-.lay[aria-pressed="true"] { border-color: var(--acc, var(--coin)); box-shadow: 0 0 18px color-mix(in srgb, var(--acc, var(--coin)) 45%, transparent); }
-.lay.locked { opacity: 0.4; cursor: default; }
-.card { padding: 12px; border-radius: 16px; background: var(--card); margin-bottom: 10px; }
-.card h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-transform: uppercase; }
+.lay { flex: 1 0 100px; min-height: 66px; padding: 6px 8px; border-radius: 14px; border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 18%, #140e28); color: var(--chalk); text-align: left; cursor: pointer; font-family: var(--font-body); }
+.lay b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 19px; text-transform: uppercase; color: var(--c); }
+.lay small { font-family: var(--font-mono); font-size: 11px; }
+.lay[aria-pressed="true"] { background: var(--c); color: #120c22; box-shadow: 0 0 20px color-mix(in srgb, var(--c) 60%, transparent); }
+.lay[aria-pressed="true"] b { color: #120c22; }
+.lay.locked { opacity: 0.35; cursor: default; border-style: dashed; }
+.card { padding: 12px; border-radius: 18px; background: color-mix(in srgb, var(--acc) 10%, #17112e); border: 2px solid color-mix(in srgb, var(--acc) 35%, transparent); margin-bottom: 10px; }
+.card h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-transform: uppercase; color: var(--acc); }
 .card p { margin: 0 0 8px; color: var(--haze); font-size: 13px; }
-.row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.07); }
-.row .nm { font-family: var(--font-display); font-weight: 900; font-size: 19px; text-transform: uppercase; }
-.row .info { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
-.buy { min-width: 112px; min-height: 48px; padding: 4px 10px; border: 0; border-radius: 12px; background: var(--acc, var(--coin)); color: #1b1030; font-family: var(--font-display); font-weight: 900; font-size: 17px; cursor: pointer; }
-.buy small { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
-.buy:disabled { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); cursor: default; }
-.buy.done { background: transparent; color: var(--acc); border: 2px solid var(--acc); }
-.prog { grid-column: 1 / 3; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.35); overflow: hidden; }
-.prog i { display: block; height: 100%; background: var(--acc, var(--coin)); }
+.tree { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 10px; padding: 6px 0; }
+.tree svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.node { position: relative; z-index: 1; min-height: 96px; padding: 7px 8px; border-radius: 14px; border: 2px solid var(--c); background: #140e28; color: var(--chalk); text-align: left; cursor: pointer; display: grid; align-content: start; gap: 2px; font-family: var(--font-body); }
+.node b { font-family: var(--font-display); font-weight: 900; font-size: 16px; line-height: 1; text-transform: uppercase; color: var(--c); }
+.node span { font-size: 12px; line-height: 1.25; color: var(--haze); }
+.node em { font-style: normal; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--chalk); }
+.node .cost { margin-top: 2px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--c); }
+.node.can { box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent); animation: glow 1.2s ease-in-out infinite alternate; }
+@keyframes glow { to { box-shadow: 0 0 24px color-mix(in srgb, var(--c) 75%, transparent); } }
+.node.own { background: var(--c); color: #120c22; }
+.node.own b, .node.own span, .node.own em, .node.own .cost { color: #120c22; }
+.node.locked { opacity: 0.35; border-style: dashed; cursor: default; }
+.node .x2 { position: absolute; top: 4px; right: 6px; font-size: 10px; padding: 0 4px; border-radius: 5px; background: var(--x); color: #120c22; font-family: var(--font-mono); font-weight: 600; font-style: normal; }
+.node.got { animation: got 0.5s ease-out; }
+@keyframes got { 30% { transform: scale(1.12) rotate(-2deg); } }
 .grid { display: grid; gap: 6px; margin: 8px 0; }
-.tile { aspect-ratio: 1; border-radius: 12px; border: 2px dashed rgba(255,255,255,0.18); background: rgba(0,0,0,0.25); color: var(--chalk); font-size: 26px; cursor: pointer; position: relative; display: grid; place-items: center; }
-.tile.full { border-style: solid; border-color: var(--gem); background: rgba(62,242,255,0.12); }
+.tile { aspect-ratio: 1; border-radius: 12px; border: 2px dashed color-mix(in srgb, var(--gem) 50%, transparent); background: rgba(0,0,0,0.25); color: var(--chalk); font-size: 26px; cursor: pointer; position: relative; display: grid; place-items: center; }
+.tile.full { border-style: solid; border-color: var(--gem); background: color-mix(in srgb, var(--gem) 22%, transparent); }
 .tile small { position: absolute; bottom: 2px; right: 5px; font-family: var(--font-mono); font-size: 10px; color: var(--gem); }
 .tools { display: flex; gap: 6px; flex-wrap: wrap; }
-.tool { min-height: 44px; padding: 4px 10px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); background: transparent; color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 15px; cursor: pointer; }
-.tool[aria-pressed="true"] { background: var(--gem); color: #102030; border-color: var(--gem); }
-.tool:disabled { opacity: 0.35; }
-.cap { height: 34px; border-radius: 17px; border: 2px solid var(--volt); background: rgba(0,0,0,0.4); overflow: hidden; position: relative; margin: 8px 0; }
+.tool { min-height: 44px; padding: 4px 10px; border-radius: 12px; border: 2px solid var(--gem); background: transparent; color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 15px; cursor: pointer; }
+.tool[aria-pressed="true"] { background: var(--gem); color: #102030; }
+.tool:disabled { opacity: 0.3; }
+.cap { height: 36px; border-radius: 18px; border: 2px solid var(--volt); background: rgba(0,0,0,0.4); overflow: hidden; position: relative; margin: 8px 0; }
 .cap i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #6aff3b, var(--volt), #fff); }
 .cap span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: #fff; text-shadow: 0 1px 3px #000; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wide { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--acc); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 22px; cursor: pointer; }
+.wide:disabled { opacity: 0.35; cursor: default; }
 .burst { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 14px; border-radius: 999px; background: var(--volt); color: #1b2a00; font-family: var(--font-display); font-weight: 900; font-size: 18px; }
 .upbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: linear-gradient(0deg, var(--night) 70%, transparent); display: flex; justify-content: center; }
-.upbtn { width: 100%; max-width: 696px; min-height: 64px; border: 0; border-radius: 18px; background: linear-gradient(90deg, var(--pink), #ff9a3b); color: #1b1030; font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 26px rgba(255,79,163,0.5); }
+.upbtn { width: 100%; max-width: 736px; min-height: 64px; border: 0; border-radius: 18px; background: linear-gradient(90deg, var(--acc), var(--nx, var(--lab))); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 26px color-mix(in srgb, var(--nx, var(--lab)) 55%, transparent); }
 .upbtn small { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
-.upbtn:disabled { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.45); box-shadow: none; cursor: default; }
-.toast { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 8; width: max-content; max-width: 90%; padding: 10px 18px; border-radius: 14px; background: rgba(15,11,30,0.92); border: 2px solid var(--coin); text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: tin 0.25s ease-out; pointer-events: none; }
+.upbtn:disabled { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); box-shadow: none; cursor: default; }
+.toast { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 8; width: max-content; max-width: 90%; padding: 10px 18px; border-radius: 14px; background: rgba(15,11,30,0.94); border: 3px solid var(--acc); text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: tin 0.25s ease-out; pointer-events: none; }
 .toast small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 13px; text-transform: none; color: var(--haze); }
 @keyframes tin { from { transform: translateX(-50%) scale(0.6); opacity: 0; } }
-.flash { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; background: radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,79,163,0.6) 40%, rgba(15,11,30,0.95) 75%); animation: fl 1.6s ease-out forwards; pointer-events: none; }
-.flash b { font-family: var(--font-display); font-weight: 900; font-size: clamp(48px, 14vw, 110px); color: #1b1030; text-transform: uppercase; animation: zoom 1.6s ease-out forwards; text-align: center; line-height: 0.9; }
+.flash { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; animation: fl 1.6s ease-out forwards; pointer-events: none; }
+.flash b { font-family: var(--font-display); font-weight: 900; font-size: clamp(48px, 14vw, 110px); color: #120c22; text-transform: uppercase; animation: zoom 1.6s ease-out forwards; text-align: center; line-height: 0.9; }
 @keyframes fl { 70% { opacity: 1; } to { opacity: 0; } }
 @keyframes zoom { from { transform: scale(0.3); } 30% { transform: scale(1.1); } to { transform: scale(1.4); } }
-.pop { position: fixed; z-index: 7; pointer-events: none; font-family: var(--font-display); font-weight: 900; font-size: 22px; animation: rise 0.9s ease-out forwards; text-shadow: 0 2px 0 rgba(0,0,0,0.5); }
-@keyframes rise { to { transform: translateY(-50px); opacity: 0; } }
+.fly { position: fixed; z-index: 7; pointer-events: none; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-shadow: 0 2px 0 rgba(0,0,0,0.6); transition: transform 0.7s cubic-bezier(.3,.7,.2,1), opacity 0.7s; }
+.spark { position: fixed; z-index: 7; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; transition: transform 0.6s ease-out, opacity 0.6s; }
 .foot { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
 .link-btn { min-height: 44px; border: 0; background: none; color: var(--chalk); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; }
-button:focus-visible, .lay:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+@media (max-width: 420px) { .tree { gap: 18px 6px; } .node { min-height: 92px; padding: 6px; } .node b { font-size: 14px; } .node span { font-size: 11px; } }
 </style>
 <!-- /source:head -->
 </head>
@@ -98,6 +114,7 @@ button:focus-visible, .lay:focus-visible { outline: 3px solid #fff; outline-offs
     <div><div class="big" id="main">🪙 0</div><div class="rate" id="rate">0 / s</div></div>
     <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on">🔊</button>
   </div>
+  <div class="chips" id="chips"></div>
   <div class="map" id="map" aria-label="Layers"></div>
   <div id="screen"></div>
   <div class="foot"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
@@ -110,223 +127,281 @@ button:focus-visible, .lay:focus-visible { outline: 3px solid #fff; outline-offs
 const $ = (id) => document.getElementById(id);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } } };
 const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
-function fmt(n) { if (!isFinite(n)) return '∞'; if (n < 1000) return n < 10 ? n.toFixed(n % 1 ? 1 : 0) : String(Math.floor(n)); const e = Math.floor(Math.log10(n) / 3); if (e < SUF.length) { const v = n / Math.pow(1000, e); return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + SUF[e]; } return n.toExponential(2).replace('+', ''); }
+function fmt(n) { if (!isFinite(n)) return '∞'; if (n < 1000) return n < 10 ? (Math.round(n * 100) / 100).toString() : String(Math.floor(n)); const e = Math.floor(Math.log10(n) / 3); if (e < SUF.length) { const v = n / Math.pow(1000, e); return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + SUF[e]; } return n.toExponential(2).replace('+', ''); }
+const fx = (m) => `×${fmt(m)}`;
+const log10 = (n) => Math.log10(Math.max(1, n));
 
-// ---------- the layers (step 1: coins, gems, volts; more come later, then endless generated ones)
+// ---------- layers: each has its colour, its currency, its upgrade tree and its own mechanic
 const LAYERS = [
-  { id: 'coin', name: 'Coins', icon: '🪙', acc: '#ffc93c', what: 'Machines' },
-  { id: 'gem', name: 'Gems', icon: '💎', acc: '#3ef2ff', what: 'The Mine' },
-  { id: 'volt', name: 'Volts', icon: '⚡', acc: '#d4ff3b', what: 'The Capacitor' },
-  { id: 'next', name: '???', icon: '🧪', acc: '#ff4fa3', what: 'coming soon' },
+  { id: 'coin', name: 'Coins', icon: '🪙', c: '#ffc93c', what: 'Base pay + the coin tree' },
+  { id: 'gem', name: 'Gems', icon: '💎', c: '#3ef2ff', what: 'The gem tree + the Mine' },
+  { id: 'volt', name: 'Volts', icon: '⚡', c: '#b6ff3b', what: 'The volt tree + the Capacitor' },
+  { id: 'lab', name: '???', icon: '🧪', c: '#ff4fa3', what: 'coming soon' },
 ];
-// layer 1: six tiers of machines; tier 1 makes coins, every higher tier builds the tier below it
-const TIERS = [
-  { n: 'Hand crank', c: 10, g: 1.12, rate: 1 }, { n: 'Steam press', c: 200, g: 1.18, rate: 0.15 }, { n: 'Assembly line', c: 1e4, g: 1.25, rate: 0.08 },
-  { n: 'Robot works', c: 1e6, g: 1.3, rate: 0.06 }, { n: 'Mega factory', c: 1e9, g: 1.35, rate: 0.05 }, { n: 'Orbital forge', c: 1e13, g: 1.4, rate: 0.04 },
-];
-// layer 2: gem upgrades (automation + the mine) and mine tiles
-const GEM_UPS = [
-  { id: 'start', name: 'Head start', fx: 'Every run starts with 500 coins', c: 1 },
-  { id: 'auto1', name: 'Crank robot', fx: 'Auto-buys hand cranks', c: 1 },
-  { id: 'x2', name: 'Gem polish', fx: 'Coins ×3', c: 2 },
-  { id: 'auto2', name: 'Press robot', fx: 'Auto-buys steam presses', c: 3 },
-  { id: 'amp', name: 'Amplifiers', fx: 'Unlocks amplifier tiles in the mine', c: 3 },
-  { id: 'grid4', name: 'Wider mine', fx: 'The mine grows to 4×4', c: 6 },
-  { id: 'auto3', name: 'Line robot', fx: 'Auto-buys assembly lines and robot works', c: 10 },
-  { id: 'crystal', name: 'Crystals', fx: 'Unlocks crystal tiles: ×2 to every drill in their row and column', c: 15 },
-  { id: 'grid5', name: 'Deep mine', fx: 'The mine grows to 5×5', c: 30 },
-  { id: 'auto5', name: 'Factory robot', fx: 'Auto-buys mega factories and orbital forges', c: 50 },
-];
-const TILES = { drill: { icon: '⛏️', c: 1, name: 'Drill' }, amp: { icon: '📡', c: 2, name: 'Amplifier' }, crystal: { icon: '🔮', c: 5, name: 'Crystal' } };
-// layer 3: volt upgrades (keep things, automate the mine, a bigger capacitor)
-const VOLT_UPS = [
-  { id: 'keep', name: 'Robot memory', fx: 'Keep crank and press robots when you layer up to gems', c: 1 },
-  { id: 'rate', name: 'Faster charge', fx: 'The capacitor charges twice as fast', c: 1 },
-  { id: 'gems5', name: 'Gem stash', fx: 'Every gem run starts with 5 gems', c: 2 },
-  { id: 'cap', name: 'Bigger capacitor', fx: 'A burst lasts twice as long', c: 3 },
-  { id: 'automine', name: 'Mine robot', fx: 'Places drills on empty tiles by itself', c: 5 },
-  { id: 'keepall', name: 'Full memory', fx: 'Keep every gem upgrade when you layer up to gems', c: 12 },
-];
+const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', ore: '#9ad8ff' };
 
 // ---------- save
-const SAVE = 'layer-up-save';
-const fresh = () => ({ coins: 10, run: 0, life: 0, m: [1, 0, 0, 0, 0, 0], b: [1, 0, 0, 0, 0, 0], gems: 0, gemRun: 0, gemUps: {}, grid: Array(25).fill(null), ore: 0, volts: 0, voltUps: {}, charge: 0, burst: 0, top: 0, tab: 0, ups: [0, 0, 0], last: Date.now(), muted: false, name: '', deviceId: '', tool: 'drill' });
+const SAVE = 'layer-up-save-v2';
+const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, cu: {}, gems: 0, gemsLife: 0, gemsRun: 0, gu: {}, grid: Array(25).fill(null), ore: 0, volts: 0, voltsLife: 0, vu: {}, charge: 0, burst: 0, top: 0, tab: 0, resets: [0, 0, 0], last: Date.now(), muted: false, tool: 'drill' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 const save = () => { S.last = Date.now(); store.set(SAVE, S); };
-const gu = (id) => !!S.gemUps[id], vu = (id) => !!S.voltUps[id];
+const has = (id) => !!(S.cu[id] || S.gu[id] || S.vu[id]);
+const count = (o) => Object.keys(o).length;
 
-// ---------- numbers
-const side = () => (gu('grid5') ? 5 : gu('grid4') ? 4 : 3);
+// ---------- the upgrade trees: one-time upgrades, mostly multipliers, many of them depend on other layers
+// r/c place a node in its tree; req = nodes that must be owned first; x = the other layer this node is tied to
+const TREE = {
+  coin: [
+    { id: 'c1', r: 0, c: 1, name: 'Piggy bank', cost: 10, req: [], d: 'Coins ×2', m: () => 2 },
+    { id: 'c2', r: 1, c: 0, name: 'Side hustle', cost: 40, req: ['c1'], d: 'Base pay +2', base: 2 },
+    { id: 'c3', r: 1, c: 2, name: 'Compound', cost: 80, req: ['c1'], d: '×0.25 more per coin upgrade owned', m: () => 1 + 0.25 * count(S.cu) },
+    { id: 'c4', r: 2, c: 0, name: 'Interest', cost: 350, req: ['c2'], d: 'Grows with the coins you hold', m: () => 1 + log10(S.coins + 1) / 2 },
+    { id: 'c5', r: 2, c: 1, name: 'Lucky penny', cost: 900, req: ['c2', 'c3'], d: 'Coins ×3', m: () => 3 },
+    { id: 'c6', r: 2, c: 2, name: 'Momentum', cost: 600, req: ['c3'], d: 'Grows with the time of this run', m: () => 1 + Math.sqrt(S.runT / 60) },
+    { id: 'c7', r: 3, c: 0, name: 'Snowball', cost: 6e3, req: ['c4'], d: 'Interest counts twice', m: () => 1 + log10(S.coins + 1) / 2 },
+    { id: 'c8', r: 3, c: 1, name: 'Gem sense', cost: 2e4, req: ['c5'], d: 'Gems from a layer up ×2', x: 'gem', gm: () => 2 },
+    { id: 'c9', r: 3, c: 2, name: 'Tycoon', cost: 1.2e4, req: ['c6'], d: 'Base pay +1 per coin upgrade', base: () => count(S.cu) },
+    { id: 'c10', r: 4, c: 0, name: 'Ore lust', cost: 2000000.0, req: ['c7'], d: 'Ore ×(1 + coin upgrades / 8)', x: 'gem', om: () => 1 + count(S.cu) / 8, need: 1 },
+    { id: 'c11', r: 4, c: 1, name: 'Golden touch', cost: 1000000.0, req: ['c8'], d: 'Coins ×5', m: () => 5 },
+    { id: 'c12', r: 4, c: 2, name: 'Gem synergy', cost: 3000000.0, req: ['c9'], d: 'Coins ×(1 + gem upgrades owned)', x: 'gem', m: () => 1 + count(S.gu), need: 1 },
+    { id: 'c13', r: 5, c: 0, name: 'Vault', cost: 100000000.0, req: ['c10'], d: 'Grows with every coin you ever earned', m: () => 1 + log10(S.life + 1), need: 1 },
+    { id: 'c14', r: 5, c: 1, name: 'Overtime', cost: 1000000000.0, req: ['c11'], d: 'The capacitor charges ×1.5', x: 'volt', cm: () => 1.5, need: 2 },
+    { id: 'c15', r: 5, c: 2, name: 'Coin storm', cost: 5000000000.0, req: ['c12'], d: 'Coins ×10', m: () => 10, need: 1 },
+  ],
+  gem: [
+    { id: 'g1', r: 0, c: 1, name: 'Gem glow', cost: 1, req: [], d: 'Coins ×(gems ever + 1)^0.4', x: 'coin', m: () => Math.pow(S.gemsLife + 1, 0.4) },
+    { id: 'g2', r: 1, c: 0, name: 'Coin memory', cost: 2, req: ['g1'], d: 'Keep Piggy bank on a layer up', x: 'coin' },
+    { id: 'g3', r: 1, c: 1, name: 'The Mine', cost: 5, req: ['g1'], d: 'Opens a 3×3 mine: drills dig ore, ore multiplies coins' },
+    { id: 'g4', r: 1, c: 2, name: 'Polish', cost: 5, req: ['g1'], d: 'Coins ×3', x: 'coin', m: () => 3 },
+    { id: 'g5', r: 2, c: 0, name: 'Full memory', cost: 300, req: ['g2'], d: 'Keep every coin upgrade on a layer up', x: 'coin' },
+    { id: 'g6', r: 2, c: 1, name: 'Amplifiers', cost: 20, req: ['g3'], d: 'Amplifier tiles: +1 power to the drills next to them' },
+    { id: 'g7', r: 2, c: 2, name: 'Prism', cost: 40, req: ['g4'], d: 'Gems from a layer up ×(1 + coin upgrades / 5)', gm: () => 1 + count(S.cu) / 5 },
+    { id: 'g8', r: 3, c: 0, name: 'Wider mine', cost: 3000, req: ['g5', 'g6'], d: 'The mine grows to 4×4' },
+    { id: 'g9', r: 3, c: 1, name: 'Crystals', cost: 10000, req: ['g6'], d: 'Crystal tiles: ×2 to every drill in their row and column' },
+    { id: 'g10', r: 3, c: 2, name: 'Facets', cost: 6000, req: ['g7'], d: 'Ore ×(1 + gem upgrades owned / 3)', om: () => 1 + count(S.gu) / 3 },
+    { id: 'g11', r: 4, c: 0, name: 'Deep mine', cost: 200000, req: ['g8'], d: 'The mine grows to 5×5' },
+    { id: 'g12', r: 4, c: 1, name: 'Gem storm', cost: 500000, req: ['g9'], d: 'Gems from a layer up ×(1 + volts ever)', x: 'volt', gm: () => 1 + S.voltsLife, need: 2 },
+    { id: 'g13', r: 4, c: 2, name: 'Mother lode', cost: 100000, req: ['g10'], d: 'Coins ×(1 + log of ore)²', x: 'coin', m: () => Math.pow(1 + log10(S.ore + 1), 2) },
+  ],
+  volt: [
+    { id: 'v1', r: 0, c: 1, name: 'Spark', cost: 1, req: [], d: 'Coins ×(1 + volts ever)²', x: 'coin', m: () => Math.pow(1 + S.voltsLife, 2) },
+    { id: 'v2', r: 1, c: 0, name: 'Gem memory', cost: 2, req: ['v1'], d: 'Keep Gem glow, Coin memory and The Mine on a layer up to volts', x: 'gem' },
+    { id: 'v3', r: 1, c: 2, name: 'Fast charge', cost: 3, req: ['v1'], d: 'The capacitor charges ×2', cm: () => 2 },
+    { id: 'v4', r: 2, c: 0, name: 'Ore surge', cost: 5, req: ['v2'], d: 'Ore ×(1 + volts ever)', x: 'gem', om: () => 1 + S.voltsLife },
+    { id: 'v5', r: 2, c: 1, name: 'Long burst', cost: 8, req: ['v1'], d: 'A burst lasts twice as long' },
+    { id: 'v6', r: 2, c: 2, name: 'Mine robot', cost: 10, req: ['v3'], d: 'Places drills on empty tiles by itself', x: 'gem' },
+    { id: 'v7', r: 3, c: 0, name: 'Full gem memory', cost: 40, req: ['v4'], d: 'Keep every gem upgrade on a layer up to volts', x: 'gem' },
+    { id: 'v8', r: 3, c: 1, name: 'Overload', cost: 30, req: ['v5'], d: 'Bursts are ×50 instead of ×25' },
+    { id: 'v9', r: 3, c: 2, name: 'Dynamo', cost: 60, req: ['v6'], d: 'Volts from a layer up ×(1 + gem upgrades / 4)', x: 'gem', vm: () => 1 + count(S.gu) / 4 },
+  ],
+};
+const ALL = [...TREE.coin.map((u) => ({ ...u, L: 'coin' })), ...TREE.gem.map((u) => ({ ...u, L: 'gem' })), ...TREE.volt.map((u) => ({ ...u, L: 'volt' }))];
+const bag = (L) => (L === 'coin' ? S.cu : L === 'gem' ? S.gu : S.vu);
+const wallet = (L) => (L === 'coin' ? 'coins' : L === 'gem' ? 'gems' : 'volts');
+const owned = (u) => !!bag(u.L)[u.id];
+const reqOk = (u) => u.req.every((r) => has(r)) && (!u.need || S.top >= u.need);
+
+// ---------- the numbers: every multiplier is listed, so the breakdown can show where income comes from
+function coinParts() {
+  const parts = [{ t: 'base', v: 1 + ALL.filter((u) => u.base && owned(u)).reduce((a, u) => a + (typeof u.base === 'function' ? u.base() : u.base), 0), c: COL.coin, plus: true }];
+  for (const u of ALL) if (u.m && owned(u)) parts.push({ t: u.name, v: u.m(), c: COL[u.L] });
+  if (S.gu.g3) parts.push({ t: 'ore', v: oreMult(), c: COL.ore });
+  if (S.burst > 0) parts.push({ t: 'BURST', v: burstMult(), c: COL.volt });
+  return parts;
+}
+const coinRate = () => coinParts().reduce((a, p) => a * p.v, 1);
+const prod = (key) => ALL.reduce((a, u) => (u[key] && owned(u) ? a * u[key]() : a), 1);
+const side = () => (S.gu.g11 ? 5 : S.gu.g8 ? 4 : 3);
 function drillPower(i) {
   const n = side(), x = i % 5, y = Math.floor(i / 5); let p = 1;
   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < n && ny < n && S.grid[ny * 5 + nx] === 'amp') p += 1; }
-  for (let k = 0; k < n; k++) { if (S.grid[y * 5 + k] === 'crystal') p *= 2; if (S.grid[k * 5 + x] === 'crystal' && k !== y) p *= 2; }
+  for (let k = 0; k < n; k++) { if (S.grid[y * 5 + k] === 'crystal' && k !== x) p *= 2; if (S.grid[k * 5 + x] === 'crystal' && k !== y) p *= 2; }
   return p;
 }
-function oreRate() { const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return r * burstMult() * (1 + S.volts * 0.25); }
-const oreMult = () => 1 + Math.sqrt(S.ore) / 4;
-const burstMult = () => (S.burst > 0 ? 25 : 1);
-const coinMult = () => (gu('x2') ? 3 : 1) * oreMult() * (1 + S.volts * 0.5) * burstMult();
-const tierMult = (k) => Math.pow(2, Math.floor(S.b[k] / 25));
-const coinRate = () => (1 + S.m[0] * TIERS[0].rate * tierMult(0)) * coinMult();
-const costOf = (k) => TIERS[k].c * Math.pow(TIERS[k].g, S.b[k]);
-const gemGain = () => (S.run < 1e5 ? 0 : Math.floor(Math.pow(1.8, Math.log10(S.run) - 5)));   // grows gently: 1 at 100K coins, ~6 at 100M, ~19 at 10B
-const voltGain = () => Math.floor(Math.pow(S.ore / 2e4, 0.45));
-const chargeRate = () => 0.02 * (1 + S.volts * 0.1) * (vu('rate') ? 2 : 1);   // fraction of a full capacitor per second
-const burstLen = () => 10 * (vu('cap') ? 2 : 1);
+function oreRate() { if (!S.gu.g3) return 0; const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return r * 0.1 * prod('om') * burstMult(); }
+const oreMult = () => 1 + Math.sqrt(S.ore) / 5;
+const burstMult = () => (S.burst > 0 ? (S.vu.v8 ? 50 : 25) : 1);
+const gemGain = () => (S.run < 1e4 ? 0 : Math.floor(Math.pow(S.run / 1e4, 0.3) * prod('gm')));
+const voltGain = () => (S.ore < 3e4 ? 0 : Math.floor(Math.pow(S.ore / 3e4, 0.5) * prod('vm')));
+const chargeRate = () => 0.03 * prod('cm');
+const burstLen = () => 10 * (S.vu.v5 ? 2 : 1);
+const TILES = { drill: { icon: '⛏️', c: 1, name: 'Drill' }, amp: { icon: '📡', c: 2, name: 'Amplifier', up: 'g6' }, crystal: { icon: '🔮', c: 5, name: 'Crystal', up: 'g9' } };
 
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
   init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = S.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
   tone(f, dur, type = 'sine', vol = 0.08, slide = 0, delay = 0) { if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02); },
-  buy(k) { this.tone(440 + k * 80, 0.07, 'square', 0.04); this.tone(660 + k * 80, 0.08, 'square', 0.04, 0, 0.05); },
-  mile() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.16, 'triangle', 0.07, 0, i * 0.06)); },
+  buy(n) { const f = 440 * Math.pow(1.06, n); this.tone(f, 0.1, 'triangle', 0.08); this.tone(f * 1.5, 0.14, 'triangle', 0.07, 0, 0.07); this.tone(f * 2, 0.2, 'sine', 0.06, 0, 0.14); },
+  tile() { this.tone(300, 0.06, 'square', 0.04); },
   up() { [262, 330, 392, 523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.3, 'triangle', 0.08, 0, i * 0.07)); this.tone(80, 1, 'sawtooth', 0.06, 200); },
   zap() { this.tone(200, 0.5, 'sawtooth', 0.08, 1400); this.tone(1800, 0.3, 'square', 0.04, -900, 0.1); },
 };
 $('btnMute').addEventListener('click', () => { S.muted = !S.muted; Sound.init(); if (Sound.master) Sound.master.gain.value = S.muted ? 0 : 0.5; $('btnMute').textContent = S.muted ? '🔇' : '🔊'; save(); });
 
-// ---------- feedback
+// ---------- visual feedback: toasts, a multiplier that flies into the counter, sparks
 function toast(t, sub, col) { const o = document.querySelector('.toast'); if (o) o.remove(); const e = document.createElement('div'); e.className = 'toast'; e.textContent = t; if (col) e.style.borderColor = col; if (sub) { const s = document.createElement('small'); s.textContent = sub; e.appendChild(s); } document.body.appendChild(e); setTimeout(() => e.remove(), 2200); }
-function pop(el, text, col) { const r = el.getBoundingClientRect(), e = document.createElement('div'); e.className = 'pop'; e.textContent = text; e.style.left = `${r.left + r.width / 2 - 20}px`; e.style.top = `${r.top - 6}px`; e.style.color = col || 'var(--coin)'; document.body.appendChild(e); setTimeout(() => e.remove(), 900); }
+function flyTo(fromEl, text, col) {
+  const a = fromEl.getBoundingClientRect(), b = $('main').getBoundingClientRect(), e = document.createElement('div');
+  e.className = 'fly'; e.textContent = text; e.style.color = col; e.style.left = `${a.left + a.width / 2 - 20}px`; e.style.top = `${a.top + 10}px`; document.body.appendChild(e);
+  requestAnimationFrame(() => { e.style.transform = `translate(${b.left + 40 - a.left - a.width / 2}px, ${b.top - a.top}px) scale(1.4)`; e.style.opacity = '0.2'; });
+  setTimeout(() => { e.remove(); const m = $('main'); m.classList.remove('bump'); void m.offsetWidth; m.classList.add('bump'); }, 720);
+  for (let i = 0; i < 14; i++) { const s = document.createElement('div'); s.className = 'spark'; s.style.background = col; s.style.left = `${a.left + a.width / 2}px`; s.style.top = `${a.top + a.height / 2}px`; document.body.appendChild(s); const ang = Math.random() * Math.PI * 2, d = 40 + Math.random() * 60; requestAnimationFrame(() => { s.style.transform = `translate(${Math.cos(ang) * d}px, ${Math.sin(ang) * d}px)`; s.style.opacity = '0'; }); setTimeout(() => s.remove(), 650); }
+}
 
 // ---------- buying
-function buyTier(k, auto) {
-  const c = costOf(k); if (S.coins < c) return false;
-  S.coins -= c; S.m[k]++; S.b[k]++;
-  if (S.b[k] % 25 === 0) { if (!auto) { Sound.mile(); toast(`${TIERS[k].n} ×2!`, `${S.b[k]} bought: this tier works twice as hard`); } }
-  else if (!auto) Sound.buy(k);
-  return true;
+function buy(u, el) {
+  if (owned(u) || !reqOk(u)) return;
+  const w = wallet(u.L); if (S[w] < u.cost) return;
+  const before = coinRate();
+  S[w] -= u.cost; bag(u.L)[u.id] = true; Sound.init(); Sound.buy(count(S.cu) + count(S.gu) + count(S.vu));
+  const gain = coinRate() / before;
+  if (el) { el.classList.add('got'); flyTo(el, gain > 1.001 ? `×${fmt(gain)}` : '✓', COL[u.L]); }
+  if (u.id === 'g3') toast('The Mine is open', 'place drills with gems', COL.gem);
+  render(true); save();
 }
-function gemUp(u) { if (gu(u.id) || S.gems < u.c) return; S.gems -= u.c; S.gemUps[u.id] = true; Sound.mile(); toast(u.name, u.fx, 'var(--gem)'); render(true); save(); }
-function voltUp(u) { if (vu(u.id) || S.volts < u.c) return; S.volts -= u.c; S.voltUps[u.id] = true; Sound.mile(); toast(u.name, u.fx, 'var(--volt)'); render(true); save(); }
 function tileAt(i) {
-  Sound.init();
-  const cur = S.grid[i];
-  if (cur) { S.gems += TILES[cur].c; S.grid[i] = null; Sound.buy(0); render(true); save(); return; }   // remove = full refund, so try layouts freely
-  const t = TILES[S.tool]; if (!t || S.gems < t.c) { toast('Not enough gems', `${t ? t.name : 'tile'} costs ${t ? t.c : '?'} 💎`, 'var(--gem)'); return; }
-  S.gems -= t.c; S.grid[i] = S.tool; Sound.buy(2); render(true); save();
+  Sound.init(); const cur = S.grid[i];
+  if (cur) { S.gems += TILES[cur].c; S.grid[i] = null; Sound.tile(); render(true); save(); return; }   // full refund: try layouts freely
+  const t = TILES[S.tool]; if (!t || S.gems < t.c) { toast('Not enough gems', `${t ? t.name : 'tile'} costs ${t ? t.c : '?'} 💎`, COL.gem); return; }
+  S.gems -= t.c; S.grid[i] = S.tool; Sound.tile(); render(true); save();
 }
 function discharge() {
   if (S.charge < 0.05 || S.burst > 0) return;
-  S.burst = burstLen() * S.charge; S.charge = 0; Sound.zap(); toast('BURST! ×25', `coins and ore ×25 for ${Math.round(S.burst)} s`, 'var(--volt)');
-  const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.9), rgba(212,255,59,0.5) 40%, transparent 75%)'; f.innerHTML = '<b>⚡</b>'; document.body.appendChild(f); setTimeout(() => f.remove(), 1600);
+  S.burst = burstLen() * S.charge; S.charge = 0; Sound.zap(); toast(`BURST! ×${burstMult()}`, `coins and ore for ${Math.round(S.burst)} s`, COL.volt);
+  const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.9), rgba(182,255,59,0.5) 40%, transparent 75%)'; f.innerHTML = '<b>⚡</b>'; document.body.appendChild(f); setTimeout(() => f.remove(), 1600);
   render(true);
 }
 
-// ---------- layer up: reset everything below for the next currency
+// ---------- layer up: reset the layers below for the next currency (memory upgrades keep things)
 function layerUp() {
-  const t = S.tab;
-  const next = t === 0 ? 1 : 2, gain = next === 1 ? gemGain() : voltGain();
+  if (S.tab > 1) return;
+  const next = S.tab + 1, gain = next === 1 ? gemGain() : voltGain();
   if (gain < 1) return;
   Sound.init(); Sound.up();
-  const f = document.createElement('div'); f.className = 'flash'; f.innerHTML = `<b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1600);
-  if (next === 1) { S.gems += gain; S.gemRun += gain; }
-  else { S.volts += gain; const keepUps = vu('keepall') ? S.gemUps : vu('keep') ? { auto1: !!S.gemUps.auto1, auto2: !!S.gemUps.auto2 } : {}; S.gems = vu('gems5') ? 5 : 0; S.gemRun = 0; S.gemUps = keepUps; S.grid = Array(25).fill(null); S.ore = 0; }
-  // coins always reset
-  S.coins = gu('start') ? 500 : 10; S.run = 0; S.m = [1, 0, 0, 0, 0, 0]; S.b = [1, 0, 0, 0, 0, 0];
-  S.ups[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].name}`, `${LAYERS[next].what} is open`, LAYERS[next].acc), 1500); }
+  const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1600);
+  if (next === 1) { S.gems += gain; S.gemsLife += gain; S.gemsRun += gain; }
+  else {
+    S.volts += gain; S.voltsLife += gain;
+    const keep = S.vu.v7 ? { ...S.gu } : S.vu.v2 ? Object.fromEntries(['g1', 'g2', 'g3'].filter((k) => S.gu[k]).map((k) => [k, true])) : {};
+    S.gems = 0; S.gemsRun = 0; S.gu = keep; S.grid = Array(25).fill(null); S.ore = 0;
+  }
+  const keepC = S.gu.g5 ? { ...S.cu } : S.gu.g2 ? Object.fromEntries(['c1'].filter((k) => S.cu[k]).map((k) => [k, true])) : {};
+  S.coins = 0; S.run = 0; S.runT = 0; S.cu = keepC;
+  S.resets[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].name}`, LAYERS[next].what, LAYERS[next].c), 1500); }
   render(true); save();
 }
 $('btnUp').addEventListener('click', layerUp);
 
-// ---------- simulation (also used for offline time)
+// ---------- simulation (also offline time)
 function step(dt) {
-  // machines: tier k builds tier k-1, tier 1 makes coins
-  for (let k = TIERS.length - 1; k >= 1; k--) S.m[k - 1] += S.m[k] * TIERS[k].rate * tierMult(k) * dt * (S.burst > 0 ? 25 : 1);
-  const c = coinRate() * dt; S.coins += c; S.run += c; S.life += c;
+  const c = coinRate() * dt; S.coins += c; S.run += c; S.life += c; S.runT += dt;
   S.ore += oreRate() * dt;
   if (S.top >= 2) { if (S.burst > 0) S.burst = Math.max(0, S.burst - dt); else S.charge = Math.min(1, S.charge + chargeRate() * dt); }
 }
 let autoT = 0;
 function automate(dt) {
-  autoT += dt; if (autoT < 0.25) return; autoT = 0;
-  const on = [gu('auto1'), gu('auto2'), gu('auto3'), gu('auto3'), gu('auto5'), gu('auto5')];
-  for (let k = TIERS.length - 1; k >= 0; k--) if (on[k]) for (let i = 0; i < 20 && buyTier(k, true); i++);
-  if (vu('automine')) { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x] && S.gems >= TILES.drill.c) { S.gems -= TILES.drill.c; S.grid[y * 5 + x] = 'drill'; } }
+  autoT += dt; if (autoT < 0.5) return; autoT = 0;
+  if (S.vu.v6 && S.gu.g3) { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x] && S.gems >= 1) { S.gems -= 1; S.grid[y * 5 + x] = 'drill'; } }
 }
 
 // ---------- rendering
 let shownKey = '';
 function render(force) {
   const L = LAYERS[S.tab];
-  document.documentElement.style.setProperty('--acc', L.acc);
-  const main = S.tab === 0 ? `🪙 ${fmt(S.coins)}` : S.tab === 1 ? `💎 ${fmt(S.gems)}` : `⚡ ${fmt(S.volts)}`;
-  $('main').textContent = main;
-  $('rate').textContent = S.tab === 0 ? `${fmt(coinRate())} coins / s` : S.tab === 1 ? `ore ${fmt(S.ore)} · +${fmt(oreRate())} / s · coins ×${fmt(oreMult())}` : `charge ${Math.floor(S.charge * 100)} % · coins ×${fmt(1 + S.volts * 0.5)}`;
-  // the layer map
-  const key = JSON.stringify([S.tab, S.top, Object.keys(S.gemUps).length, Object.keys(S.voltUps).length, S.tool, S.grid, side(), S.burst > 0]);
+  document.documentElement.style.setProperty('--acc', L.c);
+  const key = JSON.stringify([S.tab, S.top, S.cu, S.gu, S.vu, S.tool, S.grid, S.burst > 0]);
   if (force || key !== shownKey) { shownKey = key; renderMap(); renderScreen(); }
   refresh();
 }
 function renderMap() {
   const m = $('map'); m.textContent = '';
   LAYERS.forEach((L, i) => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'lay' + (i > S.top ? ' locked' : ''); b.style.setProperty('--acc', L.acc); b.setAttribute('aria-pressed', String(i === S.tab));
-    const val = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : i === 2 ? fmt(S.volts) : '';
-    b.innerHTML = i > S.top ? `<b>${i === S.top + 1 ? L.icon : '❔'} ???</b><small>${i === S.top + 1 ? 'layer up to open' : 'locked'}</small>` : `<b>${L.icon} ${L.name}</b><small data-v="${i}">${val}</small>`;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lay' + (i > S.top ? ' locked' : ''); b.style.setProperty('--c', L.c); b.setAttribute('aria-pressed', String(i === S.tab));
+    b.innerHTML = i > S.top ? `<b>${i === S.top + 1 ? L.icon : '❔'} ???</b><small>${i === S.top + 1 ? 'layer up to open' : 'locked'}</small>` : `<b>${L.icon} ${L.name}</b><small data-v="${i}"></small>`;
     if (i <= S.top) b.addEventListener('click', () => { S.tab = i; Sound.init(); render(true); });
     m.appendChild(b);
   });
 }
-function upRow(box, u, have, can, onBuy, unit) {
-  const r = document.createElement('div'); r.className = 'row';
-  r.innerHTML = `<div><div class="nm"></div><div class="info"></div></div><button class="buy" type="button"></button>`;
-  r.querySelector('.nm').textContent = u.name; r.querySelector('.info').textContent = u.fx;
-  const b = r.querySelector('.buy'); if (have) { b.className = 'buy done'; b.textContent = 'Owned'; b.disabled = true; } else { b.innerHTML = `Buy<small>${u.c} ${unit}</small>`; b.dataset.cost = u.c; b.dataset.unit = unit; b.addEventListener('click', () => onBuy(u)); }
-  box.appendChild(r);
+function renderTree(L, box) {
+  const tree = document.createElement('div'); tree.className = 'tree';
+  tree.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+  for (const u0 of TREE[L]) {
+    const u = { ...u0, L }, b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-up', u.id);
+    b.style.gridRow = String(u.r + 1); b.style.gridColumn = String(u.c + 1); b.style.setProperty('--c', COL[L]);
+    if (u.x) b.style.setProperty('--x', COL[u.x]);
+    b.innerHTML = `${u.x ? `<i class="x2">${LAYERS.find((z) => z.id === u.x).icon}</i>` : ''}<b></b><span></span><em data-k="now"></em><div class="cost"></div>`;
+    b.querySelector('b').textContent = u.name; b.querySelector('span').textContent = u.d;
+    b.addEventListener('click', () => buy(u, b));
+    tree.appendChild(b);
+  }
+  box.appendChild(tree);
+  requestAnimationFrame(() => drawLines(tree, L));
+}
+function drawLines(tree, L) {
+  const svg = tree.querySelector('svg'); if (!svg || !tree.getBoundingClientRect) return; const r0 = tree.getBoundingClientRect(); let html = '';
+  for (const u of TREE[L]) for (const q of u.req) {
+    const a = tree.querySelector(`[data-up="${q}"]`), b = tree.querySelector(`[data-up="${u.id}"]`); if (!a || !b) continue;
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), on = has(q);
+    html += `<line x1="${ra.left + ra.width / 2 - r0.left}" y1="${ra.bottom - r0.top}" x2="${rb.left + rb.width / 2 - r0.left}" y2="${rb.top - r0.top}" stroke="${COL[L]}" stroke-width="${on ? 4 : 2}" stroke-opacity="${on ? 0.9 : 0.3}" stroke-dasharray="${on ? '' : '6 6'}"/>`;
+  }
+  svg.innerHTML = html;
 }
 function renderScreen() {
   const box = $('screen'); box.textContent = '';
-  if (S.tab === 0) {
+  const L = LAYERS[S.tab].id;
+  if (L === 'coin') {
     const c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = `<h2>🪙 Machines</h2><p>You get 1 coin a second for free. Hand cranks make coins; every bigger machine builds the one below it. Every 25 of a kind: that kind works twice as hard.</p>`;
-    TIERS.forEach((t, k) => {
-      if (k > 0 && S.b[k - 1] < 1 && S.m[k - 1] < 1) return;
-      const r = document.createElement('div'); r.className = 'row'; r.setAttribute('data-tier', k);
-      r.innerHTML = `<div><div class="nm">${t.n}</div><div class="info" data-k="i"></div></div><button class="buy" type="button" data-k="b"></button><div class="prog"><i data-k="p"></i></div>`;
-      r.querySelector('[data-k=b]').addEventListener('click', (e) => { Sound.init(); if (buyTier(k)) { pop(e.currentTarget, `+1`, 'var(--coin)'); refresh(); save(); } });
-      c.appendChild(r);
-    });
-    box.appendChild(c);
-  } else if (S.tab === 1) {
-    const n = side(), c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = `<h2>💎 The Mine</h2><p>Place tiles with gems. Drills dig ore; ore multiplies your coins. Amplifiers boost the drills next to them, crystals double every drill in their row and column. Tap a tile again to take it back (full refund).</p>`;
-    const tools = document.createElement('div'); tools.className = 'tools';
-    for (const [id, t] of Object.entries(TILES)) { const ok = id === 'drill' || gu(id === 'amp' ? 'amp' : 'crystal'); const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = `${t.icon} ${t.name} · ${t.c}💎`; b.disabled = !ok; b.setAttribute('aria-pressed', String(S.tool === id)); b.addEventListener('click', () => { S.tool = id; render(true); }); tools.appendChild(b); }
-    c.appendChild(tools);
-    const g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
-    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const i = y * 5 + x, t = S.grid[i], b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (t ? ' full' : ''); b.textContent = t ? TILES[t].icon : '+'; if (t === 'drill') { const p = document.createElement('small'); p.textContent = `×${drillPower(i)}`; b.appendChild(p); } b.addEventListener('click', () => tileAt(i)); g.appendChild(b); }
-    c.appendChild(g); box.appendChild(c);
-    const u = document.createElement('div'); u.className = 'card'; u.innerHTML = '<h2>Gem upgrades</h2><p>Robots buy machines for you, so every coin run rebuilds itself faster.</p>';
-    for (const x of GEM_UPS) upRow(u, x, gu(x.id), S.gems >= x.c, gemUp, '💎'); box.appendChild(u);
+    c.innerHTML = '<h2>🪙 The coin tree</h2><p>You earn a base pay every second. Each upgrade multiplies it, and many grow with something else: your coins, the time of this run, other layers (the coloured corner shows which).</p>';
+    renderTree('coin', c); box.appendChild(c);
+  } else if (L === 'gem') {
+    const c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = '<h2>💎 The gem tree</h2><p>Gems come from layering up coins. They boost coins, keep coin upgrades on a reset, and open the Mine.</p>';
+    renderTree('gem', c); box.appendChild(c);
+    if (S.gu.g3) {
+      const n = side(), m = document.createElement('div'); m.className = 'card';
+      m.innerHTML = '<h2>⛏️ The Mine</h2><p>Place tiles with gems. Drills dig ore; ore multiplies coins and turns into volts. Amplifiers power their neighbours, crystals double their row and column. Tap a tile again to take it back (full refund).</p>';
+      const tools = document.createElement('div'); tools.className = 'tools';
+      for (const [id, t] of Object.entries(TILES)) { const ok = !t.up || S.gu[t.up]; const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = `${t.icon} ${t.name} · ${t.c}💎`; b.disabled = !ok; b.setAttribute('aria-pressed', String(S.tool === id)); b.addEventListener('click', () => { S.tool = id; render(true); }); tools.appendChild(b); }
+      m.appendChild(tools);
+      const g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const i = y * 5 + x, t = S.grid[i], b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (t ? ' full' : ''); b.textContent = t ? TILES[t].icon : '+'; if (t === 'drill') { const p = document.createElement('small'); p.textContent = `×${drillPower(i)}`; b.appendChild(p); } b.addEventListener('click', () => tileAt(i)); g.appendChild(b); }
+      m.appendChild(g); box.appendChild(m);
+    }
   } else {
-    const c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = `<h2>⚡ The Capacitor</h2><p>It charges by itself, also while you are away. Discharge it for a burst: coins, ore and machines ×25 for up to ${burstLen()} s. Full charge = full burst, so waiting pays, but so does using it now.</p><div class="cap"><i data-k="cf"></i><span data-k="ct"></span></div>`;
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'buy'; b.style.width = '100%'; b.setAttribute('data-k', 'dis'); b.textContent = 'Discharge'; b.addEventListener('click', discharge); c.appendChild(b);
-    box.appendChild(c);
-    const u = document.createElement('div'); u.className = 'card'; u.innerHTML = '<h2>Volt upgrades</h2><p>Volts make everything below stronger (coins ×1.5 and ore ×1.25 per volt) and keep things for you when you reset the mine.</p>';
-    for (const x of VOLT_UPS) upRow(u, x, vu(x.id), S.volts >= x.c, voltUp, '⚡'); box.appendChild(u);
+    const k = document.createElement('div'); k.className = 'card';
+    k.innerHTML = `<h2>⚡ The Capacitor</h2><p>It charges by itself, also while you are away. Discharge for a burst: coins and ore ×${S.vu.v8 ? 50 : 25} for up to ${burstLen()} s. A full charge gives the full burst.</p><div class="cap"><i data-k="cf"></i><span data-k="ct"></span></div>`;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'wide'; b.setAttribute('data-k', 'dis'); b.textContent = 'Discharge'; b.addEventListener('click', discharge); k.appendChild(b);
+    box.appendChild(k);
+    const c = document.createElement('div'); c.className = 'card'; c.innerHTML = '<h2>⚡ The volt tree</h2><p>Volts come from layering up the mine (ore). They multiply coins and ore and keep gem upgrades on a reset.</p>';
+    renderTree('volt', c); box.appendChild(c);
   }
 }
 function refresh() {
-  if (S.tab === 0) document.querySelectorAll('[data-tier]').forEach((r) => {
-    const k = +r.getAttribute('data-tier'), t = TIERS[k], c = costOf(k);
-    r.querySelector('[data-k=i]').textContent = `${fmt(S.m[k])} owned · ${k === 0 ? `${fmt(t.rate * tierMult(k) * coinMult())} coins/s each` : `builds ${fmt(t.rate * tierMult(k))} ${TIERS[k - 1].n.toLowerCase()}s/s each`}`;
-    const b = r.querySelector('[data-k=b]'); b.innerHTML = `Buy<small>${fmt(c)} 🪙</small>`; b.disabled = S.coins < c;
-    r.querySelector('[data-k=p]').style.width = `${(S.b[k] % 25) * 4}%`;
+  const L = LAYERS[S.tab].id;
+  $('main').textContent = L === 'coin' ? `🪙 ${fmt(S.coins)}` : L === 'gem' ? `💎 ${fmt(S.gems)}` : `⚡ ${fmt(S.volts)}`;
+  const parts = coinParts(), rate = parts.reduce((a, p) => a * p.v, 1);
+  $('rate').textContent = L === 'coin' ? `${fmt(rate)} coins / s` : L === 'gem' ? `ore ${fmt(S.ore)} (+${fmt(oreRate())}/s) · ${fmt(rate)} coins/s` : `charge ${Math.floor(S.charge * 100)} % · ${fmt(rate)} coins/s`;
+  // income breakdown: every multiplier as a chip in its layer's colour
+  const html = parts.filter((p) => p.plus || p.v > 1.005).map((p) => `<span class="chip" style="--c:${p.c}">${p.plus ? `base ${fmt(p.v)}` : `${p.t} ×${fmt(p.v)}`}</span>`).join('');
+  if ($('chips').innerHTML !== html) $('chips').innerHTML = html;
+  document.querySelectorAll('[data-up]').forEach((b) => {
+    const u = ALL.find((x) => x.id === b.getAttribute('data-up')), own = owned(u), ok = reqOk(u), can = !own && ok && S[wallet(u.L)] >= u.cost;
+    const cls = 'node' + (own ? ' own' : !ok ? ' locked' : can ? ' can' : '') + (b.classList.contains('got') ? ' got' : '');
+    if (b.className !== cls) b.className = cls;
+    const f = u.m || u.gm || u.om || u.cm || u.vm;
+    b.querySelector('[data-k=now]').textContent = f ? `now ${fx(f())}` : u.base ? `+${fmt(typeof u.base === 'function' ? u.base() : u.base)} base` : '';
+    b.querySelector('.cost').textContent = own ? 'owned' : !ok ? (u.need && S.top < u.need ? `needs ${LAYERS[u.need].name}` : 'locked') : `${fmt(u.cost)} ${LAYERS.find((z) => z.id === u.L).icon}`;
   });
-  if (S.tab === 2) { const f = document.querySelector('[data-k=cf]'); if (f) { f.style.width = `${S.charge * 100}%`; document.querySelector('[data-k=ct]').textContent = S.burst > 0 ? `BURST · ${Math.ceil(S.burst)} s` : `${Math.floor(S.charge * 100)} % · full in ${fmt(Math.max(0, (1 - S.charge) / chargeRate()))} s`; document.querySelector('[data-k=dis]').disabled = S.charge < 0.05 || S.burst > 0; } }
-  document.querySelectorAll('.buy[data-cost]').forEach((b) => { b.disabled = (b.dataset.unit === '💎' ? S.gems : S.volts) < +b.dataset.cost; });
+  if (L === 'volt') { const f = document.querySelector('[data-k=cf]'); if (f) { f.style.width = `${S.charge * 100}%`; document.querySelector('[data-k=ct]').textContent = S.burst > 0 ? `BURST · ${Math.ceil(S.burst)} s` : `${Math.floor(S.charge * 100)} % · full in ${fmt(Math.max(0, (1 - S.charge) / chargeRate()))} s`; document.querySelector('[data-k=dis]').disabled = S.charge < 0.05 || S.burst > 0; } }
   document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : fmt(S.volts); });
-  // the Layer Up button: coins → gems from the coin screen, mine → volts from the gem screen
-  const up = $('btnUp');
-  if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e5)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and machines</small>`; }
-  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(2e4)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the mine and coins</small>`; }
+  const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c);
+  if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e4)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and coin upgrades${S.gu.g5 ? ' (kept: all)' : S.gu.g2 ? ' (kept: Piggy bank)' : ''}</small>`; }
+  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !S.gu.g3 ? 'Layer up to ⚡ volts<small>open the Mine first (gem tree)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(3e4)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the mine and coins</small>`; }
   else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🧪 the Lab is being built</small>'; }
-  let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×25 · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
+  let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${burstMult()} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
 }
+addEventListener('resize', () => { const t = document.querySelector('.tree'); if (t) drawLines(t, LAYERS[S.tab].id); });
 
 // ---------- loop, offline time
 let last = performance.now(), saveT = 0, uiT = 0;
@@ -334,20 +409,20 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(1, (now - last) / 1000); last = now;
   step(dt); automate(dt);
-  uiT += dt; if (uiT > 0.15) { uiT = 0; render(false); }
+  uiT += dt; if (uiT > 0.2) { uiT = 0; render(false); }
   saveT += dt; if (saveT > 5) { saveT = 0; save(); }
 }
 (function offline() {
   const away = Math.min(8 * 3600, (Date.now() - (S.last || Date.now())) / 1000);
   if (away < 30) return;
   const before = S.coins, ore0 = S.ore, n = 400; for (let i = 0; i < n; i++) step(away / n);
-  setTimeout(() => toast(`Welcome back: ${Math.round(away / 60)} min`, `+${fmt(S.coins - before)} coins${S.top >= 1 ? ` · +${fmt(S.ore - ore0)} ore` : ''}${S.top >= 2 ? ` · capacitor ${Math.floor(S.charge * 100)} %` : ''}`), 400);
+  setTimeout(() => toast(`Welcome back: ${Math.round(away / 60)} min`, `+${fmt(S.coins - before)} coins${S.gu.g3 ? ` · +${fmt(S.ore - ore0)} ore` : ''}${S.top >= 2 ? ` · capacitor ${Math.floor(S.charge * 100)} %` : ''}`), 400);
 })();
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buyTier, layerUp, gemUp, voltUp, tileAt, discharge, gemGain, voltGain, GEM_UPS, VOLT_UPS, TIERS, costOf, coinRate, oreRate, fresh, render };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, ALL, TREE, coinRate, oreRate, reqOk, owned, render };
 render(true);
 requestAnimationFrame(frame);
 })();
