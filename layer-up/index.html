@@ -84,6 +84,14 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .cap { height: 36px; border-radius: 18px; border: 2px solid var(--volt); background: rgba(0,0,0,0.4); overflow: hidden; position: relative; margin: 8px 0; }
 .cap i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #6aff3b, var(--volt), #fff); }
 .cap span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: #fff; text-shadow: 0 1px 3px #000; }
+.brow { display: grid; grid-template-columns: 40px 1fr auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--acc) 25%, transparent); }
+.brow .bi { font-size: 28px; text-align: center; }
+.brow b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 18px; text-transform: uppercase; color: var(--acc); }
+.brow span { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.bbtn { min-width: 76px; min-height: 48px; padding: 2px 8px; border: 0; border-radius: 12px; background: var(--acc); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 16px; cursor: pointer; }
+.bbtn small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
+.bbtn.max { min-width: 52px; background: transparent; color: var(--acc); border: 2px solid var(--acc); }
+.bbtn:disabled { opacity: 0.35; cursor: default; }
 .wide { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--acc); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 22px; cursor: pointer; }
 .wide:disabled { opacity: 0.35; cursor: default; }
 .burst { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 14px; border-radius: 999px; background: var(--volt); color: #1b2a00; font-family: var(--font-display); font-weight: 900; font-size: 18px; }
@@ -142,8 +150,9 @@ const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', ore: '#9ad8ff' }
 
 // ---------- save
 const SAVE = 'layer-up-save-v2';
-const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, cu: {}, gems: 0, gemsLife: 0, gemsRun: 0, gu: {}, grid: Array(25).fill(null), ore: 0, volts: 0, voltsLife: 0, vu: {}, charge: 0, burst: 0, top: 0, tab: 0, resets: [0, 0, 0], last: Date.now(), muted: false, tool: 'drill' });
+const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, cu: {}, bl: {}, gems: 0, gemsLife: 0, gemsRun: 0, gu: {}, grid: Array(25).fill(null), ore: 0, volts: 0, voltsLife: 0, vu: {}, charge: 0, burst: 0, top: 0, tab: 0, resets: [0, 0, 0], last: Date.now(), muted: false, tool: 'drill' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
+if (!S.bl) S.bl = {};
 const save = () => { S.last = Date.now(); store.set(SAVE, S); };
 const has = (id) => !!(S.cu[id] || S.gu[id] || S.vu[id]);
 const count = (o) => Object.values(o).filter((v) => Number(v) > 0).length;
@@ -153,57 +162,80 @@ const levels = (o) => Object.values(o).reduce((a, v) => a + Number(v || 0), 0);
 // r/c place a node in its tree; req = nodes that must be owned first; x = the other layer this node is tied to
 const TREE = {
   coin: [
-    { id: 'c1', r: 0, c: 1, name: 'Piggy bank', cost: 10, cg: 12, max: 5, req: [], d: 'Coins ×2 per level', m: (l) => Math.pow(2, l) },
-    { id: 'c2', r: 1, c: 0, name: 'Side hustle', cost: 40, cg: 3, max: 10, req: ['c1'], d: 'Base pay +2 per level', base: (l) => 2 * l },
-    { id: 'c3', r: 1, c: 2, name: 'Compound', cost: 80, cg: 12, max: 5, req: ['c1'], d: '+5 % per level for every coin upgrade level you own', m: (l) => 1 + 0.05 * l * levels(S.cu) },
-    { id: 'c4', r: 2, c: 0, name: 'Interest', cost: 350, cg: 15, max: 4, req: ['c2'], d: 'Grows with the coins you hold', m: (l) => 1 + l * log10(S.coins + 1) / 4 },
-    { id: 'c5', r: 2, c: 1, name: 'Lucky penny', cost: 900, cg: 40, max: 3, req: ['c2', 'c3'], d: 'Coins ×3 per level', m: (l) => Math.pow(3, l) },
-    { id: 'c6', r: 2, c: 2, name: 'Momentum', cost: 600, cg: 15, max: 4, req: ['c3'], d: 'Grows with the time of this run', m: (l) => 1 + l * Math.sqrt(S.runT / 60) / 2 },
-    { id: 'c7', r: 3, c: 0, name: 'Snowball', cost: 6e3, cg: 20, max: 4, req: ['c4'], d: 'More interest per level', m: (l) => 1 + l * log10(S.coins + 1) / 4 },
-    { id: 'c8', r: 3, c: 1, name: 'Gem sense', cost: 2e4, cg: 20, max: 5, req: ['c5'], d: 'Gems from a layer up ×(1 + level)', x: 'gem', gm: (l) => 1 + l },
-    { id: 'c9', r: 3, c: 2, name: 'Tycoon', cost: 1.2e4, cg: 20, max: 3, req: ['c6'], d: 'Base pay + level × coin upgrades owned', base: (l) => l * count(S.cu) },
-    { id: 'c10', r: 4, c: 0, name: 'Ore lust', cost: 2e+08, cg: 30, max: 3, req: ['c7'], d: 'Ore grows with your coin upgrade levels', x: 'gem', om: (l) => 1 + l * levels(S.cu) / 16, need: 1 },
-    { id: 'c11', r: 4, c: 1, name: 'Golden touch', cost: 1e+08, cg: 200, max: 3, req: ['c8'], d: 'Coins ×3 per level', m: (l) => Math.pow(3, l) },
-    { id: 'c12', r: 4, c: 2, name: 'Gem synergy', cost: 3e+08, cg: 50, max: 3, req: ['c9'], d: 'Coins grow with the gem upgrades you own', x: 'gem', m: (l) => 1 + l * count(S.gu) / 2, need: 1 },
-    { id: 'c13', r: 5, c: 0, name: 'Vault', cost: 1e+10, cg: 50, max: 3, req: ['c10'], d: 'Grows with every coin you ever earned', m: (l) => 1 + l * log10(S.life + 1) / 2, need: 1 },
-    { id: 'c14', r: 5, c: 1, name: 'Overtime', cost: 1e+11, cg: 20, max: 4, req: ['c11'], d: 'The capacitor charges +50 % per level', x: 'volt', cm: (l) => 1 + 0.5 * l, need: 2 },
-    { id: 'c15', r: 5, c: 2, name: 'Coin storm', cost: 5e+11, cg: 10000, max: 2, req: ['c12'], d: 'Coins ×5 per level', m: (l) => Math.pow(5, l), need: 1 },
+    { id: 'c1', r: 0, c: 1, name: 'Piggy bank', cost: 30, cg: 12, max: 5, req: [], d: 'Coins ×2 per level', m: (l) => Math.pow(2, l) },
+    { id: 'c2', r: 1, c: 0, name: 'Side hustle', cost: 120, cg: 3, max: 10, req: ['c1'], d: 'Base pay +2 per level', base: (l) => 2 * l },
+    { id: 'c3', r: 1, c: 2, name: 'Compound', cost: 240, cg: 12, max: 5, req: ['c1'], d: '+5 % per level for every coin upgrade level you own', m: (l) => 1 + 0.05 * l * levels(S.cu) },
+    { id: 'c4', r: 2, c: 0, name: 'Interest', cost: 1050, cg: 15, max: 4, req: ['c2'], d: 'Grows with the coins you hold', m: (l) => 1 + l * log10(S.coins + 1) / 4 },
+    { id: 'c5', r: 2, c: 1, name: 'Lucky penny', cost: 2700, cg: 40, max: 3, req: ['c2', 'c3'], d: 'Coins ×3 per level', m: (l) => Math.pow(3, l) },
+    { id: 'c6', r: 2, c: 2, name: 'Momentum', cost: 1800, cg: 15, max: 4, req: ['c3'], d: 'Grows with the time of this run', m: (l) => 1 + l * Math.sqrt(S.runT / 60) / 2 },
+    { id: 'c7', r: 3, c: 0, name: 'Snowball', cost: 18000, cg: 20, max: 4, req: ['c4'], d: 'More interest per level', m: (l) => 1 + l * log10(S.coins + 1) / 4 },
+    { id: 'c8', r: 3, c: 1, name: 'Gem sense', cost: 60000, cg: 20, max: 5, req: ['c5'], d: 'Gems from a layer up ×(1 + level)', x: 'gem', gm: (l) => 1 + l },
+    { id: 'c9', r: 3, c: 2, name: 'Tycoon', cost: 36000, cg: 20, max: 3, req: ['c6'], d: 'Base pay + level × coin upgrades owned', base: (l) => l * count(S.cu) },
+    { id: 'c10', r: 4, c: 0, name: 'Ore lust', cost: 6e+08, cg: 30, max: 3, req: ['c7'], d: 'Ore grows with your coin upgrade levels', x: 'gem', om: (l) => 1 + l * levels(S.cu) / 16, need: 1 },
+    { id: 'c11', r: 4, c: 1, name: 'Golden touch', cost: 3e+08, cg: 200, max: 3, req: ['c8'], d: 'Coins ×3 per level', m: (l) => Math.pow(3, l) },
+    { id: 'c12', r: 4, c: 2, name: 'Gem synergy', cost: 9e+08, cg: 50, max: 3, req: ['c9'], d: 'Coins grow with the gem upgrades you own', x: 'gem', m: (l) => 1 + l * count(S.gu) / 2, need: 1 },
+    { id: 'c13', r: 5, c: 0, name: 'Vault', cost: 3e+10, cg: 50, max: 3, req: ['c10'], d: 'Grows with every coin you ever earned', m: (l) => 1 + l * log10(S.life + 1) / 2, need: 1 },
+    { id: 'c14', r: 5, c: 1, name: 'Overtime', cost: 3e+11, cg: 20, max: 4, req: ['c11'], d: 'The capacitor charges +50 % per level', x: 'volt', cm: (l) => 1 + 0.5 * l, need: 2 },
+    { id: 'c15', r: 5, c: 2, name: 'Coin storm', cost: 1.5e+12, cg: 10000, max: 2, req: ['c12'], d: 'Coins ×5 per level', m: (l) => Math.pow(5, l), need: 1 },
+    { id: 'c16', r: 6, c: 0, name: 'Machine love', cost: 3e+12, cg: 30, max: 3, req: ['c13'], d: 'Coins grow with your endless upgrade levels', m: (l) => 1 + l * levels(S.bl) / 20, need: 1 },
+    { id: 'c17', r: 6, c: 1, name: 'Patience', cost: 9e+12, cg: 30, max: 3, req: ['c14'], d: 'Grows with the time since your last layer up', m: (l) => 1 + l * log10(S.runT + 1), need: 2 },
+    { id: 'c18', r: 6, c: 2, name: 'Gem magnet', cost: 3e+13, cg: 40, max: 3, req: ['c15'], d: 'Gems from a layer up ×(1 + level / 2)', x: 'gem', gm: (l) => 1 + l / 2, need: 1 },
   ],
   gem: [
-    { id: 'g1', r: 0, c: 1, name: 'Gem glow', cost: 1, cg: 8, max: 4, req: [], d: 'Coins grow with every gem you ever earned', x: 'coin', m: (l) => Math.pow(S.gemsLife + 1, 0.15 * l) },
-    { id: 'g2', r: 1, c: 0, name: 'Coin memory', cost: 2, cg: 10, max: 3, req: ['g1'], d: 'Each level keeps one more row of the coin tree on a layer up', x: 'coin' },
-    { id: 'g3', r: 1, c: 1, name: 'The Mine', cost: 5, max: 1, req: ['g1'], d: 'Opens a 3×3 mine: drills dig ore, ore multiplies coins' },
-    { id: 'g4', r: 1, c: 2, name: 'Polish', cost: 5, cg: 30, max: 4, req: ['g1'], d: 'Coins ×2 per level', x: 'coin', m: (l) => Math.pow(2, l) },
-    { id: 'g5', r: 2, c: 0, name: 'Full memory', cost: 300, max: 1, req: ['g2'], d: 'Keep every coin upgrade on a layer up', x: 'coin' },
-    { id: 'g6', r: 2, c: 1, name: 'Amplifiers', cost: 20, cg: 15, max: 3, req: ['g3'], d: 'Amplifier tiles: + level power to the drills next to them' },
-    { id: 'g7', r: 2, c: 2, name: 'Prism', cost: 40, cg: 15, max: 4, req: ['g4'], d: 'Gems from a layer up grow with your coin upgrade levels', gm: (l) => 1 + l * levels(S.cu) / 20 },
-    { id: 'g8', r: 3, c: 0, name: 'Wider mine', cost: 3000, max: 1, req: ['g5', 'g6'], d: 'The mine grows to 4×4' },
-    { id: 'g9', r: 3, c: 1, name: 'Crystals', cost: 10000, cg: 20, max: 3, req: ['g6'], d: 'Crystal tiles: ×(1 + level) to every drill in their row and column' },
-    { id: 'g10', r: 3, c: 2, name: 'Facets', cost: 6000, cg: 20, max: 3, req: ['g7'], d: 'Ore grows with the gem upgrades you own', om: (l) => 1 + l * count(S.gu) / 3 },
-    { id: 'g11', r: 4, c: 0, name: 'Deep mine', cost: 200000, max: 1, req: ['g8'], d: 'The mine grows to 5×5' },
-    { id: 'g12', r: 4, c: 1, name: 'Gem storm', cost: 500000, cg: 30, max: 3, req: ['g9'], d: 'Gems from a layer up grow with your volts ever', x: 'volt', gm: (l) => 1 + l * S.voltsLife, need: 2 },
-    { id: 'g13', r: 4, c: 2, name: 'Mother lode', cost: 100000, cg: 30, max: 3, req: ['g10'], d: 'Coins ×(1 + log of ore) per level', x: 'coin', m: (l) => Math.pow(1 + log10(S.ore + 1), l) },
+    { id: 'g1', r: 0, c: 1, name: 'Gem glow', cost: 10, cg: 8, max: 4, req: [], d: 'Coins grow with every gem you ever earned', x: 'coin', m: (l) => Math.pow(S.gemsLife + 1, 0.15 * l) },
+    { id: 'g2', r: 1, c: 0, name: 'Coin memory', cost: 20, cg: 10, max: 3, req: ['g1'], d: 'Each level keeps one more row of the coin tree on a layer up', x: 'coin' },
+    { id: 'g3', r: 1, c: 1, name: 'The Mine', cost: 50, max: 1, req: ['g1'], d: 'Opens a 3×3 mine: drills dig ore, ore multiplies coins' },
+    { id: 'g4', r: 1, c: 2, name: 'Polish', cost: 50, cg: 30, max: 4, req: ['g1'], d: 'Coins ×2 per level', x: 'coin', m: (l) => Math.pow(2, l) },
+    { id: 'g5', r: 2, c: 0, name: 'Full memory', cost: 3000, max: 1, req: ['g2'], d: 'Keep every coin upgrade on a layer up', x: 'coin' },
+    { id: 'g6', r: 2, c: 1, name: 'Amplifiers', cost: 200, cg: 15, max: 3, req: ['g3'], d: 'Amplifier tiles: + level power to the drills next to them' },
+    { id: 'g7', r: 2, c: 2, name: 'Prism', cost: 400, cg: 15, max: 4, req: ['g4'], d: 'Gems from a layer up grow with your coin upgrade levels', gm: (l) => 1 + l * levels(S.cu) / 20 },
+    { id: 'g8', r: 3, c: 0, name: 'Wider mine', cost: 30000, max: 1, req: ['g5', 'g6'], d: 'The mine grows to 4×4' },
+    { id: 'g9', r: 3, c: 1, name: 'Crystals', cost: 100000, cg: 20, max: 3, req: ['g6'], d: 'Crystal tiles: ×(1 + level) to every drill in their row and column' },
+    { id: 'g10', r: 3, c: 2, name: 'Facets', cost: 60000, cg: 20, max: 3, req: ['g7'], d: 'Ore grows with the gem upgrades you own', om: (l) => 1 + l * count(S.gu) / 3 },
+    { id: 'g11', r: 4, c: 0, name: 'Deep mine', cost: 2e+06, max: 1, req: ['g8'], d: 'The mine grows to 5×5' },
+    { id: 'g12', r: 4, c: 1, name: 'Gem storm', cost: 5e+06, cg: 30, max: 3, req: ['g9'], d: 'Gems from a layer up grow with your volts ever', x: 'volt', gm: (l) => 1 + l * S.voltsLife / 10, need: 2 },
+    { id: 'g13', r: 4, c: 2, name: 'Mother lode', cost: 1e+06, cg: 30, max: 3, req: ['g10'], d: 'Coins ×(1 + log of ore) per level', x: 'coin', m: (l) => Math.pow(1 + log10(S.ore + 1), l) },
+    { id: 'g14', r: 5, c: 0, name: 'Pressure', cost: 3e6, cg: 20, max: 3, req: ['g11'], d: 'Coins grow with your gem press levels', x: 'coin', m: (l) => 1 + l * Number(S.bl.b3 || 0) / 10 },
+    { id: 'g15', r: 5, c: 2, name: 'Geode', cost: 5e6, cg: 30, max: 3, req: ['g13'], d: 'Gems from a layer up ×2 per level', gm: (l) => Math.pow(2, l) },
   ],
   volt: [
-    { id: 'v1', r: 0, c: 1, name: 'Spark', cost: 1, cg: 4, max: 3, req: [], d: 'Coins ×√(1 + volts ever) per level', x: 'coin', m: (l) => Math.pow(1 + S.voltsLife, 0.5 * l) },
-    { id: 'v2', r: 1, c: 0, name: 'Gem memory', cost: 2, max: 1, req: ['v1'], d: 'Keep Gem glow, Coin memory and The Mine on a layer up to volts', x: 'gem' },
-    { id: 'v3', r: 1, c: 2, name: 'Fast charge', cost: 3, cg: 4, max: 4, req: ['v1'], d: 'The capacitor charges ×(1 + level)', cm: (l) => 1 + l },
-    { id: 'v4', r: 2, c: 0, name: 'Ore surge', cost: 5, cg: 6, max: 3, req: ['v2'], d: 'Ore grows with your volts ever', x: 'gem', om: (l) => 1 + l * S.voltsLife / 2 },
-    { id: 'v5', r: 2, c: 1, name: 'Long burst', cost: 8, cg: 4, max: 3, req: ['v1'], d: 'Bursts last ×(1 + level)' },
-    { id: 'v6', r: 2, c: 2, name: 'Mine robot', cost: 10, max: 1, req: ['v3'], d: 'Places drills on empty tiles by itself', x: 'gem' },
-    { id: 'v7', r: 3, c: 0, name: 'Full gem memory', cost: 40, max: 1, req: ['v4'], d: 'Keep every gem upgrade on a layer up to volts', x: 'gem' },
-    { id: 'v8', r: 3, c: 1, name: 'Overload', cost: 30, cg: 6, max: 3, req: ['v5'], d: 'Bursts +×25 per level' },
-    { id: 'v9', r: 3, c: 2, name: 'Dynamo', cost: 60, cg: 8, max: 3, req: ['v6'], d: 'Volts from a layer up grow with your gem upgrades', x: 'gem', vm: (l) => 1 + l * count(S.gu) / 4 },
+    { id: 'v1', r: 0, c: 1, name: 'Spark', cost: 10, cg: 4, max: 3, req: [], d: 'Coins ×√(1 + volts ever) per level', x: 'coin', m: (l) => Math.pow(1 + S.voltsLife, 0.5 * l) },
+    { id: 'v2', r: 1, c: 0, name: 'Gem memory', cost: 20, max: 1, req: ['v1'], d: 'Keep Gem glow, Coin memory and The Mine on a layer up to volts', x: 'gem' },
+    { id: 'v3', r: 1, c: 2, name: 'Fast charge', cost: 30, cg: 4, max: 4, req: ['v1'], d: 'The capacitor charges ×(1 + level)', cm: (l) => 1 + l },
+    { id: 'v4', r: 2, c: 0, name: 'Ore surge', cost: 50, cg: 6, max: 3, req: ['v2'], d: 'Ore grows with your volts ever', x: 'gem', om: (l) => 1 + l * S.voltsLife / 20 },
+    { id: 'v5', r: 2, c: 1, name: 'Long burst', cost: 80, cg: 4, max: 3, req: ['v1'], d: 'Bursts last ×(1 + level)' },
+    { id: 'v6', r: 2, c: 2, name: 'Mine robot', cost: 100, max: 1, req: ['v3'], d: 'Places drills on empty tiles by itself', x: 'gem' },
+    { id: 'v7', r: 3, c: 0, name: 'Full gem memory', cost: 400, max: 1, req: ['v4'], d: 'Keep every gem upgrade on a layer up to volts', x: 'gem' },
+    { id: 'v8', r: 3, c: 1, name: 'Overload', cost: 300, cg: 6, max: 3, req: ['v5'], d: 'Bursts +×25 per level' },
+    { id: 'v9', r: 3, c: 2, name: 'Dynamo', cost: 600, cg: 8, max: 3, req: ['v6'], d: 'Volts from a layer up grow with your gem upgrades', x: 'gem', vm: (l) => 1 + l * count(S.gu) / 4 },
+    { id: 'v10', r: 4, c: 0, name: 'Superconductor', cost: 500, cg: 8, max: 3, req: ['v7'], d: 'Ore grows with your volt endless levels', x: 'gem', om: (l) => 1 + l * (Number(S.bl.b5 || 0) + Number(S.bl.b6 || 0)) / 5 },
+    { id: 'v11', r: 4, c: 2, name: 'Static', cost: 800, cg: 10, max: 3, req: ['v9'], d: 'Volts from a layer up ×2 per level', vm: (l) => Math.pow(2, l) },
   ],
 };
-const ALL = [...TREE.coin.map((u) => ({ ...u, L: 'coin' })), ...TREE.gem.map((u) => ({ ...u, L: 'gem' })), ...TREE.volt.map((u) => ({ ...u, L: 'volt' }))];
+// endless upgrades: every level adds a little, the price grows faster (Franz: "less multiplier than the price increase")
+const BUY = {
+  coin: [
+    { id: 'b1', icon: '⚙️', name: 'Overclock', cost: 3000, cg: 1.6, d: 'Coins ×1.15 per level', m: (l) => Math.pow(1.15, l) },
+    { id: 'b2', icon: '🧑‍💼', name: 'Interns', cost: 600, cg: 1.45, d: 'Base pay +1 per level', base: (l) => l },
+  ],
+  gem: [
+    { id: 'b3', icon: '🗜️', name: 'Gem press', cost: 100, cg: 1.8, d: 'Coins ×1.25 per level', m: (l) => Math.pow(1.25, l) },
+    { id: 'b4', icon: '🔩', name: 'Drill bits', cost: 200, cg: 1.7, d: 'Ore ×1.2 per level', om: (l) => Math.pow(1.2, l) },
+  ],
+  volt: [
+    { id: 'b5', icon: '🌀', name: 'Coils', cost: 50, cg: 1.9, d: 'Gems from a layer up ×1.15 per level', gm: (l) => Math.pow(1.15, l) },
+    { id: 'b6', icon: '🔌', name: 'Transformer', cost: 100, cg: 2, d: 'Volts from a layer up ×1.1 per level', vm: (l) => Math.pow(1.1, l) },
+  ],
+};
+const ALL = [...BUY.coin.map((u) => ({ ...u, L: 'coin', inf: true })), ...BUY.gem.map((u) => ({ ...u, L: 'gem', inf: true })), ...BUY.volt.map((u) => ({ ...u, L: 'volt', inf: true })), ...TREE.coin.map((u) => ({ ...u, L: 'coin' })), ...TREE.gem.map((u) => ({ ...u, L: 'gem' })), ...TREE.volt.map((u) => ({ ...u, L: 'volt' }))];
 const bag = (L) => (L === 'coin' ? S.cu : L === 'gem' ? S.gu : S.vu);
 const wallet = (L) => (L === 'coin' ? 'coins' : L === 'gem' ? 'gems' : 'volts');
-const lv = (u) => Number(bag(u.L)[u.id] || 0);
+const bagOf = (u) => (u.inf ? S.bl : bag(u.L));
+const lv = (u) => Number(bagOf(u)[u.id] || 0);
 const owned = (u) => lv(u) > 0;
-const maxed = (u) => lv(u) >= (u.max || 1);
+const maxed = (u) => !u.inf && lv(u) >= (u.max || 1);
 const costAt = (u) => u.cost * Math.pow(u.cg || 1, lv(u));
-const reqOk = (u) => u.req.every((r) => has(r)) && (!u.need || S.top >= u.need);
+const reqOk = (u) => (u.req || []).every((r) => has(r)) && (!u.need || S.top >= u.need);
 
 // ---------- the numbers: every multiplier is listed, so the breakdown can show where income comes from
 function coinParts() {
@@ -229,11 +261,11 @@ function drillPower(i) {
 function oreRate() { if (!S.gu.g3) return 0; const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return soft(r * 0.1 * prod('om') * burstMult(), 1e3, 0.5); }
 const oreMult = () => 1 + Math.sqrt(S.ore) / 5;
 const burstMult = () => (S.burst > 0 ? 25 * (1 + Number(S.vu.v8 || 0)) : 1);
-const gemGain = () => (S.run < 1e4 ? 0 : Math.floor(soft(Math.pow(S.run / 1e4, 0.3) * prod('gm'), 200, 0.5)));
-const voltGain = () => (S.ore < 1.5e4 ? 0 : Math.floor(soft(Math.pow(S.ore / 1.5e4, 0.5) * prod('vm'), 10, 0.5)));
+const gemGain = () => (S.run < 1e6 ? 0 : Math.floor(soft(10 * Math.pow(S.run / 1e6, 0.3) * prod('gm'), 2000, 0.5)));
+const voltGain = () => (S.ore < 3e4 ? 0 : Math.floor(soft(10 * Math.pow(S.ore / 3e4, 0.5) * prod('vm'), 100, 0.5)));
 const chargeRate = () => 0.03 * prod('cm');
 const burstLen = () => 10 * (1 + Number(S.vu.v5 || 0));
-const TILES = { drill: { icon: '⛏️', c: 1, name: 'Drill' }, amp: { icon: '📡', c: 2, name: 'Amplifier', up: 'g6' }, crystal: { icon: '🔮', c: 5, name: 'Crystal', up: 'g9' } };
+const TILES = { drill: { icon: '⛏️', c: 10, name: 'Drill' }, amp: { icon: '📡', c: 20, name: 'Amplifier', up: 'g6' }, crystal: { icon: '🔮', c: 50, name: 'Crystal', up: 'g9' } };
 
 // ---------- sound
 const Sound = {
@@ -262,7 +294,7 @@ function buy(u, el) {
   if (maxed(u) || !reqOk(u)) return;
   const w = wallet(u.L), c = costAt(u); if (S[w] < c) return;
   const before = coinRate();
-  S[w] -= c; bag(u.L)[u.id] = lv(u) + 1; Sound.init(); Sound.buy(levels(S.cu) + levels(S.gu) + levels(S.vu));
+  S[w] -= c; bagOf(u)[u.id] = lv(u) + 1; Sound.init(); Sound.buy(levels(S.cu) + levels(S.gu) + levels(S.vu));
   if (maxed(u) && (u.max || 1) > 1) toast(`${u.name} maxed!`, `level ${u.max} of ${u.max}`, COL[u.L]);
   const gain = coinRate() / before;
   if (el) { el.classList.add('got'); flyTo(el, gain > 1.001 ? `×${fmt(gain)}` : '✓', COL[u.L]); }
@@ -293,10 +325,10 @@ function layerUp() {
   else {
     S.volts += gain; S.voltsLife += gain;
     const keep = S.vu.v7 ? { ...S.gu } : S.vu.v2 ? Object.fromEntries(['g1', 'g2', 'g3'].filter((k) => S.gu[k]).map((k) => [k, S.gu[k]])) : {};
-    S.gems = 0; S.gemsRun = 0; S.gu = keep; S.grid = Array(25).fill(null); S.ore = 0;
+    S.gems = 0; S.gemsRun = 0; S.gu = keep; S.grid = Array(25).fill(null); S.ore = 0; S.bl.b3 = 0; S.bl.b4 = 0;
   }
   const rows = Number(S.gu.g2 || 0), keepC = S.gu.g5 ? { ...S.cu } : Object.fromEntries(TREE.coin.filter((u) => u.r < rows && S.cu[u.id]).map((u) => [u.id, S.cu[u.id]]));
-  S.coins = 0; S.run = 0; S.runT = 0; S.cu = keepC;
+  S.coins = 0; S.run = 0; S.runT = 0; S.cu = keepC; S.bl.b1 = 0; S.bl.b2 = 0;
   S.resets[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].name}`, LAYERS[next].what, LAYERS[next].c), 1500); }
   render(true); save();
 }
@@ -311,7 +343,7 @@ function step(dt) {
 let autoT = 0;
 function automate(dt) {
   autoT += dt; if (autoT < 0.5) return; autoT = 0;
-  if (S.vu.v6 && S.gu.g3) { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x] && S.gems >= 1) { S.gems -= 1; S.grid[y * 5 + x] = 'drill'; } }
+  if (S.vu.v6 && S.gu.g3) { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x] && S.gems >= TILES.drill.c) { S.gems -= TILES.drill.c; S.grid[y * 5 + x] = 'drill'; } }
 }
 
 // ---------- rendering
@@ -356,17 +388,30 @@ function drawLines(tree, L) {
   }
   svg.innerHTML = html;
 }
+function renderBuy(L, box) {
+  const c = document.createElement('div'); c.className = 'card';
+  c.innerHTML = '<h2>♾️ Endless upgrades</h2><p>No maximum: every level adds a little, but the price grows faster than the bonus.</p>';
+  for (const u0 of BUY[L]) {
+    const u = ALL.find((x) => x.id === u0.id), r = document.createElement('div'); r.className = 'brow'; r.setAttribute('data-buy', u.id);
+    r.innerHTML = `<div class="bi">${u.icon}</div><div><b></b><span data-k="e"></span></div><button class="bbtn" type="button" data-k="one"></button><button class="bbtn max" type="button" data-k="max">MAX</button>`;
+    r.querySelector('b').textContent = u.name;
+    r.querySelector('[data-k=one]').addEventListener('click', (e) => buy(u, e.currentTarget));
+    r.querySelector('[data-k=max]').addEventListener('click', (e) => { let n = 0; const before = coinRate(); while (n < 500 && S[wallet(u.L)] >= costAt(u)) { S[wallet(u.L)] -= costAt(u); S.bl[u.id] = lv(u) + 1; n++; } if (n) { Sound.init(); Sound.buy(levels(S.bl)); flyTo(e.currentTarget, `+${n} lv`, COL[u.L]); render(true); save(); } void before; });
+    c.appendChild(r);
+  }
+  box.appendChild(c);
+}
 function renderScreen() {
   const box = $('screen'); box.textContent = '';
   const L = LAYERS[S.tab].id;
   if (L === 'coin') {
     const c = document.createElement('div'); c.className = 'card';
     c.innerHTML = '<h2>🪙 The coin tree</h2><p>You earn a base pay every second. Every upgrade has levels (each with its own maximum) and multiplies it; many grow with something else: your coins, the time of this run, other layers (the coloured corner shows which).</p>';
-    renderTree('coin', c); box.appendChild(c);
+    renderTree('coin', c); box.appendChild(c); renderBuy('coin', box);
   } else if (L === 'gem') {
     const c = document.createElement('div'); c.className = 'card';
     c.innerHTML = '<h2>💎 The gem tree</h2><p>Gems come from layering up coins. They boost coins, keep coin upgrades on a reset, and open the Mine.</p>';
-    renderTree('gem', c); box.appendChild(c);
+    renderTree('gem', c); box.appendChild(c); renderBuy('gem', box);
     if (S.gu.g3) {
       const n = side(), m = document.createElement('div'); m.className = 'card';
       m.innerHTML = '<h2>⛏️ The Mine</h2><p>Place tiles with gems. Drills dig ore; ore multiplies coins and turns into volts. Amplifiers power their neighbours, crystals double their row and column. Tap a tile again to take it back (full refund).</p>';
@@ -383,7 +428,7 @@ function renderScreen() {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'wide'; b.setAttribute('data-k', 'dis'); b.textContent = 'Discharge'; b.addEventListener('click', discharge); k.appendChild(b);
     box.appendChild(k);
     const c = document.createElement('div'); c.className = 'card'; c.innerHTML = '<h2>⚡ The volt tree</h2><p>Volts come from layering up the mine (ore). They multiply coins and ore and keep gem upgrades on a reset.</p>';
-    renderTree('volt', c); box.appendChild(c);
+    renderTree('volt', c); box.appendChild(c); renderBuy('volt', box);
   }
 }
 function refresh() {
@@ -403,11 +448,16 @@ function refresh() {
     b.querySelector('[data-k=now]').textContent = f ? `${lvTxt}${fx(f(l))}${full ? '' : ` → ${fx(f(l + 1))}`}` : u.base ? `${lvTxt}+${fmt(u.base(l))}${full ? '' : ` → +${fmt(u.base(l + 1))}`} base` : (mx > 1 ? `Lv ${l}/${mx}` : '');
     b.querySelector('.cost').textContent = full ? (mx > 1 ? 'MAX' : 'owned') : !ok ? (u.need && S.top < u.need ? `needs ${LAYERS[u.need].name}` : 'locked') : `${fmt(costAt(u))} ${LAYERS.find((z) => z.id === u.L).icon}`;
   });
+  document.querySelectorAll('[data-buy]').forEach((r) => {
+    const u = ALL.find((x) => x.id === r.getAttribute('data-buy')), l = lv(u), f = u.m || u.gm || u.om || u.vm, c = costAt(u), ok = S[wallet(u.L)] >= c;
+    r.querySelector('[data-k=e]').textContent = `Lv ${l} · ${f ? `${fx(f(l))} → ${fx(f(l + 1))}` : `+${fmt(u.base(l))} → +${fmt(u.base(l + 1))} base`} · ${u.d}`;
+    const one = r.querySelector('[data-k=one]'); one.innerHTML = `Buy<small>${fmt(c)} ${LAYERS.find((z) => z.id === u.L).icon}</small>`; one.disabled = !ok; r.querySelector('[data-k=max]').disabled = !ok;
+  });
   if (L === 'volt') { const f = document.querySelector('[data-k=cf]'); if (f) { f.style.width = `${S.charge * 100}%`; document.querySelector('[data-k=ct]').textContent = S.burst > 0 ? `BURST · ${Math.ceil(S.burst)} s` : `${Math.floor(S.charge * 100)} % · full in ${fmt(Math.max(0, (1 - S.charge) / chargeRate()))} s`; document.querySelector('[data-k=dis]').disabled = S.charge < 0.05 || S.burst > 0; } }
   document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : fmt(S.volts); });
   const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c);
-  if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e4)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and coin upgrades${S.gu.g5 ? ' (kept: all)' : S.gu.g2 ? ` (kept: ${S.gu.g2} row${S.gu.g2 > 1 ? 's' : ''})` : ''}</small>`; }
-  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !S.gu.g3 ? 'Layer up to ⚡ volts<small>open the Mine first (gem tree)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(1.5e4)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the mine and coins</small>`; }
+  if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e6)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and coin upgrades${S.gu.g5 ? ' (kept: all)' : S.gu.g2 ? ` (kept: ${S.gu.g2} row${S.gu.g2 > 1 ? 's' : ''})` : ''}</small>`; }
+  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !S.gu.g3 ? 'Layer up to ⚡ volts<small>open the Mine first (gem tree)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(3e4)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the mine and coins</small>`; }
   else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🧪 the Lab is being built</small>'; }
   let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${burstMult()} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
 }
@@ -432,7 +482,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, ALL, TREE, coinRate, oreRate, reqOk, owned, maxed, costAt, render };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, ALL, TREE, BUY, coinRate, oreRate, reqOk, owned, maxed, costAt, render };
 render(true);
 requestAnimationFrame(frame);
 })();
