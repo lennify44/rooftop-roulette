@@ -122,6 +122,9 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .flash b { font-family: var(--font-display); font-weight: 900; font-size: clamp(48px, 14vw, 110px); color: #120c22; text-transform: uppercase; animation: zoom 1.8s ease-out forwards; text-align: center; line-height: 0.9; }
 @keyframes fl { 70% { opacity: 1; } to { opacity: 0; } }
 @keyframes zoom { from { transform: scale(0.3) rotate(-8deg); } 30% { transform: scale(1.1); } to { transform: scale(1.5); } }
+.flash .stack { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; gap: 6px; width: min(80vw, 420px); }
+.flash .stack span { display: block; padding: 8px 14px; border-radius: 12px; background: var(--c); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: rise 0.5s ease-out backwards; animation-delay: calc(var(--i) * 0.18s); box-shadow: 0 0 24px var(--c); }
+@keyframes rise { from { transform: translateY(80px) scale(0.6); opacity: 0; } }
 .fly { position: fixed; z-index: 10; pointer-events: none; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-shadow: 0 2px 0 rgba(0,0,0,0.6); transition: transform 0.7s cubic-bezier(.3,.7,.2,1), opacity 0.7s; }
 .spark { position: fixed; z-index: 10; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; transition: transform 0.6s ease-out, opacity 0.6s; }
 .over { position: fixed; inset: 0; z-index: 9; background: rgba(10,7,22,0.94); overflow-y: auto; padding: max(14px, env(safe-area-inset-top)) 14px 40px; }
@@ -411,7 +414,7 @@ function layerUp() {
   const next = S.tab + 1, gain = next === 1 ? gemGain() : voltGain();
   if (gain < 1) return;
   Sound.init(); Sound.up();
-  const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
+  const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<div class="stack">${LAYERS.slice(0, next + 1).map((z, i) => `<span style="--c:${z.c};--i:${i}">${z.icon} ${z.name}</span>`).join('')}</div><b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
   if (next === 1) { S.gems += gain; S.gemsLife += gain; S.gemsRun += gain; }
   else {
     S.volts += gain; S.voltsLife += gain;
@@ -485,8 +488,13 @@ function renderWeb(L, box) {
   box.appendChild(card);
   viewEl = view; planeEl = plane;
   view.querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const c = cam(L), z = b.getAttribute('data-z'); if (z === 'in') c.z = Math.min(1.6, c.z * 1.25); else if (z === 'out') c.z = Math.max(0.35, c.z / 1.25); else { c.x = 0; c.y = 0; c.z = 1; } applyCam(); }));
-  view.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-z]')) return; drag = { x: e.clientX, y: e.clientY, cx: cam(L).x, cy: cam(L).y, moved: false, node: e.target.closest('[data-node]') }; if (view.setPointerCapture) view.setPointerCapture(e.pointerId); view.style.cursor = 'grabbing'; });
-  view.addEventListener('pointermove', (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 6) drag.moved = true; if (drag.moved) { const c = cam(L); c.x = drag.cx + dx / c.z; c.y = drag.cy + dy / c.z; applyCam(); } });
+  const pts = new Map(); let pinch = null;
+  view.addEventListener('pointerdown', (e) => { pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: cam(L).z }; drag = null; } });
+  view.addEventListener('pointermove', (e) => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]); if (pinch && pts.size === 2) { const [a, b] = [...pts.values()]; cam(L).z = Math.max(0.35, Math.min(1.6, pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d)); applyCam(); } });
+  const lift = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
+  view.addEventListener('pointerup', lift); view.addEventListener('pointercancel', lift);
+  view.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-z]') || pinch) return; drag = { x: e.clientX, y: e.clientY, cx: cam(L).x, cy: cam(L).y, moved: false, node: e.target.closest('[data-node]') }; if (view.setPointerCapture) view.setPointerCapture(e.pointerId); view.style.cursor = 'grabbing'; });
+  view.addEventListener('pointermove', (e) => { if (!drag || pinch) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 6) drag.moved = true; if (drag.moved) { const c = cam(L); c.x = drag.cx + dx / c.z; c.y = drag.cy + dy / c.z; applyCam(); } });
   const up = () => { if (!drag) return; const d = drag; drag = null; view.style.cursor = ''; if (!d.moved && d.node) { S.sel[L] = d.node.getAttribute('data-node'); Sound.init(); renderSheet(); refresh(); } save(); };
   view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
   requestAnimationFrame(applyCam);
