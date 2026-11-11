@@ -109,6 +109,12 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .cap span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: #fff; text-shadow: 0 1px 3px #000; }
 .opt .wide { flex: 1; background: var(--acc); color: #120c22; justify-content: center; }
 .opt .wide:disabled { opacity: 0.35; }
+.ship { padding: 8px 0; border-top: 1px solid rgba(169,139,255,0.3); }
+.ship b { font-family: var(--font-display); font-weight: 900; font-size: 18px; text-transform: uppercase; }
+.dests { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; margin-top: 6px; }
+.dests button { min-height: 52px; padding: 4px 8px; border-radius: 12px; border: 2px solid var(--star, #a98bff); background: rgba(169,139,255,0.1); color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 15px; cursor: pointer; text-align: left; }
+.dests button small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--haze); }
+.ship .cap { border-color: #a98bff; } .ship .cap i { background: linear-gradient(90deg, #6a4aff, #a98bff, #fff); }
 .rx-slots { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 6px 0; font-family: var(--font-display); font-weight: 900; font-size: 24px; text-transform: uppercase; }
 .rx-slots span { min-width: 120px; padding: 10px; border-radius: 14px; border: 3px dashed var(--lab); text-align: center; }
 .rx-pal { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
@@ -186,15 +192,18 @@ const log10 = (n) => Math.log10(Math.max(1, n));
 
 // ---------- save
 const SAVE = 'layer-up-save-v3';
-const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill',
-  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0], bursts: 0, reacts: 0, bestRate: 0, born: Date.now() }, sel: {}, cam: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
+const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill',
+  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0], trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, born: Date.now() }, sel: {}, cam: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
-while (S.st.ups.length < 4) S.st.ups.push(0);
+while (S.st.ups.length < 5) S.st.ups.push(0);
+if (!Array.isArray(S.ships)) S.ships = [];
+if (!S.relics) S.relics = {};
 for (const k of ['found', 'tried']) if (!S[k]) S[k] = {};
 if (!Array.isArray(S.slots)) S.slots = [null, null];
 const save = () => { S.last = Date.now(); store.set(SAVE, S); };
 function fmt(n) { if (!isFinite(n)) return '∞'; if (n < 1000) return n < 10 ? (Math.round(n * 100) / 100).toString() : String(Math.floor(n)); if (S.sci) return n.toExponential(2).replace('+', ''); const e = Math.floor(Math.log10(n) / 3); if (e < SUF.length) { const v = n / Math.pow(1000, e); return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + SUF[e]; } return n.toExponential(2).replace('+', ''); }
 const fx = (m) => `×${fmt(m)}`;
+const fmtT = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min` : sec >= 60 ? `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}` : `${Math.ceil(sec)} s`);
 
 // ---------- layers
 const LAYERS = [
@@ -202,9 +211,10 @@ const LAYERS = [
   { id: 'gem', name: 'Gems', icon: '💎', c: '#3ef2ff', what: 'The gem web + the Mine' },
   { id: 'volt', name: 'Volts', icon: '⚡', c: '#b6ff3b', what: 'The volt web + the Capacitor' },
   { id: 'lab', name: 'Elements', icon: '🧪', c: '#ff4fa3', what: 'The lab web + the Reactor' },
-  { id: 'next', name: '???', icon: '🌌', c: '#a98bff', what: 'coming soon' },
+  { id: 'star', name: 'Stars', icon: '🌌', c: '#a98bff', what: 'The star web + Expeditions' },
+  { id: 'next', name: '???', icon: '🌀', c: '#7dffcf', what: 'coming soon' },
 ];
-const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', lab: '#ff4fa3', ore: '#9ad8ff', ach: '#ff9ad5' };
+const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', lab: '#ff4fa3', star: '#a98bff', ore: '#9ad8ff', ach: '#ff9ad5' };
 
 // ---------- the webs: grown from a centre in four directions, the same for every player (seeded)
 function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -214,6 +224,7 @@ const WEBCFG = {
   gem: { seed: 23, base: 10, grow: 3.2, arms: { N: [11, 0.6, 3], E: [9, 0.6, 3], S: [8, 0.6, 2], W: [9, 0.6, 3] }, theme: { N: 'mine', E: 'gain', S: 'mem', W: 'syn', B: 'gain' } },
   volt: { seed: 37, base: 5, grow: 2.2, arms: { N: [6, 0.5, 2], E: [5, 0.5, 2], S: [5, 0.5, 2], W: [5, 0.5, 2] }, theme: { N: 'burst', E: 'charge', S: 'keep', W: 'ore', B: 'charge' } },
   lab: { seed: 53, base: 5, grow: 3.5, arms: { N: [9, 0.6, 3], E: [8, 0.6, 2], S: [8, 0.6, 2], W: [8, 0.6, 3] }, theme: { N: 'react', E: 'egain', S: 'auto', W: 'boost', B: 'egain' } },
+  star: { seed: 71, base: 3, grow: 3.2, arms: { N: [10, 0.6, 3], E: [9, 0.6, 3], S: [9, 0.6, 2], W: [9, 0.6, 3] }, theme: { N: 'voyage', E: 'sgain', S: 'keepl', W: 'cosmos', B: 'sgain' } },
 };
 // effect templates: t = what it does, a/b = strength, max = levels
 function effectFor(L, theme, kind, d, i, main) {
@@ -234,6 +245,12 @@ function effectFor(L, theme, kind, d, i, main) {
     if (theme === 'mem') { if (main && d === 1) return { t: 'keepc', max: 4 }; return kind === 'key' ? { t: 'keepc-all', max: 1 } : kind === 'notable' ? { t: 'cm^', b: 3, max: 3 } : { t: 'cm+', a: 0.3, max: 5 }; }
     return kind === 'key' ? { t: 'syn-gems', a: 3, max: 1 } : kind === 'notable' ? { t: 'cm^', b: 3, max: 3 } : { t: 'syn-gems', a: 0.15, max: 5 };
   }
+  if (L === 'star') {
+    if (theme === 'voyage') { if (main && d === 1) return { t: 'ship', max: 3 }; return kind === 'key' ? { t: 'safe', max: 1 } : kind === 'notable' ? { t: 'xr^', b: 1.5, max: 3 } : alt ? { t: 'xs+', a: 0.2, max: 5 } : { t: 'xl-', a: 0.2, max: 4 }; }
+    if (theme === 'sgain') return kind === 'key' ? { t: 'sm^', b: 4, max: 1 } : kind === 'notable' ? { t: 'sm^', b: 1.5, max: 3 } : { t: 'sm+', a: 0.2, max: 5 };
+    if (theme === 'keepl') { if (main && d === 1) return { t: 'keepl', max: 4 }; if (main && d === 2) return { t: 'autovolt', max: 1 }; if (main && d === 3) return { t: 'autoelem', max: 1 }; return kind === 'key' ? { t: 'keepl-all', max: 1 } : kind === 'notable' ? { t: 'em^', b: 2, max: 3 } : { t: 'em+', a: 0.3, max: 5 }; }
+    return kind === 'key' ? { t: 'syn-star', a: 3, max: 1 } : kind === 'notable' ? { t: 'gm^', b: 3, max: 3 } : alt ? { t: 'cm+', a: 1, max: 5 } : { t: 'vm+', a: 0.5, max: 5 };
+  }
   if (L === 'lab') {
     if (theme === 'react') { if (main && d === 3) return { t: 'hint', max: 5 }; return kind === 'key' ? { t: 'rx^', b: 2, max: 1 } : kind === 'notable' ? { t: 'rx+', a: 0.5, max: 3 } : alt ? { t: 'rc-', a: 0.1, max: 5 } : { t: 'rx+', a: 0.15, max: 5 }; }
     if (theme === 'egain') return kind === 'key' ? { t: 'em^', b: 4, max: 1 } : kind === 'notable' ? { t: 'em^', b: 1.5, max: 3 } : { t: 'em+', a: 0.2, max: 5 };
@@ -245,19 +262,20 @@ function effectFor(L, theme, kind, d, i, main) {
   if (theme === 'keep') { if (main && d === 1) return { t: 'keepg', max: 4 }; if (main && d === 3) return { t: 'robot', max: 1 }; return kind === 'key' ? { t: 'keepg-all', max: 1 } : kind === 'notable' ? { t: 'vm^', b: 2, max: 3 } : { t: 'vm+', a: 0.2, max: 5 }; }
   return kind === 'key' ? { t: 'syn-volts', a: 3, max: 1 } : kind === 'notable' ? { t: 'om^', b: 2, max: 3 } : { t: 'om+', a: 0.3, max: 5 };
 }
-const CORE = { lab: { t: 'syn-elem', a: 1, max: 4, name: 'Catalyst' }, coin: { t: 'cm^', b: 2, max: 5, name: 'Piggy bank' }, gem: { t: 'syn-gems', a: 0.5, max: 4, name: 'Gem glow' }, volt: { t: 'syn-volts', a: 1, max: 3, name: 'Spark' } };
-const INF = { lab: [{ t: 'em*', b: 1.15, cg: 1.9, name: 'Distiller' }, { t: 'rx*', b: 1.08, cg: 2, name: 'Centrifuge' }], coin: [{ t: 'cm*', b: 1.15, cg: 1.6, name: 'Overclock' }, { t: 'base*', a: 1, cg: 1.45, name: 'Interns' }], gem: [{ t: 'cm*', b: 1.25, cg: 1.8, name: 'Gem press' }, { t: 'om*', b: 1.2, cg: 1.7, name: 'Drill bits' }], volt: [{ t: 'gm*', b: 1.15, cg: 1.9, name: 'Coils' }, { t: 'vm*', b: 1.1, cg: 2, name: 'Transformer' }] };
+const CORE = { star: { t: 'syn-star', a: 1, max: 4, name: 'Starlight' }, lab: { t: 'syn-elem', a: 1, max: 4, name: 'Catalyst' }, coin: { t: 'cm^', b: 2, max: 5, name: 'Piggy bank' }, gem: { t: 'syn-gems', a: 0.5, max: 4, name: 'Gem glow' }, volt: { t: 'syn-volts', a: 1, max: 3, name: 'Spark' } };
+const INF = { star: [{ t: 'sm*', b: 1.12, cg: 2, name: 'Telescope' }, { t: 'xr*', b: 1.05, cg: 2.2, name: 'Star map' }], lab: [{ t: 'em*', b: 1.15, cg: 1.9, name: 'Distiller' }, { t: 'rx*', b: 1.08, cg: 2, name: 'Centrifuge' }], coin: [{ t: 'cm*', b: 1.15, cg: 1.6, name: 'Overclock' }, { t: 'base*', a: 1, cg: 1.45, name: 'Interns' }], gem: [{ t: 'cm*', b: 1.25, cg: 1.8, name: 'Gem press' }, { t: 'om*', b: 1.2, cg: 1.7, name: 'Drill bits' }], volt: [{ t: 'gm*', b: 1.15, cg: 1.9, name: 'Coils' }, { t: 'vm*', b: 1.1, cg: 2, name: 'Transformer' }] };
 const NAMES = {
+  'sm+': ['Stargazer', 'Lens', 'Comet tail', 'Nova'], 'sm^': ['Supernova', 'Pulsar', 'Quasar'], 'xs+': ['Thrusters', 'Warp coil', 'Ion drive'], 'xl-': ['Shields', 'Hull plating', 'Radar'], 'xr^': ['Cargo bay', 'Collector', 'Archive'], 'syn-star': ['Starlight', 'Constellation'],
   'em+': ['Beaker', 'Flask', 'Burner', 'Pipette'], 'em^': ['Fusion', 'Fission', 'Transmute'], 'rx+': ['Enzyme', 'Stirrer', 'Heater', 'Mixer'], 'rc-': ['Recycler', 'Thrift lab', 'Spare parts'], 'syn-elem': ['Alchemy', 'Elixir'],
   'cm+': ['Tip jar', 'Price tag', 'Sales pitch', 'Side deal', 'Bargain', 'Markup', 'Hustle', 'Thrift'], 'cm^': ['Double down', 'Golden touch', 'Jackpot', 'Gold rush', 'Big spender'], 'base': ['Side hustle', 'Paper route', 'Night shift', 'Lemonade', 'Odd jobs'],
   'syn-coins': ['Interest', 'Snowball', 'Compound', 'Dividends'], 'syn-time': ['Momentum', 'Patience', 'Long game'], 'syn-nodes': ['Network', 'Web of trade', 'Connections'], 'syn-gems': ['Gem glow', 'Facets', 'Sparkle', 'Prism'], 'syn-volts': ['Static', 'Spark', 'Live wire'],
   'gm+': ['Gem sense', 'Cutter', 'Loupe', 'Polish'], 'gm^': ['Geode', 'Gem storm', 'Mother lode'], 'om+': ['Ore lust', 'Pickaxe', 'Shovel', 'Seam'], 'om^': ['Deep vein', 'Dynamite', 'Bedrock'],
   'vm+': ['Dynamo', 'Coil', 'Turbine'], 'vm^': ['Generator', 'Reactor'], 'ch+': ['Battery', 'Cell', 'Plug'], 'ch^': ['Fast charge', 'Supercharger'], 'bm+': ['Overload', 'Surge', 'Spike'], 'bm^': ['Thunderclap'], 'bl+': ['Long burst', 'Afterglow'],
 };
-const ICON = { 'em+': '⚗️', 'em^': '🧬', 'em*': '🫙', 'rx+': '🔬', 'rx^': '☢️', 'rx*': '🌀', 'rc-': '♻️', 'syn-elem': '🧪', hint: '🔎', keepv: '🧠', 'keepv-all': '🧠', autogem: '🤖', autocoin: '🤖', autodis: '🤖', 'cm+': '🪙', 'cm^': '💰', 'base': '💼', 'syn-coins': '📈', 'syn-time': '⏳', 'syn-nodes': '🕸️', 'syn-gems': '✨', 'syn-volts': '⚡', 'gm+': '💎', 'gm^': '💠', 'om+': '⛏️', 'om^': '🧨', 'vm+': '🔌', 'vm^': '🔋', 'ch+': '🔋', 'ch^': '⚡', 'bm+': '💥', 'bm^': '🌩️', 'bl+': '⏱️',
+const ICON = { 'sm+': '✨', 'sm^': '🌟', 'sm*': '🔭', 'xs+': '🚀', 'xl-': '🛡️', 'xr^': '📦', 'xr*': '🗺️', 'syn-star': '🌌', ship: '🛸', safe: '🛡️', keepl: '🧠', 'keepl-all': '🧠', autovolt: '🤖', autoelem: '🤖', 'em+': '⚗️', 'em^': '🧬', 'em*': '🫙', 'rx+': '🔬', 'rx^': '☢️', 'rx*': '🌀', 'rc-': '♻️', 'syn-elem': '🧪', hint: '🔎', keepv: '🧠', 'keepv-all': '🧠', autogem: '🤖', autocoin: '🤖', autodis: '🤖', 'cm+': '🪙', 'cm^': '💰', 'base': '💼', 'syn-coins': '📈', 'syn-time': '⏳', 'syn-nodes': '🕸️', 'syn-gems': '✨', 'syn-volts': '⚡', 'gm+': '💎', 'gm^': '💠', 'om+': '⛏️', 'om^': '🧨', 'vm+': '🔌', 'vm^': '🔋', 'ch+': '🔋', 'ch^': '⚡', 'bm+': '💥', 'bm^': '🌩️', 'bl+': '⏱️',
   mine: '🏔️', amp: '📡', crystal: '🔮', grid4: '🗺️', grid5: '🗺️', keepc: '🧠', 'keepc-all': '🧠', keepg: '🧠', 'keepg-all': '🧠', robot: '🤖', infx: '♾️', 'cm*': '⚙️', 'base*': '🧑‍💼', 'om*': '🔩', 'gm*': '🌀', 'vm*': '🔌' };
-const KEYNAMES = { 'rx^': 'Chain reaction', 'em^': 'Big crunch', 'keepv-all': 'Perfect memory', 'syn-elem': 'Philosopher stone', 'cm^': 'Big Bang', infx: 'Infinity engine', 'syn-coins': 'Avalanche', 'gm^': 'Crown jewel', 'om^': 'Core drill', 'keepc-all': 'Total recall', 'syn-gems': 'Diamond heart', 'bm^': 'Thunderclap', 'ch^': 'Tesla tower', 'keepg-all': 'Deep memory', 'syn-volts': 'Lightning rod' };
-const SPECIAL = { keepv: 'Volt memory', autogem: 'Gem robot', autocoin: 'Coin robot', autodis: 'Discharge robot', hint: 'Lab notes', mine: 'The Mine', amp: 'Amplifiers', crystal: 'Crystals', grid4: 'Wider mine', grid5: 'Deep mine', keepc: 'Coin memory', keepg: 'Gem memory', robot: 'Mine robot' };
+const KEYNAMES = { safe: 'Unbreakable hull', 'sm^': 'Big bang II', 'keepl-all': 'Cosmic memory', 'syn-star': 'Galaxy brain', 'rx^': 'Chain reaction', 'em^': 'Big crunch', 'keepv-all': 'Perfect memory', 'syn-elem': 'Philosopher stone', 'cm^': 'Big Bang', infx: 'Infinity engine', 'syn-coins': 'Avalanche', 'gm^': 'Crown jewel', 'om^': 'Core drill', 'keepc-all': 'Total recall', 'syn-gems': 'Diamond heart', 'bm^': 'Thunderclap', 'ch^': 'Tesla tower', 'keepg-all': 'Deep memory', 'syn-volts': 'Lightning rod' };
+const SPECIAL = { ship: 'Hangar', keepl: 'Lab memory', autovolt: 'Volt robot', autoelem: 'Element robot', keepv: 'Volt memory', autogem: 'Gem robot', autocoin: 'Coin robot', autodis: 'Discharge robot', hint: 'Lab notes', mine: 'The Mine', amp: 'Amplifiers', crystal: 'Crystals', grid4: 'Wider mine', grid5: 'Deep mine', keepc: 'Coin memory', keepg: 'Gem memory', robot: 'Mine robot' };
 function genWeb(L) {
   const cfg = WEBCFG[L], R = rng(cfg.seed), cells = new Map(), used = {};
   const add = (x, y, info) => { const k = `${x},${y}`; if (cells.has(k)) return null; const n = { id: `${L}:${k}`, L, x, y, ...info }; cells.set(k, n); return n; };
@@ -291,13 +309,13 @@ function genWeb(L) {
   });
   return nodes;
 }
-const WEB = { coin: genWeb('coin'), gem: genWeb('gem'), volt: genWeb('volt'), lab: genWeb('lab') };
+const WEB = { coin: genWeb('coin'), gem: genWeb('gem'), volt: genWeb('volt'), lab: genWeb('lab'), star: genWeb('star') };
 const NODE = {}; for (const L of Object.keys(WEB)) for (const n of WEB[L]) NODE[n.id] = n;
 const AT = {}; for (const L of Object.keys(WEB)) { AT[L] = {}; for (const n of WEB[L]) AT[L][`${n.x},${n.y}`] = n; }
 const nbrs = (n) => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => AT[n.L][`${n.x + dx},${n.y + dy}`]).filter(Boolean);
 const lvl = (n) => Number(S.u[n.id] || 0);
-const LIDX = { coin: 0, gem: 1, volt: 2, lab: 3 };
-const wallet = (L) => (L === 'coin' ? 'coins' : L === 'gem' ? 'gems' : L === 'volt' ? 'volts' : 'elems');
+const LIDX = { coin: 0, gem: 1, volt: 2, lab: 3, star: 4 };
+const wallet = (L) => (L === 'coin' ? 'coins' : L === 'gem' ? 'gems' : L === 'volt' ? 'volts' : L === 'lab' ? 'elems' : 'stars');
 const visible = (n) => n.kind === 'core' || lvl(n) > 0 || nbrs(n).some((m) => lvl(m) > 0);
 const reachable = (n) => n.kind === 'core' || nbrs(n).some((m) => lvl(m) > 0);
 const needOk = (n) => !n.e.need || S.top >= n.e.need;
@@ -305,17 +323,19 @@ const maxed = (n) => lvl(n) >= n.max;
 const costAt = (n) => n.cost * Math.pow(n.cg, lvl(n));
 const owned = (L) => WEB[L].filter((n) => lvl(n) > 0);
 const levelsIn = (L) => WEB[L].reduce((a, n) => a + lvl(n), 0);
-const has = (t) => WEB.coin.concat(WEB.gem, WEB.volt).some((n) => n.e.t === t && lvl(n) > 0);
-const lvT = (t) => WEB.coin.concat(WEB.gem, WEB.volt).reduce((a, n) => (n.e.t === t ? a + lvl(n) : a), 0);
+const has = (t) => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).some((n) => n.e.t === t && lvl(n) > 0);
+const lvT = (t) => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).reduce((a, n) => (n.e.t === t ? a + lvl(n) : a), 0);
 
 // ---------- effects: every multiplier a node can give, evaluated from its level
 const infx = () => (has('infx') ? 2 : 1);
 function val(n, l = lvl(n)) {
   const e = n.e;
   switch (e.t) {
-    case 'cm+': case 'gm+': case 'om+': case 'vm+': case 'ch+': case 'em+': case 'rx+': return 1 + e.a * l;
-    case 'cm^': case 'gm^': case 'om^': case 'vm^': case 'ch^': case 'bm^': case 'em^': case 'rx^': return Math.pow(e.b, l);
-    case 'cm*': case 'gm*': case 'om*': case 'vm*': case 'em*': case 'rx*': return Math.pow(e.b, l * infx());
+    case 'cm+': case 'gm+': case 'om+': case 'vm+': case 'ch+': case 'em+': case 'rx+': case 'sm+': case 'xs+': return 1 + e.a * l;
+    case 'cm^': case 'gm^': case 'om^': case 'vm^': case 'ch^': case 'bm^': case 'em^': case 'rx^': case 'sm^': case 'xr^': return Math.pow(e.b, l);
+    case 'cm*': case 'gm*': case 'om*': case 'vm*': case 'em*': case 'rx*': case 'sm*': case 'xr*': return Math.pow(e.b, l * infx());
+    case 'xl-': return Math.pow(1 - e.a, l);
+    case 'syn-star': return 1 + e.a * l * log10(S.starsLife + 1);
     case 'rc-': return Math.pow(1 - e.a, l);
     case 'syn-elem': return 1 + e.a * l * log10(S.elemsLife + 1);
     case 'syn-coins': return 1 + e.a * l * log10(S.coins + 1);
@@ -328,7 +348,7 @@ function val(n, l = lvl(n)) {
     default: return l;
   }
 }
-const KIND = (t) => (t.startsWith('em') ? 'elem' : t.startsWith('rx') ? 'rx' : t === 'rc-' ? 'rc' : t.startsWith('cm') || t.startsWith('syn') ? 'coin' : t.startsWith('gm') ? 'gem' : t.startsWith('om') ? 'ore' : t.startsWith('vm') ? 'volt' : t.startsWith('ch') ? 'charge' : t === 'base' || t === 'base*' ? 'base' : t.startsWith('bm') ? 'burstm' : t);
+const KIND = (t) => (t.startsWith('sm') ? 'star' : t.startsWith('xs') ? 'xspeed' : t.startsWith('xr') ? 'xrelic' : t.startsWith('xl') ? 'xrisk' : t.startsWith('em') ? 'elem' : t.startsWith('rx') ? 'rx' : t === 'rc-' ? 'rc' : t.startsWith('cm') || t.startsWith('syn') ? 'coin' : t.startsWith('gm') ? 'gem' : t.startsWith('om') ? 'ore' : t.startsWith('vm') ? 'volt' : t.startsWith('ch') ? 'charge' : t === 'base' || t === 'base*' ? 'base' : t.startsWith('bm') ? 'burstm' : t);
 function prodOf(kind, layer) { let p = 1; for (const L of Object.keys(WEB)) { if (layer && L !== layer) continue; for (const n of WEB[L]) if (lvl(n) > 0 && KIND(n.e.t) === kind) p *= val(n); } return p; }
 // the Reactor: combine two ingredients; 20 hidden recipes, some need earlier discoveries; each one is a permanent boost
 const BASES = [{ id: 'fire', icon: '🔥', name: 'Fire' }, { id: 'water', icon: '💧', name: 'Water' }, { id: 'earth', icon: '🌍', name: 'Earth' }, { id: 'air', icon: '💨', name: 'Air' }];
@@ -350,7 +370,7 @@ const foundN = () => Object.keys(S.found).length;
 function recipeMult(k) { const rx = prodOf('rx'); let m = 1; for (const r of RECIPES) if (S.found[r.id] && (r.k === k || r.k === 'all')) m *= 1 + (r.b - 1) * rx; return m; }
 const reactCost = () => Math.max(1, Math.ceil(5 * Math.pow(1.8, foundN()) * prodOf('rc')));
 const ingredients = () => [...BASES, ...RECIPES.filter((r) => S.found[r.id])];
-const elemGain = () => (S.voltsRun < 50 ? 0 : Math.floor(soft(20 * Math.pow(S.voltsRun / 50, 0.7) * prodOf('elem') * recipeMult('elem'), 100, 0.25)));
+const elemGain = () => (S.voltsRun < 50 ? 0 : Math.floor(soft(20 * Math.pow(S.voltsRun / 50, 0.7) * prodOf('elem') * boost('elem'), 100, 0.25)));
 function pickIngredient(id) { Sound.init(); if (!S.slots[0]) S.slots[0] = id; else if (!S.slots[1]) S.slots[1] = id; else S.slots = [id, null]; Sound.tile(); render(true); }
 function react() {
   const [a, b] = S.slots; if (!a || !b) return;
@@ -364,13 +384,38 @@ function react() {
   else { Sound.tile(); toast('Nothing happens', 'these two do not react', COL.lab); }
   S.slots = [null, null]; checkAch(); render(true); save();
 }
+// relics from expeditions: permanent, never reset; each adds to one category
+const RELIC_K = { coin: 'coins', gem: 'gems from a layer up', ore: 'ore', volt: 'volts from a layer up', elem: 'elements from a layer up', star: 'stars from a layer up' };
+const relicMult = (k) => 1 + Math.sqrt(S.relics[k] || 0);   // diminishing: many small relics do not snowball
+const boost = (k) => recipeMult(k) * relicMult(k);
+const DEST = [
+  { id: 'moon', icon: '🌙', name: 'Moon', secs: 120, tier: 1, risk: 0 }, { id: 'mars', icon: '🔴', name: 'Mars', secs: 600, tier: 2, risk: 0.05 },
+  { id: 'belt', icon: '☄️', name: 'Asteroid belt', secs: 1800, tier: 4, risk: 0.1 }, { id: 'jup', icon: '🪐', name: 'Jupiter', secs: 3600, tier: 7, risk: 0.15 },
+  { id: 'deep', icon: '🌠', name: 'Deep space', secs: 14400, tier: 20, risk: 0.25 },
+];
+const shipCount = () => 1 + lvT('ship');
+const tripSecs = (d) => d.secs / prodOf('xspeed');
+const tripRisk = (d) => (has('safe') ? 0 : d.risk * prodOf('xrisk'));
+const starGain = () => (S.elemsRun < 200 ? 0 : Math.floor(soft(5 * Math.pow(S.elemsRun / 200, 0.6) * prodOf('star') * boost('star'), 50, 0.25)));
+function launch(i, id) { const d = DEST.find((x) => x.id === id); while (S.ships.length < shipCount()) S.ships.push(null); if (!d || S.ships[i]) return; S.ships[i] = { dest: id, left: tripSecs(d) }; Sound.init(); Sound.zap(); render(true); save(); }
+function collect(i, quiet) {
+  const sh = S.ships[i]; if (!sh || sh.left > 0) return; const d = DEST.find((x) => x.id === sh.dest); S.ships[i] = null; S.st.trips++;
+  if (Math.random() < tripRisk(d)) { if (!quiet) toast(`${d.icon} Lost in space`, 'the ship came back empty', COL.star); }
+  else {
+    const ks = ['coin', 'gem', 'ore'], k = ks[Math.floor(Math.random() * ks.length)], pw = 0.05 * d.tier * prodOf('xrelic');
+    S.relics[k] = (S.relics[k] || 0) + pw; S.relicN = (S.relicN || 0) + 1; if (d.id === 'deep') S.st.deep++;
+    if (!quiet) { Sound.ach(); const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.95), rgba(169,139,255,0.6) 40%, rgba(15,11,30,0.95) 75%)'; f.innerHTML = `<b>${d.icon}<br>Relic!</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800); toast(`Relic from the ${d.name}`, `${RELIC_K[k]}: now ×${fmt(relicMult(k))} forever`, COL.star); }
+  }
+  checkAch(); if (!quiet) render(true); save();
+}
 const achCount = () => Object.keys(S.ach).length;
 const achMult = () => Math.pow(1.03, achCount());
 function coinParts() {
   let base = 1; for (const L of Object.keys(WEB)) for (const n of WEB[L]) if (lvl(n) > 0 && KIND(n.e.t) === 'base') base += val(n);
   const parts = [{ t: 'base', v: base, c: COL.coin, plus: true }];
-  for (const L of ['coin', 'gem', 'volt', 'lab']) { const m = prodOf('coin', L); if (m > 1.0005) parts.push({ t: `${LAYERS[LIDX[L]].icon} web`, v: m, c: COL[L] }); }
+  for (const L of ['coin', 'gem', 'volt', 'lab', 'star']) { const m = prodOf('coin', L); if (m > 1.0005) parts.push({ t: `${LAYERS[LIDX[L]].icon} web`, v: m, c: COL[L] }); }
   const rcp = recipeMult('coin'); if (rcp > 1.0005) parts.push({ t: '⚗️ recipes', v: rcp, c: COL.lab });
+  const rl = relicMult('coin'); if (rl > 1.0005) parts.push({ t: '🛸 relics', v: rl, c: COL.star });
   if (has('mine')) parts.push({ t: 'ore', v: oreMult(), c: COL.ore });
   if (achCount()) parts.push({ t: '🏆', v: achMult(), c: COL.ach });
   if (S.burst > 0) parts.push({ t: 'BURST', v: burstMult(), c: COL.volt });
@@ -387,12 +432,12 @@ function drillPower(i) {
   for (let k = 0; k < n; k++) { if (S.grid[y * 5 + k] === 'crystal' && k !== x) p *= crystalMult(); if (S.grid[k * 5 + x] === 'crystal' && k !== y) p *= crystalMult(); }
   return p;
 }
-function oreRate() { if (!has('mine')) return 0; const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return soft(r * 0.1 * prodOf('ore') * recipeMult('ore') * burstMult(), 1e3, 0.5); }
+function oreRate() { if (!has('mine')) return 0; const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return soft(r * 0.1 * prodOf('ore') * boost('ore') * burstMult(), 1e3, 0.5); }
 const oreMult = () => 1 + Math.pow(log10(S.ore + 1), 2) / 2;
-const burstMult = () => (S.burst > 0 ? (25 + WEB.volt.reduce((a, n) => (n.e.t === 'bm+' && lvl(n) ? a + val(n) : a), 0)) * prodOf('burstm') * recipeMult('burst') : 1);
-const gemGain = () => (S.run < 1e6 ? 0 : Math.floor(soft(10 * Math.pow(S.run / 1e6, 0.3) * prodOf('gem') * recipeMult('gem'), 1000, 0.35)));
-const voltGain = () => (S.ore < 1.2e5 ? 0 : Math.floor(soft(25 * Math.pow(S.ore / 1.2e5, 0.5) * prodOf('volt') * recipeMult('volt'), 200, 0.25)));
-const chargeRate = () => 0.03 * prodOf('charge') * recipeMult('charge');
+const burstMult = () => (S.burst > 0 ? (25 + WEB.volt.reduce((a, n) => (n.e.t === 'bm+' && lvl(n) ? a + val(n) : a), 0)) * prodOf('burstm') * boost('burst') : 1);
+const gemGain = () => (S.run < 1e6 ? 0 : Math.floor(soft(10 * Math.pow(S.run / 1e6, 0.3) * prodOf('gem') * boost('gem'), 1000, 0.35)));
+const voltGain = () => (S.ore < 1.2e5 ? 0 : Math.floor(soft(25 * Math.pow(S.ore / 1.2e5, 0.5) * prodOf('volt') * boost('volt'), 200, 0.25)));
+const chargeRate = () => 0.03 * prodOf('charge') * boost('charge');
 const burstLen = () => 10 * WEB.volt.reduce((a, n) => (n.e.t === 'bl+' && lvl(n) ? a * val(n) : a), 1);
 const TILES = { drill: { icon: '⛏️', c: 10, name: 'Drill' }, amp: { icon: '📡', c: 20, name: 'Amplifier', up: 'amp' }, crystal: { icon: '🔮', c: 50, name: 'Crystal', up: 'crystal' } };
 function describe(n, l) {
@@ -406,10 +451,14 @@ function describe(n, l) {
     'em+': `Elements from a layer up +${Math.round((e.a || 0) * 100)} % per level`, 'em^': `Elements from a layer up ×${e.b} per level`, 'em*': `Elements from a layer up ×${e.b} per level, no maximum`,
     'rx+': `Recipe effects +${Math.round((e.a || 0) * 100)} % stronger per level`, 'rx^': `Recipe effects ×${e.b}`, 'rx*': `Recipe effects ×${e.b} per level, no maximum`, 'rc-': `Reactions cost ${Math.round((e.a || 0) * 100)} % less per level`,
     'syn-elem': 'Coins grow with every element you ever earned', hint: 'Each level reveals one ingredient of a recipe you have not found yet', keepv: 'A layer up to elements always keeps the volt nodes 2 steps around the centre; each level keeps 2 more steps',
-    'keepv-all': 'Keep the whole volt web on a layer up to elements', autogem: 'Layers up to gems by itself whenever it pays off', autocoin: 'Buys coin nodes by itself (cheapest first)', autodis: 'Discharges the capacitor by itself when it is full' };
+    'keepv-all': 'Keep the whole volt web on a layer up to elements', autogem: 'Layers up to gems by itself whenever it pays off', autocoin: 'Buys coin nodes by itself (cheapest first)', autodis: 'Discharges the capacitor by itself when it is full',
+    'sm+': `Stars from a layer up +${Math.round((e.a || 0) * 100)} % per level`, 'sm^': `Stars from a layer up ×${e.b} per level`, 'sm*': `Stars from a layer up ×${e.b} per level, no maximum`,
+    'xs+': `Expeditions +${Math.round((e.a || 0) * 100)} % faster per level`, 'xl-': `Expedition risk −${Math.round((e.a || 0) * 100)} % per level`, 'xr^': `Relics ×${e.b} stronger per level`, 'xr*': `Relics ×${e.b} stronger per level, no maximum`,
+    'syn-star': 'Coins grow with every star you ever earned', ship: 'One more ship per level', safe: 'Ships never get lost', keepl: 'A layer up to stars always keeps the lab nodes 2 steps around the centre; each level keeps 2 more steps',
+    'keepl-all': 'Keep the whole lab web on a layer up to stars', autovolt: 'Layers up to volts by itself whenever it pays off', autoelem: 'Layers up to elements by itself whenever it pays off' };
   return (D[t] || t) + (e.need && S.top < e.need ? ` (needs ${LAYERS[e.need].name})` : '');
 }
-const hasValue = (n) => !['mine', 'amp', 'crystal', 'grid4', 'grid5', 'keepc', 'keepc-all', 'keepg', 'keepg-all', 'robot', 'infx', 'hint', 'keepv', 'keepv-all', 'autogem', 'autocoin', 'autodis'].includes(n.e.t);
+const hasValue = (n) => !['mine', 'amp', 'crystal', 'grid4', 'grid5', 'keepc', 'keepc-all', 'keepg', 'keepg-all', 'robot', 'infx', 'hint', 'keepv', 'keepv-all', 'autogem', 'autocoin', 'autodis', 'ship', 'safe', 'keepl', 'keepl-all', 'autovolt', 'autoelem'].includes(n.e.t);
 const showVal = (n, l) => (KIND(n.e.t) === 'base' ? `+${fmt(val(n, l))} base` : n.e.t === 'bm+' ? `+×${fmt(val(n, l))}` : fx(val(n, l)));
 
 // ---------- sound and music
@@ -475,19 +524,20 @@ function discharge() {
 // ---------- layer up (memory nodes keep parts of the web)
 function layerUp(target, quiet) {
   const next = typeof target === 'number' ? target : S.tab + 1;
-  if (next < 1 || next > 3) return;
-  const gain = [0, gemGain(), voltGain(), elemGain()][next];
+  if (next < 1 || next > 4) return;
+  const gain = [0, gemGain(), voltGain(), elemGain(), starGain()][next];
   if (gain < 1) return;
   if (!quiet) {
     Sound.init(); Sound.up();
     const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<div class="stack">${LAYERS.slice(0, next + 1).map((z, i) => `<span style="--c:${z.c};--i:${i}">${z.icon} ${z.name}</span>`).join('')}</div><b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
   }
   // decide what the memory nodes keep before anything is deleted
-  const keepV = has('keepv-all'), reachV = 2 + 2 * lvT('keepv'), keepG = has('keepg-all'), reachG = 2 * lvT('keepg'), keepC = has('keepc-all'), reachC = 2 * lvT('keepc');
+  const keepL = has('keepl-all'), reachL = 2 + 2 * lvT('keepl'), keepV = has('keepv-all'), reachV = 2 + 2 * lvT('keepv'), keepG = has('keepg-all'), reachG = 2 * lvT('keepg'), keepC = has('keepc-all'), reachC = 2 * lvT('keepc');
   if (next === 1) { S.gems += gain; S.gemsLife += gain; S.gemsRun += gain; }
   if (next === 2) { S.volts += gain; S.voltsLife += gain; S.voltsRun += gain; }
-  if (next === 3) {
-    S.elems += gain; S.elemsLife += gain;
+  if (next === 4) { S.stars += gain; S.starsLife += gain; for (const n of WEB.lab) if (!(keepL || n.d <= reachL)) delete S.u[n.id]; S.elems = 0; S.elemsRun = 0; S.slots = [null, null]; }
+  if (next >= 3) {
+    if (next === 3) { S.elems += gain; S.elemsLife += gain; S.elemsRun += gain; }
     for (const n of WEB.volt) if (!(keepV || n.d <= reachV)) delete S.u[n.id];
     S.volts = 0; S.voltsRun = 0; S.charge = 0; S.burst = 0;
   }
@@ -508,10 +558,11 @@ const ACH = [
   ['Miner', 'Open the Mine', () => has('mine')], ['Full mine', 'Fill a whole mine', () => { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x]) return false; return true; }], ['Ore baron', '100K ore', () => S.ore >= 1e5],
   ['Gem explorer', 'Own 25 gem nodes', () => owned('gem').length >= 25], ['Gem web', 'Own every gem node', () => owned('gem').length === WEB.gem.length],
   ['Charged', 'Get your first volts', () => S.st.ups[2] >= 1], ['Volt hoard', '100 volts ever', () => S.voltsLife >= 100], ['Boom', 'Discharge a burst', () => S.st.bursts >= 1], ['Storm', '25 bursts', () => S.st.bursts >= 25],
-  ['Volt web', 'Own every volt node', () => owned('volt').length === WEB.volt.length], ['Keystone', 'Own a keystone', () => WEB.coin.concat(WEB.gem, WEB.volt).some((n) => n.kind === 'key' && lvl(n) > 0)], ['Keymaster', 'Own 5 keystones', () => WEB.coin.concat(WEB.gem, WEB.volt).filter((n) => n.kind === 'key' && lvl(n) > 0).length >= 5],
-  ['Endless', '25 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 25], ['Infinite', '200 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 200],
+  ['Volt web', 'Own every volt node', () => owned('volt').length === WEB.volt.length], ['Keystone', 'Own a keystone', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).some((n) => n.kind === 'key' && lvl(n) > 0)], ['Keymaster', 'Own 5 keystones', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).filter((n) => n.kind === 'key' && lvl(n) > 0).length >= 5],
+  ['Endless', '25 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 25], ['Infinite', '200 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 200],
   ['Chemist', 'Get your first elements', () => S.st.ups[3] >= 1], ['Eureka', 'Discover a recipe', () => foundN() >= 1], ['Alchemist', 'Discover 10 recipes', () => foundN() >= 10], ['Creator', 'Discover all 20 recipes', () => foundN() >= 20], ['Lab rat', 'Own 30 lab nodes', () => owned('lab').length >= 30],
-  ['Maxed out', 'Max any node with levels', () => WEB.coin.concat(WEB.gem, WEB.volt).some((n) => n.max > 1 && isFinite(n.max) && maxed(n))], ['Patient', 'Play for an hour', () => S.st.played >= 3600],
+  ['Stargazer', 'Get your first stars', () => S.st.ups[4] >= 1], ['Astronaut', 'Bring back a ship', () => S.st.trips >= 1], ['Collector', 'Find 10 relics', () => (S.relicN || 0) >= 10], ['Deep diver', 'Return from deep space with a relic', () => S.st.deep >= 1], ['Star web', 'Own 40 star nodes', () => owned('star').length >= 40],
+  ['Maxed out', 'Max any node with levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star).some((n) => n.max > 1 && isFinite(n.max) && maxed(n))], ['Patient', 'Play for an hour', () => S.st.played >= 3600],
 ];
 function checkAch() {
   for (const [name, , ok] of ACH) if (!S.ach[name]) { let got = false; try { got = ok(); } catch (e) { got = false; } if (got) { S.ach[name] = Date.now(); Sound.ach(); toast(`🏆 ${name}`, `achievement · coins +3 % (${achCount()}/${ACH.length})`, COL.ach); } }
@@ -521,11 +572,14 @@ function checkAch() {
 function step(dt) {
   const c = coinRate() * dt; S.coins += c; S.run += c; S.life += c; S.runT += dt; S.st.played += dt;
   S.ore += oreRate() * dt;
+  for (const sh of S.ships) if (sh && sh.left > 0) sh.left = Math.max(0, sh.left - dt);
   if (S.top >= 2) { if (S.burst > 0) S.burst = Math.max(0, S.burst - dt); else S.charge = Math.min(1, S.charge + chargeRate() * dt); }
 }
 let autoT = 0;
 function automate(dt) {
   autoT += dt; if (autoT < 0.5) return; autoT = 0;
+  if (has('autoelem') && elemGain() >= Math.max(1, S.elemsRun * 0.25)) layerUp(3, true);
+  if (has('autovolt') && voltGain() >= Math.max(1, S.voltsRun * 0.25)) layerUp(2, true);
   if (has('autogem') && S.runT > 5 && gemGain() >= Math.max(10, S.gemsRun * 0.25)) layerUp(1, true);
   if (has('autodis') && S.charge >= 1 && S.burst <= 0) { S.burst = burstLen(); S.charge = 0; S.st.bursts++; }
   if (has('autocoin')) { for (let k = 0; k < 5; k++) { const n = WEB.coin.filter((m) => !maxed(m) && reachable(m) && needOk(m) && S.coins >= costAt(m)).sort((x, y) => costAt(x) - costAt(y))[0]; if (!n) break; S.coins -= costAt(n); S.u[n.id] = lvl(n) + 1; } }
@@ -610,6 +664,20 @@ function renderScreen() {
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const i = y * 5 + x, t = S.grid[i], b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (t ? ' full' : ''); b.textContent = t ? TILES[t].icon : '+'; if (t === 'drill') { const p = document.createElement('small'); p.textContent = `×${fmt(drillPower(i))}`; b.appendChild(p); } b.addEventListener('click', () => tileAt(i)); g.appendChild(b); }
     m.appendChild(g); box.appendChild(m);
   }
+  if (L === 'star') {
+    while (S.ships.length < shipCount()) S.ships.push(null);
+    const k = document.createElement('div'); k.className = 'card';
+    k.innerHTML = `<h2>🚀 Expeditions <small>${shipCount()} ship${shipCount() > 1 ? 's' : ''} · ${S.relicN || 0} relics</small></h2><p>Send a ship out. It flies on while you are away. Longer trips bring stronger relics (a permanent boost that is never reset) but can get lost.</p>`;
+    S.ships.slice(0, shipCount()).forEach((sh, i) => {
+      const row = document.createElement('div'); row.className = 'ship'; row.setAttribute('data-ship', i);
+      if (!sh) { row.innerHTML = `<b>🛸 Ship ${i + 1} · ready</b>`; const g = document.createElement('div'); g.className = 'dests'; for (const d of DEST) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `${d.icon} ${d.name}<small>${fmtT(tripSecs(d))} · relic ×${d.tier}${tripRisk(d) ? ` · ${Math.round(tripRisk(d) * 100)} % risk` : ''}</small>`; b.addEventListener('click', () => launch(i, d.id)); g.appendChild(b); } row.appendChild(g); }
+      else if (sh.left > 0) { const d = DEST.find((x) => x.id === sh.dest); row.innerHTML = `<b>🛸 Ship ${i + 1} → ${d.icon} ${d.name}</b><div class="cap"><i data-k="sf"></i><span data-k="st"></span></div>`; }
+      else { const d = DEST.find((x) => x.id === sh.dest); const b = document.createElement('button'); b.type = 'button'; b.className = 'wide'; b.textContent = `Unload ship ${i + 1} from the ${d.name} ${d.icon}`; b.addEventListener('click', () => collect(i)); row.appendChild(b); }
+      k.appendChild(row);
+    });
+    const rel = document.createElement('div'); rel.className = 'chips'; rel.innerHTML = Object.entries(S.relics).map(([kk, v]) => `<span class="chip" style="--c:${COL.star}">🛸 ${RELIC_K[kk]} ×${fmt(1 + v)}</span>`).join('') || '<span class="chip" style="--c:#9a92b8">no relics yet</span>';
+    k.appendChild(rel); box.appendChild(k);
+  }
   if (L === 'lab') {
     const k = document.createElement('div'); k.className = 'card';
     const [a, b] = S.slots, ing = (id) => ingredients().find((x) => x.id === id), tried = a && b ? S.tried[[a, b].sort().join('+')] : 0;
@@ -647,16 +715,16 @@ let shownKey = '';
 function render(force) {
   document.documentElement.style.setProperty('--acc', LAYERS[S.tab].c);
   const L = LAYERS[S.tab].id;
-  const key = JSON.stringify([S.tab, S.top, WEB[L].filter(visible).length, owned(L).length, S.tool, S.grid, has('mine'), side(), S.slots, foundN(), L === 'lab' ? S.elems >= reactCost() : 0, lvT('hint')]);
+  const key = JSON.stringify([S.tab, S.top, WEB[L].filter(visible).length, owned(L).length, S.tool, S.grid, has('mine'), side(), S.slots, foundN(), L === 'lab' ? S.elems >= reactCost() : 0, lvT('hint'), S.ships.map((x) => (x ? (x.left > 0 ? 1 : 2) : 0)), S.relicN]);
   if (force || key !== shownKey) { shownKey = key; renderMap(); renderScreen(); }
   refresh();
 }
 function refresh() {
   const L = LAYERS[S.tab].id;
-  $('main').textContent = L === 'coin' ? `🪙 ${fmt(S.coins)}` : L === 'gem' ? `💎 ${fmt(S.gems)}` : L === 'volt' ? `⚡ ${fmt(S.volts)}` : `🧪 ${fmt(S.elems)}`;
+  $('main').textContent = L === 'coin' ? `🪙 ${fmt(S.coins)}` : L === 'gem' ? `💎 ${fmt(S.gems)}` : L === 'volt' ? `⚡ ${fmt(S.volts)}` : L === 'lab' ? `🧪 ${fmt(S.elems)}` : `🌌 ${fmt(S.stars)}`;
   const parts = coinParts(), raw = parts.reduce((a, p) => a * p.v, 1), rate = coinSoft(raw);
   if (rate < raw * 0.999) parts.push({ t: 'softcap', v: rate / raw, c: '#9a92b8' });
-  $('rate').textContent = L === 'coin' ? `${fmt(rate)} coins / s` : L === 'gem' ? `ore ${fmt(S.ore)} (+${fmt(oreRate())}/s) · ${fmt(rate)} coins/s` : L === 'volt' ? `charge ${Math.floor(S.charge * 100)} % · ${fmt(rate)} coins/s` : `recipes ${foundN()}/${RECIPES.length} · a reaction costs ${fmt(reactCost())} 🧪 · ${fmt(rate)} coins/s`;
+  $('rate').textContent = L === 'coin' ? `${fmt(rate)} coins / s` : L === 'gem' ? `ore ${fmt(S.ore)} (+${fmt(oreRate())}/s) · ${fmt(rate)} coins/s` : L === 'volt' ? `charge ${Math.floor(S.charge * 100)} % · ${fmt(rate)} coins/s` : L === 'lab' ? `recipes ${foundN()}/${RECIPES.length} · a reaction costs ${fmt(reactCost())} 🧪 · ${fmt(rate)} coins/s` : `${shipCount()} ships · ${S.relicN || 0} relics · ${fmt(rate)} coins/s`;
   const html = parts.filter((p) => p.plus || p.v > 1.0005 || p.t === 'softcap').map((p) => `<span class="chip" style="--c:${p.c}">${p.plus ? `base ${fmt(p.v)}` : p.t === 'softcap' ? `softcap ÷${fmt(1 / p.v)}` : `${p.t} ×${fmt(p.v)}`}</span>`).join('');
   if ($('chips').innerHTML !== html) $('chips').innerHTML = html;
   const w = wallet(L);
@@ -675,12 +743,14 @@ function refresh() {
     one.innerHTML = full ? 'MAX' : !reachable(n) ? 'Hidden' : `Buy<small>${fmt(c)} ${LAYERS[LIDX[L]].icon}</small>`; one.disabled = !ok; sh.querySelector('[data-k=max]').disabled = !ok || n.max === 1;
   }
   if (L === 'volt') { const f = document.querySelector('[data-k=cf]'); if (f) { f.style.width = `${S.charge * 100}%`; document.querySelector('[data-k=ct]').textContent = S.burst > 0 ? `BURST · ${Math.ceil(S.burst)} s` : `${Math.floor(S.charge * 100)} % · full in ${fmt(Math.max(0, (1 - S.charge) / chargeRate()))} s`; document.querySelector('[data-k=dis]').disabled = S.charge < 0.05 || S.burst > 0; } }
-  document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : i === 2 ? fmt(S.volts) : fmt(S.elems); });
+  document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : i === 2 ? fmt(S.volts) : i === 3 ? fmt(S.elems) : fmt(S.stars); });
   const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c);
   if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e6)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and the coin web${has('keepc-all') ? ' (kept: all)' : lvT('keepc') ? ` (kept: ${2 * lvT('keepc')} steps around the centre)` : ''}</small>`; }
   else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !has('mine') ? 'Layer up to ⚡ volts<small>open the Mine first (in the gem web)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(1.2e5)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the gem web, the mine and coins</small>`; }
   else if (S.tab === 2) { const e = elemGain(); up.disabled = e < 1; up.innerHTML = e < 1 ? `Layer up to 🧪 elements<small>at 50 volts earned this run (${fmt(S.voltsRun)})</small>` : `Layer up: +${fmt(e)} 🧪<small>resets volts, the volt web, gems, the mine and coins${has('keepv-all') ? ' (volt web kept)' : ''}</small>`; }
-  else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🌌 something big is being built</small>'; }
+  else if (S.tab === 3) { const g = starGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 🌌 stars<small>at 200 elements earned this run (${fmt(S.elemsRun)})</small>` : `Layer up: +${fmt(g)} 🌌<small>resets elements, the lab web and everything below (recipes and relics stay)</small>`; }
+  else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🌀 the next layer is being built</small>'; }
+  document.querySelectorAll('[data-ship]').forEach((r) => { const sh = S.ships[+r.getAttribute('data-ship')]; const f = r.querySelector('[data-k=sf]'); if (sh && f) { const d = DEST.find((x) => x.id === sh.dest), tot = tripSecs(d); f.style.width = `${Math.round((1 - sh.left / tot) * 100)}%`; r.querySelector('[data-k=st]').textContent = `back in ${fmtT(sh.left)}`; if (sh.left <= 0) shownKey = ''; } });
   let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${fmt(burstMult())} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
   S.st.bestRate = Math.max(S.st.bestRate || 0, rate);
 }
@@ -693,13 +763,13 @@ const score = () => Math.floor(S.top * 1000 + log10(S.life + 1) * 10 + achCount(
 function deviceId() { if (!S.deviceId) { S.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); save(); } return S.deviceId; }
 function openMenu() {
   const o = document.createElement('div'); o.className = 'over'; o.id = 'over';
-  const tot = WEB.coin.length + WEB.gem.length + WEB.volt.length + WEB.lab.length, own = owned('coin').length + owned('gem').length + owned('volt').length + owned('lab').length;
+  const tot = WEB.coin.length + WEB.gem.length + WEB.volt.length + WEB.lab.length + WEB.star.length, own = owned('coin').length + owned('gem').length + owned('volt').length + owned('lab').length + owned('star').length;
   const h = Math.floor(S.st.played / 3600), mi = Math.floor(S.st.played % 3600 / 60);
   o.innerHTML = `<div class="box"><div class="opt"><button type="button" id="mClose">✕ Close</button></div>
     <h2>📊 Stats</h2><dl class="stats">
       <div><dt>Time played</dt><dd>${h} h ${mi} min</dd></div><div><dt>Coins ever</dt><dd>${fmt(S.life)}</dd></div><div><dt>Best coins / s</dt><dd>${fmt(S.st.bestRate || 0)}</dd></div>
-      <div><dt>Gems ever</dt><dd>${fmt(S.gemsLife)}</dd></div><div><dt>Volts ever</dt><dd>${fmt(S.voltsLife)}</dd></div><div><dt>Layer ups</dt><dd>💎 ${S.st.ups[1]} · ⚡ ${S.st.ups[2]} · 🧪 ${S.st.ups[3]}</dd></div>
-      <div><dt>Elements ever</dt><dd>${fmt(S.elemsLife)}</dd></div><div><dt>Recipes</dt><dd>${foundN()}/${RECIPES.length}</dd></div>
+      <div><dt>Gems ever</dt><dd>${fmt(S.gemsLife)}</dd></div><div><dt>Volts ever</dt><dd>${fmt(S.voltsLife)}</dd></div><div><dt>Layer ups</dt><dd>💎 ${S.st.ups[1]} · ⚡ ${S.st.ups[2]} · 🧪 ${S.st.ups[3]} · 🌌 ${S.st.ups[4]}</dd></div>
+      <div><dt>Elements ever</dt><dd>${fmt(S.elemsLife)}</dd></div><div><dt>Recipes</dt><dd>${foundN()}/${RECIPES.length}</dd></div><div><dt>Stars ever</dt><dd>${fmt(S.starsLife)}</dd></div><div><dt>Relics</dt><dd>${S.relicN || 0}</dd></div>
       <div><dt>Nodes owned</dt><dd>${own}</dd></div><div><dt>Bursts</dt><dd>${S.st.bursts}</dd></div><div><dt>Score</dt><dd>${fmt(score())}</dd></div></dl>
     <h2>🏆 Achievements ${achCount()}/${ACH.length} <small style="font-size:14px">coins ×${fmt(achMult())}</small></h2><div class="achs">${ACH.map(([n, d]) => `<div class="ach${S.ach[n] ? ' on' : ''}"><b>${S.ach[n] ? '🏆' : '🔒'} ${n}</b><span>${d}</span></div>`).join('')}</div>
     <h2>⚙️ Settings</h2>
@@ -753,7 +823,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount };
 render(true);
 requestAnimationFrame(frame);
 })();
