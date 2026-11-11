@@ -25,8 +25,8 @@ img { max-width: 100%; }
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root {
-  /* Layout: the layer map on top (one colour per layer), the active layer's upgrade tree below, the income breakdown
-     under the big counter, Layer Up button pinned to the bottom */
+  /* Layout: layer map on top, then the active layer's upgrade web (a pannable 2D plane with fog, minimap and a node
+     detail sheet), the layer's own mechanic below it, Layer Up button pinned to the bottom; ⚙️ opens stats/settings */
   --night: #0f0b1e; --chalk: #fff7ee; --haze: #c4bce0;
   --coin: #ffc93c; --gem: #3ef2ff; --volt: #b6ff3b; --lab: #ff4fa3;
   --acc: var(--coin);
@@ -39,14 +39,15 @@ html { background: var(--night); }
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--font-body); font-size: 15px; -webkit-tap-highlight-color: transparent;
   background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--acc) 38%, #1a0f3a), var(--night) 62%); transition: background 0.6s; }
-#app { max-width: 760px; margin: 0 auto; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 120px max(12px, env(safe-area-inset-left)); }
+#app { max-width: 820px; margin: 0 auto; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 120px max(12px, env(safe-area-inset-left)); }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .big { font-family: var(--font-display); font-weight: 900; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--acc); text-shadow: 0 0 22px color-mix(in srgb, var(--acc) 50%, transparent); }
 .big.bump { animation: bump 0.25s ease-out; }
 @keyframes bump { 40% { transform: scale(1.12); } }
-.rate { font-family: var(--font-mono); font-size: 13px; color: var(--chalk); margin-top: 2px; }
+.rate { font-family: var(--font-mono); font-size: 13px; margin-top: 2px; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .chip { padding: 2px 7px; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: #120c22; background: var(--c); }
+.tbtns { display: flex; gap: 6px; }
 .icon-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.12); color: var(--chalk); font-size: 18px; cursor: pointer; }
 .map { display: flex; gap: 6px; margin: 12px 0; overflow-x: auto; padding-bottom: 4px; }
 .lay { flex: 1 0 100px; min-height: 66px; padding: 6px 8px; border-radius: 14px; border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 18%, #140e28); color: var(--chalk); text-align: left; cursor: pointer; font-family: var(--font-body); }
@@ -56,23 +57,45 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .lay[aria-pressed="true"] b { color: #120c22; }
 .lay.locked { opacity: 0.35; cursor: default; border-style: dashed; }
 .card { padding: 12px; border-radius: 18px; background: color-mix(in srgb, var(--acc) 10%, #17112e); border: 2px solid color-mix(in srgb, var(--acc) 35%, transparent); margin-bottom: 10px; }
-.card h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-transform: uppercase; color: var(--acc); }
+.card h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-transform: uppercase; color: var(--acc); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card h2 small { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--chalk); text-transform: none; }
 .card p { margin: 0 0 8px; color: var(--haze); font-size: 13px; }
-.tree { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 10px; padding: 6px 0; }
-.tree svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.node { position: relative; z-index: 1; min-height: 96px; padding: 7px 8px; border-radius: 14px; border: 2px solid var(--c); background: #140e28; color: var(--chalk); text-align: left; cursor: pointer; display: grid; align-content: start; gap: 2px; font-family: var(--font-body); }
-.node b { font-family: var(--font-display); font-weight: 900; font-size: 16px; line-height: 1; text-transform: uppercase; color: var(--c); }
-.node span { font-size: 12px; line-height: 1.25; color: var(--haze); }
-.node em { font-style: normal; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--chalk); }
-.node .cost { margin-top: 2px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--c); }
-.node.can { box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent); animation: glow 1.2s ease-in-out infinite alternate; }
-@keyframes glow { to { box-shadow: 0 0 24px color-mix(in srgb, var(--c) 75%, transparent); } }
-.node.own { background: var(--c); color: #120c22; }
-.node.own b, .node.own span, .node.own em, .node.own .cost { color: #120c22; }
-.node.locked { opacity: 0.35; border-style: dashed; cursor: default; }
-.node .x2 { position: absolute; top: 4px; right: 6px; font-size: 10px; padding: 0 4px; border-radius: 5px; background: var(--x); color: #120c22; font-family: var(--font-mono); font-weight: 600; font-style: normal; }
-.node.got { animation: got 0.5s ease-out; }
-@keyframes got { 30% { transform: scale(1.12) rotate(-2deg); } }
+/* the web */
+.view { position: relative; height: min(58vh, 520px); border-radius: 14px; overflow: hidden; touch-action: none; cursor: grab; background:
+  radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--acc) 12%, transparent), transparent 70%), repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 48px), repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 48px), #0c0818; }
+.plane { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.plane svg { position: absolute; left: -4000px; top: -4000px; width: 8000px; height: 8000px; pointer-events: none; overflow: visible; }
+.nd { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 16px; border: 3px solid var(--c); background: #140e28; color: var(--chalk); display: grid; place-items: center; align-content: center; gap: 0; font-family: var(--font-display); font-weight: 900; cursor: pointer; padding: 0; }
+.nd i { font-style: normal; font-size: 24px; line-height: 1; }
+.nd small { font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
+.nd.notable { width: 82px; height: 82px; margin: -41px 0 0 -41px; border-radius: 50%; border-width: 4px; }
+.nd.key { width: 92px; height: 92px; margin: -46px 0 0 -46px; border-radius: 22px; border-width: 5px; transform: rotate(45deg); }
+.nd.key > * { transform: rotate(-45deg); }
+.nd.inf { border-style: double; border-width: 6px; }
+.nd.core { width: 88px; height: 88px; margin: -44px 0 0 -44px; border-radius: 50%; border-width: 5px; }
+.nd.own { background: color-mix(in srgb, var(--c) 45%, #140e28); }
+.nd.full { background: var(--c); color: #120c22; }
+.nd.can { box-shadow: 0 0 16px var(--c); animation: glow 1.1s ease-in-out infinite alternate; }
+@keyframes glow { to { box-shadow: 0 0 30px var(--c); } }
+.nd.fog { border-style: dashed; opacity: 0.45; background: #0c0818; }
+.nd.sel { outline: 3px solid #fff; outline-offset: 4px; }
+.nd.got { animation: got 0.5s ease-out; }
+@keyframes got { 30% { scale: 1.2; } }
+.vbtns { position: absolute; right: 8px; top: 8px; display: grid; gap: 6px; z-index: 2; }
+.vbtns button { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--acc); background: rgba(15,11,30,0.85); color: var(--chalk); font-size: 20px; font-weight: 700; cursor: pointer; }
+.mini { position: absolute; left: 8px; bottom: 8px; width: 96px; height: 96px; border-radius: 10px; border: 2px solid color-mix(in srgb, var(--acc) 60%, transparent); background: rgba(15,11,30,0.85); z-index: 2; pointer-events: none; }
+.disc { position: absolute; left: 8px; top: 8px; z-index: 2; padding: 3px 8px; border-radius: 8px; background: rgba(15,11,30,0.85); font-family: var(--font-mono); font-size: 12px; pointer-events: none; }
+.sheet { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px; border-radius: 14px; background: rgba(0,0,0,0.3); border: 2px solid var(--c, var(--acc)); }
+.sheet b { font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; color: var(--c, var(--acc)); }
+.sheet .kd { font-family: var(--font-mono); font-size: 11px; color: var(--haze); margin-left: 6px; }
+.sheet .ds { font-size: 13px; color: var(--haze); }
+.sheet .nw { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.sheet .btns { display: flex; gap: 6px; }
+.bbtn { min-width: 84px; min-height: 52px; padding: 2px 10px; border: 0; border-radius: 12px; background: var(--c, var(--acc)); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 18px; cursor: pointer; }
+.bbtn small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
+.bbtn.max { min-width: 56px; background: transparent; color: var(--c, var(--acc)); border: 2px solid var(--c, var(--acc)); }
+.bbtn:disabled { opacity: 0.35; cursor: default; }
+/* mine + capacitor */
 .grid { display: grid; gap: 6px; margin: 8px 0; }
 .tile { aspect-ratio: 1; border-radius: 12px; border: 2px dashed color-mix(in srgb, var(--gem) 50%, transparent); background: rgba(0,0,0,0.25); color: var(--chalk); font-size: 26px; cursor: pointer; position: relative; display: grid; place-items: center; }
 .tile.full { border-style: solid; border-color: var(--gem); background: color-mix(in srgb, var(--gem) 22%, transparent); }
@@ -84,34 +107,44 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .cap { height: 36px; border-radius: 18px; border: 2px solid var(--volt); background: rgba(0,0,0,0.4); overflow: hidden; position: relative; margin: 8px 0; }
 .cap i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #6aff3b, var(--volt), #fff); }
 .cap span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: #fff; text-shadow: 0 1px 3px #000; }
-.brow { display: grid; grid-template-columns: 40px 1fr auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--acc) 25%, transparent); }
-.brow .bi { font-size: 28px; text-align: center; }
-.brow b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 18px; text-transform: uppercase; color: var(--acc); }
-.brow span { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
-.bbtn { min-width: 76px; min-height: 48px; padding: 2px 8px; border: 0; border-radius: 12px; background: var(--acc); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 16px; cursor: pointer; }
-.bbtn small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
-.bbtn.max { min-width: 52px; background: transparent; color: var(--acc); border: 2px solid var(--acc); }
-.bbtn:disabled { opacity: 0.35; cursor: default; }
 .wide { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--acc); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 22px; cursor: pointer; }
 .wide:disabled { opacity: 0.35; cursor: default; }
 .burst { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 14px; border-radius: 999px; background: var(--volt); color: #1b2a00; font-family: var(--font-display); font-weight: 900; font-size: 18px; }
 .upbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: linear-gradient(0deg, var(--night) 70%, transparent); display: flex; justify-content: center; }
-.upbtn { width: 100%; max-width: 736px; min-height: 64px; border: 0; border-radius: 18px; background: linear-gradient(90deg, var(--acc), var(--nx, var(--lab))); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 26px color-mix(in srgb, var(--nx, var(--lab)) 55%, transparent); }
+.upbtn { width: 100%; max-width: 796px; min-height: 64px; border: 0; border-radius: 18px; background: linear-gradient(90deg, var(--acc), var(--nx, var(--lab))); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 26px color-mix(in srgb, var(--nx, var(--lab)) 55%, transparent); }
 .upbtn small { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
 .upbtn:disabled { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); box-shadow: none; cursor: default; }
-.toast { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 8; width: max-content; max-width: 90%; padding: 10px 18px; border-radius: 14px; background: rgba(15,11,30,0.94); border: 3px solid var(--acc); text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: tin 0.25s ease-out; pointer-events: none; }
+/* overlays */
+.toast { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 12; width: max-content; max-width: 90%; padding: 10px 18px; border-radius: 14px; background: rgba(15,11,30,0.94); border: 3px solid var(--acc); text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: tin 0.25s ease-out; pointer-events: none; }
 .toast small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 13px; text-transform: none; color: var(--haze); }
 @keyframes tin { from { transform: translateX(-50%) scale(0.6); opacity: 0; } }
-.flash { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; animation: fl 1.6s ease-out forwards; pointer-events: none; }
-.flash b { font-family: var(--font-display); font-weight: 900; font-size: clamp(48px, 14vw, 110px); color: #120c22; text-transform: uppercase; animation: zoom 1.6s ease-out forwards; text-align: center; line-height: 0.9; }
+.flash { position: fixed; inset: 0; z-index: 11; display: grid; place-items: center; animation: fl 1.8s ease-out forwards; pointer-events: none; }
+.flash b { font-family: var(--font-display); font-weight: 900; font-size: clamp(48px, 14vw, 110px); color: #120c22; text-transform: uppercase; animation: zoom 1.8s ease-out forwards; text-align: center; line-height: 0.9; }
 @keyframes fl { 70% { opacity: 1; } to { opacity: 0; } }
-@keyframes zoom { from { transform: scale(0.3); } 30% { transform: scale(1.1); } to { transform: scale(1.4); } }
-.fly { position: fixed; z-index: 7; pointer-events: none; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-shadow: 0 2px 0 rgba(0,0,0,0.6); transition: transform 0.7s cubic-bezier(.3,.7,.2,1), opacity 0.7s; }
-.spark { position: fixed; z-index: 7; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; transition: transform 0.6s ease-out, opacity 0.6s; }
+@keyframes zoom { from { transform: scale(0.3) rotate(-8deg); } 30% { transform: scale(1.1); } to { transform: scale(1.5); } }
+.fly { position: fixed; z-index: 10; pointer-events: none; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-shadow: 0 2px 0 rgba(0,0,0,0.6); transition: transform 0.7s cubic-bezier(.3,.7,.2,1), opacity 0.7s; }
+.spark { position: fixed; z-index: 10; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; transition: transform 0.6s ease-out, opacity 0.6s; }
+.over { position: fixed; inset: 0; z-index: 9; background: rgba(10,7,22,0.94); overflow-y: auto; padding: max(14px, env(safe-area-inset-top)) 14px 40px; }
+.over .box { max-width: 760px; margin: 0 auto; }
+.over h2 { font-family: var(--font-display); font-weight: 900; font-size: 30px; text-transform: uppercase; margin: 10px 0 6px; color: var(--acc); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.stats div { padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,0.06); }
+.stats dt { font-family: var(--font-mono); font-size: 11px; color: var(--haze); text-transform: uppercase; }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 24px; }
+.achs { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.ach { padding: 8px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+.ach b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 16px; text-transform: uppercase; }
+.ach span { font-size: 12px; color: var(--haze); }
+.ach.on { border-color: var(--coin); background: color-mix(in srgb, var(--coin) 18%, transparent); }
+.opt { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+.opt button, .opt a { min-height: 44px; padding: 6px 14px; border-radius: 12px; border: 2px solid var(--acc); background: transparent; color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+.opt button[aria-pressed="true"] { background: var(--acc); color: #120c22; }
+textarea { width: 100%; min-height: 80px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); color: var(--chalk); font-family: var(--font-mono); font-size: 11px; padding: 8px; }
+input[type=text] { min-height: 44px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.4); color: var(--chalk); font: 600 16px var(--font-body); padding: 6px 10px; }
 .foot { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
 .link-btn { min-height: 44px; border: 0; background: none; color: var(--chalk); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; }
 button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-@media (max-width: 420px) { .tree { gap: 18px 6px; } .node { min-height: 92px; padding: 6px; } .node b { font-size: 14px; } .node span { font-size: 11px; } }
+@media (orientation: landscape) and (max-height: 520px) { .view { height: 74vh; } .big { font-size: 32px; } .map { margin: 6px 0; } .lay { min-height: 40px; padding: 3px 8px; } .lay small, .webp { display: none; } .chips { margin-top: 3px; } .upbtn { min-height: 52px; font-size: 20px; } .upbtn small { display: none; } }
 </style>
 <!-- /source:head -->
 </head>
@@ -120,7 +153,7 @@ button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 <div id="app">
   <div class="top">
     <div><div class="big" id="main">🪙 0</div><div class="rate" id="rate">0 / s</div></div>
-    <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on">🔊</button>
+    <div class="tbtns"><button class="icon-btn" id="btnMenu" type="button" aria-label="Stats, achievements and settings">⚙️</button><button class="icon-btn" id="btnMute" type="button" aria-label="Sound on">🔊</button></div>
   </div>
   <div class="chips" id="chips"></div>
   <div class="map" id="map" aria-label="Layers"></div>
@@ -135,153 +168,207 @@ button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 const $ = (id) => document.getElementById(id);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } } };
 const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
-function fmt(n) { if (!isFinite(n)) return '∞'; if (n < 1000) return n < 10 ? (Math.round(n * 100) / 100).toString() : String(Math.floor(n)); const e = Math.floor(Math.log10(n) / 3); if (e < SUF.length) { const v = n / Math.pow(1000, e); return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + SUF[e]; } return n.toExponential(2).replace('+', ''); }
-const fx = (m) => `×${fmt(m)}`;
 const log10 = (n) => Math.log10(Math.max(1, n));
 
-// ---------- layers: each has its colour, its currency, its upgrade tree and its own mechanic
+// ---------- save
+const SAVE = 'layer-up-save-v3';
+const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill',
+  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0], bursts: 0, bestRate: 0, born: Date.now() }, sel: {}, cam: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
+let S = Object.assign(fresh(), store.get(SAVE, {}));
+const save = () => { S.last = Date.now(); store.set(SAVE, S); };
+function fmt(n) { if (!isFinite(n)) return '∞'; if (n < 1000) return n < 10 ? (Math.round(n * 100) / 100).toString() : String(Math.floor(n)); if (S.sci) return n.toExponential(2).replace('+', ''); const e = Math.floor(Math.log10(n) / 3); if (e < SUF.length) { const v = n / Math.pow(1000, e); return (v >= 100 ? v.toFixed(0) : v.toFixed(v >= 10 ? 1 : 2)) + SUF[e]; } return n.toExponential(2).replace('+', ''); }
+const fx = (m) => `×${fmt(m)}`;
+
+// ---------- layers
 const LAYERS = [
-  { id: 'coin', name: 'Coins', icon: '🪙', c: '#ffc93c', what: 'Base pay + the coin tree' },
-  { id: 'gem', name: 'Gems', icon: '💎', c: '#3ef2ff', what: 'The gem tree + the Mine' },
-  { id: 'volt', name: 'Volts', icon: '⚡', c: '#b6ff3b', what: 'The volt tree + the Capacitor' },
+  { id: 'coin', name: 'Coins', icon: '🪙', c: '#ffc93c', what: 'Base pay + the coin web' },
+  { id: 'gem', name: 'Gems', icon: '💎', c: '#3ef2ff', what: 'The gem web + the Mine' },
+  { id: 'volt', name: 'Volts', icon: '⚡', c: '#b6ff3b', what: 'The volt web + the Capacitor' },
   { id: 'lab', name: '???', icon: '🧪', c: '#ff4fa3', what: 'coming soon' },
 ];
-const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', ore: '#9ad8ff' };
+const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', ore: '#9ad8ff', ach: '#ff9ad5' };
 
-// ---------- save
-const SAVE = 'layer-up-save-v2';
-const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, cu: {}, bl: {}, gems: 0, gemsLife: 0, gemsRun: 0, gu: {}, grid: Array(25).fill(null), ore: 0, volts: 0, voltsLife: 0, vu: {}, charge: 0, burst: 0, top: 0, tab: 0, resets: [0, 0, 0], last: Date.now(), muted: false, tool: 'drill' });
-let S = Object.assign(fresh(), store.get(SAVE, {}));
-if (!S.bl) S.bl = {};
-const save = () => { S.last = Date.now(); store.set(SAVE, S); };
-const has = (id) => !!(S.cu[id] || S.gu[id] || S.vu[id]);
-const count = (o) => Object.values(o).filter((v) => Number(v) > 0).length;
-const levels = (o) => Object.values(o).reduce((a, v) => a + Number(v || 0), 0);
-
-// ---------- the upgrade trees: one-time upgrades, mostly multipliers, many of them depend on other layers
-// r/c place a node in its tree; req = nodes that must be owned first; x = the other layer this node is tied to
-const TREE = {
-  coin: [
-    { id: 'c1', r: 0, c: 1, name: 'Piggy bank', cost: 30, cg: 12, max: 5, req: [], d: 'Coins ×2 per level', m: (l) => Math.pow(2, l) },
-    { id: 'c2', r: 1, c: 0, name: 'Side hustle', cost: 120, cg: 3, max: 10, req: ['c1'], d: 'Base pay +2 per level', base: (l) => 2 * l },
-    { id: 'c3', r: 1, c: 2, name: 'Compound', cost: 240, cg: 12, max: 5, req: ['c1'], d: '+5 % per level for every coin upgrade level you own', m: (l) => 1 + 0.05 * l * levels(S.cu) },
-    { id: 'c4', r: 2, c: 0, name: 'Interest', cost: 1050, cg: 15, max: 4, req: ['c2'], d: 'Grows with the coins you hold', m: (l) => 1 + l * log10(S.coins + 1) / 4 },
-    { id: 'c5', r: 2, c: 1, name: 'Lucky penny', cost: 2700, cg: 40, max: 3, req: ['c2', 'c3'], d: 'Coins ×3 per level', m: (l) => Math.pow(3, l) },
-    { id: 'c6', r: 2, c: 2, name: 'Momentum', cost: 1800, cg: 15, max: 4, req: ['c3'], d: 'Grows with the time of this run', m: (l) => 1 + l * Math.sqrt(S.runT / 60) / 2 },
-    { id: 'c7', r: 3, c: 0, name: 'Snowball', cost: 18000, cg: 20, max: 4, req: ['c4'], d: 'More interest per level', m: (l) => 1 + l * log10(S.coins + 1) / 4 },
-    { id: 'c8', r: 3, c: 1, name: 'Gem sense', cost: 60000, cg: 20, max: 5, req: ['c5'], d: 'Gems from a layer up ×(1 + level)', x: 'gem', gm: (l) => 1 + l },
-    { id: 'c9', r: 3, c: 2, name: 'Tycoon', cost: 36000, cg: 20, max: 3, req: ['c6'], d: 'Base pay + level × coin upgrades owned', base: (l) => l * count(S.cu) },
-    { id: 'c10', r: 4, c: 0, name: 'Ore lust', cost: 6e+08, cg: 30, max: 3, req: ['c7'], d: 'Ore grows with your coin upgrade levels', x: 'gem', om: (l) => 1 + l * levels(S.cu) / 16, need: 1 },
-    { id: 'c11', r: 4, c: 1, name: 'Golden touch', cost: 3e+08, cg: 200, max: 3, req: ['c8'], d: 'Coins ×3 per level', m: (l) => Math.pow(3, l) },
-    { id: 'c12', r: 4, c: 2, name: 'Gem synergy', cost: 9e+08, cg: 50, max: 3, req: ['c9'], d: 'Coins grow with the gem upgrades you own', x: 'gem', m: (l) => 1 + l * count(S.gu) / 2, need: 1 },
-    { id: 'c13', r: 5, c: 0, name: 'Vault', cost: 3e+10, cg: 50, max: 3, req: ['c10'], d: 'Grows with every coin you ever earned', m: (l) => 1 + l * log10(S.life + 1) / 2, need: 1 },
-    { id: 'c14', r: 5, c: 1, name: 'Overtime', cost: 3e+11, cg: 20, max: 4, req: ['c11'], d: 'The capacitor charges +50 % per level', x: 'volt', cm: (l) => 1 + 0.5 * l, need: 2 },
-    { id: 'c15', r: 5, c: 2, name: 'Coin storm', cost: 1.5e+12, cg: 10000, max: 2, req: ['c12'], d: 'Coins ×5 per level', m: (l) => Math.pow(5, l), need: 1 },
-    { id: 'c16', r: 6, c: 0, name: 'Machine love', cost: 3e+12, cg: 30, max: 3, req: ['c13'], d: 'Coins grow with your endless upgrade levels', m: (l) => 1 + l * levels(S.bl) / 20, need: 1 },
-    { id: 'c17', r: 6, c: 1, name: 'Patience', cost: 9e+12, cg: 30, max: 3, req: ['c14'], d: 'Grows with the time since your last layer up', m: (l) => 1 + l * log10(S.runT + 1), need: 2 },
-    { id: 'c18', r: 6, c: 2, name: 'Gem magnet', cost: 3e+13, cg: 40, max: 3, req: ['c15'], d: 'Gems from a layer up ×(1 + level / 2)', x: 'gem', gm: (l) => 1 + l / 2, need: 1 },
-  ],
-  gem: [
-    { id: 'g1', r: 0, c: 1, name: 'Gem glow', cost: 10, cg: 8, max: 4, req: [], d: 'Coins grow with every gem you ever earned', x: 'coin', m: (l) => Math.pow(S.gemsLife + 1, 0.15 * l) },
-    { id: 'g2', r: 1, c: 0, name: 'Coin memory', cost: 20, cg: 10, max: 3, req: ['g1'], d: 'Each level keeps one more row of the coin tree on a layer up', x: 'coin' },
-    { id: 'g3', r: 1, c: 1, name: 'The Mine', cost: 50, max: 1, req: ['g1'], d: 'Opens a 3×3 mine: drills dig ore, ore multiplies coins' },
-    { id: 'g4', r: 1, c: 2, name: 'Polish', cost: 50, cg: 30, max: 4, req: ['g1'], d: 'Coins ×2 per level', x: 'coin', m: (l) => Math.pow(2, l) },
-    { id: 'g5', r: 2, c: 0, name: 'Full memory', cost: 3000, max: 1, req: ['g2'], d: 'Keep every coin upgrade on a layer up', x: 'coin' },
-    { id: 'g6', r: 2, c: 1, name: 'Amplifiers', cost: 200, cg: 15, max: 3, req: ['g3'], d: 'Amplifier tiles: + level power to the drills next to them' },
-    { id: 'g7', r: 2, c: 2, name: 'Prism', cost: 400, cg: 15, max: 4, req: ['g4'], d: 'Gems from a layer up grow with your coin upgrade levels', gm: (l) => 1 + l * levels(S.cu) / 20 },
-    { id: 'g8', r: 3, c: 0, name: 'Wider mine', cost: 30000, max: 1, req: ['g5', 'g6'], d: 'The mine grows to 4×4' },
-    { id: 'g9', r: 3, c: 1, name: 'Crystals', cost: 100000, cg: 20, max: 3, req: ['g6'], d: 'Crystal tiles: ×(1 + level) to every drill in their row and column' },
-    { id: 'g10', r: 3, c: 2, name: 'Facets', cost: 60000, cg: 20, max: 3, req: ['g7'], d: 'Ore grows with the gem upgrades you own', om: (l) => 1 + l * count(S.gu) / 3 },
-    { id: 'g11', r: 4, c: 0, name: 'Deep mine', cost: 2e+06, max: 1, req: ['g8'], d: 'The mine grows to 5×5' },
-    { id: 'g12', r: 4, c: 1, name: 'Gem storm', cost: 5e+06, cg: 30, max: 3, req: ['g9'], d: 'Gems from a layer up grow with your volts ever', x: 'volt', gm: (l) => 1 + l * S.voltsLife / 10, need: 2 },
-    { id: 'g13', r: 4, c: 2, name: 'Mother lode', cost: 1e+06, cg: 30, max: 3, req: ['g10'], d: 'Coins ×(1 + log of ore) per level', x: 'coin', m: (l) => Math.pow(1 + log10(S.ore + 1), l) },
-    { id: 'g14', r: 5, c: 0, name: 'Pressure', cost: 3e6, cg: 20, max: 3, req: ['g11'], d: 'Coins grow with your gem press levels', x: 'coin', m: (l) => 1 + l * Number(S.bl.b3 || 0) / 10 },
-    { id: 'g15', r: 5, c: 2, name: 'Geode', cost: 5e6, cg: 30, max: 3, req: ['g13'], d: 'Gems from a layer up ×2 per level', gm: (l) => Math.pow(2, l) },
-  ],
-  volt: [
-    { id: 'v1', r: 0, c: 1, name: 'Spark', cost: 10, cg: 4, max: 3, req: [], d: 'Coins ×√(1 + volts ever) per level', x: 'coin', m: (l) => Math.pow(1 + S.voltsLife, 0.5 * l) },
-    { id: 'v2', r: 1, c: 0, name: 'Gem memory', cost: 20, max: 1, req: ['v1'], d: 'Keep Gem glow, Coin memory and The Mine on a layer up to volts', x: 'gem' },
-    { id: 'v3', r: 1, c: 2, name: 'Fast charge', cost: 30, cg: 4, max: 4, req: ['v1'], d: 'The capacitor charges ×(1 + level)', cm: (l) => 1 + l },
-    { id: 'v4', r: 2, c: 0, name: 'Ore surge', cost: 50, cg: 6, max: 3, req: ['v2'], d: 'Ore grows with your volts ever', x: 'gem', om: (l) => 1 + l * S.voltsLife / 20 },
-    { id: 'v5', r: 2, c: 1, name: 'Long burst', cost: 80, cg: 4, max: 3, req: ['v1'], d: 'Bursts last ×(1 + level)' },
-    { id: 'v6', r: 2, c: 2, name: 'Mine robot', cost: 100, max: 1, req: ['v3'], d: 'Places drills on empty tiles by itself', x: 'gem' },
-    { id: 'v7', r: 3, c: 0, name: 'Full gem memory', cost: 400, max: 1, req: ['v4'], d: 'Keep every gem upgrade on a layer up to volts', x: 'gem' },
-    { id: 'v8', r: 3, c: 1, name: 'Overload', cost: 300, cg: 6, max: 3, req: ['v5'], d: 'Bursts +×25 per level' },
-    { id: 'v9', r: 3, c: 2, name: 'Dynamo', cost: 600, cg: 8, max: 3, req: ['v6'], d: 'Volts from a layer up grow with your gem upgrades', x: 'gem', vm: (l) => 1 + l * count(S.gu) / 4 },
-    { id: 'v10', r: 4, c: 0, name: 'Superconductor', cost: 500, cg: 8, max: 3, req: ['v7'], d: 'Ore grows with your volt endless levels', x: 'gem', om: (l) => 1 + l * (Number(S.bl.b5 || 0) + Number(S.bl.b6 || 0)) / 5 },
-    { id: 'v11', r: 4, c: 2, name: 'Static', cost: 800, cg: 10, max: 3, req: ['v9'], d: 'Volts from a layer up ×2 per level', vm: (l) => Math.pow(2, l) },
-  ],
+// ---------- the webs: grown from a centre in four directions, the same for every player (seeded)
+function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const DIRS = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+const WEBCFG = {
+  coin: { seed: 11, base: 20, grow: 8, arms: { N: [8, 0.5, 3], E: [7, 0.5, 2], S: [7, 0.5, 2], W: [6, 0.5, 2] }, theme: { N: 'raw', E: 'eco', S: 'grow', W: 'link', B: 'raw' } },
+  gem: { seed: 23, base: 10, grow: 3.2, arms: { N: [11, 0.6, 3], E: [9, 0.6, 3], S: [8, 0.6, 2], W: [9, 0.6, 3] }, theme: { N: 'mine', E: 'gain', S: 'mem', W: 'syn', B: 'gain' } },
+  volt: { seed: 37, base: 5, grow: 2.2, arms: { N: [6, 0.5, 2], E: [5, 0.5, 2], S: [5, 0.5, 2], W: [5, 0.5, 2] }, theme: { N: 'burst', E: 'charge', S: 'keep', W: 'ore', B: 'charge' } },
 };
-// endless upgrades: every level adds a little, the price grows faster (Franz: "less multiplier than the price increase")
-const BUY = {
-  coin: [
-    { id: 'b1', icon: '⚙️', name: 'Overclock', cost: 3000, cg: 1.6, d: 'Coins ×1.15 per level', m: (l) => Math.pow(1.15, l) },
-    { id: 'b2', icon: '🧑‍💼', name: 'Interns', cost: 600, cg: 1.45, d: 'Base pay +1 per level', base: (l) => l },
-  ],
-  gem: [
-    { id: 'b3', icon: '🗜️', name: 'Gem press', cost: 100, cg: 1.8, d: 'Coins ×1.25 per level', m: (l) => Math.pow(1.25, l) },
-    { id: 'b4', icon: '🔩', name: 'Drill bits', cost: 200, cg: 1.7, d: 'Ore ×1.2 per level', om: (l) => Math.pow(1.2, l) },
-  ],
-  volt: [
-    { id: 'b5', icon: '🌀', name: 'Coils', cost: 50, cg: 1.9, d: 'Gems from a layer up ×1.15 per level', gm: (l) => Math.pow(1.15, l) },
-    { id: 'b6', icon: '🔌', name: 'Transformer', cost: 100, cg: 2, d: 'Volts from a layer up ×1.1 per level', vm: (l) => Math.pow(1.1, l) },
-  ],
+// effect templates: t = what it does, a/b = strength, max = levels
+function effectFor(L, theme, kind, d, i, main) {
+  const alt = i % 2;
+  if (L === 'coin') {
+    if (theme === 'raw') return kind === 'key' ? { t: 'cm^', b: 10, max: 1 } : kind === 'notable' ? { t: 'cm^', b: 2, max: 3 } : { t: 'cm+', a: 0.2 + 0.04 * d, max: 5 };
+    if (theme === 'eco') return kind === 'key' ? { t: 'infx', b: 2, max: 1 } : kind === 'notable' ? { t: 'base', a: 3 * d, max: 4 } : alt ? { t: 'base', a: 1 + Math.floor(d / 2), max: 8 } : { t: 'cm+', a: 0.15, max: 5 };
+    if (theme === 'grow') return kind === 'key' ? { t: 'syn-coins', a: 2, max: 1 } : kind === 'notable' ? { t: 'syn-nodes', a: 0.04, max: 3 } : alt ? { t: 'syn-time', a: 0.2, max: 5 } : { t: 'syn-coins', a: 0.08, max: 5 };
+    return kind === 'key' ? { t: 'gm^', b: 3, max: 1, need: 1 } : kind === 'notable' ? { t: 'syn-gems', a: 0.4, max: 3, need: 1 } : alt ? { t: 'gm+', a: 0.2, max: 5, need: 1 } : { t: 'om+', a: 0.25, max: 5, need: 1 };
+  }
+  if (L === 'gem') {
+    if (theme === 'mine') {
+      if (main && d === 1) return { t: 'mine', max: 1 }; if (main && d === 3) return { t: 'amp', max: 3 }; if (main && d === 5) return { t: 'grid4', max: 1 };
+      if (main && d === 7) return { t: 'crystal', max: 3 }; if (main && d === 9) return { t: 'grid5', max: 1 };
+      return kind === 'key' ? { t: 'om^', b: 10, max: 1 } : kind === 'notable' ? { t: 'om^', b: 2, max: 3 } : { t: 'om+', a: 0.3, max: 5 };
+    }
+    if (theme === 'gain') return kind === 'key' ? { t: 'gm^', b: 4, max: 1 } : kind === 'notable' ? { t: 'gm^', b: 1.5, max: 3 } : { t: 'gm+', a: 0.2, max: 5 };
+    if (theme === 'mem') { if (main && d === 1) return { t: 'keepc', max: 4 }; return kind === 'key' ? { t: 'keepc-all', max: 1 } : kind === 'notable' ? { t: 'cm^', b: 3, max: 3 } : { t: 'cm+', a: 0.3, max: 5 }; }
+    return kind === 'key' ? { t: 'syn-gems', a: 3, max: 1 } : kind === 'notable' ? { t: 'cm^', b: 3, max: 3 } : { t: 'syn-gems', a: 0.15, max: 5 };
+  }
+  if (theme === 'burst') return kind === 'key' ? { t: 'bm^', b: 3, max: 1 } : kind === 'notable' ? { t: 'bl+', a: 0.5, max: 3 } : { t: 'bm+', a: 10, max: 5 };
+  if (theme === 'charge') return kind === 'key' ? { t: 'ch^', b: 5, max: 1 } : kind === 'notable' ? { t: 'ch^', b: 2, max: 3 } : { t: 'ch+', a: 0.25, max: 5 };
+  if (theme === 'keep') { if (main && d === 1) return { t: 'keepg', max: 4 }; if (main && d === 3) return { t: 'robot', max: 1 }; return kind === 'key' ? { t: 'keepg-all', max: 1 } : kind === 'notable' ? { t: 'vm^', b: 2, max: 3 } : { t: 'vm+', a: 0.2, max: 5 }; }
+  return kind === 'key' ? { t: 'syn-volts', a: 3, max: 1 } : kind === 'notable' ? { t: 'om^', b: 2, max: 3 } : { t: 'om+', a: 0.3, max: 5 };
+}
+const CORE = { coin: { t: 'cm^', b: 2, max: 5, name: 'Piggy bank' }, gem: { t: 'syn-gems', a: 0.5, max: 4, name: 'Gem glow' }, volt: { t: 'syn-volts', a: 1, max: 3, name: 'Spark' } };
+const INF = { coin: [{ t: 'cm*', b: 1.15, cg: 1.6, name: 'Overclock' }, { t: 'base*', a: 1, cg: 1.45, name: 'Interns' }], gem: [{ t: 'cm*', b: 1.25, cg: 1.8, name: 'Gem press' }, { t: 'om*', b: 1.2, cg: 1.7, name: 'Drill bits' }], volt: [{ t: 'gm*', b: 1.15, cg: 1.9, name: 'Coils' }, { t: 'vm*', b: 1.1, cg: 2, name: 'Transformer' }] };
+const NAMES = {
+  'cm+': ['Tip jar', 'Price tag', 'Sales pitch', 'Side deal', 'Bargain', 'Markup', 'Hustle', 'Thrift'], 'cm^': ['Double down', 'Golden touch', 'Jackpot', 'Gold rush', 'Big spender'], 'base': ['Side hustle', 'Paper route', 'Night shift', 'Lemonade', 'Odd jobs'],
+  'syn-coins': ['Interest', 'Snowball', 'Compound', 'Dividends'], 'syn-time': ['Momentum', 'Patience', 'Long game'], 'syn-nodes': ['Network', 'Web of trade', 'Connections'], 'syn-gems': ['Gem glow', 'Facets', 'Sparkle', 'Prism'], 'syn-volts': ['Static', 'Spark', 'Live wire'],
+  'gm+': ['Gem sense', 'Cutter', 'Loupe', 'Polish'], 'gm^': ['Geode', 'Gem storm', 'Mother lode'], 'om+': ['Ore lust', 'Pickaxe', 'Shovel', 'Seam'], 'om^': ['Deep vein', 'Dynamite', 'Bedrock'],
+  'vm+': ['Dynamo', 'Coil', 'Turbine'], 'vm^': ['Generator', 'Reactor'], 'ch+': ['Battery', 'Cell', 'Plug'], 'ch^': ['Fast charge', 'Supercharger'], 'bm+': ['Overload', 'Surge', 'Spike'], 'bm^': ['Thunderclap'], 'bl+': ['Long burst', 'Afterglow'],
 };
-const ALL = [...BUY.coin.map((u) => ({ ...u, L: 'coin', inf: true })), ...BUY.gem.map((u) => ({ ...u, L: 'gem', inf: true })), ...BUY.volt.map((u) => ({ ...u, L: 'volt', inf: true })), ...TREE.coin.map((u) => ({ ...u, L: 'coin' })), ...TREE.gem.map((u) => ({ ...u, L: 'gem' })), ...TREE.volt.map((u) => ({ ...u, L: 'volt' }))];
-const bag = (L) => (L === 'coin' ? S.cu : L === 'gem' ? S.gu : S.vu);
+const ICON = { 'cm+': '🪙', 'cm^': '💰', 'base': '💼', 'syn-coins': '📈', 'syn-time': '⏳', 'syn-nodes': '🕸️', 'syn-gems': '✨', 'syn-volts': '⚡', 'gm+': '💎', 'gm^': '💠', 'om+': '⛏️', 'om^': '🧨', 'vm+': '🔌', 'vm^': '🔋', 'ch+': '🔋', 'ch^': '⚡', 'bm+': '💥', 'bm^': '🌩️', 'bl+': '⏱️',
+  mine: '🏔️', amp: '📡', crystal: '🔮', grid4: '🗺️', grid5: '🗺️', keepc: '🧠', 'keepc-all': '🧠', keepg: '🧠', 'keepg-all': '🧠', robot: '🤖', infx: '♾️', 'cm*': '⚙️', 'base*': '🧑‍💼', 'om*': '🔩', 'gm*': '🌀', 'vm*': '🔌' };
+const KEYNAMES = { 'cm^': 'Big Bang', infx: 'Infinity engine', 'syn-coins': 'Avalanche', 'gm^': 'Crown jewel', 'om^': 'Core drill', 'keepc-all': 'Total recall', 'syn-gems': 'Diamond heart', 'bm^': 'Thunderclap', 'ch^': 'Tesla tower', 'keepg-all': 'Deep memory', 'syn-volts': 'Lightning rod' };
+const SPECIAL = { mine: 'The Mine', amp: 'Amplifiers', crystal: 'Crystals', grid4: 'Wider mine', grid5: 'Deep mine', keepc: 'Coin memory', keepg: 'Gem memory', robot: 'Mine robot' };
+function genWeb(L) {
+  const cfg = WEBCFG[L], R = rng(cfg.seed), cells = new Map(), used = {};
+  const add = (x, y, info) => { const k = `${x},${y}`; if (cells.has(k)) return null; const n = { id: `${L}:${k}`, L, x, y, ...info }; cells.set(k, n); return n; };
+  add(0, 0, { kind: 'core', arm: 'C', d: 0 });
+  for (const dir of ['N', 'E', 'S', 'W']) {
+    const [len, pb, mb] = cfg.arms[dir], [dx, dy] = DIRS[dir], px = -dy, py = dx; let side = R() < 0.5 ? 1 : -1;
+    for (let i = 1; i <= len; i++) {
+      add(dx * i, dy * i, { arm: dir, d: i, kind: i === len ? 'key' : i % 4 === 0 ? 'notable' : 'small', main: true });
+      if (i < len && i >= 2 && R() < pb) {
+        const bl = 1 + Math.floor(R() * mb);
+        for (let j = 1; j <= bl; j++) if (!add(dx * i + px * side * j, dy * i + py * side * j, { arm: dir, d: i + j, kind: j === bl ? 'notable' : 'small' })) break;
+        side = -side;
+      }
+    }
+  }
+  for (const [bx, by] of [[1, -1], [1, 1], [-1, 1], [-1, -1], [2, -1], [-2, 1], [1, 2], [-1, -2]]) add(bx, by, { arm: 'B', d: Math.abs(bx) + Math.abs(by), kind: 'small' });
+  const nodes = [...cells.values()];
+  // two endless upgrades per web: the closest notable branch tips
+  const infs = nodes.filter((n) => n.kind === 'notable' && !n.main).sort((a, b) => a.d - b.d).slice(0, 2);
+  infs.forEach((n, k) => { n.kind = 'inf'; n.e = { ...INF[L][k], max: Infinity }; n.name = INF[L][k].name; });
+  nodes.forEach((n, i) => {
+    if (n.kind === 'core') { n.e = { ...CORE[L] }; n.name = CORE[L].name; }
+    else if (!n.e) n.e = effectFor(L, cfg.theme[n.arm], n.kind, n.d, i, !!n.main);
+    const t = n.e.t;
+    if (!n.name) { if (SPECIAL[t]) n.name = SPECIAL[t]; else if (n.kind === 'key') n.name = KEYNAMES[t] || 'Keystone'; else { const pool = NAMES[t] || ['Upgrade']; used[t] = (used[t] || 0) + 1; const k = used[t] - 1; n.name = pool[k % pool.length] + (k >= pool.length ? ` ${['II', 'III', 'IV', 'V'][Math.floor(k / pool.length) - 1] || ''}` : ''); } }
+    n.icon = n.kind === 'key' ? '⭐' : ICON[t] || '◆';
+    const kf = { core: 0.5, small: 1, notable: 4, key: 30, inf: 3 }[n.kind];
+    n.cost = Math.max(1, Math.round(cfg.base * Math.pow(cfg.grow, n.d) * kf));
+    n.cg = n.e.cg || ({ core: 6, small: 3, notable: 15, key: 1, inf: 1.6 }[n.kind]);
+    n.max = n.e.max;
+  });
+  return nodes;
+}
+const WEB = { coin: genWeb('coin'), gem: genWeb('gem'), volt: genWeb('volt') };
+const NODE = {}; for (const L of Object.keys(WEB)) for (const n of WEB[L]) NODE[n.id] = n;
+const AT = {}; for (const L of Object.keys(WEB)) { AT[L] = {}; for (const n of WEB[L]) AT[L][`${n.x},${n.y}`] = n; }
+const nbrs = (n) => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => AT[n.L][`${n.x + dx},${n.y + dy}`]).filter(Boolean);
+const lvl = (n) => Number(S.u[n.id] || 0);
+const LIDX = { coin: 0, gem: 1, volt: 2 };
 const wallet = (L) => (L === 'coin' ? 'coins' : L === 'gem' ? 'gems' : 'volts');
-const bagOf = (u) => (u.inf ? S.bl : bag(u.L));
-const lv = (u) => Number(bagOf(u)[u.id] || 0);
-const owned = (u) => lv(u) > 0;
-const maxed = (u) => !u.inf && lv(u) >= (u.max || 1);
-const costAt = (u) => u.cost * Math.pow(u.cg || 1, lv(u));
-const reqOk = (u) => (u.req || []).every((r) => has(r)) && (!u.need || S.top >= u.need);
+const visible = (n) => n.kind === 'core' || lvl(n) > 0 || nbrs(n).some((m) => lvl(m) > 0);
+const reachable = (n) => n.kind === 'core' || nbrs(n).some((m) => lvl(m) > 0);
+const needOk = (n) => !n.e.need || S.top >= n.e.need;
+const maxed = (n) => lvl(n) >= n.max;
+const costAt = (n) => n.cost * Math.pow(n.cg, lvl(n));
+const owned = (L) => WEB[L].filter((n) => lvl(n) > 0);
+const levelsIn = (L) => WEB[L].reduce((a, n) => a + lvl(n), 0);
+const has = (t) => WEB.coin.concat(WEB.gem, WEB.volt).some((n) => n.e.t === t && lvl(n) > 0);
+const lvT = (t) => WEB.coin.concat(WEB.gem, WEB.volt).reduce((a, n) => (n.e.t === t ? a + lvl(n) : a), 0);
 
-// ---------- the numbers: every multiplier is listed, so the breakdown can show where income comes from
+// ---------- effects: every multiplier a node can give, evaluated from its level
+const infx = () => (has('infx') ? 2 : 1);
+function val(n, l = lvl(n)) {
+  const e = n.e;
+  switch (e.t) {
+    case 'cm+': case 'gm+': case 'om+': case 'vm+': case 'ch+': return 1 + e.a * l;
+    case 'cm^': case 'gm^': case 'om^': case 'vm^': case 'ch^': case 'bm^': return Math.pow(e.b, l);
+    case 'cm*': case 'gm*': case 'om*': case 'vm*': return Math.pow(e.b, l * infx());
+    case 'syn-coins': return 1 + e.a * l * log10(S.coins + 1);
+    case 'syn-time': return 1 + e.a * l * Math.sqrt(S.runT / 60);
+    case 'syn-nodes': return 1 + e.a * l * owned(n.L).length;
+    case 'syn-gems': return 1 + e.a * l * log10(S.gemsLife + 1);
+    case 'syn-volts': return 1 + e.a * l * log10(S.voltsLife + 1);
+    case 'base': return e.a * l; case 'base*': return e.a * l * infx();
+    case 'bm+': return e.a * l; case 'bl+': return 1 + e.a * l;
+    default: return l;
+  }
+}
+const KIND = (t) => (t.startsWith('cm') || t.startsWith('syn') ? 'coin' : t.startsWith('gm') ? 'gem' : t.startsWith('om') ? 'ore' : t.startsWith('vm') ? 'volt' : t.startsWith('ch') ? 'charge' : t === 'base' || t === 'base*' ? 'base' : t.startsWith('bm') ? 'burstm' : t);
+function prodOf(kind, layer) { let p = 1; for (const L of Object.keys(WEB)) { if (layer && L !== layer) continue; for (const n of WEB[L]) if (lvl(n) > 0 && KIND(n.e.t) === kind) p *= val(n); } return p; }
+const achCount = () => Object.keys(S.ach).length;
+const achMult = () => Math.pow(1.03, achCount());
 function coinParts() {
-  const parts = [{ t: 'base', v: 1 + ALL.filter((u) => u.base && owned(u)).reduce((a, u) => a + u.base(lv(u)), 0), c: COL.coin, plus: true }];
-  for (const u of ALL) if (u.m && owned(u)) parts.push({ t: u.name + (u.max > 1 ? ` ${lv(u)}` : ''), v: u.m(lv(u)), c: COL[u.L] });
-  if (S.gu.g3) parts.push({ t: 'ore', v: oreMult(), c: COL.ore });
+  let base = 1; for (const L of Object.keys(WEB)) for (const n of WEB[L]) if (lvl(n) > 0 && KIND(n.e.t) === 'base') base += val(n);
+  const parts = [{ t: 'base', v: base, c: COL.coin, plus: true }];
+  for (const L of ['coin', 'gem', 'volt']) { const m = prodOf('coin', L); if (m > 1.0005) parts.push({ t: `${LAYERS[LIDX[L]].icon} web`, v: m, c: COL[L] }); }
+  if (has('mine')) parts.push({ t: 'ore', v: oreMult(), c: COL.ore });
+  if (achCount()) parts.push({ t: '🏆', v: achMult(), c: COL.ach });
   if (S.burst > 0) parts.push({ t: 'BURST', v: burstMult(), c: COL.volt });
   return parts;
 }
-// softcaps: past these marks every extra multiplier counts less (keeps the numbers in reach of the upgrade prices)
 const soft = (v, at, k) => (v <= at ? v : at * Math.pow(v / at, k));
-const coinSoft = (raw) => soft(soft(raw, 1e5, 0.5), 1e10, 0.5);
+const coinSoft = (raw) => soft(soft(raw, 1e5, 0.5), 1e8, 0.3);
 const coinRate = () => coinSoft(coinParts().reduce((a, p) => a * p.v, 1));
-const prod = (key) => ALL.reduce((a, u) => (u[key] && owned(u) ? a * u[key](lv(u)) : a), 1);
-const side = () => (S.gu.g11 ? 5 : S.gu.g8 ? 4 : 3);
+const side = () => 3 + (has('grid4') ? 1 : 0) + (has('grid5') ? 1 : 0);
+const ampPower = () => Math.max(1, lvT('amp')), crystalMult = () => 1 + Math.max(1, lvT('crystal'));
 function drillPower(i) {
   const n = side(), x = i % 5, y = Math.floor(i / 5); let p = 1;
-  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < n && ny < n && S.grid[ny * 5 + nx] === 'amp') p += Number(S.gu.g6 || 1); }
-  const cm = 1 + Number(S.gu.g9 || 1);
-  for (let k = 0; k < n; k++) { if (S.grid[y * 5 + k] === 'crystal' && k !== x) p *= cm; if (S.grid[k * 5 + x] === 'crystal' && k !== y) p *= cm; }
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < n && ny < n && S.grid[ny * 5 + nx] === 'amp') p += ampPower(); }
+  for (let k = 0; k < n; k++) { if (S.grid[y * 5 + k] === 'crystal' && k !== x) p *= crystalMult(); if (S.grid[k * 5 + x] === 'crystal' && k !== y) p *= crystalMult(); }
   return p;
 }
-function oreRate() { if (!S.gu.g3) return 0; const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return soft(r * 0.1 * prod('om') * burstMult(), 1e3, 0.5); }
-const oreMult = () => 1 + Math.sqrt(S.ore) / 5;
-const burstMult = () => (S.burst > 0 ? 25 * (1 + Number(S.vu.v8 || 0)) : 1);
-const gemGain = () => (S.run < 1e6 ? 0 : Math.floor(soft(10 * Math.pow(S.run / 1e6, 0.3) * prod('gm'), 2000, 0.5)));
-const voltGain = () => (S.ore < 3e4 ? 0 : Math.floor(soft(10 * Math.pow(S.ore / 3e4, 0.5) * prod('vm'), 100, 0.5)));
-const chargeRate = () => 0.03 * prod('cm');
-const burstLen = () => 10 * (1 + Number(S.vu.v5 || 0));
-const TILES = { drill: { icon: '⛏️', c: 10, name: 'Drill' }, amp: { icon: '📡', c: 20, name: 'Amplifier', up: 'g6' }, crystal: { icon: '🔮', c: 50, name: 'Crystal', up: 'g9' } };
+function oreRate() { if (!has('mine')) return 0; const n = side(); let r = 0; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (S.grid[y * 5 + x] === 'drill') r += drillPower(y * 5 + x); return soft(r * 0.1 * prodOf('ore') * burstMult(), 1e3, 0.5); }
+const oreMult = () => 1 + Math.pow(log10(S.ore + 1), 2) / 2;
+const burstMult = () => (S.burst > 0 ? (25 + WEB.volt.reduce((a, n) => (n.e.t === 'bm+' && lvl(n) ? a + val(n) : a), 0)) * prodOf('burstm') : 1);
+const gemGain = () => (S.run < 1e6 ? 0 : Math.floor(soft(10 * Math.pow(S.run / 1e6, 0.3) * prodOf('gem'), 1000, 0.35)));
+const voltGain = () => (S.ore < 2e5 ? 0 : Math.floor(soft(25 * Math.pow(S.ore / 2e5, 0.5) * prodOf('volt'), 200, 0.35)));
+const chargeRate = () => 0.03 * prodOf('charge');
+const burstLen = () => 10 * WEB.volt.reduce((a, n) => (n.e.t === 'bl+' && lvl(n) ? a * val(n) : a), 1);
+const TILES = { drill: { icon: '⛏️', c: 10, name: 'Drill' }, amp: { icon: '📡', c: 20, name: 'Amplifier', up: 'amp' }, crystal: { icon: '🔮', c: 50, name: 'Crystal', up: 'crystal' } };
+function describe(n, l) {
+  const e = n.e, t = e.t;
+  const D = { 'cm+': `Coins +${Math.round(e.a * 100)} % per level`, 'cm^': `Coins ×${e.b} per level`, 'cm*': `Coins ×${e.b} per level, no maximum`, 'gm+': `Gems from a layer up +${Math.round(e.a * 100)} % per level`, 'gm^': `Gems from a layer up ×${e.b} per level`, 'gm*': `Gems from a layer up ×${e.b} per level, no maximum`,
+    'om+': `Ore +${Math.round(e.a * 100)} % per level`, 'om^': `Ore ×${e.b} per level`, 'om*': `Ore ×${e.b} per level, no maximum`, 'vm+': `Volts from a layer up +${Math.round(e.a * 100)} % per level`, 'vm^': `Volts from a layer up ×${e.b} per level`, 'vm*': `Volts from a layer up ×${e.b} per level, no maximum`,
+    'ch+': `The capacitor charges +${Math.round(e.a * 100)} % faster per level`, 'ch^': `The capacitor charges ×${e.b} per level`, 'bm+': `Bursts +×${e.a} per level`, 'bm^': `Bursts ×${e.b}`, 'bl+': `Bursts last +${Math.round(e.a * 100)} % per level`,
+    'base': `Base pay +${e.a} per level`, 'base*': `Base pay +${e.a} per level, no maximum`, 'syn-coins': 'Coins grow with the coins you hold', 'syn-time': 'Coins grow with the time since your last layer up', 'syn-nodes': `Coins grow with every node you own in this web`,
+    'syn-gems': 'Coins grow with every gem you ever earned', 'syn-volts': 'Coins grow with every volt you ever earned', infx: 'Endless upgrades count double', mine: 'Opens the Mine: drills dig ore, ore multiplies coins and turns into volts', amp: 'Amplifier tiles: + level power to the drills next to them', crystal: 'Crystal tiles: ×(1 + level) to every drill in their row and column',
+    grid4: 'The mine grows to 4×4', grid5: 'The mine grows by one more row and column', keepc: 'Each level keeps the coin nodes within 2 more steps of the centre on a layer up', 'keepc-all': 'Keep the whole coin web on a layer up', keepg: 'Each level keeps the gem nodes within 2 more steps of the centre on a layer up to volts', 'keepg-all': 'Keep the whole gem web on a layer up to volts', robot: 'Places drills on empty mine tiles by itself' };
+  return (D[t] || t) + (e.need && S.top < e.need ? ` (needs ${LAYERS[e.need].name})` : '');
+}
+const hasValue = (n) => !['mine', 'amp', 'crystal', 'grid4', 'grid5', 'keepc', 'keepc-all', 'keepg', 'keepg-all', 'robot', 'infx'].includes(n.e.t);
+const showVal = (n, l) => (KIND(n.e.t) === 'base' ? `+${fmt(val(n, l))} base` : n.e.t === 'bm+' ? `+×${fmt(val(n, l))}` : fx(val(n, l)));
 
-// ---------- sound
+// ---------- sound and music
 const Sound = {
-  ctx: null, master: null,
-  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = S.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
-  tone(f, dur, type = 'sine', vol = 0.08, slide = 0, delay = 0) { if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02); },
-  buy(n) { const f = 440 * Math.pow(1.06, n); this.tone(f, 0.1, 'triangle', 0.08); this.tone(f * 1.5, 0.14, 'triangle', 0.07, 0, 0.07); this.tone(f * 2, 0.2, 'sine', 0.06, 0, 0.14); },
+  ctx: null, master: null, mus: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = S.muted ? 0 : 0.5; this.master.connect(this.ctx.destination); this.mus = this.ctx.createGain(); this.mus.gain.value = S.music ? 0.5 : 0; this.mus.connect(this.master); this.startMusic(); } catch (e) { this.ctx = null; } },
+  tone(f, dur, type = 'sine', vol = 0.08, slide = 0, delay = 0, out) { if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(out || this.master); o.start(t0); o.stop(t0 + dur + 0.02); },
+  buy(n) { const f = 440 * Math.pow(1.04, n % 40); this.tone(f, 0.1, 'triangle', 0.08); this.tone(f * 1.5, 0.14, 'triangle', 0.07, 0, 0.07); this.tone(f * 2, 0.2, 'sine', 0.06, 0, 0.14); },
   tile() { this.tone(300, 0.06, 'square', 0.04); },
+  ach() { [784, 988, 1175, 1568].forEach((f, i) => this.tone(f, 0.18, 'square', 0.05, 0, i * 0.08)); },
   up() { [262, 330, 392, 523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.3, 'triangle', 0.08, 0, i * 0.07)); this.tone(80, 1, 'sawtooth', 0.06, 200); },
   zap() { this.tone(200, 0.5, 'sawtooth', 0.08, 1400); this.tone(1800, 0.3, 'square', 0.04, -900, 0.1); },
+  step: 0, nextT: 0,
+  startMusic() { if (!this.ctx) return; this.nextT = this.ctx.currentTime + 0.1; setInterval(() => this.sched(), 60); },
+  sched() { // a soft arpeggio in the active layer's own key
+    if (!this.ctx || !S.music) return;
+    const roots = [220, 247, 196, 262], r = roots[S.tab] || 220, pat = [0, 7, 12, 7, 3, 7, 12, 15], stepT = 0.28;
+    while (this.nextT < this.ctx.currentTime + 0.3) { const k = pat[this.step % 8], d = Math.max(0, this.nextT - this.ctx.currentTime); this.tone(r * Math.pow(2, k / 12), 0.5, 'sine', 0.035, 0, d, this.mus); if (this.step % 8 === 0) this.tone(r / 2, 1.2, 'triangle', 0.03, 0, d, this.mus); this.nextT += stepT; this.step++; }
+  },
 };
 $('btnMute').addEventListener('click', () => { S.muted = !S.muted; Sound.init(); if (Sound.master) Sound.master.gain.value = S.muted ? 0 : 0.5; $('btnMute').textContent = S.muted ? '🔇' : '🔊'; save(); });
 
-// ---------- visual feedback: toasts, a multiplier that flies into the counter, sparks
-function toast(t, sub, col) { const o = document.querySelector('.toast'); if (o) o.remove(); const e = document.createElement('div'); e.className = 'toast'; e.textContent = t; if (col) e.style.borderColor = col; if (sub) { const s = document.createElement('small'); s.textContent = sub; e.appendChild(s); } document.body.appendChild(e); setTimeout(() => e.remove(), 2200); }
+// ---------- feedback
+function toast(t, sub, col) { const o = document.querySelector('.toast'); if (o) o.remove(); const e = document.createElement('div'); e.className = 'toast'; e.textContent = t; if (col) e.style.borderColor = col; if (sub) { const s = document.createElement('small'); s.textContent = sub; e.appendChild(s); } document.body.appendChild(e); setTimeout(() => e.remove(), 2400); }
 function flyTo(fromEl, text, col) {
+  if (!fromEl || !fromEl.getBoundingClientRect) return;
   const a = fromEl.getBoundingClientRect(), b = $('main').getBoundingClientRect(), e = document.createElement('div');
   e.className = 'fly'; e.textContent = text; e.style.color = col; e.style.left = `${a.left + a.width / 2 - 20}px`; e.style.top = `${a.top + 10}px`; document.body.appendChild(e);
   requestAnimationFrame(() => { e.style.transform = `translate(${b.left + 40 - a.left - a.width / 2}px, ${b.top - a.top}px) scale(1.4)`; e.style.opacity = '0.2'; });
@@ -290,70 +377,164 @@ function flyTo(fromEl, text, col) {
 }
 
 // ---------- buying
-function buy(u, el) {
-  if (maxed(u) || !reqOk(u)) return;
-  const w = wallet(u.L), c = costAt(u); if (S[w] < c) return;
-  const before = coinRate();
-  S[w] -= c; bagOf(u)[u.id] = lv(u) + 1; Sound.init(); Sound.buy(levels(S.cu) + levels(S.gu) + levels(S.vu));
-  if (maxed(u) && (u.max || 1) > 1) toast(`${u.name} maxed!`, `level ${u.max} of ${u.max}`, COL[u.L]);
+function buy(n, el, many) {
+  if (!needOk(n) || !reachable(n)) return 0;
+  const w = wallet(n.L), before = coinRate(), seenBefore = new Set(WEB[n.L].filter(visible).map((m) => m.id)); let k = 0;
+  while (k < (many ? 500 : 1) && !maxed(n) && S[w] >= costAt(n)) { S[w] -= costAt(n); S.u[n.id] = lvl(n) + 1; k++; }
+  if (!k) return 0;
+  Sound.init(); Sound.buy(levelsIn(n.L));
   const gain = coinRate() / before;
-  if (el) { el.classList.add('got'); flyTo(el, gain > 1.001 ? `×${fmt(gain)}` : '✓', COL[u.L]); }
-  if (u.id === 'g3') toast('The Mine is open', 'place drills with gems', COL.gem);
-  render(true); save();
+  if (el) { el.classList.add('got'); flyTo(el, k > 1 ? `+${k} lv` : gain > 1.001 ? `×${fmt(gain)}` : '✓', COL[n.L]); }
+  if (maxed(n) && n.max > 1 && isFinite(n.max)) toast(`${n.name} maxed!`, `level ${n.max} of ${n.max}`, COL[n.L]);
+  const fresh = WEB[n.L].filter((m) => visible(m) && !seenBefore.has(m.id));
+  if (fresh.some((m) => m.kind === 'key')) toast('Keystone found!', fresh.find((m) => m.kind === 'key').name, COL[n.L]);
+  if (n.e.t === 'mine') toast('The Mine is open', 'place drills with gems, below the web', COL.gem);
+  checkAch(); render(true); save();
+  return k;
 }
 function tileAt(i) {
   Sound.init(); const cur = S.grid[i];
-  if (cur) { S.gems += TILES[cur].c; S.grid[i] = null; Sound.tile(); render(true); save(); return; }   // full refund: try layouts freely
+  if (cur) { S.gems += TILES[cur].c; S.grid[i] = null; Sound.tile(); render(true); save(); return; }
   const t = TILES[S.tool]; if (!t || S.gems < t.c) { toast('Not enough gems', `${t ? t.name : 'tile'} costs ${t ? t.c : '?'} 💎`, COL.gem); return; }
-  S.gems -= t.c; S.grid[i] = S.tool; Sound.tile(); render(true); save();
+  S.gems -= t.c; S.grid[i] = S.tool; Sound.tile(); checkAch(); render(true); save();
 }
 function discharge() {
   if (S.charge < 0.05 || S.burst > 0) return;
-  S.burst = burstLen() * S.charge; S.charge = 0; Sound.zap(); toast(`BURST! ×${burstMult()}`, `coins and ore for ${Math.round(S.burst)} s`, COL.volt);
-  const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.9), rgba(182,255,59,0.5) 40%, transparent 75%)'; f.innerHTML = '<b>⚡</b>'; document.body.appendChild(f); setTimeout(() => f.remove(), 1600);
-  render(true);
+  S.burst = burstLen() * S.charge; S.charge = 0; S.st.bursts++; Sound.zap(); toast(`BURST! ×${fmt(burstMult())}`, `coins and ore for ${Math.round(S.burst)} s`, COL.volt);
+  const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.9), rgba(182,255,59,0.5) 40%, transparent 75%)'; f.innerHTML = '<b>⚡</b>'; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
+  checkAch(); render(true);
 }
 
-// ---------- layer up: reset the layers below for the next currency (memory upgrades keep things)
+// ---------- layer up (memory nodes keep parts of the web)
 function layerUp() {
   if (S.tab > 1) return;
   const next = S.tab + 1, gain = next === 1 ? gemGain() : voltGain();
   if (gain < 1) return;
   Sound.init(); Sound.up();
-  const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1600);
+  const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
   if (next === 1) { S.gems += gain; S.gemsLife += gain; S.gemsRun += gain; }
   else {
     S.volts += gain; S.voltsLife += gain;
-    const keep = S.vu.v7 ? { ...S.gu } : S.vu.v2 ? Object.fromEntries(['g1', 'g2', 'g3'].filter((k) => S.gu[k]).map((k) => [k, S.gu[k]])) : {};
-    S.gems = 0; S.gemsRun = 0; S.gu = keep; S.grid = Array(25).fill(null); S.ore = 0; S.bl.b3 = 0; S.bl.b4 = 0;
+    const keepAll = has('keepg-all'), reach = 2 * lvT('keepg');
+    for (const n of WEB.gem) if (!(keepAll || (n.d <= reach && n.e.t !== 'keepc' ? true : n.e.t === 'keepg'))) delete S.u[n.id];
+    S.gems = 0; S.gemsRun = 0; S.grid = Array(25).fill(null); S.ore = 0;
   }
-  const rows = Number(S.gu.g2 || 0), keepC = S.gu.g5 ? { ...S.cu } : Object.fromEntries(TREE.coin.filter((u) => u.r < rows && S.cu[u.id]).map((u) => [u.id, S.cu[u.id]]));
-  S.coins = 0; S.run = 0; S.runT = 0; S.cu = keepC; S.bl.b1 = 0; S.bl.b2 = 0;
-  S.resets[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].name}`, LAYERS[next].what, LAYERS[next].c), 1500); }
-  render(true); save();
+  const keepAllC = has('keepc-all'), reachC = 2 * lvT('keepc');
+  for (const n of WEB.coin) if (!(keepAllC || n.d <= reachC)) delete S.u[n.id];
+  S.coins = 0; S.run = 0; S.runT = 0;
+  S.st.ups[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].name}`, LAYERS[next].what, LAYERS[next].c), 1600); }
+  checkAch(); render(true); save();
 }
 $('btnUp').addEventListener('click', layerUp);
 
+// ---------- achievements: each one gives +3 % coins forever
+const ACH = [
+  ['First step', 'Buy your first node', () => owned('coin').length >= 1], ['Explorer', 'Own 10 coin nodes', () => owned('coin').length >= 10], ['Cartographer', 'Own 25 coin nodes', () => owned('coin').length >= 25], ['The whole web', 'Own every coin node', () => owned('coin').length === WEB.coin.length],
+  ['Thousandaire', '1K coins', () => S.life >= 1e3], ['Millionaire', '1M coins ever', () => S.life >= 1e6], ['Billionaire', '1B coins ever', () => S.life >= 1e9], ['Trillionaire', '1T coins ever', () => S.life >= 1e12], ['Beyond', '1Qa coins ever', () => S.life >= 1e15],
+  ['Fast hands', '100 coins a second', () => coinRate() >= 100], ['Money machine', '1M coins a second', () => coinRate() >= 1e6], ['Printer', '1B coins a second', () => coinRate() >= 1e9],
+  ['Layer up!', 'Get your first gems', () => S.st.ups[1] >= 1], ['Habit', 'Layer up to gems 10 times', () => S.st.ups[1] >= 10], ['Gem hoard', '1K gems ever', () => S.gemsLife >= 1e3], ['Gem mountain', '100K gems ever', () => S.gemsLife >= 1e5],
+  ['Miner', 'Open the Mine', () => has('mine')], ['Full mine', 'Fill a whole mine', () => { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x]) return false; return true; }], ['Ore baron', '100K ore', () => S.ore >= 1e5],
+  ['Gem explorer', 'Own 25 gem nodes', () => owned('gem').length >= 25], ['Gem web', 'Own every gem node', () => owned('gem').length === WEB.gem.length],
+  ['Charged', 'Get your first volts', () => S.st.ups[2] >= 1], ['Volt hoard', '100 volts ever', () => S.voltsLife >= 100], ['Boom', 'Discharge a burst', () => S.st.bursts >= 1], ['Storm', '25 bursts', () => S.st.bursts >= 25],
+  ['Volt web', 'Own every volt node', () => owned('volt').length === WEB.volt.length], ['Keystone', 'Own a keystone', () => WEB.coin.concat(WEB.gem, WEB.volt).some((n) => n.kind === 'key' && lvl(n) > 0)], ['Keymaster', 'Own 5 keystones', () => WEB.coin.concat(WEB.gem, WEB.volt).filter((n) => n.kind === 'key' && lvl(n) > 0).length >= 5],
+  ['Endless', '25 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 25], ['Infinite', '200 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 200],
+  ['Maxed out', 'Max any node with levels', () => WEB.coin.concat(WEB.gem, WEB.volt).some((n) => n.max > 1 && isFinite(n.max) && maxed(n))], ['Patient', 'Play for an hour', () => S.st.played >= 3600],
+];
+function checkAch() {
+  for (const [name, , ok] of ACH) if (!S.ach[name]) { let got = false; try { got = ok(); } catch (e) { got = false; } if (got) { S.ach[name] = Date.now(); Sound.ach(); toast(`🏆 ${name}`, `achievement · coins +3 % (${achCount()}/${ACH.length})`, COL.ach); } }
+}
+
 // ---------- simulation (also offline time)
 function step(dt) {
-  const c = coinRate() * dt; S.coins += c; S.run += c; S.life += c; S.runT += dt;
+  const c = coinRate() * dt; S.coins += c; S.run += c; S.life += c; S.runT += dt; S.st.played += dt;
   S.ore += oreRate() * dt;
   if (S.top >= 2) { if (S.burst > 0) S.burst = Math.max(0, S.burst - dt); else S.charge = Math.min(1, S.charge + chargeRate() * dt); }
 }
 let autoT = 0;
 function automate(dt) {
   autoT += dt; if (autoT < 0.5) return; autoT = 0;
-  if (S.vu.v6 && S.gu.g3) { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x] && S.gems >= TILES.drill.c) { S.gems -= TILES.drill.c; S.grid[y * 5 + x] = 'drill'; } }
+  if (has('robot') && has('mine')) { const n = side(); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!S.grid[y * 5 + x] && S.gems >= TILES.drill.c) { S.gems -= TILES.drill.c; S.grid[y * 5 + x] = 'drill'; } }
 }
 
-// ---------- rendering
-let shownKey = '';
-function render(force) {
-  const L = LAYERS[S.tab];
-  document.documentElement.style.setProperty('--acc', L.c);
-  const key = JSON.stringify([S.tab, S.top, S.cu, S.gu, S.vu, S.tool, S.grid, S.burst > 0]);
-  if (force || key !== shownKey) { shownKey = key; renderMap(); renderScreen(); }
-  refresh();
+// ---------- the web view: pan by dragging, zoom buttons, minimap, fog
+const STEP = 104;
+const cam = (L) => (S.cam[L] = S.cam[L] || { x: 0, y: 0, z: 1 });
+let drag = null, viewEl = null, planeEl = null;
+function renderWeb(L, box) {
+  const card = document.createElement('div'); card.className = 'card';
+  const disc = WEB[L].filter(visible).length, all = WEB[L].length, ownN = owned(L).length;
+  card.innerHTML = `<h2>${LAYERS[LIDX[L]].icon} The ${LAYERS[LIDX[L]].name.toLowerCase().replace(/s$/, '')} web <small>${ownN} owned · ${disc === all ? `${all} nodes` : `${disc} found · ? more`}</small></h2><p>Drag to move around. Buying a node reveals its neighbours: nobody knows how big the web is until it is explored. Circles are notable, diamonds ⭐ are keystones, double rings ♾️ have no maximum.</p>`;
+  card.querySelector('p').className = 'webp';
+  const view = document.createElement('div'); view.className = 'view'; view.setAttribute('aria-label', 'Upgrade web');
+  const plane = document.createElement('div'); plane.className = 'plane';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); plane.appendChild(svg);
+  let lines = '';
+  for (const n of WEB[L]) {
+    if (!visible(n)) continue;
+    for (const m of nbrs(n)) if (visible(m) && (m.x > n.x || m.y > n.y)) { const on = lvl(n) > 0 && lvl(m) > 0; lines += `<line x1="${n.x * STEP + 4000}" y1="${n.y * STEP + 4000}" x2="${m.x * STEP + 4000}" y2="${m.y * STEP + 4000}" stroke="${COL[L]}" stroke-width="${on ? 6 : 3}" stroke-opacity="${on ? 0.9 : 0.3}" stroke-dasharray="${on ? '' : '8 8'}"/>`; }
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-node', n.id); b.style.left = `${n.x * STEP}px`; b.style.top = `${n.y * STEP}px`; b.style.setProperty('--c', COL[L]);
+    b.innerHTML = `<span><i>${n.icon}</i></span><small data-k="lv"></small>`; b.setAttribute('aria-label', n.name);
+    plane.appendChild(b);
+  }
+  // fog stubs: a dashed "?" where an unseen neighbour of a visible node exists
+  svg.innerHTML = lines;
+  view.appendChild(plane);
+  view.insertAdjacentHTML('beforeend', `<div class="disc">${disc}/${disc === all ? all : '?'}</div><div class="vbtns"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="home" aria-label="Back to the centre">⌂</button></div><canvas class="mini" width="96" height="96"></canvas>`);
+  card.appendChild(view);
+  const sheet = document.createElement('div'); sheet.className = 'sheet'; sheet.id = 'sheet'; card.appendChild(sheet);
+  box.appendChild(card);
+  viewEl = view; planeEl = plane;
+  view.querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const c = cam(L), z = b.getAttribute('data-z'); if (z === 'in') c.z = Math.min(1.6, c.z * 1.25); else if (z === 'out') c.z = Math.max(0.35, c.z / 1.25); else { c.x = 0; c.y = 0; c.z = 1; } applyCam(); }));
+  view.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-z]')) return; drag = { x: e.clientX, y: e.clientY, cx: cam(L).x, cy: cam(L).y, moved: false, node: e.target.closest('[data-node]') }; if (view.setPointerCapture) view.setPointerCapture(e.pointerId); view.style.cursor = 'grabbing'; });
+  view.addEventListener('pointermove', (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 6) drag.moved = true; if (drag.moved) { const c = cam(L); c.x = drag.cx + dx / c.z; c.y = drag.cy + dy / c.z; applyCam(); } });
+  const up = () => { if (!drag) return; const d = drag; drag = null; view.style.cursor = ''; if (!d.moved && d.node) { S.sel[L] = d.node.getAttribute('data-node'); Sound.init(); renderSheet(); refresh(); } save(); };
+  view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
+  requestAnimationFrame(applyCam);
+  renderSheet();
+}
+function applyCam() {
+  if (!viewEl || !planeEl) return; const L = LAYERS[S.tab].id, c = cam(L), w = viewEl.clientWidth || 360, h = viewEl.clientHeight || 400;
+  planeEl.style.transform = `translate(${w / 2 + c.x * c.z}px, ${h / 2 + c.y * c.z}px) scale(${c.z})`;
+  drawMini(L, w, h);
+}
+function drawMini(L, w, h) {
+  const cv = viewEl && viewEl.querySelector('.mini'); if (!cv || !cv.getContext) return; const ctx = cv.getContext('2d'); if (!ctx) return;
+  const vis = WEB[L].filter(visible), xs = vis.map((n) => n.x), ys = vis.map((n) => n.y), minX = Math.min(...xs, -2), maxX = Math.max(...xs, 2), minY = Math.min(...ys, -2), maxY = Math.max(...ys, 2);
+  const sc = Math.min(80 / (maxX - minX + 1), 80 / (maxY - minY + 1)), ox = 48 - ((minX + maxX) / 2) * sc, oy = 48 - ((minY + maxY) / 2) * sc;
+  ctx.clearRect(0, 0, 96, 96);
+  for (const n of vis) { ctx.fillStyle = lvl(n) > 0 ? COL[L] : 'rgba(255,255,255,0.35)'; const r = n.kind === 'key' ? 3.5 : n.kind === 'small' ? 2 : 3; ctx.beginPath(); ctx.arc(ox + n.x * sc, oy + n.y * sc, r, 0, Math.PI * 2); ctx.fill(); }
+  const c = cam(L), vw = w / (STEP * c.z), vh = h / (STEP * c.z), cx = -c.x / STEP, cy = -c.y / STEP;
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.strokeRect(ox + (cx - vw / 2) * sc, oy + (cy - vh / 2) * sc, vw * sc, vh * sc);
+}
+function renderSheet() {
+  const sh = $('sheet'); if (!sh) return; const L = LAYERS[S.tab].id;
+  let n = NODE[S.sel[L]]; if (!n || n.L !== L || !visible(n)) { n = WEB[L][0]; S.sel[L] = n.id; }
+  sh.style.setProperty('--c', COL[L]);
+  const kindTxt = { core: 'centre', small: 'node', notable: 'notable', key: 'keystone', inf: 'endless' }[n.kind];
+  sh.innerHTML = `<div><b></b><span class="kd">${n.icon} ${kindTxt}</span><div class="ds"></div><div class="nw" data-k="nw"></div></div><div class="btns"><button class="bbtn" type="button" data-k="one"></button><button class="bbtn max" type="button" data-k="max">MAX</button></div>`;
+  sh.querySelector('b').textContent = n.name; sh.querySelector('.ds').textContent = describe(n);
+  sh.querySelector('[data-k=one]').addEventListener('click', (e) => buy(n, e.currentTarget, false));
+  sh.querySelector('[data-k=max]').addEventListener('click', (e) => buy(n, e.currentTarget, true));
+}
+function renderScreen() {
+  const box = $('screen'); box.textContent = ''; viewEl = null; planeEl = null;
+  const L = LAYERS[S.tab].id; renderWeb(L, box);
+  if (L === 'gem' && has('mine')) {
+    const n = side(), m = document.createElement('div'); m.className = 'card';
+    m.innerHTML = `<h2>⛏️ The Mine <small>ore ${fmt(S.ore)}</small></h2><p>Place tiles with gems. Drills dig ore; ore multiplies coins and turns into volts. Amplifiers power their neighbours, crystals multiply their row and column. Tap a tile again to take it back (full refund).</p>`;
+    const tools = document.createElement('div'); tools.className = 'tools';
+    for (const [id, t] of Object.entries(TILES)) { const ok = !t.up || has(t.up); const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = `${t.icon} ${t.name} · ${t.c}💎`; b.disabled = !ok; b.setAttribute('aria-pressed', String(S.tool === id)); b.addEventListener('click', () => { S.tool = id; render(true); }); tools.appendChild(b); }
+    m.appendChild(tools);
+    const g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const i = y * 5 + x, t = S.grid[i], b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (t ? ' full' : ''); b.textContent = t ? TILES[t].icon : '+'; if (t === 'drill') { const p = document.createElement('small'); p.textContent = `×${fmt(drillPower(i))}`; b.appendChild(p); } b.addEventListener('click', () => tileAt(i)); g.appendChild(b); }
+    m.appendChild(g); box.appendChild(m);
+  }
+  if (L === 'volt') {
+    const k = document.createElement('div'); k.className = 'card';
+    k.innerHTML = `<h2>⚡ The Capacitor</h2><p>It charges by itself, also while you are away. Discharge for a burst: coins and ore ×${fmt(25 + WEB.volt.reduce((a, n) => (n.e.t === 'bm+' && lvl(n) ? a + val(n) : a), 0))} for up to ${fmt(burstLen())} s.</p><div class="cap"><i data-k="cf"></i><span data-k="ct"></span></div>`;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'wide'; b.setAttribute('data-k', 'dis'); b.textContent = 'Discharge'; b.addEventListener('click', discharge); k.appendChild(b);
+    box.appendChild(k);
+  }
 }
 function renderMap() {
   const m = $('map'); m.textContent = '';
@@ -364,72 +545,13 @@ function renderMap() {
     m.appendChild(b);
   });
 }
-function renderTree(L, box) {
-  const tree = document.createElement('div'); tree.className = 'tree';
-  tree.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
-  for (const u0 of TREE[L]) {
-    const u = { ...u0, L }, b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-up', u.id);
-    b.style.gridRow = String(u.r + 1); b.style.gridColumn = String(u.c + 1); b.style.setProperty('--c', COL[L]);
-    if (u.x) b.style.setProperty('--x', COL[u.x]);
-    b.innerHTML = `${u.x ? `<i class="x2">${LAYERS.find((z) => z.id === u.x).icon}</i>` : ''}<b></b><span></span><em data-k="now"></em><div class="cost"></div>`;
-    b.querySelector('b').textContent = u.name; b.querySelector('span').textContent = u.d;
-    b.addEventListener('click', () => buy(u, b));
-    tree.appendChild(b);
-  }
-  box.appendChild(tree);
-  requestAnimationFrame(() => drawLines(tree, L));
-}
-function drawLines(tree, L) {
-  const svg = tree.querySelector('svg'); if (!svg || !tree.getBoundingClientRect) return; const r0 = tree.getBoundingClientRect(); let html = '';
-  for (const u of TREE[L]) for (const q of u.req) {
-    const a = tree.querySelector(`[data-up="${q}"]`), b = tree.querySelector(`[data-up="${u.id}"]`); if (!a || !b) continue;
-    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), on = has(q);
-    html += `<line x1="${ra.left + ra.width / 2 - r0.left}" y1="${ra.bottom - r0.top}" x2="${rb.left + rb.width / 2 - r0.left}" y2="${rb.top - r0.top}" stroke="${COL[L]}" stroke-width="${on ? 4 : 2}" stroke-opacity="${on ? 0.9 : 0.3}" stroke-dasharray="${on ? '' : '6 6'}"/>`;
-  }
-  svg.innerHTML = html;
-}
-function renderBuy(L, box) {
-  const c = document.createElement('div'); c.className = 'card';
-  c.innerHTML = '<h2>♾️ Endless upgrades</h2><p>No maximum: every level adds a little, but the price grows faster than the bonus.</p>';
-  for (const u0 of BUY[L]) {
-    const u = ALL.find((x) => x.id === u0.id), r = document.createElement('div'); r.className = 'brow'; r.setAttribute('data-buy', u.id);
-    r.innerHTML = `<div class="bi">${u.icon}</div><div><b></b><span data-k="e"></span></div><button class="bbtn" type="button" data-k="one"></button><button class="bbtn max" type="button" data-k="max">MAX</button>`;
-    r.querySelector('b').textContent = u.name;
-    r.querySelector('[data-k=one]').addEventListener('click', (e) => buy(u, e.currentTarget));
-    r.querySelector('[data-k=max]').addEventListener('click', (e) => { let n = 0; const before = coinRate(); while (n < 500 && S[wallet(u.L)] >= costAt(u)) { S[wallet(u.L)] -= costAt(u); S.bl[u.id] = lv(u) + 1; n++; } if (n) { Sound.init(); Sound.buy(levels(S.bl)); flyTo(e.currentTarget, `+${n} lv`, COL[u.L]); render(true); save(); } void before; });
-    c.appendChild(r);
-  }
-  box.appendChild(c);
-}
-function renderScreen() {
-  const box = $('screen'); box.textContent = '';
+let shownKey = '';
+function render(force) {
+  document.documentElement.style.setProperty('--acc', LAYERS[S.tab].c);
   const L = LAYERS[S.tab].id;
-  if (L === 'coin') {
-    const c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = '<h2>🪙 The coin tree</h2><p>You earn a base pay every second. Every upgrade has levels (each with its own maximum) and multiplies it; many grow with something else: your coins, the time of this run, other layers (the coloured corner shows which).</p>';
-    renderTree('coin', c); box.appendChild(c); renderBuy('coin', box);
-  } else if (L === 'gem') {
-    const c = document.createElement('div'); c.className = 'card';
-    c.innerHTML = '<h2>💎 The gem tree</h2><p>Gems come from layering up coins. They boost coins, keep coin upgrades on a reset, and open the Mine.</p>';
-    renderTree('gem', c); box.appendChild(c); renderBuy('gem', box);
-    if (S.gu.g3) {
-      const n = side(), m = document.createElement('div'); m.className = 'card';
-      m.innerHTML = '<h2>⛏️ The Mine</h2><p>Place tiles with gems. Drills dig ore; ore multiplies coins and turns into volts. Amplifiers power their neighbours, crystals double their row and column. Tap a tile again to take it back (full refund).</p>';
-      const tools = document.createElement('div'); tools.className = 'tools';
-      for (const [id, t] of Object.entries(TILES)) { const ok = !t.up || S.gu[t.up]; const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = `${t.icon} ${t.name} · ${t.c}💎`; b.disabled = !ok; b.setAttribute('aria-pressed', String(S.tool === id)); b.addEventListener('click', () => { S.tool = id; render(true); }); tools.appendChild(b); }
-      m.appendChild(tools);
-      const g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
-      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const i = y * 5 + x, t = S.grid[i], b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (t ? ' full' : ''); b.textContent = t ? TILES[t].icon : '+'; if (t === 'drill') { const p = document.createElement('small'); p.textContent = `×${drillPower(i)}`; b.appendChild(p); } b.addEventListener('click', () => tileAt(i)); g.appendChild(b); }
-      m.appendChild(g); box.appendChild(m);
-    }
-  } else {
-    const k = document.createElement('div'); k.className = 'card';
-    k.innerHTML = `<h2>⚡ The Capacitor</h2><p>It charges by itself, also while you are away. Discharge for a burst: coins and ore ×${S.vu.v8 ? 50 : 25} for up to ${burstLen()} s. A full charge gives the full burst.</p><div class="cap"><i data-k="cf"></i><span data-k="ct"></span></div>`;
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'wide'; b.setAttribute('data-k', 'dis'); b.textContent = 'Discharge'; b.addEventListener('click', discharge); k.appendChild(b);
-    box.appendChild(k);
-    const c = document.createElement('div'); c.className = 'card'; c.innerHTML = '<h2>⚡ The volt tree</h2><p>Volts come from layering up the mine (ore). They multiply coins and ore and keep gem upgrades on a reset.</p>';
-    renderTree('volt', c); box.appendChild(c); renderBuy('volt', box);
-  }
+  const key = JSON.stringify([S.tab, S.top, WEB[L].filter(visible).length, owned(L).length, S.tool, S.grid, has('mine'), side()]);
+  if (force || key !== shownKey) { shownKey = key; renderMap(); renderScreen(); }
+  refresh();
 }
 function refresh() {
   const L = LAYERS[S.tab].id;
@@ -437,52 +559,101 @@ function refresh() {
   const parts = coinParts(), raw = parts.reduce((a, p) => a * p.v, 1), rate = coinSoft(raw);
   if (rate < raw * 0.999) parts.push({ t: 'softcap', v: rate / raw, c: '#9a92b8' });
   $('rate').textContent = L === 'coin' ? `${fmt(rate)} coins / s` : L === 'gem' ? `ore ${fmt(S.ore)} (+${fmt(oreRate())}/s) · ${fmt(rate)} coins/s` : `charge ${Math.floor(S.charge * 100)} % · ${fmt(rate)} coins/s`;
-  // income breakdown: every multiplier as a chip in its layer's colour
-  const html = parts.filter((p) => p.plus || p.v > 1.005 || p.t === 'softcap').map((p) => `<span class="chip" style="--c:${p.c}">${p.plus ? `base ${fmt(p.v)}` : p.t === 'softcap' ? `softcap ÷${fmt(1 / p.v)}` : `${p.t} ×${fmt(p.v)}`}</span>`).join('');
+  const html = parts.filter((p) => p.plus || p.v > 1.0005 || p.t === 'softcap').map((p) => `<span class="chip" style="--c:${p.c}">${p.plus ? `base ${fmt(p.v)}` : p.t === 'softcap' ? `softcap ÷${fmt(1 / p.v)}` : `${p.t} ×${fmt(p.v)}`}</span>`).join('');
   if ($('chips').innerHTML !== html) $('chips').innerHTML = html;
-  document.querySelectorAll('[data-up]').forEach((b) => {
-    const u = ALL.find((x) => x.id === b.getAttribute('data-up')), l = lv(u), mx = u.max || 1, full = l >= mx, ok = reqOk(u), can = !full && ok && S[wallet(u.L)] >= costAt(u);
-    const cls = 'node' + (full ? ' own' : !ok ? ' locked' : can ? ' can' : '') + (b.classList.contains('got') ? ' got' : '');
+  const w = wallet(L);
+  document.querySelectorAll('[data-node]').forEach((b) => {
+    const n = NODE[b.getAttribute('data-node')], l = lvl(n), can = !maxed(n) && reachable(n) && needOk(n) && S[w] >= costAt(n);
+    const cls = `nd ${n.kind}` + (l > 0 ? (maxed(n) ? ' full own' : ' own') : '') + (!reachable(n) ? ' fog' : can ? ' can' : '') + (S.sel[L] === n.id ? ' sel' : '') + (b.classList.contains('got') ? ' got' : '');
     if (b.className !== cls) b.className = cls;
-    const f = u.m || u.gm || u.om || u.cm || u.vm, lvTxt = mx > 1 ? `Lv ${l}/${mx} · ` : '';
-    b.querySelector('[data-k=now]').textContent = f ? `${lvTxt}${fx(f(l))}${full ? '' : ` → ${fx(f(l + 1))}`}` : u.base ? `${lvTxt}+${fmt(u.base(l))}${full ? '' : ` → +${fmt(u.base(l + 1))}`} base` : (mx > 1 ? `Lv ${l}/${mx}` : '');
-    b.querySelector('.cost').textContent = full ? (mx > 1 ? 'MAX' : 'owned') : !ok ? (u.need && S.top < u.need ? `needs ${LAYERS[u.need].name}` : 'locked') : `${fmt(costAt(u))} ${LAYERS.find((z) => z.id === u.L).icon}`;
+    const t = isFinite(n.max) ? (n.max > 1 ? `${l}/${n.max}` : l ? '✓' : '') : `${l}`;
+    const lv = b.querySelector('[data-k=lv]'); if (lv.textContent !== t) lv.textContent = t;
   });
-  document.querySelectorAll('[data-buy]').forEach((r) => {
-    const u = ALL.find((x) => x.id === r.getAttribute('data-buy')), l = lv(u), f = u.m || u.gm || u.om || u.vm, c = costAt(u), ok = S[wallet(u.L)] >= c;
-    r.querySelector('[data-k=e]').textContent = `Lv ${l} · ${f ? `${fx(f(l))} → ${fx(f(l + 1))}` : `+${fmt(u.base(l))} → +${fmt(u.base(l + 1))} base`} · ${u.d}`;
-    const one = r.querySelector('[data-k=one]'); one.innerHTML = `Buy<small>${fmt(c)} ${LAYERS.find((z) => z.id === u.L).icon}</small>`; one.disabled = !ok; r.querySelector('[data-k=max]').disabled = !ok;
-  });
+  const n = NODE[S.sel[L]], sh = $('sheet');
+  if (n && sh && sh.querySelector('[data-k=nw]')) {
+    const l = lvl(n), mx = n.max, full = maxed(n), c = costAt(n);
+    sh.querySelector('[data-k=nw]').textContent = `${isFinite(mx) ? `Lv ${l}/${mx}` : `Lv ${l} · no maximum`}${hasValue(n) ? ` · ${showVal(n, l)}${full ? '' : ` → ${showVal(n, l + 1)}`}` : ''}`;
+    const one = sh.querySelector('[data-k=one]'), ok = !full && reachable(n) && needOk(n) && S[w] >= c;
+    one.innerHTML = full ? 'MAX' : !reachable(n) ? 'Hidden' : `Buy<small>${fmt(c)} ${LAYERS[LIDX[L]].icon}</small>`; one.disabled = !ok; sh.querySelector('[data-k=max]').disabled = !ok || n.max === 1;
+  }
   if (L === 'volt') { const f = document.querySelector('[data-k=cf]'); if (f) { f.style.width = `${S.charge * 100}%`; document.querySelector('[data-k=ct]').textContent = S.burst > 0 ? `BURST · ${Math.ceil(S.burst)} s` : `${Math.floor(S.charge * 100)} % · full in ${fmt(Math.max(0, (1 - S.charge) / chargeRate()))} s`; document.querySelector('[data-k=dis]').disabled = S.charge < 0.05 || S.burst > 0; } }
   document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : fmt(S.volts); });
   const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c);
-  if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e6)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and coin upgrades${S.gu.g5 ? ' (kept: all)' : S.gu.g2 ? ` (kept: ${S.gu.g2} row${S.gu.g2 > 1 ? 's' : ''})` : ''}</small>`; }
-  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !S.gu.g3 ? 'Layer up to ⚡ volts<small>open the Mine first (gem tree)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(3e4)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the mine and coins</small>`; }
+  if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e6)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and the coin web${has('keepc-all') ? ' (kept: all)' : lvT('keepc') ? ` (kept: ${2 * lvT('keepc')} steps around the centre)` : ''}</small>`; }
+  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !has('mine') ? 'Layer up to ⚡ volts<small>open the Mine first (in the gem web)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(2e5)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the gem web, the mine and coins</small>`; }
   else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🧪 the Lab is being built</small>'; }
-  let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${burstMult()} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
+  let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${fmt(burstMult())} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
+  S.st.bestRate = Math.max(S.st.bestRate || 0, rate);
 }
-addEventListener('resize', () => { const t = document.querySelector('.tree'); if (t) drawLines(t, LAYERS[S.tab].id); });
+addEventListener('resize', () => applyCam());
 
-// ---------- loop, offline time
-let last = performance.now(), saveT = 0, uiT = 0;
+// ---------- the ⚙️ sheet: stats, achievements, settings, save export/import, leaderboard
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev', GAME_ID = 'layer';
+const lbReachable = () => location.hostname === 'lennify44.github.io';
+const score = () => Math.floor(S.top * 1000 + log10(S.life + 1) * 10 + achCount() * 5);
+function deviceId() { if (!S.deviceId) { S.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); save(); } return S.deviceId; }
+function openMenu() {
+  const o = document.createElement('div'); o.className = 'over'; o.id = 'over';
+  const tot = WEB.coin.length + WEB.gem.length + WEB.volt.length, own = owned('coin').length + owned('gem').length + owned('volt').length;
+  const h = Math.floor(S.st.played / 3600), mi = Math.floor(S.st.played % 3600 / 60);
+  o.innerHTML = `<div class="box"><div class="opt"><button type="button" id="mClose">✕ Close</button></div>
+    <h2>📊 Stats</h2><dl class="stats">
+      <div><dt>Time played</dt><dd>${h} h ${mi} min</dd></div><div><dt>Coins ever</dt><dd>${fmt(S.life)}</dd></div><div><dt>Best coins / s</dt><dd>${fmt(S.st.bestRate || 0)}</dd></div>
+      <div><dt>Gems ever</dt><dd>${fmt(S.gemsLife)}</dd></div><div><dt>Volts ever</dt><dd>${fmt(S.voltsLife)}</dd></div><div><dt>Layer ups</dt><dd>💎 ${S.st.ups[1]} · ⚡ ${S.st.ups[2]}</dd></div>
+      <div><dt>Nodes owned</dt><dd>${own}</dd></div><div><dt>Bursts</dt><dd>${S.st.bursts}</dd></div><div><dt>Score</dt><dd>${fmt(score())}</dd></div></dl>
+    <h2>🏆 Achievements ${achCount()}/${ACH.length} <small style="font-size:14px">coins ×${fmt(achMult())}</small></h2><div class="achs">${ACH.map(([n, d]) => `<div class="ach${S.ach[n] ? ' on' : ''}"><b>${S.ach[n] ? '🏆' : '🔒'} ${n}</b><span>${d}</span></div>`).join('')}</div>
+    <h2>⚙️ Settings</h2>
+    <div class="opt"><span>Numbers</span><button type="button" data-o="suf" aria-pressed="${!S.sci}">1.5M</button><button type="button" data-o="sci" aria-pressed="${S.sci}">1.5e6</button></div>
+    <div class="opt"><span>Music</span><button type="button" data-o="mus" aria-pressed="${S.music}">${S.music ? 'On' : 'Off'}</button></div>
+    <h2>💾 Save</h2><p style="color:var(--haze);font-size:13px">Copy this text to keep your game safe or move it to another device; paste one in and tap Load.</p>
+    <textarea id="mSave" spellcheck="false"></textarea><div class="opt"><button type="button" id="mLoad">Load</button><button type="button" id="mReset">Start over</button></div>
+    <h2>🌍 World leaderboard</h2><div id="mLb" style="color:var(--haze);font-size:14px"></div>
+    <div class="opt"><input type="text" id="mName" maxlength="16" placeholder="your name" autocomplete="nickname"><button type="button" id="mPost">Post my score</button></div><p id="mLbRes" style="color:var(--haze);font-size:13px"></p></div>`;
+  document.body.appendChild(o);
+  $('mSave').value = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  $('mName').value = S.name || '';
+  $('mClose').addEventListener('click', () => o.remove());
+  o.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => { const k = b.getAttribute('data-o'); if (k === 'suf') S.sci = false; if (k === 'sci') S.sci = true; if (k === 'mus') { S.music = !S.music; Sound.init(); if (Sound.mus) Sound.mus.gain.value = S.music ? 0.5 : 0; } save(); o.remove(); openMenu(); render(true); }));
+  $('mLoad').addEventListener('click', () => { try { const d = JSON.parse(decodeURIComponent(escape(atob($('mSave').value.trim())))); if (!d || typeof d !== 'object' || !('coins' in d)) throw new Error('bad'); S = Object.assign(fresh(), d); save(); o.remove(); toast('Save loaded', '', COL.coin); render(true); } catch (e) { toast('That save text does not work', 'copy the whole text again', COL.ach); } });
+  $('mReset').addEventListener('click', (e) => { if (!e.currentTarget.dataset.sure) { e.currentTarget.dataset.sure = '1'; e.currentTarget.textContent = 'Tap again: really start over?'; return; } S = fresh(); save(); o.remove(); render(true); });
+  $('mPost').addEventListener('click', postScore);
+  showBoard();
+}
+async function showBoard() {
+  const el = $('mLb'); if (!el) return;
+  if (!lbReachable()) { el.textContent = 'The world leaderboard lives on the public version of the game (lennify44.github.io).'; return; }
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}`); const d = await r.json(); const rows = (d.alltime || []).slice(0, 10); el.innerHTML = rows.length ? rows.map((x, i) => `${i + 1}. ${x.name.replace(/[<>&]/g, '')} · ${fmt(x.score)} · layer ${x.dist}`).join('<br>') : 'No scores yet. Be the first.'; } catch (e) { el.textContent = 'Could not reach the leaderboard right now.'; }
+}
+async function postScore() {
+  const name = ($('mName').value || '').trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('mLbRes');
+  if (!name) { out.textContent = 'Type a name first.'; return; } if (!lbReachable()) { out.textContent = 'Posting works on the public version of the game.'; return; }
+  S.name = name; save(); out.textContent = 'Posting…';
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, game: GAME_ID, score: score(), dist: S.top + 1, daily: false }) }); const res = await r.json().catch(() => ({})); out.textContent = r.ok ? (res.rank && res.rank.alltime ? `World rank #${res.rank.alltime}` : 'Posted.') : 'The leaderboard did not take this score.'; showBoard(); } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+}
+$('btnMenu').addEventListener('click', () => { Sound.init(); openMenu(); });
+
+// ---------- loop, offline time, first-time hints
+let last = performance.now(), saveT = 0, uiT = 0, achT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(1, (now - last) / 1000); last = now;
   step(dt); automate(dt);
   uiT += dt; if (uiT > 0.2) { uiT = 0; render(false); }
+  achT += dt; if (achT > 1) { achT = 0; checkAch(); }
   saveT += dt; if (saveT > 5) { saveT = 0; save(); }
 }
 (function offline() {
   const away = Math.min(8 * 3600, (Date.now() - (S.last || Date.now())) / 1000);
   if (away < 30) return;
-  const before = S.coins, ore0 = S.ore, n = 400; for (let i = 0; i < n; i++) step(away / n);
-  setTimeout(() => toast(`Welcome back: ${Math.round(away / 60)} min`, `+${fmt(S.coins - before)} coins${S.gu.g3 ? ` · +${fmt(S.ore - ore0)} ore` : ''}${S.top >= 2 ? ` · capacitor ${Math.floor(S.charge * 100)} %` : ''}`), 400);
+  const before = S.coins, ore0 = S.ore, ch0 = S.charge, n = 400; for (let i = 0; i < n; i++) step(away / n);
+  setTimeout(() => toast(`Welcome back: ${Math.round(away / 60)} min`, `+${fmt(S.coins - before)} coins${has('mine') ? ` · +${fmt(S.ore - ore0)} ore` : ''}${S.top >= 2 ? ` · capacitor ${Math.floor(ch0 * 100)} → ${Math.floor(S.charge * 100)} %` : ''}`), 500);
 })();
+if (!S.hints.first) { S.hints.first = 1; setTimeout(() => toast('Tap the glowing node', 'then Buy. Each node you buy reveals its neighbours.', COL.coin), 900); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, ALL, TREE, BUY, coinRate, oreRate, reqOk, owned, maxed, costAt, render };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH };
 render(true);
 requestAnimationFrame(frame);
 })();
