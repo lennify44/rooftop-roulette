@@ -331,7 +331,7 @@ function oreRate() { if (!has('mine')) return 0; const n = side(); let r = 0; fo
 const oreMult = () => 1 + Math.pow(log10(S.ore + 1), 2) / 2;
 const burstMult = () => (S.burst > 0 ? (25 + WEB.volt.reduce((a, n) => (n.e.t === 'bm+' && lvl(n) ? a + val(n) : a), 0)) * prodOf('burstm') : 1);
 const gemGain = () => (S.run < 1e6 ? 0 : Math.floor(soft(10 * Math.pow(S.run / 1e6, 0.3) * prodOf('gem'), 1000, 0.35)));
-const voltGain = () => (S.ore < 2e5 ? 0 : Math.floor(soft(25 * Math.pow(S.ore / 2e5, 0.5) * prodOf('volt'), 200, 0.35)));
+const voltGain = () => (S.ore < 1.2e5 ? 0 : Math.floor(soft(25 * Math.pow(S.ore / 1.2e5, 0.5) * prodOf('volt'), 200, 0.35)));
 const chargeRate = () => 0.03 * prodOf('charge');
 const burstLen = () => 10 * WEB.volt.reduce((a, n) => (n.e.t === 'bl+' && lvl(n) ? a * val(n) : a), 1);
 const TILES = { drill: { icon: '⛏️', c: 10, name: 'Drill' }, amp: { icon: '📡', c: 20, name: 'Amplifier', up: 'amp' }, crystal: { icon: '🔮', c: 50, name: 'Crystal', up: 'crystal' } };
@@ -588,7 +588,7 @@ function refresh() {
   document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) : i === 1 ? fmt(S.gems) : fmt(S.volts); });
   const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c);
   if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(1e6)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>resets coins and the coin web${has('keepc-all') ? ' (kept: all)' : lvT('keepc') ? ` (kept: ${2 * lvT('keepc')} steps around the centre)` : ''}</small>`; }
-  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !has('mine') ? 'Layer up to ⚡ volts<small>open the Mine first (in the gem web)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(2e5)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the gem web, the mine and coins</small>`; }
+  else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !has('mine') ? 'Layer up to ⚡ volts<small>open the Mine first (in the gem web)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(1.2e5)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>resets gems, the gem web, the mine and coins</small>`; }
   else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🧪 the Lab is being built</small>'; }
   let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${fmt(burstMult())} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
   S.st.bestRate = Math.max(S.st.bestRate || 0, rate);
