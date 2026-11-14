@@ -25,8 +25,9 @@ img { max-width: 100%; }
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root {
-  /* Layout: layer map on top, then the active layer's upgrade web (a pannable 2D plane with fog, minimap and a node
-     detail sheet), the layer's own mechanic below it, Layer Up button pinned to the bottom; ⚙️ opens stats/settings */
+  /* Layout: one fixed screen, the page never scrolls. HUD on top, the active layer's upgrade web in the middle (a pannable 2D plane
+     with fog; minimap and the node sheet lie over it), a dock with that layer's panels (only its inside scrolls; tap the open panel's
+     tab to fold it), the Layer Up bar and the layer tabs at the bottom. Landscape: tabs left, dock right. ⚙️ opens stats/settings */
   --night: #0f0b1e; --chalk: #fff7ee; --haze: #c4bce0;
   --coin: #ffc93c; --gem: #3ef2ff; --volt: #b6ff3b; --lab: #ff4fa3;
   --acc: var(--coin);
@@ -37,31 +38,68 @@ img { max-width: 100%; }
 }
 html { background: var(--night); }
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--font-body); font-size: 15px; -webkit-tap-highlight-color: transparent;
+body { margin: 0; min-height: 100vh; overflow: hidden; overscroll-behavior: none; color: var(--chalk); font-family: var(--font-body); font-size: 15px; -webkit-tap-highlight-color: transparent;
   background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--acc) 38%, #1a0f3a), var(--night) 62%); transition: background 0.6s; }
-#app { max-width: 820px; margin: 0 auto; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 120px max(12px, env(safe-area-inset-left)); }
-.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-.big { font-family: var(--font-display); font-weight: 900; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--acc); text-shadow: 0 0 22px color-mix(in srgb, var(--acc) 50%, transparent); }
+#app { --dock: clamp(176px, 31vh, 300px); position: fixed; inset: 0; display: grid; gap: 6px; padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  grid-template: "hud" auto "stage" minmax(0, 1fr) "dock" var(--dock) "up" auto "map" auto / minmax(0, 1fr); }
+.hud { grid-area: hud; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 8px; align-items: center; }
+.hud-main { min-width: 0; }
+.big { font-family: var(--font-display); font-weight: 900; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--acc); text-shadow: 0 0 22px color-mix(in srgb, var(--acc) 50%, transparent); white-space: nowrap; }
 .big.bump { animation: bump 0.25s ease-out; }
 @keyframes bump { 40% { transform: scale(1.12); } }
-.rate { font-family: var(--font-mono); font-size: 13px; margin-top: 2px; }
+.rate, .goal { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.goal { font-size: 11px; color: var(--haze); }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.hud .chips { grid-column: 1 / -1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0; } .hud .chip { flex: none; }
+.hud .chips::-webkit-scrollbar, .dtabs::-webkit-scrollbar { display: none; }
 .chip { padding: 2px 7px; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: #120c22; background: var(--c); }
 .tbtns { display: flex; gap: 6px; }
 .icon-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.12); color: var(--chalk); font-size: 18px; cursor: pointer; }
-.map { display: flex; gap: 6px; margin: 12px 0; overflow-x: auto; padding-bottom: 4px; }
-.lay { flex: 1 0 100px; min-height: 66px; padding: 6px 8px; border-radius: 14px; border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 18%, #140e28); color: var(--chalk); text-align: left; cursor: pointer; font-family: var(--font-body); }
-.lay b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 19px; text-transform: uppercase; color: var(--c); }
-.lay small { font-family: var(--font-mono); font-size: 11px; }
-.lay[aria-pressed="true"] { background: var(--c); color: #120c22; box-shadow: 0 0 20px color-mix(in srgb, var(--c) 60%, transparent); }
-.lay[aria-pressed="true"] b { color: #120c22; }
-.lay.locked { opacity: 0.35; cursor: default; border-style: dashed; }
-.card { padding: 12px; border-radius: 18px; background: color-mix(in srgb, var(--acc) 10%, #17112e); border: 2px solid color-mix(in srgb, var(--acc) 35%, transparent); margin-bottom: 10px; }
-.card h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: 26px; text-transform: uppercase; color: var(--acc); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.card h2 small { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--chalk); text-transform: none; }
-.card p { margin: 0 0 8px; color: var(--haze); font-size: 13px; }
+.map { grid-area: map; display: flex; gap: 4px; min-width: 0; }
+.lay { position: relative; flex: 1 1 0; min-width: 0; min-height: 56px; padding: 3px 2px 7px; border-radius: 12px; border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); background: color-mix(in srgb, var(--c) 14%, #140e28); color: var(--chalk); cursor: pointer; font-family: var(--font-body); display: grid; justify-items: center; align-content: center; overflow: hidden; }
+.lay i { font-style: normal; font-size: 20px; line-height: 1.15; }
+.lay b { max-width: 100%; font-family: var(--font-display); font-weight: 900; font-size: 12px; line-height: 1.1; text-transform: uppercase; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lay small { max-width: 100%; font-family: var(--font-mono); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lay .v2 { display: none; opacity: 0.75; }
+.pg { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,0.4); }
+.pg span { display: block; height: 100%; width: 0; background: var(--c); }
+.lay em, .dtab em { font-style: normal; font-family: var(--font-mono); font-size: 11px; font-weight: 600; padding: 0 5px; border-radius: 8px; background: #ff4f6d; color: #fff; }
+.lay em { position: absolute; top: 2px; right: 3px; } .dtab em { margin-left: 5px; } .lay em:empty, .dtab em:empty { display: none; }
+.lay[aria-pressed="true"] { background: var(--c); color: #120c22; border-color: var(--c); box-shadow: 0 0 16px color-mix(in srgb, var(--c) 60%, transparent); }
+.lay[aria-pressed="true"] b { color: #120c22; } .lay[aria-pressed="true"] .pg span { background: #120c22; }
+.lay.locked { flex-grow: 0.55; opacity: 0.4; cursor: default; border-style: dashed; }
+.stage { grid-area: stage; position: relative; min-height: 0; border-radius: 14px; overflow: hidden; border: 2px solid color-mix(in srgb, var(--acc) 35%, transparent); }
+.dock { grid-area: dock; min-height: 0; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--acc) 10%, #17112e); border: 2px solid color-mix(in srgb, var(--acc) 35%, transparent); }
+.dtabs { flex: none; display: flex; gap: 4px; padding: 4px; background: rgba(0,0,0,0.32); overflow-x: auto; scrollbar-width: none; }
+.dtab { flex: 1 0 auto; min-height: 40px; padding: 2px 10px; border: 0; border-radius: 10px; background: transparent; color: var(--haze); font-family: var(--font-display); font-weight: 900; font-size: 16px; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
+.dtab[aria-pressed="true"] { background: var(--acc); color: #120c22; }
+.dbody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 8px 10px; }
+.pane { display: flex; flex-direction: column; }
+.pane h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: 20px; text-transform: uppercase; color: var(--acc); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pane h2 small { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--chalk); text-transform: none; }
+.pane p { margin: 0 0 8px; color: var(--haze); font-size: 12px; }
+.pane > p:first-of-type { order: 9; margin: 8px 0 0; }
+.pane[data-pane="mine"] { display: grid; grid-template-columns: min(54%, 250px) minmax(0, 1fr); gap: 6px 10px; align-content: start; }
+.pane[data-pane="mine"] > h2, .pane[data-pane="mine"] > p { grid-column: 1 / -1; }
+.pane[data-pane="mine"] .grid { grid-area: 2 / 1 / span 2; margin: 0; align-self: start; }
+.pane[data-pane="mine"] .tile { min-width: 0; font-size: 18px; border-radius: 9px; } .pane[data-pane="mine"] .tile small { font-size: 9px; bottom: 1px; right: 3px; }
+.dtabs.many .dtab:not([aria-pressed="true"]) span { display: none; }
+.pane[data-pane="mine"] .tools { flex-direction: column; } .pane[data-pane="mine"] .tool { text-align: left; }
+.ladder { display: grid; gap: 4px; margin-top: 8px; }
+.rk { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0 8px; align-items: center; padding: 4px 8px; border-radius: 10px; border: 2px dashed rgba(255,255,255,0.15); }
+.rk i { grid-row: 1 / span 2; font-style: normal; font-size: 22px; }
+.rk b { font-family: var(--font-display); font-weight: 900; font-size: 16px; text-transform: uppercase; }
+.rk span { grid-area: 2 / 2; font-size: 12px; color: var(--haze); }
+.rk em { grid-area: 1 / 3 / span 2; font-style: normal; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--coin); text-align: right; }
+.rk.on { border-style: solid; border-color: var(--coin); background: color-mix(in srgb, var(--coin) 14%, transparent); }
+.rk.now { border-color: var(--coin); box-shadow: 0 0 12px color-mix(in srgb, var(--coin) 55%, transparent); }
+.nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px; }
+.nums h3 { grid-column: 1 / -1; margin: 4px 0 0; font-family: var(--font-display); font-weight: 900; font-size: 15px; text-transform: uppercase; color: var(--acc); }
+.nums div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 3px 8px; border-radius: 8px; background: rgba(255,255,255,0.06); border-left: 4px solid var(--c, var(--acc)); }
+.nums span { font-size: 12px; color: var(--haze); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nums b { font-family: var(--font-mono); font-size: 12px; font-weight: 600; white-space: nowrap; }
 /* the web */
-.view { position: relative; height: min(58vh, 520px); border-radius: 14px; overflow: hidden; touch-action: none; cursor: grab; background:
+.view { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; background:
   radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--acc) 12%, transparent), transparent 70%), repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 48px), repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 48px), #0c0818; }
 .plane { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .plane svg { position: absolute; left: -4000px; top: -4000px; width: 8000px; height: 8000px; pointer-events: none; overflow: visible; }
@@ -81,17 +119,17 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .nd.sel { outline: 3px solid #fff; outline-offset: 4px; }
 .nd.got { animation: got 0.5s ease-out; }
 @keyframes got { 30% { scale: 1.2; } }
-.vbtns { position: absolute; right: 8px; top: 8px; display: grid; gap: 6px; z-index: 2; }
-.vbtns button { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--acc); background: rgba(15,11,30,0.85); color: var(--chalk); font-size: 20px; font-weight: 700; cursor: pointer; }
-.mini { position: absolute; left: 8px; bottom: 8px; width: 96px; height: 96px; border-radius: 10px; border: 2px solid color-mix(in srgb, var(--acc) 60%, transparent); background: rgba(15,11,30,0.85); z-index: 2; pointer-events: none; }
+.vbtns { position: absolute; right: 8px; top: 8px; display: flex; gap: 6px; z-index: 2; }
+.vbtns button { width: 40px; height: 40px; border-radius: 12px; border: 2px solid var(--acc); background: rgba(15,11,30,0.85); color: var(--chalk); font-size: 20px; font-weight: 700; cursor: pointer; }
+.mini { position: absolute; left: 8px; top: 40px; width: 64px; height: 64px; border-radius: 10px; border: 2px solid color-mix(in srgb, var(--acc) 60%, transparent); background: rgba(15,11,30,0.85); z-index: 2; pointer-events: none; }
 .disc { position: absolute; left: 8px; top: 8px; z-index: 2; padding: 3px 8px; border-radius: 8px; background: rgba(15,11,30,0.85); font-family: var(--font-mono); font-size: 12px; pointer-events: none; }
-.sheet { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px; border-radius: 14px; background: rgba(0,0,0,0.3); border: 2px solid var(--c, var(--acc)); }
-.sheet b { font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; color: var(--c, var(--acc)); }
+.sheet { position: absolute; left: 6px; right: 6px; bottom: 6px; z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; padding: 6px 8px; border-radius: 12px; background: rgba(15,11,30,0.93); border: 2px solid var(--c, var(--acc)); }
+.sheet b { font-family: var(--font-display); font-weight: 900; font-size: 18px; text-transform: uppercase; color: var(--c, var(--acc)); }
 .sheet .kd { font-family: var(--font-mono); font-size: 11px; color: var(--haze); margin-left: 6px; }
-.sheet .ds { font-size: 13px; color: var(--haze); }
+.sheet .ds { font-size: 12px; color: var(--haze); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .sheet .nw { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
 .sheet .btns { display: flex; gap: 6px; }
-.bbtn { min-width: 84px; min-height: 52px; padding: 2px 10px; border: 0; border-radius: 12px; background: var(--c, var(--acc)); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 18px; cursor: pointer; }
+.bbtn { min-width: 76px; min-height: 48px; padding: 2px 10px; border: 0; border-radius: 12px; background: var(--c, var(--acc)); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 18px; cursor: pointer; }
 .bbtn small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
 .bbtn.max { min-width: 56px; background: transparent; color: var(--c, var(--acc)); border: 2px solid var(--c, var(--acc)); }
 .bbtn:disabled { opacity: 0.35; cursor: default; }
@@ -126,11 +164,12 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .bk.on { border-style: solid; border-color: var(--lab); background: rgba(255,79,163,0.12); }
 .wide { width: 100%; min-height: 52px; border: 0; border-radius: 14px; background: var(--acc); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 22px; cursor: pointer; }
 .wide:disabled { opacity: 0.35; cursor: default; }
-.burst { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 14px; border-radius: 999px; background: var(--volt); color: #1b2a00; font-family: var(--font-display); font-weight: 900; font-size: 18px; }
-.upbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: linear-gradient(0deg, var(--night) 70%, transparent); display: flex; justify-content: center; }
-.upbtn { width: 100%; max-width: 796px; min-height: 64px; border: 0; border-radius: 18px; background: linear-gradient(90deg, var(--acc), var(--nx, var(--lab))); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 26px color-mix(in srgb, var(--nx, var(--lab)) 55%, transparent); }
-.upbtn small { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
-.upbtn:disabled { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); box-shadow: none; cursor: default; }
+.wide small { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+.burst { position: absolute; top: 54px; right: 8px; z-index: 3; pointer-events: none; padding: 4px 10px; border-radius: 999px; background: var(--volt); color: #1b2a00; font-family: var(--font-display); font-weight: 900; font-size: 18px; }
+.upbar { grid-area: up; display: flex; }
+.upbtn { --p: 0; width: 100%; min-height: 46px; padding: 2px 10px; border: 0; border-radius: 14px; background: linear-gradient(90deg, var(--acc), var(--nx, var(--lab))); color: #120c22; font-family: var(--font-display); font-weight: 900; font-size: 20px; line-height: 1.05; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 20px color-mix(in srgb, var(--nx, var(--lab)) 55%, transparent); }
+.upbtn small { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upbtn:disabled { background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 42%, #1a1330) calc(var(--p) * 100%), rgba(255,255,255,0.08) 0); color: rgba(255,255,255,0.78); box-shadow: none; cursor: default; }
 /* deals, veins, robots, museum */
 .deals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
 .deal { --c: var(--coin); min-height: 100px; padding: 8px 4px; border-radius: 14px; border: 3px solid var(--coin); background: color-mix(in srgb, var(--coin) 14%, #140e28); color: var(--chalk); font-family: var(--font-display); font-weight: 900; font-size: 17px; text-transform: uppercase; text-align: center; cursor: pointer; display: grid; gap: 2px; place-items: center; align-content: center; animation: glow 1.1s ease-in-out infinite alternate; }
@@ -152,7 +191,7 @@ body { margin: 0; min-height: 100vh; color: var(--chalk); font-family: var(--fon
 .museum .bk.on { border-color: #a98bff; background: rgba(169,139,255,0.16); }
 .bk b i { font-style: normal; color: #ffe066; }
 /* overlays */
-.toast { position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 12; width: max-content; max-width: 90%; padding: 10px 18px; border-radius: 14px; background: rgba(15,11,30,0.94); border: 3px solid var(--acc); text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: tin 0.25s ease-out; pointer-events: none; }
+.toast { position: fixed; left: 50%; top: max(8px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 12; width: max-content; max-width: 90%; padding: 10px 18px; border-radius: 14px; background: rgba(15,11,30,0.94); border: 3px solid var(--acc); text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; animation: tin 0.25s ease-out; pointer-events: none; }
 .toast small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 13px; text-transform: none; color: var(--haze); }
 @keyframes tin { from { transform: translateX(-50%) scale(0.6); opacity: 0; } }
 .flash { position: fixed; inset: 0; z-index: 11; display: grid; place-items: center; animation: fl 1.8s ease-out forwards; pointer-events: none; }
@@ -184,23 +223,39 @@ input[type=text] { min-height: 44px; border-radius: 10px; border: 2px solid rgba
 .foot { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
 .link-btn { min-height: 44px; border: 0; background: none; color: var(--chalk); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; }
 button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-@media (orientation: landscape) and (max-height: 520px) { .view { height: 74vh; } .big { font-size: 32px; } .map { margin: 6px 0; } .lay { min-height: 40px; padding: 3px 8px; } .lay small, .webp { display: none; } .chips { margin-top: 3px; } .upbtn { min-height: 52px; font-size: 20px; } .upbtn small { display: none; } }
+@supports (height: 1dvh) { #app { --dock: clamp(176px, 31dvh, 300px); } }
+#app.fold { --dock: auto; } #app.fold .dbody { display: none; }
+@media (min-width: 860px), (orientation: landscape) and (min-width: 600px) {
+  #app { grid-template: "hud hud hud" auto "map stage dock" minmax(0, 1fr) "map up dock" auto / clamp(120px, 17vw, 220px) minmax(0, 1fr) clamp(280px, 34vw, 440px); }
+  #app.fold .dbody { display: block; }
+  .hud { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .hud .chips { grid-area: 1 / 2; flex-wrap: wrap; max-height: 43px; overflow: hidden; }
+  .tbtns { grid-area: 1 / 3; }
+  .map { flex-direction: column; overflow-y: auto; }
+  .lay, .lay.locked { flex: none; grid-template-columns: auto minmax(0, 1fr); justify-items: start; column-gap: 8px; padding: 6px 8px 9px; }
+  .lay i { grid-row: 1 / span 3; font-size: 28px; } .lay b { font-size: 17px; } .lay small { font-size: 11px; } .lay .v2 { display: block; }
+}
+@media (orientation: portrait) and (max-height: 740px) { #app { --dock: clamp(150px, 27vh, 260px); } .big { font-size: 28px; } .sheet .ds { -webkit-line-clamp: 2; } .mini { display: none; } }
+@media (orientation: landscape) and (max-height: 520px) { .hud .chips { flex-wrap: nowrap; overflow-x: auto; max-height: none; } .big { font-size: 24px; } .goal, .mini, .lay .v2 { display: none; } .upbtn { min-height: 40px; font-size: 17px; } .lay { min-height: 44px; padding: 2px 6px 6px; } .lay i { font-size: 20px; } .lay b { font-size: 14px; } }
 </style>
 <!-- /source:head -->
 </head>
 <body>
 <!-- source:body -->
 <div id="app">
-  <div class="top">
-    <div><div class="big" id="main">🪙 0</div><div class="rate" id="rate">0 / s</div></div>
+  <header class="hud">
+    <div class="hud-main"><div class="big" id="main">🪙 0</div><div class="rate" id="rate">0 / s</div><div class="goal" id="goal"></div></div>
     <div class="tbtns"><button class="icon-btn" id="btnMenu" type="button" aria-label="Stats, achievements and settings">⚙️</button><button class="icon-btn" id="btnMute" type="button" aria-label="Sound on">🔊</button></div>
-  </div>
-  <div class="chips" id="chips"></div>
-  <div class="map" id="map" aria-label="Layers"></div>
-  <div id="screen"></div>
-  <div class="foot"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+    <div class="chips" id="chips"></div>
+  </header>
+  <div class="stage" id="stage"></div>
+  <section class="dock">
+    <div class="dtabs" id="dtabs" aria-label="Panels"></div>
+    <div class="dbody"><div id="screen"></div><div class="foot"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div></div>
+  </section>
+  <div class="upbar"><button class="upbtn" id="btnUp" type="button" disabled>Layer up</button></div>
+  <nav class="map" id="map" aria-label="Layers"></nav>
 </div>
-<div class="upbar"><button class="upbtn" id="btnUp" type="button" disabled>Layer up</button></div>
 
 <script>
 (() => {
@@ -212,12 +267,16 @@ const log10 = (n) => Math.log10(Math.max(1, n));
 
 // ---------- save
 const SAVE = 'layer-up-save-v3';
-const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, starT: 300, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
-  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0], trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, born: Date.now() }, sel: {}, cam: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
+const RANK = { req: [600, 1e6, 5e8, 1e11, 2e13], grow: 100, mult: 3, ring0: 2, ringStep: 2, open: 5 };
+const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
+  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0], trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 // older saves miss newer fields: fill them in
 function shape() {
   if (!(S.starT >= 0)) S.starT = 300;
+  if (!(S.rank >= 0)) S.rank = 0;
+  if (!S.pane || typeof S.pane !== 'object') S.pane = {};
+  if (!(S.rankBest >= S.rank)) S.rankBest = S.rank;
   S.st = Object.assign(fresh().st, S.st || {});
   if (!Array.isArray(S.st.ups)) S.st.ups = [0, 0, 0, 0, 0];
   while (S.st.ups.length < 5) S.st.ups.push(0);
@@ -235,12 +294,12 @@ const fmtT = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)} h ${Math.floor(s
 
 // ---------- layers
 const LAYERS = [
-  { id: 'coin', name: 'Coins', icon: '🪙', c: '#ffc93c', what: 'Base pay + the coin web' },
-  { id: 'gem', name: 'Gems', icon: '💎', c: '#3ef2ff', what: 'The gem web + the Mine' },
-  { id: 'volt', name: 'Volts', icon: '⚡', c: '#b6ff3b', what: 'The volt web + the Capacitor' },
-  { id: 'lab', name: 'Elements', icon: '🧪', c: '#ff4fa3', what: 'The lab web + the Reactor' },
-  { id: 'star', name: 'Stars', icon: '🌌', c: '#a98bff', what: 'The star web + Expeditions' },
-  { id: 'next', name: '???', icon: '🌀', c: '#7dffcf', what: 'coming soon' },
+  { id: 'coin', name: 'Bazaar', pic: '🏪', cur: 'coins', icon: '🪙', c: '#ffc93c', what: 'Your business, the coin web and Deals' },
+  { id: 'gem', name: 'Deep Mine', pic: '⛏️', cur: 'gems', icon: '💎', c: '#3ef2ff', what: 'The gem web + the Mine' },
+  { id: 'volt', name: 'Stormworks', pic: '🌩️', cur: 'volts', icon: '⚡', c: '#b6ff3b', what: 'The volt web + the Capacitor' },
+  { id: 'lab', name: 'Alchemy Lab', pic: '⚗️', cur: 'elements', icon: '🧪', c: '#ff4fa3', what: 'The lab web + the Reactor' },
+  { id: 'star', name: 'Star Port', pic: '🚀', cur: 'stars', icon: '🌌', c: '#a98bff', what: 'The star web + Expeditions' },
+  { id: 'next', name: '???', pic: '🌀', cur: '', icon: '🌀', c: '#7dffcf', what: 'coming soon' },
 ];
 const COL = { coin: '#ffc93c', gem: '#3ef2ff', volt: '#b6ff3b', lab: '#ff4fa3', star: '#a98bff', ore: '#9ad8ff', ach: '#ff9ad5' };
 
@@ -348,9 +407,11 @@ const LIDX = { coin: 0, gem: 1, volt: 2, lab: 3, star: 4 };
 const wallet = (L) => (L === 'coin' ? 'coins' : L === 'gem' ? 'gems' : L === 'volt' ? 'volts' : L === 'lab' ? 'elems' : 'stars');
 const visible = (n) => n.kind === 'core' || lvl(n) > 0 || nbrs(n).some((m) => lvl(m) > 0);
 const reachable = (n) => n.kind === 'core' || nbrs(n).some((m) => lvl(m) > 0);
-const needOk = (n) => !n.e.need || S.top >= n.e.need;
+const ringMax = () => (S.rankBest >= RANK.open ? 99 : RANK.ring0 + RANK.ringStep * S.rankBest);   // how far out the coin web is open: grows with the business
+const ringRank = (n) => Math.min(RANK.open, Math.ceil((n.d - RANK.ring0) / RANK.ringStep));
+const needOk = (n) => (!n.e.need || S.top >= n.e.need) && (n.L !== 'coin' || n.d <= ringMax());
 const maxed = (n) => lvl(n) >= n.max;
-const costAt = (n) => n.cost * Math.pow(n.cg, lvl(n)) * (n.L === 'coin' && S.half > 0 ? 0.5 : 1);
+const costAt = (n) => n.cost * Math.pow(n.cg, lvl(n)) * (n.L === 'coin' && S.half > 0 ? 0.5 : 1) * (n.L === 'coin' && S.rank >= 2 ? 0.75 : 1);
 const owned = (L) => WEB[L].filter((n) => lvl(n) > 0);
 const levelsIn = (L) => WEB[L].reduce((a, n) => a + lvl(n), 0);
 const ALLN = Object.values(NODE), BYT = {}, BYK = {};
@@ -360,6 +421,7 @@ const lvT = (t) => (BYT[t] || []).reduce((a, n) => a + lvl(n), 0);
 // the webs grow between versions: drop nodes that no longer exist and clamp levels
 function fixSave() {
   shape();
+  if (S.top >= 1 && !S.st.ranks && S.rankBest < RANK.open) S.rankBest = RANK.open;   // saves from before the business ranks: they played the old layer 1 through, so the whole coin web stays open
   for (const id of Object.keys(S.u)) { const n = NODE[id]; if (!n) delete S.u[id]; else if (S.u[id] > n.max) S.u[id] = n.max; }
   if (!S.blue && S.grid.some(Boolean)) S.blue = S.grid.slice();
 }
@@ -413,7 +475,7 @@ const RECIPES = [
 ];
 const AETHER = { id: 'aether', icon: '🫧', name: 'Aether' };
 const bookOf = () => RECIPES.filter((r) => !r.ae || S.aether);
-const REQ = { gem: 1e6, volt: 1.2e5, elem: 500, star: 2500 }, GAIN = { gem: 10, volt: 25, elem: 80, star: 30, robo: 0.05 }, GCAP = { gem: 1000, volt: 200, elem: 400, star: 300 }, FORM = 300, GEXP = { gem: 0.35, volt: 0.25, elem: 0.25, star: 0.25 };
+const REQ = { gem: 3e14, volt: 1.2e5, elem: 500, star: 2500 }, GAIN = { gem: 10, volt: 25, elem: 80, star: 30, robo: 0.05 }, GCAP = { gem: 1000, volt: 200, elem: 400, star: 300 }, FORM = 300, GEXP = { gem: 0.35, volt: 0.25, elem: 0.25, star: 0.25 };
 const KTXT = { coin: 'coins', gem: 'gems from a layer up', ore: 'ore', volt: 'volts from a layer up', charge: 'capacitor charge', burst: 'bursts', elem: 'elements from a layer up', star: 'stars from a layer up', deal: 'deals', vein: 'rich veins', all: 'coins, ore and all layer-up gains' };
 const recipeOf = (a, b) => RECIPES.find((r) => (r.in[0] === a && r.in[1] === b) || (r.in[0] === b && r.in[1] === a));
 const foundN = () => Object.keys(S.found).length;
@@ -490,6 +552,7 @@ function coinParts() {
   const rcp = recipeMult('coin'); if (rcp > 1.0005) parts.push({ t: '⚗️ recipes', v: rcp, c: COL.lab });
   const rl = relicMult('coin'); if (rl > 1.0005) parts.push({ t: '🛸 relics', v: rl, c: COL.star });
   if (has('mine')) parts.push({ t: 'ore', v: oreMult(), c: COL.ore });
+  if (S.rank > 0) parts.push({ t: `${rankIcon(S.rank)} business`, v: rankMult(), c: COL.coin });
   if (achCount()) parts.push({ t: '🏆', v: achMult(), c: COL.ach });
   if (S.burst > 0) parts.push({ t: 'BURST', v: burstMult(), c: COL.volt });
   if (S.rush > 0) parts.push({ t: '🔥 RUSH', v: S.rushM, c: COL.coin });
@@ -515,7 +578,7 @@ function oreRate() { if (!has('mine')) return 0; const n = side(), vm = veinMult
 const oreMult = () => 1 + Math.pow(log10(S.ore + 1), 2) / 2;
 const burstBase = () => fin((25 + (BYT['bm+'] || []).reduce((a, n) => a + val(n), 0)) * prodOf('burstm') * boost('burst') * (S.arts.jup ? 2 : 1) * chargePow());
 const burstMult = () => (S.burst > 0 ? burstBase() * (S.burstP || 1) : 1);
-const gemGain = () => (S.run < REQ.gem ? 0 : Math.floor(soft(fin(GAIN.gem * Math.pow(S.run / REQ.gem, 0.3) * prodOf('gem') * boost('gem') * (S.arts.belt ? 3 : 1)), GCAP.gem, GEXP.gem)));
+const gemGain = () => (S.run < REQ.gem ? 0 : Math.floor(soft(fin(GAIN.gem * Math.pow(S.run / REQ.gem, 0.3) * prodOf('gem') * boost('gem') * (S.arts.belt ? 3 : 1) * (S.rank >= 4 ? 1.5 : 1)), GCAP.gem, GEXP.gem)));
 const voltGain = () => (S.ore < REQ.volt ? 0 : Math.floor(soft(fin(GAIN.volt * Math.pow(S.ore / REQ.volt, 0.5) * prodOf('volt') * boost('volt')), GCAP.volt, GEXP.volt)));
 const CH_CAP = 0.2;   // the capacitor fills at most 20 % a second; charge speed beyond that makes bursts stronger instead
 const chargeRaw = () => fin(0.03 * prodOf('charge') * boost('charge'));
@@ -523,10 +586,32 @@ const chargeRate = () => Math.min(CH_CAP, chargeRaw());
 const chargePow = () => Math.max(1, Math.pow(chargeRaw() / CH_CAP, 0.25));
 const capMax = () => 1 + 0.5 * lvT('oc');
 const burstLen = () => 10 + (BYT['bl+'] || []).reduce((a, n) => a + 10 * (val(n) - 1), 0);
+// the business (inside the Bazaar): expanding resets coins and the coin web, the shop gets bigger and stays bigger.
+// A layer up sets it back to the street stall, but ranks you reached before come back by themselves (no reset) as the coins flow
+const RANKS = [['🧺', 'Street stall'], ['⛺', 'Market stall'], ['🏪', 'Corner shop'], ['🏬', 'Department store'], ['🏛️', 'Trading house'], ['👑', 'Trade empire']];
+const PERKS = ['opens Deals', 'coin nodes cost 25 % less', 'deals arrive 25 % faster', 'gems from a layer up ×1.5', 'deals are 50 % stronger'];
+const ringTxt = (r) => (r > RANK.open ? '' : r === RANK.open ? 'opens the whole coin web' : `opens ${RANK.ringStep > 1 ? 'rings ' + (RANK.ring0 + RANK.ringStep * (r - 1) + 1) + ' to ' : 'ring '}${RANK.ring0 + RANK.ringStep * r} of the coin web`);
+const rankIcon = (r) => RANKS[Math.min(r, RANKS.length - 1)][0];
+const rankName = (r) => (r < RANKS.length ? RANKS[r][1] : `Trade empire +${r - RANKS.length + 1}`);
+const rankReq = (r) => { const q = RANK.req, k = q.length - 1; return r <= k ? q[r] : q[k] * Math.pow(RANK.grow, r - k); };
+const rankMult = (r = S.rank) => Math.pow(RANK.mult, r);
+const rankGain = () => { let r = S.rank; while (r < S.rank + 50 && S.run >= rankReq(r)) r++; return r - S.rank; };
+function rankUp(quiet) {
+  const k = rankGain(); if (k < 1) return;
+  const keepC = has('keepc-all'), reachC = 2 * lvT('keepc');
+  for (const n of WEB.coin) if (!(keepC || n.d <= reachC)) delete S.u[n.id];
+  S.rank += k; S.rankBest = Math.max(S.rankBest, S.rank); S.coins = 0; S.run = 0; S.st.ranks = (S.st.ranks || 0) + 1;
+  if (!quiet) {
+    Sound.init(); Sound.up();
+    const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,201,60,0.65) 40%, rgba(15,11,30,0.95) 75%)'; f.innerHTML = `<b>${rankIcon(S.rank)}<br>${rankName(S.rank)}!</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
+    toast(`${rankIcon(S.rank)} ${rankName(S.rank)}`, `coins ×${fmt(rankMult())}${PERKS[S.rank - 1] ? ` · new: ${PERKS[S.rank - 1]}` : ''}`, COL.coin); checkAch(); render(true);
+  }
+  save();
+}
 // Deals (coins): three offers at a time, pick one; up to three rounds wait for you
-const dealsOpen = () => S.life >= 1000 || S.top >= 1;
-const dealEvery = () => Math.max(10, 75 / (prodOf('dealspeed') * (S.arts.moon ? 1.25 : 1)));
-const dealPow = () => prodOf('dealpow') * recipeMult('deal');
+const dealsOpen = () => S.rankBest >= 1 || S.top >= 1 || S.st.deals > 0;
+const dealEvery = () => Math.max(10, 75 / (prodOf('dealspeed') * (S.arts.moon ? 1.25 : 1) * (S.rank >= 3 ? 1.25 : 1)));
+const dealPow = () => prodOf('dealpow') * recipeMult('deal') * (S.rank >= 5 ? 1.5 : 1);
 const freebie = () => { let best = null, bc = Infinity; for (const m of WEB.coin) { if (maxed(m) || !needOk(m)) continue; const c = costAt(m); if (c > S.coins && c < bc && reachable(m)) { best = m; bc = c; } } return best; };
 const gemTip = (p) => Math.max(1, Math.floor(0.1 * p * gemGain()));
 const DEALS = [
@@ -542,7 +627,7 @@ function newOffer() { const pool = DEALS.filter((d) => d.ok()), out = []; while 
 function dealTick(dt) {
   if (S.rush > 0) S.rush = Math.max(0, S.rush - dt);
   if (!dealsOpen()) return;
-  if (S.dealQ < 3) { S.dealT += dt; const ev = dealEvery(); while (S.dealT >= ev && S.dealQ < 3) { S.dealT -= ev; S.dealQ++; if (S.dealQ === 1 && typeof toast === 'function' && !robOn('autodeal')) toast('🤝 A deal is waiting', 'pick one of three on the coin tab', COL.coin); } if (S.dealQ >= 3) S.dealT = 0; }
+  if (S.dealQ < 3) { S.dealT += dt; const ev = dealEvery(); while (S.dealT >= ev && S.dealQ < 3) { S.dealT -= ev; S.dealQ++; if (S.dealQ === 1 && typeof toast === 'function' && !robOn('autodeal')) toast('🤝 A deal is waiting', 'pick one of three in the Bazaar', COL.coin); } if (S.dealQ >= 3) S.dealT = 0; }
   if (S.dealQ > 0 && !S.offer) newOffer();
 }
 function takeDeal(i, quiet) {
@@ -585,7 +670,7 @@ function describe(n, l) {
     'xs+': `Expeditions +${Math.round((e.a || 0) * 100)} % faster per level`, 'xl-': `Expedition risk −${Math.round((e.a || 0) * 100)} % per level`, 'xr^': `Relics ×${e.b} stronger per level`, 'xr*': `Relics ×${e.b} stronger per level, no maximum`,
     'syn-star': 'Coins grow with every star you ever earned', ship: 'One more ship per level', safe: 'Ships never get lost', keepl: 'A layer up to stars always keeps the lab nodes 2 steps around the centre; each level keeps 2 more steps',
     'keepl-all': 'Keep the whole lab web on a layer up to stars', autovolt: 'Earns 5 % of your volt layer-up gain every second, with no reset', autoelem: 'Earns 5 % of your element layer-up gain every second, with no reset' };
-  return (D[t] || t) + (e.need && S.top < e.need ? ` (needs ${LAYERS[e.need].name})` : '');
+  return (D[t] || t) + (e.need && S.top < e.need ? ` (needs the ${LAYERS[e.need].name})` : '') + (n.L === 'coin' && n.d > ringMax() ? ` (🔒 needs the ${rankName(ringRank(n))})` : '');
 }
 const hasValue = (n) => !['mine', 'amp', 'crystal', 'grid4', 'grid5', 'keepc', 'keepc-all', 'keepg', 'keepg-all', 'robot', 'infx', 'hint', 'keepv', 'keepv-all', 'autogem', 'autocoin', 'autodis', 'ship', 'safe', 'keepl', 'keepl-all', 'autovolt', 'autoelem', 'oc', 'aether', 'blueprint', 'autodeal', 'autogemweb', 'autovoltweb', 'autoship', 'autolab'].includes(n.e.t);
 const showVal = (n, l) => (KIND(n.e.t) === 'base' ? `+${fmt(val(n, l))} base` : n.e.t === 'bm+' ? `+×${fmt(val(n, l))}` : n.e.t === 'bl+' ? `+${fmt(10 * (val(n, l) - 1))} s` : fx(val(n, l)));
@@ -633,9 +718,9 @@ function buy(n, el, many) {
   if (maxed(n) && n.max > 1 && isFinite(n.max)) toast(`${n.name} maxed!`, `level ${n.max} of ${n.max}`, COL[n.L]);
   const fresh = WEB[n.L].filter((m) => visible(m) && !seenBefore.has(m.id));
   if (fresh.some((m) => m.kind === 'key')) toast('Keystone found!', fresh.find((m) => m.kind === 'key').name, COL[n.L]);
-  if (n.e.t === 'mine') toast('The Mine is open', 'place drills with gems, below the web', COL.gem);
+  if (n.e.t === 'mine') toast('The Mine is open', 'place drills with gems in the ⛏️ Mine panel', COL.gem);
   if (n.e.t === 'aether' && !S.aether) { S.aether = 1; toast('🫧 Aether unlocked', 'a fifth ingredient: 12 new recipes', COL.lab); }
-  if (n.e.t.startsWith('auto') || n.e.t === 'robot' || n.e.t === 'blueprint') { const rl = Object.keys(ROBOTS).find((x) => ROBOTS[x].includes(n.e.t)); toast(`🤖 ${n.name} is working`, rl ? `its switch is on the ${LAYERS[LIDX[rl]].name} tab` : 'the Mine robot got smarter', COL[n.L]); }
+  if (n.e.t.startsWith('auto') || n.e.t === 'robot' || n.e.t === 'blueprint') { const rl = Object.keys(ROBOTS).find((x) => ROBOTS[x].includes(n.e.t)); toast(`🤖 ${n.name} is working`, rl ? `its switch: ${LAYERS[LIDX[rl]].name} → 🤖 Robots` : 'the Mine robot got smarter', COL[n.L]); }
   checkAch(); render(true); save();
   return k;
 }
@@ -662,7 +747,7 @@ function layerUp(target, quiet) {
   if (gain < 1) return;
   if (!quiet) {
     Sound.init(); Sound.up();
-    const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<div class="stack">${LAYERS.slice(0, next + 1).map((z, i) => `<span style="--c:${z.c};--i:${i}">${z.icon} ${z.name}</span>`).join('')}</div><b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
+    const f = document.createElement('div'); f.className = 'flash'; f.style.background = `radial-gradient(circle, rgba(255,255,255,0.95), ${LAYERS[next].c}aa 40%, rgba(15,11,30,0.95) 75%)`; f.innerHTML = `<div class="stack">${LAYERS.slice(0, next + 1).map((z, i) => `<span style="--c:${z.c};--i:${i}">${z.pic} ${z.name}</span>`).join('')}</div><b>Layer up!<br>${LAYERS[next].icon} +${fmt(gain)}</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
   }
   // decide what the memory nodes keep before anything is deleted
   const keepL = has('keepl-all'), reachL = 2 + 2 * lvT('keepl'), keepV = has('keepv-all'), reachV = 2 + 2 * lvT('keepv'), keepG = has('keepg-all'), reachG = 2 * lvT('keepg'), keepC = has('keepc-all'), reachC = 2 * lvT('keepc');
@@ -676,8 +761,8 @@ function layerUp(target, quiet) {
   }
   if (next >= 2) { for (const n of WEB.gem) if (!(keepG || n.d <= reachG)) delete S.u[n.id]; S.gems = 0; S.gemsRun = 0; S.grid = Array(25).fill(null); S.ore = 0; }
   for (const n of WEB.coin) if (!(keepC || n.d <= reachC)) delete S.u[n.id];
-  S.coins = 0; S.run = 0; S.runT = 0;
-  S.st.ups[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].name}`, LAYERS[next].what, LAYERS[next].c), 1600); }
+  S.coins = 0; S.run = 0; S.runT = 0; S.rank = 0;
+  S.st.ups[next]++; if (next > S.top) { S.top = next; S.tab = next; setTimeout(() => toast(`New layer: ${LAYERS[next].pic} ${LAYERS[next].name}`, LAYERS[next].what, LAYERS[next].c), 1600); }
   checkAch(); if (!quiet) render(true); save();
 }
 $('btnUp').addEventListener('click', () => layerUp());
@@ -701,6 +786,7 @@ const ACH = [
   ['Overcharged', 'Discharge an overcharged burst', () => S.st.ocb >= 1], ['Thunderstruck', 'Discharge at 300 %', () => S.st.ocTop >= 2.999],
   ['Fifth element', 'Unlock Aether', () => !!S.aether], ['Refined', 'Refine a recipe', () => Object.keys(S.ref).length >= 1], ['Master chemist', 'Refine a recipe to ★★★', () => Object.values(S.ref).some((v) => v >= 3)], ['Grand creator', 'Discover all 32 recipes', () => foundN() >= 32],
   ['Comet rider', 'Catch a comet', () => S.st.dust >= 1], ['Curator', 'Find an artifact', () => artN() >= 1], ['Museum', 'Find all 8 artifacts', () => artN() >= 8], ['Event horizon', 'Bring a relic back from the black hole', () => S.st.hole >= 1],
+  ['Open for business', 'Expand your business', () => S.rankBest >= 1], ['Shopkeeper', 'Reach the Corner shop', () => S.rankBest >= 2], ['Tycoon', 'Reach the Trade empire', () => S.rankBest >= 5], ['Monopoly', 'Reach Trade empire +5', () => S.rankBest >= 10],
   ['Robot friend', 'Own 3 robots', () => robN() >= 3], ['Factory', 'Own 10 robots at once', () => robN() >= 10],
 ];
 function checkAch() {
@@ -713,6 +799,7 @@ function step(dt) {
   const cut = Math.min(S.burst > 0 ? S.burst : Infinity, S.rush > 0 ? S.rush : Infinity);
   if (cut < dt - 1e-9) { step(cut); step(dt - cut); return; }
   const c = coinRate() * dt; S.coins = fin(S.coins + c); S.run = fin(S.run + c); S.life = fin(S.life + c); S.runT += dt; S.starT += dt; S.st.played += dt;
+  while (S.rank < S.rankBest && S.run >= rankReq(S.rank)) { S.rank++; if (dt <= 1 && typeof toast === 'function') toast(`${rankIcon(S.rank)} ${rankName(S.rank)} again`, 'ranks you reached before come back without a reset', COL.coin); }
   for (const k of ['gems', 'gemsLife', 'gemsRun', 'ore', 'volts', 'voltsLife', 'voltsRun', 'elems', 'elemsLife', 'elemsRun', 'stars', 'starsLife']) if (!(S[k] < 1e300)) S[k] = 1e300;
   if (has('mine')) { if (S.veinSide !== side()) rollVeins(); S.ore += oreRate() * dt; }
   const shipBot = S.top >= 4 && robOn('autoship');
@@ -756,10 +843,7 @@ const STEP = 104;
 const cam = (L) => (S.cam[L] = S.cam[L] || { x: 0, y: 0, z: 1 });
 let drag = null, viewEl = null, planeEl = null;
 function renderWeb(L, box) {
-  const card = document.createElement('div'); card.className = 'card';
   const disc = WEB[L].filter(visible).length, all = WEB[L].length, ownN = owned(L).length;
-  card.innerHTML = `<h2>${LAYERS[LIDX[L]].icon} The ${LAYERS[LIDX[L]].name.toLowerCase().replace(/s$/, '')} web <small>${ownN} owned · ${disc === all ? `${all} nodes` : `${disc} found · ? more`}</small></h2><p>Drag to move around. Buying a node reveals its neighbours: nobody knows how big the web is until it is explored. Circles are notable, diamonds ⭐ are keystones, double rings ♾️ have no maximum.</p>`;
-  card.querySelector('p').className = 'webp';
   const view = document.createElement('div'); view.className = 'view'; view.setAttribute('aria-label', 'Upgrade web');
   const plane = document.createElement('div'); plane.className = 'plane';
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); plane.appendChild(svg);
@@ -774,10 +858,9 @@ function renderWeb(L, box) {
   // fog stubs: a dashed "?" where an unseen neighbour of a visible node exists
   svg.innerHTML = lines;
   view.appendChild(plane);
-  view.insertAdjacentHTML('beforeend', `<div class="disc">${disc}/${disc === all ? all : '?'}</div><div class="vbtns"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="home" aria-label="Back to the centre">⌂</button></div><canvas class="mini" width="96" height="96"></canvas>`);
-  card.appendChild(view);
-  const sheet = document.createElement('div'); sheet.className = 'sheet'; sheet.id = 'sheet'; card.appendChild(sheet);
-  box.appendChild(card);
+  view.insertAdjacentHTML('beforeend', `<div class="disc">${LAYERS[LIDX[L]].pic} ${ownN} owned · ${disc}/${disc === all ? all : '?'} found</div><div class="vbtns"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="home" aria-label="Back to the centre">⌂</button></div><canvas class="mini" width="96" height="96"></canvas>`);
+  box.appendChild(view);
+  const sheet = document.createElement('div'); sheet.className = 'sheet'; sheet.id = 'sheet'; box.appendChild(sheet);
   viewEl = view; planeEl = plane;
   view.querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const c = cam(L), z = b.getAttribute('data-z'); if (z === 'in') c.z = Math.min(1.6, c.z * 1.25); else if (z === 'out') c.z = Math.max(0.35, c.z / 1.25); else { c.x = 0; c.y = 0; c.z = 1; } applyCam(); }));
   const pts = new Map(); let pinch = null;
@@ -817,10 +900,16 @@ function renderSheet() {
   sh.querySelector('[data-k=max]').addEventListener('click', (e) => buy(n, e.currentTarget, true));
 }
 function renderScreen() {
-  const box = $('screen'); box.textContent = ''; viewEl = null; planeEl = null;
-  const L = LAYERS[S.tab].id; renderWeb(L, box);
+  const box = $('screen'), stage = $('stage'); box.textContent = ''; stage.textContent = ''; viewEl = null; planeEl = null;
+  const L = LAYERS[S.tab].id, panes = []; renderWeb(L, stage);
+  const pane = (id, icon, label) => { const k = document.createElement('div'); k.className = 'pane'; k.setAttribute('data-pane', id); panes.push([id, icon, label]); box.appendChild(k); return k; };
+  if (L === 'coin') {
+    const k = pane('biz', '🏪', 'Business');
+    k.innerHTML = `<h2><span data-k="bzn"></span><small data-k="bzm"></small></h2><div class="cap gold"><i data-k="bzf"></i><span data-k="bzt"></span></div><button class="wide" type="button" data-k="bzb"></button><div class="ladder" data-k="bzl"></div><p>Expanding trades your business for a bigger one: coins and the coin web start again, but every rank multiplies coins ×${RANK.mult} for good, opens more of the web and brings a perk. After a layer up, the ranks you reached before come back by themselves, without a reset.</p>`;
+    k.querySelector('[data-k=bzb]').addEventListener('click', (e) => { const g = rankGain(); if (g < 1) return; Sound.init(); flyTo(e.currentTarget, rankIcon(S.rank + g), COL.coin); rankUp(); });
+  }
   if (L === 'coin' && dealsOpen()) {
-    const k = document.createElement('div'); k.className = 'card';
+    const k = pane('deal', '🤝', 'Deals');
     k.innerHTML = `<h2>🤝 Deals <small data-k="dq"></small></h2><p>Every ${Math.round(dealEvery())} seconds someone makes you three offers: pick one. Up to three rounds wait for you, also while you are away.</p>`;
     if (S.offer && S.dealQ > 0) {
       const g = document.createElement('div'); g.className = 'deals'; const pw = dealPow();
@@ -828,23 +917,21 @@ function renderScreen() {
       k.appendChild(g);
     }
     k.insertAdjacentHTML('beforeend', '<div class="cap gold"><i data-k="df"></i><span data-k="dt"></span></div><div class="chips" data-k="dc"></div>');
-    box.appendChild(k);
   }
   if (L === 'gem' && has('mine')) {
-    const n = side(), m = document.createElement('div'); m.className = 'card';
+    const n = side(), m = pane('mine', '⛏️', 'Mine');
     m.innerHTML = `<h2>⛏️ The Mine <small data-k="mo"></small></h2><p>Place tiles with gems. Drills dig ore; ore multiplies coins and turns into volts. Amplifiers power their neighbours, crystals multiply their row and column. ✨ Rich veins: a drill on one digs ×${fmt(veinMult())}. Tap a tile with the same tool to take it back (full refund), with another tool to swap it.</p>`;
     const tools = document.createElement('div'); tools.className = 'tools';
     for (const [id, t] of Object.entries(TILES)) { const ok = !t.up || has(t.up); const b = document.createElement('button'); b.type = 'button'; b.className = 'tool'; b.textContent = `${t.icon} ${t.name} · ${t.c}💎`; b.disabled = !ok; b.setAttribute('aria-pressed', String(S.tool === id)); b.addEventListener('click', () => { S.tool = id; render(true); }); tools.appendChild(b); }
     m.appendChild(tools);
-    const g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+    const g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const i = y * 5 + x, t = S.grid[i], v = S.veins.includes(i), b = document.createElement('button'); b.type = 'button'; b.className = 'tile' + (t ? ' full' : '') + (v ? ' vein' : ''); b.setAttribute('data-tile', i); b.setAttribute('aria-label', `${t ? TILES[t].name : 'Empty tile'}${v ? ', rich vein' : ''}`); b.textContent = t ? TILES[t].icon : v ? '✨' : '+'; if (t === 'drill') { const p = document.createElement('small'); p.textContent = `×${fmt(drillPower(i))}`; b.appendChild(p); } b.addEventListener('click', () => tileAt(i)); g.appendChild(b); }
     m.appendChild(g);
     const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'tool'; pb.textContent = `🔎 Prospect: move the veins · ${fmt(prospectCost())}💎`; pb.addEventListener('click', prospect); m.appendChild(pb);
-    box.appendChild(m);
   }
   if (L === 'star') {
     while (S.ships.length < shipCount()) S.ships.push(null);
-    const k = document.createElement('div'); k.className = 'card';
+    const k = pane('ship', '🚀', 'Ships');
     k.innerHTML = `<h2>🚀 Expeditions <small>${shipCount()} ship${shipCount() > 1 ? 's' : ''} · ${S.relicN || 0} relics</small></h2><p>Send a ship out. It flies on while you are away. Longer trips bring stronger relics (a permanent boost that is never reset) but can get lost. Every place also hides one artifact for the Museum (❔ = not found yet).</p>`;
     S.ships.slice(0, shipCount()).forEach((sh, i) => {
       const row = document.createElement('div'); row.className = 'ship'; row.setAttribute('data-ship', i);
@@ -855,13 +942,13 @@ function renderScreen() {
     });
     const rel = document.createElement('div'); rel.className = 'chips'; rel.innerHTML = Object.entries(S.relics).map(([kk, v]) => `<span class="chip" style="--c:${COL.star}">🛸 ${RELIC_K[kk]} ×${fmt(relicMult(kk))}</span>`).join('') || '<span class="chip" style="--c:#9a92b8">no relics yet</span>';
     k.appendChild(rel);
-    const mu = document.createElement('div'); mu.innerHTML = `<h2 style="margin-top:12px">🏛️ Museum <small>${artN()}/8${artN() < 8 ? ` · ${Math.round(artChance() * 100)} % chance per trip` : ' · complete'}</small></h2>`;
+    const mu = document.createElement('div'); mu.innerHTML = `<h2>🏛️ Museum <small>${artN()}/8${artN() < 8 ? ` · ${Math.round(artChance() * 100)} % chance per trip` : ' · complete'}</small></h2>`;
     const mg = document.createElement('div'); mg.className = 'museum';
     mg.innerHTML = DEST.map((d) => { const a = ARTS[d.id]; return S.arts[d.id] ? `<div class="bk on"><b>${a[0]} ${a[1]}</b><span>${a[2]}</span></div>` : `<div class="bk"><b>❔ ???</b><span>hidden at: ${d.icon} ${d.name}</span></div>`; }).join('');
-    k.append(mu, mg); box.appendChild(k);
+    pane('mus', '🏛️', 'Museum').append(mu, mg);
   }
   if (L === 'lab') {
-    const k = document.createElement('div'); k.className = 'card';
+    const k = pane('rx', '⚗️', 'Reactor');
     const [a, b] = S.slots, ing = (id) => ingredients().find((x) => x.id === id), tried = a && b ? S.tried[[a, b].sort().join('+')] : 0, book0 = bookOf();
     const rr = a && b ? recipeOf(a, b) : null, known = !!(rr && S.found[rr.id]), rs = known ? S.ref[rr.id] || 0 : 0, cost = rxCost();
     k.innerHTML = `<h2>⚗️ The Reactor <small>${foundN()}/${book0.length} recipes</small></h2><p>Pick two ingredients and react them (${fmt(reactCost())} 🧪). Some pairs make something new: a permanent boost, and a new ingredient to try. Pairs that do nothing still cost elements, so think first. Reacting a pair you already know refines it: every ★ makes it 50 % stronger, up to ★★★.</p>
@@ -879,18 +966,17 @@ function renderScreen() {
     const rxNow = rxPow();
     book.innerHTML = book0.map((r) => { const st = S.ref[r.id] || 0; return S.found[r.id] ? `<div class="bk on"><b>${r.icon} ${r.name}${st ? ` <i>${'★'.repeat(st)}</i>` : ''}</b><span>${ic(r.in[0])} + ${ic(r.in[1])} · ${KTXT[r.k]} ×${fmt(recipeVal(r, rxNow))}</span></div>` : `<div class="bk"><b>❔ ???</b><span>${hints.includes(r) ? `${ic(r.in[0])} + ?` : '? + ?'}</span></div>`; }).join('')
       + (S.aether ? '' : '<div class="bk"><b>🫧 ???</b><span>a second book: find the Aether node in the lab web</span></div>');
-    k.appendChild(book); box.appendChild(k);
+    const bk = pane('book', '📖', 'Book'); bk.innerHTML = `<h2>📖 Recipe book <small>${foundN()}/${book0.length} found</small></h2>`; bk.appendChild(book);
   }
   if (L === 'volt') {
-    const k = document.createElement('div'); k.className = 'card';
+    const k = pane('cap', '⚡', 'Capacitor');
     const cm = capMax();
     k.innerHTML = `<h2>⚡ The Capacitor${cm > 1 ? ` <small>charges up to ${Math.round(cm * 100)} %</small>` : ''}</h2><p>It charges by itself, also while you are away. Discharge for a burst: coins and ore ×${fmt(burstBase())} for up to ${fmt(burstLen())} s.${chargeRaw() > CH_CAP ? ` It cannot fill faster than ${CH_CAP * 100} % a second: your extra charge speed makes bursts ×${fmt(chargePow())} stronger instead.` : ''}${cm > 1 ? ' Overcharge: wait past 100 % (it fills slower there) for a longer burst with squared power: 200 % = ×4, 300 % = ×9.' : ''}</p><div class="cap">${cm > 1 ? `<em style="left:${100 / cm}%"></em>` : ''}<i data-k="cf"></i><span data-k="ct"></span></div>`;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'wide'; b.setAttribute('data-k', 'dis'); b.textContent = 'Discharge'; b.addEventListener('click', discharge); k.appendChild(b);
-    box.appendChild(k);
   }
   const bots = (ROBOTS[L] || []).filter(has);
   if (bots.length) {
-    const k = document.createElement('div'); k.className = 'card';
+    const k = pane('bot', '🤖', 'Robots');
     k.innerHTML = `<h2>🤖 Robots <small>${bots.filter((t) => !S.rob[t]).length} of ${bots.length} on</small></h2><p>These robots work on this layer by themselves. Switch one off when you want to do its job by hand.</p>`;
     for (const t of bots) {
       const row = document.createElement('div'); row.className = 'rob';
@@ -900,14 +986,49 @@ function renderScreen() {
       b.addEventListener('click', () => { if (S.rob[t]) delete S.rob[t]; else S.rob[t] = 1; Sound.init(); Sound.tile(); render(true); save(); });
       row.appendChild(b); k.appendChild(row);
     }
-    box.appendChild(k);
   }
+  pane('num', '📊', 'Numbers').innerHTML = '<div class="nums" data-k="nums"></div><p>The web: drag to move around, pinch or use + and − to zoom. Buying a node reveals its neighbours: nobody knows how big a web is until it is explored. Circles are notable, diamonds ⭐ are keystones, double rings ♾️ have no maximum.</p>';
+  const tabs = $('dtabs'); tabs.textContent = '';
+  for (const [id, icon, label] of panes) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'dtab'; b.setAttribute('data-pt', id); b.innerHTML = `${icon}<span> ${label}</span><em data-pb="${id}"></em>`;
+    b.addEventListener('click', () => { Sound.init(); if (showPane() === id) S.fold = S.fold ? 0 : 1; else { S.pane[L] = id; S.fold = 0; } showPane(); refresh(); applyCam(); });
+    tabs.appendChild(b);
+  }
+  showPane();
+}
+// the dock shows one pane at a time; tapping the open pane's tab folds the dock away (more room for the web)
+function showPane() {
+  const L = LAYERS[S.tab].id, ids = []; document.querySelectorAll('[data-pane]').forEach((p) => ids.push(p.getAttribute('data-pane')));
+  const cur = ids.includes(S.pane[L]) ? S.pane[L] : ids[0];
+  document.querySelectorAll('[data-pane]').forEach((p) => { p.style.display = p.getAttribute('data-pane') === cur ? '' : 'none'; });
+  document.querySelectorAll('[data-pt]').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-pt') === cur)));
+  $('app').className = S.fold ? 'fold' : '';
+  const tb = $('dtabs'); tb.classList.remove('many'); if (tb.scrollWidth > tb.clientWidth + 2) tb.classList.add('many');
+  return cur;
+}
+// the 📊 Numbers pane: where the coins come from, how far the next goals are, this layer's figures
+function numbers(L, parts, rate) {
+  const row = (a, b, c) => `<div${c ? ` style="--c:${c}"` : ''}><span>${a}</span><b>${b}</b></div>`, eta = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per) : '–');
+  let h = `<h3>Coins</h3>${row('coins / s', fmt(rate), COL.coin)}${row('coins this run', fmt(S.run), COL.coin)}${row('time this run', fmtT(S.runT), COL.coin)}`;
+  h += parts.map((p) => row(p.plus ? 'base pay' : p.t, p.plus ? fmt(p.v) : p.t === 'softcap' ? `÷${fmt(1 / p.v)}` : `×${fmt(p.v)}`, p.c)).join('');
+  h += `<h3>Goals</h3>${row(`${rankIcon(S.rank + 1)} ${rankName(S.rank + 1)}`, eta(rankReq(S.rank) - S.run, rate), COL.coin)}${row(`💎 at ${fmt(REQ.gem)} coins`, S.run >= REQ.gem ? `+${fmt(gemGain())} 💎` : eta(REQ.gem - S.run, rate), COL.gem)}`;
+  if (S.top >= 1) h += row(`⚡ at ${fmt(REQ.volt)} ore`, !has('mine') ? 'needs the Mine' : S.ore >= REQ.volt ? `+${fmt(voltGain())} ⚡` : eta(REQ.volt - S.ore, oreRate()), COL.volt);
+  if (S.top >= 2) h += row(`🧪 at ${fmt(REQ.elem)} volts`, S.voltsRun >= REQ.elem ? `+${fmt(elemGain())} 🧪` : `${fmt(S.voltsRun)} so far`, COL.lab);
+  if (S.top >= 3) h += row(`🌌 at ${fmt(REQ.star)} elements`, S.elemsRun >= REQ.star ? `+${fmt(starGain())} 🌌` : `${fmt(S.elemsRun)} so far`, COL.star);
+  h += `<h3>${LAYERS[LIDX[L]].name}</h3>${row('nodes owned', `${owned(L).length} of ${WEB[L].filter(visible).length} found`)}`;
+  if (L === 'coin') h += row('business', `${rankName(S.rank)} ×${fmt(rankMult())}`) + row('expansions', String(S.st.ranks || 0)) + (dealsOpen() ? row('deals taken', String(S.st.deals)) + row('a deal every', fmtT(dealEvery())) + row('deal power', `×${fmt(dealPow())}`) : '');
+  if (L === 'gem' && has('mine')) h += row('ore', fmt(S.ore)) + row('ore / s', fmt(oreRate())) + row('rich veins', `×${fmt(veinMult())}`);
+  if (L === 'volt') h += row('charge / s', `${fmt(chargeRate() * 100)} %`) + row('burst power', `×${fmt(burstBase())}`) + row('burst length', `${fmt(burstLen())} s`) + row('fills up to', `${Math.round(capMax() * 100)} %`) + row('bursts fired', String(S.st.bursts));
+  if (L === 'lab') h += row('recipes', `${foundN()}/${bookOf().length}`) + row('a reaction costs', `${fmt(reactCost())} 🧪`) + row('recipe power', `×${fmt(rxPow())}`);
+  if (L === 'star') h += row('ships', String(shipCount())) + row('relics', String(S.relicN || 0)) + row('artifacts', `${artN()}/8`) + row('stardust per trip', fmt(dustGain()));
+  return h + `<h3>All in all</h3>${row('achievements', `${achCount()}/${ACH.length} · ×${fmt(achMult())}`)}${row('robots', String(robN()))}${row('layer ups', String(S.st.ups.reduce((a, b) => a + b, 0)))}${row('time played', fmtT(S.st.played))}`;
 }
 function renderMap() {
   const m = $('map'); m.textContent = '';
   LAYERS.forEach((L, i) => {
+    if (i > S.top + 1) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lay' + (i > S.top ? ' locked' : ''); b.style.setProperty('--c', L.c); b.setAttribute('aria-pressed', String(i === S.tab));
-    b.innerHTML = i > S.top ? `<b>${i === S.top + 1 ? L.icon : '❔'} ???</b><small>${i === S.top + 1 ? 'layer up to open' : 'locked'}</small>` : `<b>${L.icon} ${L.name}</b><small data-v="${i}"></small>`;
+    b.innerHTML = i > S.top ? '<i>🔒</i><b>???</b><small>layer up to open</small>' : `<i>${L.pic}</i><b>${L.name}</b><small data-v="${i}"></small><small class="v2" data-v2="${i}"></small><span class="pg"><span data-vp="${i}"></span></span><em data-vb="${i}"></em>`;
     if (i <= S.top) b.addEventListener('click', () => { S.tab = i; Sound.init(); render(true); });
     m.appendChild(b);
   });
@@ -942,7 +1063,7 @@ function refresh() {
     const l = lvl(n), mx = n.max, full = maxed(n), c = costAt(n);
     sh.querySelector('[data-k=nw]').textContent = `${isFinite(mx) ? `Lv ${l}/${mx}` : `Lv ${l} · no maximum`}${hasValue(n) ? ` · ${showVal(n, l)}${full ? '' : ` → ${showVal(n, l + 1)}`}` : ''}`;
     const one = sh.querySelector('[data-k=one]'), ok = !full && reachable(n) && needOk(n) && S[w] >= c;
-    one.innerHTML = full ? 'MAX' : !reachable(n) ? 'Hidden' : `Buy<small>${fmt(c)} ${LAYERS[LIDX[L]].icon}</small>`; one.disabled = !ok; sh.querySelector('[data-k=max]').disabled = !ok || n.max === 1;
+    one.innerHTML = full ? '✓<small>maxed</small>' : !reachable(n) ? 'Hidden' : !needOk(n) ? '🔒' : `Buy<small>${fmt(c)} ${LAYERS[LIDX[L]].icon}</small>`; one.disabled = !ok; const mb = sh.querySelector('[data-k=max]'); mb.disabled = !ok || n.max === 1; mb.style.display = full ? 'none' : '';
   }
   if (L === 'volt') { const f = document.querySelector('[data-k=cf]'); if (f) {
     const cm = capMax(), cr = chargeRate(), sp = S.arts.comet ? 1 : 0.5, pct = Math.floor(S.charge * 100 + 1e-6);
@@ -961,8 +1082,27 @@ function refresh() {
   } }
   if (L === 'gem') { const mo = document.querySelector('[data-k=mo]'); if (mo) mo.textContent = `ore ${fmt(S.ore)} · +${fmt(oreRate())}/s`; }
   document.querySelectorAll('[data-rr]').forEach((e) => { const t = e.getAttribute('data-rr'), g = !robOn(t) ? -1 : t === 'autogem' ? gemGain() : t === 'autovolt' ? voltGain() : t === 'autoelem' ? elemGain() : -1, tx = g < 0 ? '' : `+${fmt(g * roboRate())}/s`; if (e.textContent !== tx) e.textContent = tx; });
-  document.querySelectorAll('[data-v]').forEach((e) => { const i = +e.getAttribute('data-v'); e.textContent = i === 0 ? fmt(S.coins) + (S.dealQ > 0 ? ` 🤝${S.dealQ}` : '') : i === 1 ? fmt(S.gems) : i === 2 ? fmt(S.volts) : i === 3 ? fmt(S.elems) : fmt(S.stars); });
-  const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c);
+  const pr = (v, q) => Math.max(0, Math.min(1, Math.log10(v + 1) / Math.log10(q))), idle = S.ships.slice(0, S.top >= 4 ? shipCount() : 0).filter((x) => !x || x.left <= 0).length;
+  const TI = [[`🪙 ${fmt(S.coins)}`, `+${fmt(rate)}/s`, pr(S.run, REQ.gem), S.dealQ > 0 ? `🤝${S.dealQ}` : rankGain() >= 1 ? '⬆' : ''], [`💎 ${fmt(S.gems)}`, has('mine') ? `ore +${fmt(oreRate())}/s` : 'no mine yet', pr(S.ore, REQ.volt), ''],
+    [`⚡ ${fmt(S.volts)}`, `charge ${Math.floor(S.charge * 100)} %`, pr(S.voltsRun, REQ.elem), S.top >= 2 && S.burst <= 0 && S.charge >= capMax() - 1e-6 ? '⚡' : ''], [`🧪 ${fmt(S.elems)}`, `${foundN()}/${bookOf().length} recipes`, pr(S.elemsRun, REQ.star), ''], [`🌌 ${fmt(S.stars)}`, `${S.relicN || 0} relics`, 0, idle ? `🛸${idle}` : '']];
+  const each = (a, f) => document.querySelectorAll(`[${a}]`).forEach((e) => { const t = TI[+e.getAttribute(a)]; if (t) f(e, t); }), txt = (e, t) => { if (e.textContent !== t) e.textContent = t; };
+  each('data-v', (e, t) => txt(e, t[0])); each('data-v2', (e, t) => txt(e, t[1])); each('data-vp', (e, t) => { e.style.width = `${Math.round(t[2] * 100)}%`; }); each('data-vb', (e, t) => txt(e, t[2] >= 1 ? '▲' : t[3]));
+  const PB = { biz: rankGain() >= 1 ? '!' : '', deal: S.dealQ > 0 ? String(S.dealQ) : '', cap: S.burst <= 0 && S.charge >= 1 ? '!' : '', ship: idle ? String(idle) : '' };
+  document.querySelectorAll('[data-pb]').forEach((e) => txt(e, PB[e.getAttribute('data-pb')] || ''));
+  const until = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per) : '–');
+  txt($('goal'), '🎯 ' + (S.tab === 0 ? (rankGain() >= 1 ? 'your business can expand: 🏪 Business' : S.run >= REQ.gem ? 'the layer up is ready' : rankReq(S.rank) < REQ.gem ? `${rankName(S.rank + 1)} in ${until(rankReq(S.rank) - S.run, rate)}` : `gems in ${until(REQ.gem - S.run, rate)}`)
+    : S.tab === 1 ? (!has('mine') ? 'find the Mine in this web' : S.ore >= REQ.volt ? 'the layer up is ready' : `volts in ${until(REQ.volt - S.ore, oreRate())}`) : S.tab === 2 ? `${fmt(S.voltsRun)} / ${fmt(REQ.elem)} volts for elements` : S.tab === 3 ? `${fmt(S.elemsRun)} / ${fmt(REQ.star)} elements for stars` : `${artN()}/8 artifacts · ${S.relicN || 0} relics`));
+  const html2 = (k, t) => { const e = document.querySelector(`[data-k=${k}]`); if (e && e._t !== t) { e._t = t; e.innerHTML = t; } };
+  const bz = document.querySelector('[data-k=bzb]');
+  if (bz) {
+    const g = rankGain(), nx = S.rank + Math.max(1, g), q = rankReq(S.rank), rows = [1, 2, 3, 4, 5]; if (S.rank >= 5) rows.push(S.rank + 1);
+    html2('bzn', `${rankIcon(S.rank)} ${rankName(S.rank)}`); html2('bzm', `rank ${S.rank} · coins ×${fmt(rankMult())}`); html2('bzt', `${fmt(S.run)} / ${fmt(q)} coins this run`);
+    document.querySelector('[data-k=bzf]').style.width = `${Math.round(pr(S.run, q) * 100)}%`; bz.disabled = g < 1;
+    html2('bzb', g >= 1 ? `Expand: ${rankIcon(nx)} ${rankName(nx)}<small>coins ×${fmt(Math.pow(RANK.mult, g))} for good · coins and the coin web start again</small>` : `${S.rank < S.rankBest ? 'Comes back' : 'Next'}: ${rankIcon(nx)} ${rankName(nx)}<small>at ${fmt(q)} coins this run${S.rank < S.rankBest ? ', without a reset' : ''} · ${until(q - S.run, rate)}</small>`);
+    html2('bzl', rows.map((r) => `<div class="rk${r <= S.rank ? ' on' : r === S.rank + 1 ? ' now' : ''}"><i>${rankIcon(r)}</i><b>${rankName(r)}${r <= S.rank ? ' ✓' : r <= S.rankBest ? ' ↩' : ''}</b><em>${fmt(rankReq(r - 1))} 🪙<br>×${fmt(rankMult(r))}</em><span>${[PERKS[r - 1], ringTxt(r)].filter(Boolean).join(' · ') || `coins ×${RANK.mult} more`}</span></div>`).join(''));
+  }
+  const nm = document.querySelector('[data-k=nums]'); if (nm && nm.parentNode.style.display !== 'none') { const t = numbers(L, parts, rate); if (nm._t !== t) { nm._t = t; nm.innerHTML = t; } }
+  const up = $('btnUp'); up.style.setProperty('--nx', LAYERS[Math.min(3, S.tab + 1)].c); up.style.setProperty('--p', String(S.tab < 4 ? TI[S.tab][2] : 0));
   const bot = (t, g, ic) => (robOn(t) && g >= 1 ? `your robot already earns +${fmt(g * roboRate())} ${ic}/s without a reset · ` : '');
   if (S.tab === 0) { const g = gemGain(); up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 💎 gems<small>at ${fmt(REQ.gem)} coins this run (${fmt(S.run)})</small>` : `Layer up: +${fmt(g)} 💎<small>${bot('autogem', g, '💎')}resets coins and the coin web${has('keepc-all') ? ' (kept: all)' : lvT('keepc') ? ` (kept: ${2 * lvT('keepc')} steps around the centre)` : ''}</small>`; }
   else if (S.tab === 1) { const v = voltGain(); up.disabled = v < 1; up.innerHTML = !has('mine') ? 'Layer up to ⚡ volts<small>open the Mine first (in the gem web)</small>' : v < 1 ? `Layer up to ⚡ volts<small>at ${fmt(REQ.volt)} ore (${fmt(S.ore)})</small>` : `Layer up: +${fmt(v)} ⚡<small>${bot('autovolt', v, '⚡')}resets gems, the gem web, the mine and coins</small>`; }
@@ -970,7 +1110,7 @@ function refresh() {
   else if (S.tab === 3) { const g = starGain(), f = starForm(), ft = f < 1 ? `⏳ stars are still forming: ${Math.floor(f * 100)} % (full in ${fmtT(FORM - S.starT)}) · ` : ''; up.disabled = g < 1; up.innerHTML = g < 1 ? `Layer up to 🌌 stars<small>${S.elemsRun < REQ.star ? `at ${fmt(REQ.star)} elements earned this run (${fmt(S.elemsRun)})` : `⏳ new stars are forming: wait a moment`}</small>` : `Layer up: +${fmt(g)} 🌌<small>${ft}resets elements, the lab web and everything below (recipes and relics stay)</small>`; }
   else { up.disabled = true; up.innerHTML = 'Next layer: coming soon<small>🌀 the next layer is being built</small>'; }
   document.querySelectorAll('[data-ship]').forEach((r) => { const sh = S.ships[+r.getAttribute('data-ship')]; const f = r.querySelector('[data-k=sf]'); if (sh && f) { const d = DEST.find((x) => x.id === sh.dest) || DEST[0], tot = tripSecs(d); f.style.width = `${Math.round((1 - sh.left / tot) * 100)}%`; r.querySelector('[data-k=st]').textContent = `back in ${fmtT(sh.left)}`; if (sh.left <= 0) shownKey = ''; } });
-  let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; document.body.appendChild(bb); } bb.textContent = `⚡ BURST ×${fmt(burstMult())} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
+  let bb = document.querySelector('.burst'); if (S.burst > 0) { if (!bb) { bb = document.createElement('div'); bb.className = 'burst'; $('stage').appendChild(bb); } bb.textContent = `⚡ BURST ×${fmt(burstMult())} · ${Math.ceil(S.burst)} s`; } else if (bb) bb.remove();
   S.st.bestRate = Math.max(S.st.bestRate || 0, rate);
 }
 addEventListener('resize', () => applyCam());
@@ -1046,7 +1186,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh, RANK, RANKS, PERKS, rankReq, rankGain, rankUp, rankMult, rankName, ringMax };
 render(true);
 requestAnimationFrame(frame);
 })();
