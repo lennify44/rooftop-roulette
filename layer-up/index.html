@@ -350,7 +350,7 @@ function effectFor(L, theme, kind, d, i, main) {
   return kind === 'key' ? { t: 'syn-volts', a: 3, max: 1 } : kind === 'notable' ? { t: 'om^', b: 2, max: 3 } : { t: 'om+', a: 0.3, max: 5 };
 }
 const CORE = { star: { t: 'syn-star', a: 1, max: 4, name: 'Starlight' }, lab: { t: 'syn-elem', a: 1, max: 4, name: 'Catalyst' }, coin: { t: 'cm^', b: 2, max: 5, name: 'Piggy bank' }, gem: { t: 'syn-gems', a: 0.5, max: 4, name: 'Gem glow' }, volt: { t: 'syn-volts', a: 1, max: 3, name: 'Spark' } };
-const INF = { star: [{ t: 'sm*', b: 1.12, cg: 2, name: 'Telescope' }, { t: 'xr*', b: 1.05, cg: 2.2, name: 'Star map' }], lab: [{ t: 'em*', b: 1.15, cg: 1.9, name: 'Distiller' }, { t: 'rx*', b: 1.08, cg: 2, name: 'Centrifuge' }], coin: [{ t: 'cm*', b: 1.15, cg: 1.6, name: 'Overclock' }, { t: 'base*', a: 1, cg: 1.45, name: 'Interns' }], gem: [{ t: 'cm*', b: 1.25, cg: 1.8, name: 'Gem press' }, { t: 'om*', b: 1.2, cg: 1.7, name: 'Drill bits' }], volt: [{ t: 'gm*', b: 1.15, cg: 1.9, name: 'Coils' }, { t: 'vm*', b: 1.1, cg: 2, name: 'Transformer' }] };
+const INF = { star: [{ t: 'sm*', b: 1.12, cg: 2, name: 'Telescope' }, { t: 'xr*', b: 1.05, cg: 2.2, name: 'Star map' }], lab: [{ t: 'em*', b: 1.15, cg: 1.9, name: 'Distiller' }, { t: 'rx*', a: 0.1, cg: 2, name: 'Centrifuge' }], coin: [{ t: 'cm*', b: 1.15, cg: 1.6, name: 'Overclock' }, { t: 'base*', a: 1, cg: 1.45, name: 'Interns' }], gem: [{ t: 'cm*', b: 1.25, cg: 1.8, name: 'Gem press' }, { t: 'om*', b: 1.2, cg: 1.7, name: 'Drill bits' }], volt: [{ t: 'gm*', b: 1.15, cg: 1.9, name: 'Coils' }, { t: 'vm*', b: 1.1, cg: 2, name: 'Transformer' }] };
 const NAMES = {
   'sm+': ['Stargazer', 'Lens', 'Comet tail', 'Nova'], 'sm^': ['Supernova', 'Pulsar', 'Quasar'], 'xs+': ['Thrusters', 'Warp coil', 'Ion drive'], 'xl-': ['Shields', 'Hull plating', 'Radar'], 'xr^': ['Cargo bay', 'Collector', 'Archive'], 'syn-star': ['Starlight', 'Constellation'],
   'em+': ['Beaker', 'Flask', 'Burner', 'Pipette'], 'em^': ['Fusion', 'Fission', 'Transmute'], 'rx+': ['Enzyme', 'Stirrer', 'Heater', 'Mixer'], 'rc-': ['Recycler', 'Thrift lab', 'Spare parts'], 'syn-elem': ['Alchemy', 'Elixir'],
@@ -411,7 +411,10 @@ const ringMax = () => (S.rankBest >= RANK.open ? 99 : RANK.ring0 + RANK.ringStep
 const ringRank = (n) => Math.min(RANK.open, Math.ceil((n.d - RANK.ring0) / RANK.ringStep));
 const needOk = (n) => (!n.e.need || S.top >= n.e.need) && (n.L !== 'coin' || n.d <= ringMax());
 const maxed = (n) => lvl(n) >= n.max;
-const costAt = (n) => n.cost * Math.pow(n.cg, lvl(n)) * (n.L === 'coin' && S.half > 0 ? 0.5 : 1) * (n.L === 'coin' && S.rank >= 2 ? 0.75 : 1);
+// far rings get dearer on top of the normal growth, so late-game income cannot sweep a whole web in minutes
+const RAMP = { coin: 1, gem: 1.3, volt: 1.3, lab: 1.2, star: 1.12, d0: 4, p: 2 };   // ×RAMP^((ring − 4)²); sim: webs fill from ~5 h to 20 h+ instead of all at ~4 h
+const ramp = (n) => (RAMP[n.L] > 1 && n.d > RAMP.d0 ? Math.pow(RAMP[n.L], Math.pow(n.d - RAMP.d0, RAMP.p)) : 1);
+const costAt = (n) => n.cost * ramp(n) * Math.pow(n.cg, lvl(n)) * (n.L === 'coin' && S.half > 0 ? 0.5 : 1) * (n.L === 'coin' && S.rank >= 2 ? 0.75 : 1);
 const owned = (L) => WEB[L].filter((n) => lvl(n) > 0);
 const levelsIn = (L) => WEB[L].reduce((a, n) => a + lvl(n), 0);
 const ALLN = Object.values(NODE), BYT = {}, BYK = {};
@@ -434,7 +437,8 @@ function val(n, l = lvl(n)) {
   switch (e.t) {
     case 'cm+': case 'gm+': case 'om+': case 'vm+': case 'ch+': case 'em+': case 'rx+': case 'sm+': case 'xs+': case 'dl+': case 'dp+': case 'vn+': case 'xa+': case 'ro+': return 1 + e.a * l;
     case 'cm^': case 'gm^': case 'om^': case 'vm^': case 'ch^': case 'bm^': case 'em^': case 'rx^': case 'sm^': case 'xr^': return Math.pow(e.b, l);
-    case 'cm*': case 'gm*': case 'om*': case 'vm*': case 'em*': case 'rx*': case 'sm*': case 'xr*': return Math.pow(e.b, l * infx());
+    case 'rx*': return 1 + e.a * l * infx();   // adds like rx+: recipe power scales every recipe at once, so a multiplying endless node ran away
+    case 'cm*': case 'gm*': case 'om*': case 'vm*': case 'em*': case 'sm*': case 'xr*': return Math.pow(e.b, l * infx());
     case 'xl-': return Math.pow(1 - e.a, l);
     case 'syn-star': return 1 + e.a * l * log10(S.starsLife + 1);
     case 'rc-': return Math.pow(1 - e.a, l);
@@ -480,7 +484,7 @@ const KTXT = { coin: 'coins', gem: 'gems from a layer up', ore: 'ore', volt: 'vo
 const recipeOf = (a, b) => RECIPES.find((r) => (r.in[0] === a && r.in[1] === b) || (r.in[0] === b && r.in[1] === a));
 const foundN = () => Object.keys(S.found).length;
 const FLAT = { deal: 1, vein: 1 };   // these two are not scaled by recipe power and not touched by "everything" recipes
-const rxPow = () => { let a = 1, m = 1; for (const n of BYK.rx || []) if (lvl(n) > 0) { if (n.e.t === 'rx+') a += val(n) - 1; else m *= val(n); } return a * m; };
+const rxPow = () => { let a = 1, m = 1; for (const n of BYK.rx || []) if (lvl(n) > 0) { if (n.e.t === 'rx+' || n.e.t === 'rx*') a += val(n) - 1; else m *= val(n); } return a * m; };
 const recipeVal = (r, rx = rxPow()) => 1 + (r.b - 1) * (FLAT[r.k] ? 1 : rx) * (1 + 0.5 * (S.ref[r.id] || 0));
 function recipeMult(k) { const rx = rxPow(); let m = 1; for (const r of RECIPES) if (S.found[r.id] && (r.k === k || (r.k === 'all' && !FLAT[k]))) m *= recipeVal(r, rx); return fin(m); }
 const reactCost = () => Math.max(1, Math.ceil(5 * Math.pow(1.5, foundN()) * prodOf('rc') * (S.arts.sat ? 0.5 : 1)));
@@ -560,8 +564,11 @@ function coinParts() {
 }
 const soft = (v, at, k) => (v <= at ? v : at * Math.pow(v / at, k));
 const fin = (v) => (v < 1e300 ? v : 1e300);   // also catches NaN and Infinity
-const coinSoft = (raw) => soft(soft(raw, 1e5, 0.5), 1e8, 0.3);
-const coinRate = () => coinSoft(fin(coinParts().reduce((a, p) => a * p.v, 1)));
+// the softcap works on log10 of the raw product, so a raw product past 1e300 no longer freezes the income (it did after ~12 h)
+const softL = (l, a, k) => (l <= a ? l : a + k * (l - a));
+const coinLog = (parts) => parts.reduce((a, p) => a + Math.log10(p.v > 0 ? p.v : 1), 0);
+const coinSoftL = (lr) => fin(Math.pow(10, Math.min(300, softL(softL(lr, 5, 0.5), 8, 0.3))));
+const coinRate = () => coinSoftL(coinLog(coinParts()));
 const side = () => 3 + (has('grid4') ? 1 : 0) + (has('grid5') ? 1 : 0);
 const ampPower = () => Math.max(1, lvT('amp')), crystalMult = () => 1 + Math.max(1, lvT('crystal'));
 const veinMult = () => 3 * prodOf('vein') * (S.arts.mars ? 2 : 1) * recipeMult('vein');
@@ -660,7 +667,7 @@ function describe(n, l) {
     'syn-gems': 'Coins grow with every gem you ever earned', 'syn-volts': 'Coins grow with every volt you ever earned', infx: 'Endless upgrades count double', mine: 'Opens the Mine: drills dig ore, ore multiplies coins and turns into volts', amp: 'Amplifier tiles: + level power to the drills next to them', crystal: 'Crystal tiles: ×(1 + level) to every drill in their row and column',
     grid4: 'The mine grows to 4×4', grid5: 'The mine grows by one more row and column', keepc: 'Each level keeps the coin nodes within 2 more steps of the centre on a layer up', 'keepc-all': 'Keep the whole coin web on a layer up', keepg: 'Each level keeps the gem nodes within 2 more steps of the centre on a layer up to volts', 'keepg-all': 'Keep the whole gem web on a layer up to volts', robot: 'Places drills on empty mine tiles by itself',
     'em+': `Elements from a layer up +${Math.round((e.a || 0) * 100)} % per level`, 'em^': `Elements from a layer up ×${e.b} per level`, 'em*': `Elements from a layer up ×${e.b} per level, no maximum`,
-    'rx+': `Recipe effects +${Math.round((e.a || 0) * 100)} % stronger per level`, 'rx^': `Recipe effects ×${e.b}`, 'rx*': `Recipe effects ×${e.b} per level, no maximum`, 'rc-': `Reactions cost ${Math.round((e.a || 0) * 100)} % less per level`,
+    'rx+': `Recipe effects +${Math.round((e.a || 0) * 100)} % stronger per level`, 'rx^': `Recipe effects ×${e.b}`, 'rx*': `Recipe effects +${Math.round((e.a || 0) * 100)} % stronger per level, no maximum`, 'rc-': `Reactions cost ${Math.round((e.a || 0) * 100)} % less per level`,
     'syn-elem': 'Coins grow with every element you ever earned', hint: 'Each level reveals one ingredient of a recipe you have not found yet', keepv: 'A layer up to elements always keeps the volt nodes 2 steps around the centre; each level keeps 2 more steps',
     'keepv-all': 'Keep the whole volt web on a layer up to elements', autogem: 'Earns 5 % of your gem layer-up gain every second, with no reset', autocoin: 'Buys coin nodes by itself (cheapest first)', autodis: 'Discharges the capacitor by itself when it is full',
     'dl+': `Deals arrive +${Math.round((e.a || 0) * 100)} % faster per level`, 'dp+': `Deals are +${Math.round((e.a || 0) * 100)} % stronger per level`, 'vn+': `Rich veins +${Math.round((e.a || 0) * 100)} % stronger per level`, 'xa+': `Artifacts are +${Math.round((e.a || 0) * 100)} % easier to find per level`, 'ro+': `Robots work +${Math.round((e.a || 0) * 100)} % faster per level`,
@@ -1010,7 +1017,7 @@ function showPane() {
 function numbers(L, parts, rate) {
   const row = (a, b, c) => `<div${c ? ` style="--c:${c}"` : ''}><span>${a}</span><b>${b}</b></div>`, eta = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per) : '–');
   let h = `<h3>Coins</h3>${row('coins / s', fmt(rate), COL.coin)}${row('coins this run', fmt(S.run), COL.coin)}${row('time this run', fmtT(S.runT), COL.coin)}`;
-  h += parts.map((p) => row(p.plus ? 'base pay' : p.t, p.plus ? fmt(p.v) : p.t === 'softcap' ? `÷${fmt(1 / p.v)}` : `×${fmt(p.v)}`, p.c)).join('');
+  h += parts.map((p) => row(p.plus ? 'base pay' : p.t, p.plus ? fmt(p.v) : p.t === 'softcap' ? `÷${fmt(p.inv || 1 / p.v)}` : `×${fmt(p.v)}`, p.c)).join('');
   h += `<h3>Goals</h3>${row(`${rankIcon(S.rank + 1)} ${rankName(S.rank + 1)}`, eta(rankReq(S.rank) - S.run, rate), COL.coin)}${row(`💎 at ${fmt(REQ.gem)} coins`, S.run >= REQ.gem ? `+${fmt(gemGain())} 💎` : eta(REQ.gem - S.run, rate), COL.gem)}`;
   if (S.top >= 1) h += row(`⚡ at ${fmt(REQ.volt)} ore`, !has('mine') ? 'needs the Mine' : S.ore >= REQ.volt ? `+${fmt(voltGain())} ⚡` : eta(REQ.volt - S.ore, oreRate()), COL.volt);
   if (S.top >= 2) h += row(`🧪 at ${fmt(REQ.elem)} volts`, S.voltsRun >= REQ.elem ? `+${fmt(elemGain())} 🧪` : `${fmt(S.voltsRun)} so far`, COL.lab);
@@ -1045,10 +1052,10 @@ function render(force) {
 function refresh() {
   const L = LAYERS[S.tab].id;
   $('main').textContent = L === 'coin' ? `🪙 ${fmt(S.coins)}` : L === 'gem' ? `💎 ${fmt(S.gems)}` : L === 'volt' ? `⚡ ${fmt(S.volts)}` : L === 'lab' ? `🧪 ${fmt(S.elems)}` : `🌌 ${fmt(S.stars)}`;
-  const parts = coinParts(), raw = parts.reduce((a, p) => a * p.v, 1), rate = coinSoft(raw);
-  if (rate < raw * 0.999) parts.push({ t: 'softcap', v: rate / raw, c: '#9a92b8' });
+  const parts = coinParts(), lr = coinLog(parts), rate = coinSoftL(lr), cut = lr - Math.log10(rate);
+  if (cut > 0.0005) parts.push({ t: 'softcap', v: Math.pow(10, -cut), inv: fin(Math.pow(10, cut)), c: '#9a92b8' });
   $('rate').textContent = L === 'coin' ? `${fmt(rate)} coins / s` : L === 'gem' ? `ore ${fmt(S.ore)} (+${fmt(oreRate())}/s) · ${fmt(rate)} coins/s` : L === 'volt' ? `charge ${Math.floor(S.charge * 100)} % · ${fmt(rate)} coins/s` : L === 'lab' ? `recipes ${foundN()}/${bookOf().length} · a reaction costs ${fmt(reactCost())} 🧪 · ${fmt(rate)} coins/s` : `${shipCount()} ships · ${S.relicN || 0} relics · ${fmt(rate)} coins/s`;
-  const html = parts.filter((p) => p.plus || p.v > 1.0005 || p.t === 'softcap').map((p) => `<span class="chip" style="--c:${p.c}">${p.plus ? `base ${fmt(p.v)}` : p.t === 'softcap' ? `softcap ÷${fmt(1 / p.v)}` : `${p.t} ×${fmt(p.v)}`}</span>`).join('');
+  const html = parts.filter((p) => p.plus || p.v > 1.0005 || p.t === 'softcap').map((p) => `<span class="chip" style="--c:${p.c}">${p.plus ? `base ${fmt(p.v)}` : p.t === 'softcap' ? `softcap ÷${fmt(p.inv || 1 / p.v)}` : `${p.t} ×${fmt(p.v)}`}</span>`).join('');
   if ($('chips').innerHTML !== html) $('chips').innerHTML = html;
   const w = wallet(L);
   document.querySelectorAll('[data-node]').forEach((b) => {
