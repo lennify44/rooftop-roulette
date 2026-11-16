@@ -292,7 +292,7 @@ const log10 = (n) => Math.log10(Math.max(1, n));
 // ---------- save
 const SAVE = 'layer-up-save-v3';
 const RANK = { req: [600, 1e6, 5e8, 1e11, 2e13], grow: 100, mult: 3, ring0: 2, ringStep: 2, open: 5 };
-const fresh = () => ({ speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
+const fresh = () => ({ dev: 0, speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
   muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0, 0], feeds: 0, pfeeds: 0, bestD: 0, trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 // older saves miss newer fields: fill them in
@@ -1228,7 +1228,7 @@ function openMenu() {
   const tot = WEB.coin.length + WEB.gem.length + WEB.volt.length + WEB.lab.length + WEB.star.length + WEB.void.length, own = owned('coin').length + owned('gem').length + owned('volt').length + owned('lab').length + owned('star').length + owned('void').length;
   const h = Math.floor(S.st.played / 3600), mi = Math.floor(S.st.played % 3600 / 60);
   o.innerHTML = `<div class="box"><div class="opt"><button type="button" id="mClose">✕ Close</button></div>
-    <h2>📊 Stats</h2><dl class="stats">
+    <h2 id="mStats">📊 Stats</h2><dl class="stats">
       <div><dt>Time played</dt><dd>${h} h ${mi} min</dd></div><div><dt>Coins ever</dt><dd>${fmt(S.life)}</dd></div><div><dt>Best coins / s</dt><dd>${fmt(S.st.bestRate || 0)}</dd></div>
       <div><dt>Gems ever</dt><dd>${fmt(S.gemsLife)}</dd></div><div><dt>Volts ever</dt><dd>${fmt(S.voltsLife)}</dd></div><div><dt>Layer ups</dt><dd>💎 ${S.st.ups[1]} · ⚡ ${S.st.ups[2]} · 🧪 ${S.st.ups[3]} · 🌌 ${S.st.ups[4]}</dd></div>
       <div><dt>Elements ever</dt><dd>${fmt(S.elemsLife)}</dd></div><div><dt>Recipes</dt><dd>${foundN()}/${bookOf().length}</dd></div><div><dt>Stars ever</dt><dd>${fmt(S.starsLife)}</dd></div><div><dt>Relics</dt><dd>${S.relicN || 0}</dd></div>
@@ -1237,8 +1237,10 @@ function openMenu() {
     <h2>⚙️ Settings</h2>
     <div class="opt"><span>Numbers</span><button type="button" data-o="suf" aria-pressed="${!S.sci}">1.5M</button><button type="button" data-o="sci" aria-pressed="${S.sci}">1.5e6</button></div>
     <div class="opt"><span>Music</span><button type="button" data-o="mus" aria-pressed="${S.music}">${S.music ? 'On' : 'Off'}</button></div>
-    <h2>🛠️ Dev options</h2><p style="color:var(--haze);font-size:13px">Game speed for testing and speedruns: everything runs faster (time away from the game still counts normally). A save that ran faster than ×1 can no longer post to the world leaderboard; Start over makes a fair run again.</p>
+    ${S.dev ? `<h2>🛠️ Dev options</h2><p style="color:var(--haze);font-size:13px">For testing and speedruns: a faster game speed, or skip time at once (time away from the game still counts normally). A save that used them can no longer post to the world leaderboard; Start over makes a fair run again.</p>
     <div class="opt"><span>Game speed</span>${[1, 2, 5, 10, 50, 100].map((v) => `<button type="button" data-sp="${v}" aria-pressed="${S.speed === v}">×${v}</button>`).join('')}</div>
+    <div class="opt"><span>Skip</span><button type="button" data-skip="600">+10 min</button><button type="button" data-skip="3600">+1 h</button><button type="button" data-skip="28800">+8 h</button></div>
+    <div class="opt"><button type="button" id="mDevHide">Hide dev options</button></div>` : ''}
     <h2>💾 Save</h2><p style="color:var(--haze);font-size:13px">Copy this text to keep your game safe or move it to another device; paste one in and tap Load.</p>
     <textarea id="mSave" spellcheck="false"></textarea><div class="opt"><button type="button" id="mLoad">Load</button><button type="button" id="mReset">Start over</button></div>
     <h2>🌍 World leaderboard</h2><div id="mLb" style="color:var(--haze);font-size:14px"></div>
@@ -1251,6 +1253,9 @@ function openMenu() {
   $('mLoad').addEventListener('click', () => { try { const d = JSON.parse(decodeURIComponent(escape(atob($('mSave').value.trim())))); if (!d || typeof d !== 'object' || !('coins' in d)) throw new Error('bad'); S = Object.assign(fresh(), d); fixSave(); save(); o.remove(); toast('Save loaded', '', COL.coin); render(true); } catch (e) { toast('That save text does not work', 'copy the whole text again', COL.ach); } });
   $('mReset').addEventListener('click', (e) => { if (!e.currentTarget.dataset.sure) { e.currentTarget.dataset.sure = '1'; e.currentTarget.textContent = 'Tap again: really start over?'; return; } S = fresh(); save(); o.remove(); render(true); });
   $('mPost').addEventListener('click', postScore);
+  let taps = []; $('mStats').addEventListener('click', () => { const t = Date.now(); taps = taps.filter((x) => t - x < 3000); taps.push(t); if (taps.length >= 5 && !S.dev) { S.dev = 1; save(); o.remove(); openMenu(); toast('🛠️ Dev options', 'unlocked: they are at the bottom of the settings', COL.ach); } });
+  o.querySelectorAll('[data-skip]').forEach((b) => b.addEventListener('click', () => { const sec = +b.getAttribute('data-skip'); S.devUsed = 1; o.remove(); catchUp(sec, `⏩ Skipped ${b.textContent.replace('+', '')}`, Math.min(4000, Math.max(400, Math.ceil(sec / 2)))); checkAch(); render(true); save(); }));
+  if ($('mDevHide')) $('mDevHide').addEventListener('click', () => { S.dev = 0; setSpeed(1); o.remove(); openMenu(); });
   o.querySelectorAll('[data-sp]').forEach((b) => b.addEventListener('click', () => { setSpeed(+b.getAttribute('data-sp')); o.querySelectorAll('[data-sp]').forEach((x) => x.setAttribute('aria-pressed', String(+x.getAttribute('data-sp') === S.speed))); }));
   showBoard();
 }
@@ -1280,15 +1285,21 @@ function frame(now) {
   achT += dt; if (achT > 1) { achT = 0; checkAch(); }
   saveT += dt; if (saveT > 5) { saveT = 0; save(); }
 }
+// time away and the dev skip: run the game forward in n steps, then show what came in
+function catchUp(sec, title, n = 400) {
+  const l0 = S.life, ore0 = S.ore, ch0 = S.charge, g0 = S.gemsLife, v0 = S.voltsLife, e0 = S.elemsLife, s0 = S.starsLife, d0 = S.dmLife, r0 = S.rad, tr0 = S.st.trips;
+  for (let i = 0; i < n; i++) { step(sec / n); automate(sec / n); }
+  const bits = [`+${fmt(S.life - l0)} coins`]; if (S.ore > ore0) bits.push(`+${fmt(S.ore - ore0)} ore`);
+  if (S.gemsLife > g0) bits.push(`+${fmt(S.gemsLife - g0)} 💎`); if (S.voltsLife > v0) bits.push(`+${fmt(S.voltsLife - v0)} ⚡`); if (S.elemsLife > e0) bits.push(`+${fmt(S.elemsLife - e0)} 🧪`);
+  if (S.starsLife > s0) bits.push(`+${fmt(S.starsLife - s0)} 🌌`); if (S.dmLife > d0) bits.push(`+${fmt(S.dmLife - d0)} 🌑`); if (S.rad > r0) bits.push(`+${fmt(S.rad - r0)} ☢`);
+  if (S.top >= 2 && !robOn('autodis')) bits.push(`capacitor ${Math.floor(ch0 * 100)} → ${Math.floor(S.charge * 100)} %`);
+  if (S.st.trips > tr0) bits.push(`${S.st.trips - tr0} ship trips`); if (S.dealQ > 0) bits.push(`${S.dealQ} deal${S.dealQ > 1 ? 's' : ''} waiting`);
+  setTimeout(() => toast(title, bits.join(' · ')), 300);
+}
 (function offline() {
   const away = Math.min(8 * 3600, (Date.now() - (S.last || Date.now())) / 1000);
   if (away < 30) return;
-  const l0 = S.life, ore0 = S.ore, ch0 = S.charge, g0 = S.gemsLife, v0 = S.voltsLife, e0 = S.elemsLife, tr0 = S.st.trips, n = 400; for (let i = 0; i < n; i++) { step(away / n); automate(away / n); }
-  const bits = [`+${fmt(S.life - l0)} coins`]; if (S.ore > ore0) bits.push(`+${fmt(S.ore - ore0)} ore`);
-  if (S.gemsLife > g0) bits.push(`+${fmt(S.gemsLife - g0)} 💎`); if (S.voltsLife > v0) bits.push(`+${fmt(S.voltsLife - v0)} ⚡`); if (S.elemsLife > e0) bits.push(`+${fmt(S.elemsLife - e0)} 🧪`);
-  if (S.top >= 2 && !robOn('autodis')) bits.push(`capacitor ${Math.floor(ch0 * 100)} → ${Math.floor(S.charge * 100)} %`);
-  if (S.st.trips > tr0) bits.push(`${S.st.trips - tr0} ship trips`); if (S.dealQ > 0) bits.push(`${S.dealQ} deal${S.dealQ > 1 ? 's' : ''} waiting`);
-  setTimeout(() => toast(`Welcome back: ${Math.round(away / 60)} min`, bits.join(' · ')), 500);
+  catchUp(away, `Welcome back: ${Math.round(away / 60)} min`);
 })();
 if (!S.hints.first) { S.hints.first = 1; setTimeout(() => toast('Tap the glowing node', 'then Buy. Each node you buy reveals its neighbours.', COL.coin), 900); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
