@@ -54,6 +54,8 @@ body { margin: 0; min-height: 100vh; overflow: hidden; overscroll-behavior: none
 .hud .chips::-webkit-scrollbar, .dtabs::-webkit-scrollbar { display: none; }
 .chip { padding: 2px 7px; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: #120c22; background: var(--c); }
 .tbtns { display: flex; gap: 6px; }
+.spd { min-height: 40px; padding: 0 12px; border-radius: 20px; border: 2px solid var(--acc); background: rgba(15,11,30,0.85); color: var(--acc); font-family: var(--font-display); font-weight: 900; font-size: 17px; cursor: pointer; align-self: center; }
+.spd[hidden] { display: none; }
 .icon-btn { width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.12); color: var(--chalk); font-size: 18px; cursor: pointer; }
 .map { grid-area: map; display: flex; gap: 4px; min-width: 0; }
 .lay { position: relative; flex: 1 1 0; min-width: 0; min-height: 56px; padding: 3px 2px 7px; border-radius: 12px; border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); background: color-mix(in srgb, var(--c) 14%, #140e28); color: var(--chalk); cursor: pointer; font-family: var(--font-body); display: grid; justify-items: center; align-content: center; overflow: hidden; }
@@ -267,7 +269,7 @@ button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 <div id="app">
   <header class="hud">
     <div class="hud-main"><div class="big" id="main">🪙 0</div><div class="rate" id="rate">0 / s</div><div class="goal" id="goal"></div></div>
-    <div class="tbtns"><button class="icon-btn" id="btnMenu" type="button" aria-label="Stats, achievements and settings">⚙️</button><button class="icon-btn" id="btnMute" type="button" aria-label="Sound on">🔊</button></div>
+    <div class="tbtns"><button class="spd" id="btnSpeed" type="button" hidden aria-label="Game speed: tap for normal speed"></button><button class="icon-btn" id="btnMenu" type="button" aria-label="Stats, achievements and settings">⚙️</button><button class="icon-btn" id="btnMute" type="button" aria-label="Sound on">🔊</button></div>
     <div class="chips" id="chips"></div>
   </header>
   <div class="stage" id="stage"></div>
@@ -290,13 +292,14 @@ const log10 = (n) => Math.log10(Math.max(1, n));
 // ---------- save
 const SAVE = 'layer-up-save-v3';
 const RANK = { req: [600, 1e6, 5e8, 1e11, 2e13], grow: 100, mult: 3, ring0: 2, ringStep: 2, open: 5 };
-const fresh = () => ({ coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
+const fresh = () => ({ speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
   muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0, 0], feeds: 0, pfeeds: 0, bestD: 0, trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 // older saves miss newer fields: fill them in
 function shape() {
   if (!(S.starT >= 0)) S.starT = 300;
   if (!(S.rank >= 0)) S.rank = 0;
+  if (![1, 2, 5, 10, 50, 100].includes(S.speed)) S.speed = 1;
   if (!S.pane || typeof S.pane !== 'object') S.pane = {};
   if (!(S.rankBest >= S.rank)) S.rankBest = S.rank;
   S.st = Object.assign(fresh().st, S.st || {});
@@ -1095,7 +1098,7 @@ function showPane() {
 }
 // the 📊 Numbers pane: where the coins come from, how far the next goals are, this layer's figures
 function numbers(L, parts, rate) {
-  const row = (a, b, c) => `<div${c ? ` style="--c:${c}"` : ''}><span>${a}</span><b>${b}</b></div>`, eta = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per) : '–');
+  const row = (a, b, c) => `<div${c ? ` style="--c:${c}"` : ''}><span>${a}</span><b>${b}</b></div>`, eta = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per / (S.speed || 1)) : '–');
   let h = `<h3>Coins</h3>${row('coins / s', fmt(rate), COL.coin)}${row('coins this run', fmt(S.run), COL.coin)}${row('time this run', fmtT(S.runT), COL.coin)}`;
   h += parts.map((p) => row(p.plus ? 'base pay' : p.t, p.plus ? fmt(p.v) : p.t === 'softcap' ? `÷${fmt(p.inv || 1 / p.v)}` : `×${fmt(p.v)}`, p.c)).join('');
   h += `<h3>Goals</h3>${row(`${rankIcon(S.rank + 1)} ${rankName(S.rank + 1)}`, eta(rankReq(S.rank) - S.run, rate), COL.coin)}${row(`💎 at ${fmt(REQ.gem)} coins`, S.run >= REQ.gem ? `+${fmt(gemGain())} 💎` : eta(REQ.gem - S.run, rate), COL.gem)}`;
@@ -1178,7 +1181,7 @@ function refresh() {
   each('data-v', (e, t) => txt(e, t[0])); each('data-v2', (e, t) => txt(e, t[1])); each('data-vp', (e, t) => { e.style.width = `${Math.round(t[2] * 100)}%`; }); each('data-vb', (e, t) => txt(e, t[2] >= 1 ? '▲' : t[3]));
   const PB = { biz: rankGain() >= 1 ? '!' : '', deal: S.dealQ > 0 ? String(S.dealQ) : '', cap: S.burst <= 0 && S.charge >= 1 ? '!' : '', ship: idle ? String(idle) : '', rift: pulseOn() ? '💓' : '' };
   document.querySelectorAll('[data-pb]').forEach((e) => txt(e, PB[e.getAttribute('data-pb')] || ''));
-  const until = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per) : '–');
+  const until = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per / (S.speed || 1)) : '–');   // real time, also with dev speed
   txt($('goal'), '🎯 ' + (S.tab === 0 ? (rankGain() >= 1 ? 'your business can expand: 🏪 Business' : S.run >= REQ.gem ? 'the layer up is ready' : rankReq(S.rank) < REQ.gem ? `${rankName(S.rank + 1)} in ${until(rankReq(S.rank) - S.run, rate)}` : `gems in ${until(REQ.gem - S.run, rate)}`)
     : S.tab === 1 ? (!has('mine') ? 'find the Mine in this web' : S.ore >= REQ.volt ? 'the layer up is ready' : `volts in ${until(REQ.volt - S.ore, oreRate())}`) : S.tab === 2 ? `${fmt(S.voltsRun)} / ${fmt(REQ.elem)} volts for elements` : S.tab === 3 ? `${fmt(S.elemsRun)} / ${fmt(REQ.star)} elements for stars` : S.tab === 4 ? (S.starsRun >= REQ.dm ? 'the layer up is ready' : `${fmt(S.starsRun)} / ${fmt(REQ.dm)} stars for dark matter`) : pulseOn() ? `💓 pulse: feed now ×${fmt(pulseX())}` : `next pulse in ${Math.ceil(pulseIn())} s · ${fmt(evapRate())} 🌑/s evaporating`));
   const html2 = (k, t) => { const e = document.querySelector(`[data-k=${k}]`); if (e && e._t !== t) { e._t = t; e.innerHTML = t; } };
@@ -1234,6 +1237,8 @@ function openMenu() {
     <h2>⚙️ Settings</h2>
     <div class="opt"><span>Numbers</span><button type="button" data-o="suf" aria-pressed="${!S.sci}">1.5M</button><button type="button" data-o="sci" aria-pressed="${S.sci}">1.5e6</button></div>
     <div class="opt"><span>Music</span><button type="button" data-o="mus" aria-pressed="${S.music}">${S.music ? 'On' : 'Off'}</button></div>
+    <h2>🛠️ Dev options</h2><p style="color:var(--haze);font-size:13px">Game speed for testing and speedruns: everything runs faster (time away from the game still counts normally). A save that ran faster than ×1 can no longer post to the world leaderboard; Start over makes a fair run again.</p>
+    <div class="opt"><span>Game speed</span>${[1, 2, 5, 10, 50, 100].map((v) => `<button type="button" data-sp="${v}" aria-pressed="${S.speed === v}">×${v}</button>`).join('')}</div>
     <h2>💾 Save</h2><p style="color:var(--haze);font-size:13px">Copy this text to keep your game safe or move it to another device; paste one in and tap Load.</p>
     <textarea id="mSave" spellcheck="false"></textarea><div class="opt"><button type="button" id="mLoad">Load</button><button type="button" id="mReset">Start over</button></div>
     <h2>🌍 World leaderboard</h2><div id="mLb" style="color:var(--haze);font-size:14px"></div>
@@ -1246,6 +1251,7 @@ function openMenu() {
   $('mLoad').addEventListener('click', () => { try { const d = JSON.parse(decodeURIComponent(escape(atob($('mSave').value.trim())))); if (!d || typeof d !== 'object' || !('coins' in d)) throw new Error('bad'); S = Object.assign(fresh(), d); fixSave(); save(); o.remove(); toast('Save loaded', '', COL.coin); render(true); } catch (e) { toast('That save text does not work', 'copy the whole text again', COL.ach); } });
   $('mReset').addEventListener('click', (e) => { if (!e.currentTarget.dataset.sure) { e.currentTarget.dataset.sure = '1'; e.currentTarget.textContent = 'Tap again: really start over?'; return; } S = fresh(); save(); o.remove(); render(true); });
   $('mPost').addEventListener('click', postScore);
+  o.querySelectorAll('[data-sp]').forEach((b) => b.addEventListener('click', () => { setSpeed(+b.getAttribute('data-sp')); o.querySelectorAll('[data-sp]').forEach((x) => x.setAttribute('aria-pressed', String(+x.getAttribute('data-sp') === S.speed))); }));
   showBoard();
 }
 async function showBoard() {
@@ -1253,9 +1259,11 @@ async function showBoard() {
   if (!lbReachable()) { el.textContent = 'The world leaderboard lives on the public version of the game (lennify44.github.io).'; return; }
   try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}`); const d = await r.json(); const rows = (d.alltime || []).slice(0, 10); el.innerHTML = rows.length ? rows.map((x, i) => `${i + 1}. ${x.name.replace(/[<>&]/g, '')} · ${fmt(x.score)} · layer ${x.dist}`).join('<br>') : 'No scores yet. Be the first.'; } catch (e) { el.textContent = 'Could not reach the leaderboard right now.'; }
 }
+function setSpeed(v) { S.speed = v; if (v > 1) S.devUsed = 1; const b = $('btnSpeed'); b.hidden = v <= 1; b.textContent = `⏩ ×${v}`; save(); }
+$('btnSpeed').addEventListener('click', () => setSpeed(1));
 async function postScore() {
   const name = ($('mName').value || '').trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('mLbRes');
-  if (!name) { out.textContent = 'Type a name first.'; return; } if (!lbReachable()) { out.textContent = 'Posting works on the public version of the game.'; return; }
+  if (!name) { out.textContent = 'Type a name first.'; return; } if (S.devUsed) { out.textContent = 'This save ran with dev speed, so it cannot post to the world leaderboard. Start over for a fair run.'; return; } if (!lbReachable()) { out.textContent = 'Posting works on the public version of the game.'; return; }
   S.name = name; save(); out.textContent = 'Posting…';
   try { const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, game: GAME_ID, score: score(), dist: S.top + 1, daily: false }) }); const res = await r.json().catch(() => ({})); out.textContent = r.ok ? (res.rank && res.rank.alltime ? `World rank #${res.rank.alltime}` : 'Posted.') : 'The leaderboard did not take this score.'; showBoard(); } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
 }
@@ -1266,7 +1274,8 @@ let last = performance.now(), saveT = 0, uiT = 0, achT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(1, (now - last) / 1000); last = now;
-  step(dt); automate(dt);
+  let g = dt * (S.speed || 1); const part = Math.max(0.5, g / 40);
+  while (g > 1e-9) { const d = Math.min(part, g); step(d); automate(d); g -= d; }
   uiT += dt; if (uiT > 0.2) { uiT = 0; render(false); }
   achT += dt; if (achT > 1) { achT = 0; checkAch(); }
   saveT += dt; if (saveT > 5) { saveT = 0; save(); }
@@ -1289,6 +1298,7 @@ $('btnMute').textContent = S.muted ? '🔇' : '🔊';
 if (location.hash === '#bot') window.__game = { get S() { return S; }, dmGain, feed, pulseOn, halfLife, vaultShare, gravMult, radMult, VOID, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh, RANK, RANKS, PERKS, rankReq, rankGain, rankUp, rankMult, rankName, ringMax };
 render(true);
 requestAnimationFrame(frame);
+if (S.speed > 1) setSpeed(S.speed);   // the ⏩ pill comes back after a reload
 })();
 </script>
 <!-- /source:body -->
