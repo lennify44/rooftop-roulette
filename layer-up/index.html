@@ -948,6 +948,7 @@ function automate(dt) {
 const STEP = 104;
 const cam = (L) => (S.cam[L] = S.cam[L] || { x: 0, y: 0, z: 1 });
 let drag = null, viewEl = null, planeEl = null;
+const tapAt = { id: '', t: 0 };   // the last tap on a node, for double-tap buying
 function renderWeb(L, box) {
   const disc = WEB[L].filter(visible).length, all = WEB[L].length, ownN = owned(L).length;
   const view = document.createElement('div'); view.className = 'view'; view.setAttribute('aria-label', 'Upgrade web');
@@ -976,7 +977,11 @@ function renderWeb(L, box) {
   view.addEventListener('pointerup', lift); view.addEventListener('pointercancel', lift);
   view.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-z]') || pinch) return; drag = { x: e.clientX, y: e.clientY, cx: cam(L).x, cy: cam(L).y, moved: false, node: e.target.closest('[data-node]') }; if (view.setPointerCapture) view.setPointerCapture(e.pointerId); view.style.cursor = 'grabbing'; });
   view.addEventListener('pointermove', (e) => { if (!drag || pinch) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.hypot(dx, dy) > 6) drag.moved = true; if (drag.moved) { const c = cam(L); c.x = drag.cx + dx / c.z; c.y = drag.cy + dy / c.z; applyCam(); } });
-  const up = () => { if (!drag) return; const d = drag; drag = null; view.style.cursor = ''; if (!d.moved && d.node) { S.sel[L] = d.node.getAttribute('data-node'); Sound.init(); renderSheet(); refresh(); } save(); };
+  const up = () => { if (!drag) return; const d = drag; drag = null; view.style.cursor = '';
+    if (!d.moved && d.node) { const id = d.node.getAttribute('data-node'), now = performance.now(); Sound.init();
+      if (tapAt.id === id && now - tapAt.t < 400) { tapAt.t = 0; const b = document.querySelector('#sheet [data-k=one]'); if (b && !b.disabled) b.click(); }   // double tap = Buy (player wish 2026-11-17)
+      else { tapAt.id = id; tapAt.t = now; S.sel[L] = id; renderSheet(); refresh(); } }
+    save(); };
   view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
   requestAnimationFrame(applyCam);
   renderSheet();
@@ -1106,7 +1111,7 @@ function renderScreen() {
       row.appendChild(b); k.appendChild(row);
     }
   }
-  pane('num', '📊', 'Numbers').innerHTML = '<div class="nums" data-k="nums"></div><p>The web: drag to move around, pinch or use + and − to zoom. Buying a node reveals its neighbours: nobody knows how big a web is until it is explored. Circles are notable, diamonds ⭐ are keystones, double rings ♾️ have no maximum.</p>';
+  pane('num', '📊', 'Numbers').innerHTML = '<div class="nums" data-k="nums"></div><p>The web: drag to move around, pinch or use + and − to zoom. Double-tap a node to buy it. Buying a node reveals its neighbours: nobody knows how big a web is until it is explored. Circles are notable, diamonds ⭐ are keystones, double rings ♾️ have no maximum.</p>';
   const tabs = $('dtabs'); tabs.textContent = '';
   for (const [id, icon, label] of panes) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'dtab'; b.setAttribute('data-pt', id); b.innerHTML = `${icon}<span> ${label}</span><em data-pb="${id}"></em>`;
@@ -1338,7 +1343,7 @@ function catchUp(sec, title, n = 400) {
   if (away < 30) return;
   catchUp(away, `Welcome back: ${Math.round(away / 60)} min`);
 })();
-if (!S.hints.first) { S.hints.first = 1; setTimeout(() => toast('Tap the glowing node', 'then Buy. Each node you buy reveals its neighbours.', COL.coin), 900); }
+if (!S.hints.first) { S.hints.first = 1; setTimeout(() => toast('Tap the glowing node', 'then Buy, or double-tap it. Each node you buy reveals its neighbours.', COL.coin), 900); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
