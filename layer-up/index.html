@@ -200,6 +200,7 @@ body { margin: 0; min-height: 100vh; overflow: hidden; overscroll-behavior: none
 .deal i { font-style: normal; font-size: 30px; line-height: 1; }
 .deal small { font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: none; color: var(--haze); }
 .cap.gold { border-color: var(--coin); } .cap.gold i { background: linear-gradient(90deg, #ff9a3c, var(--coin), #fff); }
+.cap.rose { border-color: var(--lab); } .cap.rose i { background: linear-gradient(90deg, #9b2cff, var(--lab), #fff); }
 .cap.ice { border-color: var(--gem); } .cap.ice i { background: linear-gradient(90deg, #2b7bff, var(--gem), #fff); }
 .cap em { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; background: #fff; opacity: 0.85; z-index: 1; }
 .tile.vein { border-color: #ffe066; box-shadow: inset 0 0 16px rgba(255,224,102,0.55); animation: vein 1.6s ease-in-out infinite alternate; }
@@ -294,9 +295,10 @@ const log10 = (n) => Math.log10(Math.max(1, n));
 const SAVE = 'layer-up-save-v3';
 const RANK = { req: [600, 1e6, 5e8, 1e11, 2e13], grow: 100, mult: 3, ring0: 2, ringStep: 2, open: 5 };
 const DEPTH = { req: [2e3, 3e4, 3e5, 5e6, 5e7], grow: 1e4, mult: 3 };
-const GRADE = { req: [40, 120, 350, 900, 2500], grow: 10, mult: 3, inside: 1 };   // inside: 1 = the grade multiplies volts before their softcap (full effect early, gentle late)   // the grid in Stormworks: volts earned this element run for each grade, volts ×mult per grade   // the shaft in the Deep Mine: ore you hold for each depth, ore ×mult per depth
-const fresh = () => ({ grade: 0, gradeBest: 0, depth: 0, depthBest: 0, dev: 0, speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
-  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0, 0], grades: 0, digs: 0, feeds: 0, pfeeds: 0, bestD: 0, trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
+const GRADE = { req: [40, 120, 350, 900, 2500], grow: 10, mult: 3, inside: 1 };
+const TITLE = { req: [150, 600, 2500, 1e4, 4e4], grow: 100, mult: 3 };   // titles in the Alchemy Lab: elements earned this star run for each title, elements ×mult (before their softcap)   // inside: 1 = the grade multiplies volts before their softcap (full effect early, gentle late)   // the grid in Stormworks: volts earned this element run for each grade, volts ×mult per grade   // the shaft in the Deep Mine: ore you hold for each depth, ore ×mult per depth
+const fresh = () => ({ title: 0, titleBest: 0, grade: 0, gradeBest: 0, depth: 0, depthBest: 0, dev: 0, speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
+  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0, 0], titles: 0, grades: 0, digs: 0, feeds: 0, pfeeds: 0, bestD: 0, trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 // older saves miss newer fields: fill them in
 function shape() {
@@ -305,6 +307,7 @@ function shape() {
   if (![1, 2, 5, 10, 50, 100].includes(S.speed)) S.speed = 1;
   if (!S.pane || typeof S.pane !== 'object') S.pane = {};
   if (!(S.rankBest >= S.rank)) S.rankBest = S.rank;
+  if (!(S.title >= 0)) S.title = 0; if (!(S.titleBest >= S.title)) S.titleBest = S.title;
   if (!(S.grade >= 0)) S.grade = 0; if (!(S.gradeBest >= S.grade)) S.gradeBest = S.grade;
   if (!(S.depth >= 0)) S.depth = 0; if (!(S.depthBest >= S.depth)) S.depthBest = S.depth;
   S.st = Object.assign(fresh().st, S.st || {});
@@ -466,7 +469,8 @@ const lvT = (t) => (BYT[t] || []).reduce((a, n) => a + lvl(n), 0);
 function fixSave() {
   shape();
   if (S.top >= 2 && !S.st.digs && S.depthBest < 5) S.depthBest = 5;
-  if (S.top >= 3 && !S.st.grades && S.gradeBest < 5) S.gradeBest = 5;   // saves from before the grid played the old Stormworks through   // saves from before the shaft played the old Deep Mine through
+  if (S.top >= 3 && !S.st.grades && S.gradeBest < 5) S.gradeBest = 5;
+  if (S.top >= 4 && !S.st.titles && S.titleBest < 5) S.titleBest = 5;   // saves from before the titles played the old Alchemy Lab through   // saves from before the grid played the old Stormworks through   // saves from before the shaft played the old Deep Mine through
   if (S.top >= 1 && !S.st.ranks && S.rankBest < RANK.open) S.rankBest = RANK.open;   // saves from before the business ranks: they played the old layer 1 through, so the whole coin web stays open
   for (const id of Object.keys(S.u)) { const n = NODE[id]; if (!n) delete S.u[id]; else if (S.u[id] > n.max) S.u[id] = n.max; }
   if (!S.blue && S.grid.some(Boolean)) S.blue = S.grid.slice();
@@ -524,19 +528,19 @@ const RECIPES = [
 ];
 const AETHER = { id: 'aether', icon: '🫧', name: 'Aether' };
 const bookOf = () => RECIPES.filter((r) => !r.ae || S.aether);
-const REQ = { gem: 3e14, volt: 1e8, elem: 1000, star: 2500, dm: 1e6 }, GAIN = { gem: 10, volt: 25, elem: 80, star: 30, dm: 20, robo: 0.05 }, GCAP = { gem: 1000, volt: 200, elem: 400, star: 300, dm: 300 }, FORM = 300, GEXP = { gem: 0.35, volt: 0.25, elem: 0.25, star: 0.25, dm: 0.25 };
+const REQ = { gem: 3e14, volt: 1e8, elem: 1000, star: 2e4, dm: 3e6 }, GAIN = { gem: 10, volt: 25, elem: 80, star: 30, dm: 20, robo: 0.05 }, GCAP = { gem: 1000, volt: 200, elem: 400, star: 300, dm: 300 }, FORM = 300, GEXP = { gem: 0.35, volt: 0.25, elem: 0.25, star: 0.25, dm: 0.25 };
 const KTXT = { coin: 'coins', gem: 'gems from a layer up', ore: 'ore', volt: 'volts from a layer up', charge: 'capacitor charge', burst: 'bursts', elem: 'elements from a layer up', star: 'stars from a layer up', deal: 'deals', vein: 'rich veins', all: 'coins, ore and all layer-up gains' };
 const recipeOf = (a, b) => RECIPES.find((r) => (r.in[0] === a && r.in[1] === b) || (r.in[0] === b && r.in[1] === a));
 const foundN = () => Object.keys(S.found).length;
 const FLAT = { deal: 1, vein: 1 };   // these two are not scaled by recipe power and not touched by "everything" recipes
-const rxPow = () => { let a = 1, m = 1; for (const n of BYK.rx || []) if (lvl(n) > 0) { if (n.e.t === 'rx+' || n.e.t === 'rx*') a += val(n) - 1; else m *= val(n); } return a * m; };
+const rxPow = () => { let a = S.title >= 2 ? 1.25 : 1, m = 1; for (const n of BYK.rx || []) if (lvl(n) > 0) { if (n.e.t === 'rx+' || n.e.t === 'rx*') a += val(n) - 1; else m *= val(n); } return a * m; };
 const recipeVal = (r, rx = rxPow()) => 1 + (r.b - 1) * (FLAT[r.k] ? 1 : rx) * (1 + 0.5 * (S.ref[r.id] || 0));
 function recipeMult(k) { const rx = rxPow(); let m = 1; for (const r of RECIPES) if (S.found[r.id] && (r.k === k || (r.k === 'all' && !FLAT[k]))) m *= recipeVal(r, rx); return fin(m); }
-const reactCost = () => Math.max(1, Math.ceil(5 * Math.pow(1.5, foundN()) * prodOf('rc') * (S.arts.sat ? 0.5 : 1)));
-const refineCost = (r) => reactCost() * Math.pow(4, (S.ref[r.id] || 0) + 1);
+const reactCost = () => Math.max(1, Math.ceil(5 * Math.pow(1.5, foundN()) * prodOf('rc') * (S.arts.sat ? 0.5 : 1) * (S.title >= 1 ? 0.75 : 1)));
+const refineCost = (r) => reactCost() * Math.pow(4, (S.ref[r.id] || 0) + 1) * (S.title >= 4 ? 0.5 : 1);
 const rxCost = () => { const [a, b] = S.slots, r = a && b ? recipeOf(a, b) : null; return r && S.found[r.id] ? ((S.ref[r.id] || 0) >= 3 ? Infinity : refineCost(r)) : reactCost(); };
 const ingredients = () => [...BASES, ...(S.aether ? [AETHER] : []), ...RECIPES.filter((r) => S.found[r.id])];
-const elemGain = () => (S.voltsRun < REQ.elem ? 0 : Math.floor(soft(fin(GAIN.elem * Math.pow(S.voltsRun / REQ.elem, 0.7) * prodOf('elem') * boost('elem') * (S.grade >= 3 ? 1.5 : 1)), GCAP.elem, GEXP.elem)));
+const elemGain = () => (S.voltsRun < REQ.elem ? 0 : Math.floor(soft(fin(GAIN.elem * Math.pow(S.voltsRun / REQ.elem, 0.7) * prodOf('elem') * boost('elem') * (S.grade >= 3 ? 1.5 : 1) * titleMult() * (S.title >= 5 ? 2 : 1)), GCAP.elem, GEXP.elem)));
 function pickIngredient(id) { Sound.init(); if (!S.slots[0]) S.slots[0] = id; else if (!S.slots[1]) S.slots[1] = id; else S.slots = [id, null]; Sound.tile(); render(true); }
 function react() {
   const [a, b] = S.slots; if (!a || !b) return;
@@ -597,7 +601,7 @@ const shipCount = () => 1 + lvT('ship');
 const tripSecs = (d) => d.secs / prodOf('xspeed') / (S.arts.deep ? 1.25 : 1);
 const tripRisk = (d) => (has('safe') ? 0 : d.risk * prodOf('xrisk'));
 const starForm = () => Math.min(1, S.starT / FORM);
-const starGain = () => (S.elemsRun < REQ.star ? 0 : Math.floor(soft(fin(GAIN.star * Math.pow(S.elemsRun / REQ.star, 0.6) * prodOf('star') * boost('star') * (S.arts.hole ? 3 : 1)), GCAP.star, GEXP.star) * radMult() * starForm()));
+const starGain = () => (S.elemsRun < REQ.star ? 0 : Math.floor(soft(fin(GAIN.star * Math.pow(S.elemsRun / REQ.star, 0.6) * prodOf('star') * boost('star') * (S.arts.hole ? 3 : 1) * (S.title >= 3 ? 1.5 : 1)), GCAP.star, GEXP.star) * radMult() * starForm()));
 function launch(i, id, quiet) { const d = DEST.find((x) => x.id === id); while (S.ships.length < shipCount()) S.ships.push(null); if (!d || S.ships[i]) return; S.ships[i] = { dest: id, left: tripSecs(d) }; if (quiet) return; Sound.init(); Sound.zap(); render(true); save(); }
 function collect(i, quiet) {
   const sh = S.ships[i]; if (!sh || sh.left > 0) return; const d = DEST.find((x) => x.id === sh.dest) || DEST[0]; S.ships[i] = null; S.st.trips++;
@@ -688,6 +692,24 @@ function rankUp(quiet) {
 }
 // Deals (coins): three offers at a time, pick one; up to three rounds wait for you
 const dealsOpen = () => S.rankBest >= 1 || S.top >= 1 || S.st.deals > 0;
+// titles (inside the Alchemy Lab): graduating resets the elements of this run and the reactor slots; every title multiplies elements
+const TITLES = [['🧪', 'Apprentice'], ['⚗️', 'Journeyman'], ['🔬', 'Alchemist'], ['📜', 'Master'], ['🔮', 'Archalchemist'], ['🌟', 'Philosopher']];
+const TPERKS = ['reactions cost 25 % less', 'recipe power +25 %', 'stars from a layer up ×1.5', 'refining costs half', 'elements ×2'];
+const titleIcon = (r) => TITLES[Math.min(r, TITLES.length - 1)][0];
+const titleName = (r) => (r < TITLES.length ? TITLES[r][1] : `Philosopher +${r - TITLES.length + 1}`);
+const titleReq = (r) => { const q = TITLE.req, k = q.length - 1; return r <= k ? q[r] : q[k] * Math.pow(TITLE.grow, r - k); };
+const titleMult = (r = S.title) => Math.pow(TITLE.mult, r);
+const titleGain = () => { if (S.top < 3) return 0; let r = S.title; while (r < S.title + 50 && S.elemsRun >= titleReq(r)) r++; return r - S.title; };
+function graduate(quiet) {
+  const k = titleGain(); if (k < 1) return;
+  S.title += k; S.titleBest = Math.max(S.titleBest, S.title); S.elems = 0; S.elemsRun = 0; S.slots = [null, null]; S.st.titles = (S.st.titles || 0) + 1;
+  if (!quiet) {
+    Sound.init(); Sound.up();
+    const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,79,163,0.6) 40%, rgba(15,11,30,0.95) 75%)'; f.innerHTML = `<b>${titleIcon(S.title)}<br>${titleName(S.title)}!</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
+    toast(`${titleIcon(S.title)} ${titleName(S.title)}`, `elements ×${fmt(titleMult())}${TPERKS[S.title - 1] ? ` · new: ${TPERKS[S.title - 1]}` : ''}`, COL.lab); checkAch(); render(true);
+  }
+  save();
+}
 // the grid (inside Stormworks): upgrading resets volts and the capacitor; every grade multiplies volts for good
 const GRADES = [['⚡', 'Spark'], ['🔋', 'Battery bank'], ['🔌', 'Substation'], ['🏭', 'Power plant'], ['🗼', 'Pylon network'], ['🌩️', 'Storm grid']];
 const GPERKS = ['the capacitor charges 25 % faster', 'bursts last 5 s longer', 'elements from a layer up ×1.5', 'bursts ×2 stronger', 'the capacitor fills 50 % further'];
@@ -874,7 +896,7 @@ function layerUp(target, quiet) {
   if (next === 1) { S.gems += gain; S.gemsLife += gain; S.gemsRun += gain; }
   if (next === 2) { S.volts += gain; S.voltsLife += gain; S.voltsRun += gain; }
   if (next === 5) { S.dm += gain; S.dmLife += gain; S.dmRun += gain; S.st.bestD = Math.max(S.st.bestD || 0, gain); for (const n of WEB.star) if (!(keepS || n.d <= reachS)) delete S.u[n.id]; S.stars = 0; S.starsRun = 0; }
-  if (next >= 4) { if (next === 4) { S.stars += gain; S.starsLife += gain; S.starsRun += gain; S.st.bestS = Math.max(S.st.bestS || 0, gain); } for (const n of WEB.lab) if (!(keepL || n.d <= reachL)) delete S.u[n.id]; S.elems = 0; S.elemsRun = 0; S.starT = 0; S.slots = [null, null]; }
+  if (next >= 4) { if (next === 4) { S.stars += gain; S.starsLife += gain; S.starsRun += gain; S.st.bestS = Math.max(S.st.bestS || 0, gain); } for (const n of WEB.lab) if (!(keepL || n.d <= reachL)) delete S.u[n.id]; S.elems = 0; S.elemsRun = 0; S.starT = 0; S.slots = [null, null]; S.title = 0; }
   if (next >= 3) {
     if (next === 3) { S.elems += gain; S.elemsLife += gain; S.elemsRun += gain; }
     for (const n of WEB.volt) if (!(keepV || n.d <= reachV)) delete S.u[n.id];
@@ -901,6 +923,7 @@ const ACH = [
   ['Endless', '25 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star, WEB.void).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 25], ['Infinite', '200 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star, WEB.void).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 200],
   ['Chemist', 'Get your first elements', () => S.st.ups[3] >= 1], ['Eureka', 'Discover a recipe', () => foundN() >= 1], ['Alchemist', 'Discover 10 recipes', () => foundN() >= 10], ['Creator', 'Discover 20 recipes', () => foundN() >= 20], ['Lab rat', 'Own 30 lab nodes', () => owned('lab').length >= 30],
   ['Stargazer', 'Get your first stars', () => S.st.ups[4] >= 1], ['Astronaut', 'Bring back a ship', () => S.st.trips >= 1], ['Collector', 'Find 10 relics', () => (S.relicN || 0) >= 10], ['Deep diver', 'Return from deep space with a relic', () => S.st.deep >= 1], ['Star web', 'Own 40 star nodes', () => owned('star').length >= 40],
+  ['Graduate', 'Earn your first title', () => S.titleBest >= 1], ['Master of arts', 'Become a Master', () => S.titleBest >= 3], ['Philosopher', 'Become a Philosopher', () => S.titleBest >= 5],
   ['Electrician', 'Upgrade the grid', () => S.gradeBest >= 1], ['Power plant', 'Reach the Power plant', () => S.gradeBest >= 3], ['Storm chaser', 'Reach the Storm grid', () => S.gradeBest >= 5],
   ['Digger', 'Dig the mine deeper', () => S.depthBest >= 1], ['Spelunker', 'Reach the Crystal cavern', () => S.depthBest >= 3], ['Journey to the centre', "Reach Earth's heart", () => S.depthBest >= 5],
   ['Event horizon', 'Get your first dark matter', () => S.st.ups[5] >= 1], ['Feeding time', 'Feed the hole 10 times', () => (S.st.feeds || 0) >= 10], ['On the beat', 'Feed the hole during a pulse', () => (S.st.pfeeds || 0) >= 1],
@@ -924,6 +947,7 @@ function step(dt) {
   const cut = Math.min(S.burst > 0 ? S.burst : Infinity, S.rush > 0 ? S.rush : Infinity);
   if (cut < dt - 1e-9) { step(cut); step(dt - cut); return; }
   const c = coinRate() * dt; S.coins = fin(S.coins + c); S.run = fin(S.run + c); S.life = fin(S.life + c); S.runT += dt; S.starT += dt; S.st.played += dt;
+  while (S.title < S.titleBest && S.elemsRun >= titleReq(S.title)) { S.title++; if (dt <= 1 && typeof toast === 'function') toast(`${titleIcon(S.title)} ${titleName(S.title)} again`, 'titles you earned before come back without a reset', COL.lab); }
   while (S.grade < S.gradeBest && S.voltsRun >= gradeReq(S.grade)) { S.grade++; if (dt <= 1 && typeof toast === 'function') toast(`${gradeIcon(S.grade)} ${gradeName(S.grade)} again`, 'grades you reached before come back without a reset', COL.volt); }
   while (S.depth < S.depthBest && has('mine') && S.ore >= depthReq(S.depth)) { S.depth++; if (dt <= 1 && typeof toast === 'function') toast(`${depthIcon(S.depth)} ${depthName(S.depth)} again`, 'depths you reached before come back without a reset', COL.gem); }
   while (S.rank < S.rankBest && S.run >= rankReq(S.rank)) { S.rank++; if (dt <= 1 && typeof toast === 'function') toast(`${rankIcon(S.rank)} ${rankName(S.rank)} again`, 'ranks you reached before come back without a reset', COL.coin); }
@@ -1063,6 +1087,11 @@ function renderScreen() {
     m.appendChild(g);
     const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'tool'; pb.textContent = `🔎 Prospect: move the veins · ${fmt(prospectCost())}💎`; pb.addEventListener('click', prospect); m.appendChild(pb);
   }
+  if (L === 'lab') {
+    const k = pane('ttl', '🎓', 'Titles');
+    k.innerHTML = `<h2><span data-k="ttn"></span><small data-k="ttm"></small></h2><div class="cap rose"><i data-k="ttf"></i><span data-k="ttt"></span></div><button class="wide" type="button" data-k="ttb" style="background:var(--lab)"></button><div class="ladder" data-k="ttl" style="--coin:var(--lab)"></div><p>Graduating starts the elements of this run again and empties the reactor slots, but every title multiplies elements ×${TITLE.mult} for good and brings a perk. Recipes and the lab web stay. After a layer up to stars, the titles you earned before come back by themselves as the elements come in.</p>`;
+    k.querySelector('[data-k=ttb]').addEventListener('click', (e) => { const g = titleGain(); if (g < 1) return; Sound.init(); flyTo(e.currentTarget, titleIcon(S.title + g), COL.lab); graduate(); });
+  }
   if (L === 'volt') {
     const k = pane('grid', '🗼', 'Grid');
     k.innerHTML = `<h2><span data-k="gdn"></span><small data-k="gdm"></small></h2><div class="cap"><i data-k="gdf"></i><span data-k="gdt"></span></div><button class="wide" type="button" data-k="gdb" style="background:var(--volt)"></button><div class="ladder" data-k="gdl" style="--coin:var(--volt)"></div><p>Upgrading the grid empties the capacitor and starts the volts of this run again, but every grade multiplies volts ×${GRADE.mult} for good and brings a perk. After a layer up to elements, the grades you reached before come back by themselves as the volts come in.</p>`;
@@ -1172,7 +1201,7 @@ function numbers(L, parts, rate) {
   if (L === 'coin') h += row('business', `${rankName(S.rank)} ×${fmt(rankMult())}`) + row('expansions', String(S.st.ranks || 0)) + (dealsOpen() ? row('deals taken', String(S.st.deals)) + row('a deal every', fmtT(dealEvery())) + row('deal power', `×${fmt(dealPow())}`) : '');
   if (L === 'gem' && has('mine')) h += row('ore', fmt(S.ore)) + row('ore / s', fmt(oreRate())) + row('rich veins', `×${fmt(veinMult())}`) + row('shaft', `${depthName(S.depth)} · ore ×${fmt(depthMult())}`) + row('digs', String(S.st.digs || 0));
   if (L === 'volt') h += row('charge / s', `${fmt(chargeRate() * 100)} %`) + row('burst power', `×${fmt(burstBase())}`) + row('burst length', `${fmt(burstLen())} s`) + row('fills up to', `${Math.round(capMax() * 100)} %`) + row('bursts fired', String(S.st.bursts)) + row('grid', `${gradeName(S.grade)} · volts ×${fmt(gradeMult())}`) + row('upgrades', String(S.st.grades || 0));
-  if (L === 'lab') h += row('recipes', `${foundN()}/${bookOf().length}`) + row('a reaction costs', `${fmt(reactCost())} 🧪`) + row('recipe power', `×${fmt(rxPow())}`);
+  if (L === 'lab') h += row('recipes', `${foundN()}/${bookOf().length}`) + row('a reaction costs', `${fmt(reactCost())} 🧪`) + row('recipe power', `×${fmt(rxPow())}`) + row('title', `${titleName(S.title)} · elements ×${fmt(titleMult())}`) + row('graduations', String(S.st.titles || 0));
   if (L === 'void') h += row('half-life', fmtT(halfLife())) + row('vault', `${Math.round(vaultShare() * 100)} %`) + row('gravity (mass)', `×${fmt(gravMult())}`) + row('radiation', `×${fmt(radMult())}`) + row('pulse', `×${fmt(pulseX())} every ${VOID.every} s`) + row('feeds', `${S.st.feeds || 0} (${S.st.pfeeds || 0} on the beat)`);
   if (L === 'star') h += row('ships', String(shipCount())) + row('relics', String(S.relicN || 0)) + row('artifacts', `${artN()}/8`) + row('stardust per trip', fmt(dustGain()));
   return h + `<h3>All in all</h3>${row('achievements', `${achCount()}/${ACH.length} · ×${fmt(achMult())}`)}${row('robots', String(robN()))}${row('layer ups', String(S.st.ups.reduce((a, b) => a + b, 0)))}${row('time played', fmtT(S.st.played))}`;
@@ -1238,14 +1267,14 @@ function refresh() {
   document.querySelectorAll('[data-rr]').forEach((e) => { const t = e.getAttribute('data-rr'), g = !robOn(t) ? -1 : t === 'autogem' ? gemGain() : t === 'autovolt' ? voltGain() : t === 'autoelem' ? elemGain() : -1, tx = g < 0 ? '' : `+${fmt(g * roboRate())}/s`; if (e.textContent !== tx) e.textContent = tx; });
   const pr = (v, q) => Math.max(0, Math.min(1, Math.log10(v + 1) / Math.log10(q))), idle = S.ships.slice(0, S.top >= 4 ? shipCount() : 0).filter((x) => !x || x.left <= 0).length;
   const TI = [[`🪙 ${fmt(S.coins)}`, `+${fmt(rate)}/s`, pr(S.run, REQ.gem), S.dealQ > 0 ? `🤝${S.dealQ}` : rankGain() >= 1 ? '⬆' : ''], [`💎 ${fmt(S.gems)}`, has('mine') ? `ore +${fmt(oreRate())}/s` : 'no mine yet', pr(S.ore, REQ.volt), depthGain() >= 1 ? '⬇' : ''],
-    [`⚡ ${fmt(S.volts)}`, `charge ${Math.floor(S.charge * 100)} %`, pr(S.voltsRun, REQ.elem), gradeGain() >= 1 ? '⬆' : S.top >= 2 && S.burst <= 0 && S.charge >= capMax() - 1e-6 ? '⚡' : ''], [`🧪 ${fmt(S.elems)}`, `${foundN()}/${bookOf().length} recipes`, pr(S.elemsRun, REQ.star), ''], [`🌌 ${fmt(S.stars)}`, `${S.relicN || 0} relics`, pr(S.starsRun, REQ.dm), idle ? `🛸${idle}` : ''], [`🌑 ${fmt(S.dm)}`, `mass ${fmt(S.mass)}`, pr(S.mass, 1e12), pulseOn() ? '💓' : '']];
+    [`⚡ ${fmt(S.volts)}`, `charge ${Math.floor(S.charge * 100)} %`, pr(S.voltsRun, REQ.elem), gradeGain() >= 1 ? '⬆' : S.top >= 2 && S.burst <= 0 && S.charge >= capMax() - 1e-6 ? '⚡' : ''], [`🧪 ${fmt(S.elems)}`, `${foundN()}/${bookOf().length} recipes`, pr(S.elemsRun, REQ.star), titleGain() >= 1 ? '🎓' : ''], [`🌌 ${fmt(S.stars)}`, `${S.relicN || 0} relics`, pr(S.starsRun, REQ.dm), idle ? `🛸${idle}` : ''], [`🌑 ${fmt(S.dm)}`, `mass ${fmt(S.mass)}`, pr(S.mass, 1e12), pulseOn() ? '💓' : '']];
   const each = (a, f) => document.querySelectorAll(`[${a}]`).forEach((e) => { const t = TI[+e.getAttribute(a)]; if (t) f(e, t); }), txt = (e, t) => { if (e.textContent !== t) e.textContent = t; };
   each('data-v', (e, t) => txt(e, t[0])); each('data-v2', (e, t) => txt(e, t[1])); each('data-vp', (e, t) => { e.style.width = `${Math.round(t[2] * 100)}%`; }); each('data-vb', (e, t) => txt(e, t[2] >= 1 ? '▲' : t[3]));
-  const PB = { biz: rankGain() >= 1 ? '!' : '', deal: S.dealQ > 0 ? String(S.dealQ) : '', cap: S.burst <= 0 && S.charge >= 1 ? '!' : '', grid: gradeGain() >= 1 ? '!' : '', ship: idle ? String(idle) : '', rift: pulseOn() ? '💓' : '', shaft: depthGain() >= 1 ? '!' : '' };
+  const PB = { biz: rankGain() >= 1 ? '!' : '', deal: S.dealQ > 0 ? String(S.dealQ) : '', cap: S.burst <= 0 && S.charge >= 1 ? '!' : '', grid: gradeGain() >= 1 ? '!' : '', ttl: titleGain() >= 1 ? '!' : '', ship: idle ? String(idle) : '', rift: pulseOn() ? '💓' : '', shaft: depthGain() >= 1 ? '!' : '' };
   document.querySelectorAll('[data-pb]').forEach((e) => txt(e, PB[e.getAttribute('data-pb')] || ''));
   const until = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per / (S.speed || 1)) : '–');   // real time, also with dev speed
   txt($('goal'), '🎯 ' + (S.tab === 0 ? (rankGain() >= 1 ? 'your business can expand: 🏪 Business' : S.run >= REQ.gem ? 'the layer up is ready' : rankReq(S.rank) < REQ.gem ? `${rankName(S.rank + 1)} in ${until(rankReq(S.rank) - S.run, rate)}` : `gems in ${until(REQ.gem - S.run, rate)}`)
-    : S.tab === 1 ? (!has('mine') ? 'find the Mine in this web' : depthGain() >= 1 ? 'the mine can go deeper: 🪜 Shaft' : S.ore >= REQ.volt ? 'the layer up is ready' : `volts in ${until(REQ.volt - S.ore, oreRate())}`) : S.tab === 2 ? (gradeGain() >= 1 ? 'the grid can be upgraded: 🗼 Grid' : `${fmt(S.voltsRun)} / ${fmt(REQ.elem)} volts for elements`) : S.tab === 3 ? `${fmt(S.elemsRun)} / ${fmt(REQ.star)} elements for stars` : S.tab === 4 ? (S.starsRun >= REQ.dm ? 'the layer up is ready' : `${fmt(S.starsRun)} / ${fmt(REQ.dm)} stars for dark matter`) : pulseOn() ? `💓 pulse: feed now ×${fmt(pulseX())}` : `next pulse in ${Math.ceil(pulseIn())} s · ${fmt(evapRate())} 🌑/s evaporating`));
+    : S.tab === 1 ? (!has('mine') ? 'find the Mine in this web' : depthGain() >= 1 ? 'the mine can go deeper: 🪜 Shaft' : S.ore >= REQ.volt ? 'the layer up is ready' : `volts in ${until(REQ.volt - S.ore, oreRate())}`) : S.tab === 2 ? (gradeGain() >= 1 ? 'the grid can be upgraded: 🗼 Grid' : `${fmt(S.voltsRun)} / ${fmt(REQ.elem)} volts for elements`) : S.tab === 3 ? (titleGain() >= 1 ? 'a new title is ready: 🎓 Titles' : `${fmt(S.elemsRun)} / ${fmt(REQ.star)} elements for stars`) : S.tab === 4 ? (S.starsRun >= REQ.dm ? 'the layer up is ready' : `${fmt(S.starsRun)} / ${fmt(REQ.dm)} stars for dark matter`) : pulseOn() ? `💓 pulse: feed now ×${fmt(pulseX())}` : `next pulse in ${Math.ceil(pulseIn())} s · ${fmt(evapRate())} 🌑/s evaporating`));
   const html2 = (k, t) => { const e = document.querySelector(`[data-k=${k}]`); if (e && e._t !== t) { e._t = t; e.innerHTML = t; } };
   const rf = document.querySelector('[data-k=rift]');
   if (rf) {
@@ -1264,6 +1293,14 @@ function refresh() {
     document.querySelector('[data-k=bzf]').style.width = `${Math.round(pr(S.run, q) * 100)}%`; bz.disabled = g < 1;
     html2('bzb', g >= 1 ? `Expand: ${rankIcon(nx)} ${rankName(nx)}<small>coins ×${fmt(Math.pow(RANK.mult, g))} for good · coins and the coin web start again</small>` : `${S.rank < S.rankBest ? 'Comes back' : 'Next'}: ${rankIcon(nx)} ${rankName(nx)}<small>at ${fmt(q)} coins this run${S.rank < S.rankBest ? ', without a reset' : ''} · ${until(q - S.run, rate)}</small>`);
     html2('bzl', rows.map((r) => `<div class="rk${r <= S.rank ? ' on' : r === S.rank + 1 ? ' now' : ''}"><i>${rankIcon(r)}</i><b>${rankName(r)}${r <= S.rank ? ' ✓' : r <= S.rankBest ? ' ↩' : ''}</b><em>${fmt(rankReq(r - 1))} 🪙<br>×${fmt(rankMult(r))}</em><span>${[PERKS[r - 1], ringTxt(r)].filter(Boolean).join(' · ') || `coins ×${RANK.mult} more`}</span></div>`).join(''));
+  }
+  const tt = document.querySelector('[data-k=ttb]');
+  if (tt) {
+    const g = titleGain(), nx = S.title + Math.max(1, g), q = titleReq(S.title), rows = [1, 2, 3, 4, 5]; if (S.title >= 5) rows.push(S.title + 1);
+    html2('ttn', `${titleIcon(S.title)} ${titleName(S.title)}`); html2('ttm', `title ${S.title} · elements ×${fmt(titleMult())}`); html2('ttt', `${fmt(S.elemsRun)} / ${fmt(q)} elements this run`);
+    document.querySelector('[data-k=ttf]').style.width = `${Math.round(pr(S.elemsRun, q) * 100)}%`; tt.disabled = g < 1;
+    html2('ttb', g >= 1 ? `Graduate: ${titleIcon(nx)} ${titleName(nx)}<small>elements ×${fmt(Math.pow(TITLE.mult, g))} for good · the elements of this run start again</small>` : `${S.title < S.titleBest ? 'Comes back' : 'Next'}: ${titleIcon(nx)} ${titleName(nx)}<small>at ${fmt(q)} elements earned this run${S.title < S.titleBest ? ', without a reset' : ''}</small>`);
+    html2('ttl', rows.map((r) => `<div class="rk${r <= S.title ? ' on' : r === S.title + 1 ? ' now' : ''}"><i>${titleIcon(r)}</i><b>${titleName(r)}${r <= S.title ? ' ✓' : r <= S.titleBest ? ' ↩' : ''}</b><em>${fmt(titleReq(r - 1))} 🧪<br>×${fmt(titleMult(r))}</em><span>${TPERKS[r - 1] || `elements ×${TITLE.mult} more`}</span></div>`).join(''));
   }
   const gd = document.querySelector('[data-k=gdb]');
   if (gd) {
@@ -1384,7 +1421,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, gradeGain, gradeUp, GRADE, gradeReq, depthGain, digDown, DEPTH, depthReq, dmGain, feed, pulseOn, halfLife, vaultShare, gravMult, radMult, VOID, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh, RANK, RANKS, PERKS, rankReq, rankGain, rankUp, rankMult, rankName, ringMax };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, titleGain, graduate, TITLE, titleReq, gradeGain, gradeUp, GRADE, gradeReq, depthGain, digDown, DEPTH, depthReq, dmGain, feed, pulseOn, halfLife, vaultShare, gravMult, radMult, VOID, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh, RANK, RANKS, PERKS, rankReq, rankGain, rankUp, rankMult, rankName, ringMax };
 render(true);
 requestAnimationFrame(frame);
 if (S.speed > 1) setSpeed(S.speed);   // the ⏩ pill comes back after a reload
