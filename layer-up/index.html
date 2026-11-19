@@ -29,7 +29,7 @@ img { max-width: 100%; }
      with fog; minimap and the node sheet lie over it), a dock with that layer's panels (only its inside scrolls; tap the open panel's
      tab to fold it), the Layer Up bar and the layer tabs at the bottom. Landscape: tabs left, dock right. ⚙️ opens stats/settings */
   --night: #0f0b1e; --chalk: #fff7ee; --haze: #c4bce0;
-  --coin: #ffc93c; --gem: #3ef2ff; --volt: #b6ff3b; --lab: #ff4fa3; --star: #a98bff; --grow: #3ddc84;
+  --coin: #ffc93c; --gem: #3ef2ff; --volt: #b6ff3b; --lab: #ff4fa3; --star: #a98bff; --grow: #3ddc84; --void: #ff8a3d;
   --acc: var(--coin);
   --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
   --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
@@ -219,6 +219,7 @@ body { margin: 0; min-height: 100vh; overflow: hidden; overscroll-behavior: none
 .deal i { font-style: normal; font-size: 30px; line-height: 1; }
 .deal small { font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: none; color: var(--haze); }
 .cap.gold { border-color: var(--coin); } .cap.gold i { background: linear-gradient(90deg, #ff9a3c, var(--coin), #fff); }
+.cap.ember { border-color: var(--void); } .cap.ember i { background: linear-gradient(90deg, #7a2cff, var(--void), #fff); }
 .cap.violet { border-color: var(--star); } .cap.violet i { background: linear-gradient(90deg, #4b2cff, var(--star), #fff); }
 .cap.rose { border-color: var(--lab); } .cap.rose i { background: linear-gradient(90deg, #9b2cff, var(--lab), #fff); }
 .cap.ice { border-color: var(--gem); } .cap.ice i { background: linear-gradient(90deg, #2b7bff, var(--gem), #fff); }
@@ -317,9 +318,10 @@ const RANK = { req: [600, 1e6, 5e8, 1e11, 2e13], grow: 100, mult: 3, ring0: 2, r
 const DEPTH = { req: [2e3, 3e4, 3e5, 5e6, 5e7], grow: 1e4, mult: 3 };
 const GRADE = { req: [40, 120, 350, 900, 2500], grow: 10, mult: 3, inside: 1 };
 const TITLE = { req: [150, 600, 2500, 1e4, 4e4], grow: 100, mult: 3 };
-const PORT = { req: [200, 1e3, 5e3, 3e4, 2e5], grow: 100, mult: 3 };   // the Star Port: stars earned this void run for each level, stars ×mult (before their softcap)   // titles in the Alchemy Lab: elements earned this star run for each title, elements ×mult (before their softcap)   // inside: 1 = the grade multiplies volts before their softcap (full effect early, gentle late)   // the grid in Stormworks: volts earned this element run for each grade, volts ×mult per grade   // the shaft in the Deep Mine: ore you hold for each depth, ore ×mult per depth
-const fresh = () => ({ sap: 0, sapLife: 0, sapRun: 0, plots: Array(25).fill(null), seeds: { sprout: 1, sun: 1 }, seedSel: 'sprout', pollen: {}, port: 0, portBest: 0, title: 0, titleBest: 0, grade: 0, gradeBest: 0, depth: 0, depthBest: 0, dev: 0, speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
-  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0, 0, 0], harvests: 0, hybrids: 0, ports: 0, titles: 0, grades: 0, digs: 0, feeds: 0, pfeeds: 0, bestD: 0, trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
+const PORT = { req: [200, 1e3, 5e3, 3e4, 2e5], grow: 100, mult: 3 };
+const HORIZON = { req: [5e3, 3e4, 2e5, 1.5e6, 1e7], grow: 100, mult: 3 };   // the Void's ladder: dark matter earned since the last greenhouse for each level, dark matter ×mult (before its softcap)   // the Star Port: stars earned this void run for each level, stars ×mult (before their softcap)   // titles in the Alchemy Lab: elements earned this star run for each title, elements ×mult (before their softcap)   // inside: 1 = the grade multiplies volts before their softcap (full effect early, gentle late)   // the grid in Stormworks: volts earned this element run for each grade, volts ×mult per grade   // the shaft in the Deep Mine: ore you hold for each depth, ore ×mult per depth
+const fresh = () => ({ horizon: 0, horizonBest: 0, sap: 0, sapLife: 0, sapRun: 0, plots: Array(25).fill(null), seeds: { sprout: 1, sun: 1 }, seedSel: 'sprout', pollen: {}, port: 0, portBest: 0, title: 0, titleBest: 0, grade: 0, gradeBest: 0, depth: 0, depthBest: 0, dev: 0, speed: 1, devUsed: 0, coins: 0, run: 0, life: 0, runT: 0, starT: 300, rank: 0, rankBest: 0, dm: 0, dmLife: 0, dmRun: 0, starsRun: 0, mass: 0, rad: 0, voidT: 0, pulseN: -1, gems: 0, gemsLife: 0, gemsRun: 0, ore: 0, volts: 0, voltsLife: 0, voltsRun: 0, elems: 0, elemsLife: 0, elemsRun: 0, stars: 0, starsLife: 0, ships: [], relics: {}, relicN: 0, found: {}, tried: {}, slots: [null, null], charge: 0, burst: 0, top: 0, tab: 0, u: {}, grid: Array(25).fill(null), tool: 'drill', dealT: 0, dealQ: 0, offer: null, rush: 0, rushM: 1, half: 0, veins: [], veinSide: 0, burstP: 1, aether: 0, ref: {}, arts: {}, artTry: 0, rob: {}, ocMode: 0, blue: null,
+  muted: false, music: true, sci: false, ach: {}, st: { played: 0, ups: [0, 0, 0, 0, 0, 0, 0], collapses: 0, harvests: 0, hybrids: 0, ports: 0, titles: 0, grades: 0, digs: 0, feeds: 0, pfeeds: 0, bestD: 0, trips: 0, deep: 0, bursts: 0, reacts: 0, bestRate: 0, deals: 0, bestS: 0, ocb: 0, ocTop: 0, dust: 0, hole: 0, ranks: 0, born: Date.now() }, sel: {}, cam: {}, pane: {}, hints: {}, last: Date.now(), name: '', deviceId: '' });
 let S = Object.assign(fresh(), store.get(SAVE, {}));
 // older saves miss newer fields: fill them in
 function shape() {
@@ -328,6 +330,7 @@ function shape() {
   if (![1, 2, 5, 10, 50, 100].includes(S.speed)) S.speed = 1;
   if (!S.pane || typeof S.pane !== 'object') S.pane = {};
   if (!(S.rankBest >= S.rank)) S.rankBest = S.rank;
+  if (!(S.horizon >= 0)) S.horizon = 0; if (!(S.horizonBest >= S.horizon)) S.horizonBest = S.horizon;
   if (!(S.port >= 0)) S.port = 0; if (!(S.portBest >= S.port)) S.portBest = S.port;
   if (!(S.title >= 0)) S.title = 0; if (!(S.titleBest >= S.title)) S.titleBest = S.title;
   if (!(S.grade >= 0)) S.grade = 0; if (!(S.gradeBest >= S.grade)) S.gradeBest = S.grade;
@@ -504,7 +507,8 @@ function fixSave() {
   if (S.top >= 2 && !S.st.digs && S.depthBest < 5) S.depthBest = 5;
   if (S.top >= 3 && !S.st.grades && S.gradeBest < 5) S.gradeBest = 5;
   if (S.top >= 4 && !S.st.titles && S.titleBest < 5) S.titleBest = 5;
-  if (S.top >= 5 && !S.st.ports && S.portBest < 5) S.portBest = 5;   // saves from before the port levels played the old Star Port through   // saves from before the titles played the old Alchemy Lab through   // saves from before the grid played the old Stormworks through   // saves from before the shaft played the old Deep Mine through
+  if (S.top >= 5 && !S.st.ports && S.portBest < 5) S.portBest = 5;
+  if (S.top >= 6 && !S.st.collapses && S.horizonBest < 5) S.horizonBest = 5;   // saves from before the port levels played the old Star Port through   // saves from before the titles played the old Alchemy Lab through   // saves from before the grid played the old Stormworks through   // saves from before the shaft played the old Deep Mine through
   if (S.top >= 1 && !S.st.ranks && S.rankBest < RANK.open) S.rankBest = RANK.open;   // saves from before the business ranks: they played the old layer 1 through, so the whole coin web stays open
   for (const id of Object.keys(S.u)) { const n = NODE[id]; if (!n) delete S.u[id]; else if (S.u[id] > n.max) S.u[id] = n.max; }
   if (!S.blue && S.grid.some(Boolean)) S.blue = S.grid.slice();
@@ -597,16 +601,16 @@ const relicMult = (k) => 1 + Math.sqrt(S.relics[k] || 0);   // diminishing: many
 const boost = (k) => recipeMult(k) * relicMult(k) * polMult(k);
 // ---------- the void: dark matter evaporates (half-life); feed it to the hole (mass = gravity) or let it go (radiation)
 const VOID = { half: 60, every: 30, len: 4, pulse: 3, rad: 0.5, gk: 0.2, gp: 1.5, rk: 0.3, rp: 2 };   // gravity = 1 + gk·log10(1+mass)^gp lifts dark matter (after its softcap) and coins; radiation = 1 + rk·log10(1+rad)^rp lifts stars
-const halfLife = () => fin(VOID.half * prodOf('half'));
-const vaultShare = () => Math.min(0.6, (BYT.vault || []).reduce((a, n) => a + val(n), 0));
-const pulseOn = () => S.top >= 5 && S.voidT % VOID.every < VOID.len;
+const halfLife = () => fin(VOID.half * prodOf('half') * (S.horizon >= 1 ? 1.5 : 1));
+const vaultShare = () => { const h = S.horizon >= 4 ? 0.2 : 0; return Math.min(0.6 + h, (BYT.vault || []).reduce((a, n) => a + val(n), 0) + h); };
+const pulseOn = () => S.top >= 5 && S.voidT % VOID.every < VOID.len + (S.horizon >= 2 ? 2 : 0);
 const pulseIn = () => VOID.every - (S.voidT % VOID.every);
 const pulseX = () => VOID.pulse * prodOf('pulse');
 const massPow = () => (BYK.mass || []).reduce((a, n) => a + (lvl(n) > 0 ? val(n) - 1 : 0), 1);   // mass nodes add up: multiplied together they made gravity explode
 const gravMult = () => 1 + VOID.gk * Math.pow(log10(1 + S.mass), VOID.gp) * massPow();
 const radMult = () => 1 + VOID.rk * Math.pow(log10(1 + S.rad), VOID.rp);
 const evapRate = () => S.dm * (1 - vaultShare()) * Math.LN2 / halfLife();
-const dmGain = () => (S.starsRun < REQ.dm ? 0 : Math.floor(soft(fin(GAIN.dm * Math.pow(S.starsRun / REQ.dm, 0.5) * prodOf('dm') * boost('dm') * (S.port >= 3 ? 1.5 : 1)), GCAP.dm, GEXP.dm) * gravMult()));
+const dmGain = () => (S.starsRun < REQ.dm ? 0 : Math.floor(soft(fin(GAIN.dm * Math.pow(S.starsRun / REQ.dm, 0.5) * prodOf('dm') * boost('dm') * (S.port >= 3 ? 1.5 : 1) * horizonMult() * (S.horizon >= 5 ? 2 : 1)), GCAP.dm, GEXP.dm) * gravMult()));
 function feed(frac, quiet) {
   const a = S.dm * Math.min(1, frac); if (!(a > 0)) return 0;
   const on = pulseOn(), m = a * (on ? pulseX() : 1) * polMult('mass');
@@ -638,7 +642,7 @@ const plantTime = (id) => SPX[id].t / growMult();
 const ripe = (i) => { const p = S.plots[i]; return !!p && p.g * growMult() >= SPX[p.s].t - 1e-6; };
 const SAPK = { cap: 10, k: 0.35 };   // harvests pay sap × this multiplier, softcapped: without it the sap nodes bought the whole web in an hour
 const sapMult = () => soft(fin(prodOf('sap') * polMult('sap')), SAPK.cap, SAPK.k);   // not boost(): the Reactor's 'everything' recipes made sap run away
-const sapGain = () => (S.dmRun < REQ.sap ? 0 : Math.floor(soft(fin(GAIN.sap * Math.pow(S.dmRun / REQ.sap, 0.5) * sapMult()), GCAP.sap, GEXP.sap)));
+const sapGain = () => (S.dmRun < REQ.sap ? 0 : Math.floor(soft(fin(GAIN.sap * Math.pow(S.dmRun / REQ.sap, 0.5) * sapMult() * (S.horizon >= 3 ? 1.5 : 1)), GCAP.sap, GEXP.sap)));
 const bedNbrs = (i) => { const n = bedSide(), x = i % 5, y = Math.floor(i / 5), r = []; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = x + dx, b = y + dy; if (a >= 0 && b >= 0 && a < n && b < n) r.push(b * 5 + a); } return r; };
 function plant(i, id = S.seedSel, quiet) {
   const sp = SPX[id]; if (!sp || !S.seeds[id] || S.top < 6 || S.plots[i] || i % 5 >= bedSide() || Math.floor(i / 5) >= bedSide() || S.sap < sp.cost) return false;
@@ -783,6 +787,24 @@ function rankUp(quiet) {
 }
 // Deals (coins): three offers at a time, pick one; up to three rounds wait for you
 const dealsOpen = () => S.rankBest >= 1 || S.top >= 1 || S.st.deals > 0;
+// the horizon (inside the Void): collapsing resets dark matter; every level multiplies dark matter
+const HORIZONS = [['🌑', 'Shadow'], ['🌒', 'Eclipse'], ['🌀', 'Vortex'], ['🕳️', 'Black hole'], ['🌌', 'Quasar'], ['✨', 'Big crunch']];
+const HPERKS = ['half-life ×1.5', 'pulses last 2 s longer', 'sap from a layer up ×1.5', 'the vault keeps 20 % more', 'dark matter ×2'];
+const horizonIcon = (r) => HORIZONS[Math.min(r, HORIZONS.length - 1)][0];
+const horizonName = (r) => (r < HORIZONS.length ? HORIZONS[r][1] : `Big crunch +${r - HORIZONS.length + 1}`);
+const horizonReq = (r) => { const q = HORIZON.req, k = q.length - 1; return r <= k ? q[r] : q[k] * Math.pow(HORIZON.grow, r - k); };
+const horizonMult = (r = S.horizon) => Math.pow(HORIZON.mult, r);
+const horizonGain = () => { if (S.top < 5) return 0; let r = S.horizon; while (r < S.horizon + 50 && S.dmRun >= horizonReq(r)) r++; return r - S.horizon; };
+function collapse(quiet) {
+  const k = horizonGain(); if (k < 1) return;
+  S.horizon += k; S.horizonBest = Math.max(S.horizonBest, S.horizon); S.dm = 0; S.dmRun = 0; S.st.collapses = (S.st.collapses || 0) + 1;
+  if (!quiet) {
+    Sound.init(); Sound.up();
+    const f = document.createElement('div'); f.className = 'flash'; f.style.background = 'radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,138,61,0.6) 40%, rgba(15,11,30,0.95) 75%)'; f.innerHTML = `<b>${horizonIcon(S.horizon)}<br>${horizonName(S.horizon)}!</b>`; document.body.appendChild(f); setTimeout(() => f.remove(), 1800);
+    toast(`${horizonIcon(S.horizon)} ${horizonName(S.horizon)}`, `dark matter ×${fmt(horizonMult())}${HPERKS[S.horizon - 1] ? ` · new: ${HPERKS[S.horizon - 1]}` : ''}`, COL.void); checkAch(); render(true);
+  }
+  save();
+}
 // the port (inside the Star Port): expanding resets the stars of this run; every level multiplies stars
 const PORTS = [['🔭', 'Backyard telescope'], ['🛰️', 'Satellite'], ['🚀', 'Spaceport'], ['🛸', 'Starship yard'], ['🌌', 'Star fleet'], ['🪐', 'Galactic empire']];
 const OPERKS = ['ships fly 25 % faster', 'expedition risk halved', 'dark matter from a layer up ×1.5', 'stars form twice as fast', 'stars ×2'];
@@ -1008,7 +1030,7 @@ function layerUp(target, quiet) {
   const keepL = has('keepl-all'), reachL = 2 + 2 * lvT('keepl'), keepV = has('keepv-all'), reachV = 2 + 2 * lvT('keepv'), keepG = has('keepg-all'), reachG = 2 * lvT('keepg'), keepC = has('keepc-all'), reachC = 2 * lvT('keepc'), keepS = has('keeps-all'), reachS = 2 + 2 * lvT('keeps'), keepD = has('keepd-all'), reachD = 2 + 2 * lvT('keepd');
   if (next === 1) { S.gems += gain; S.gemsLife += gain; S.gemsRun += gain; }
   if (next === 2) { S.volts += gain; S.voltsLife += gain; S.voltsRun += gain; }
-  if (next === 6) { S.sap += gain; S.sapLife += gain; S.sapRun += gain; for (const n of WEB.void) if (!(keepD || n.d <= reachD)) delete S.u[n.id]; S.dm = 0; S.dmRun = 0; S.mass = 0; S.rad = 0; S.voidT = 0; S.pulseN = -1; }
+  if (next === 6) { S.sap += gain; S.sapLife += gain; S.sapRun += gain; for (const n of WEB.void) if (!(keepD || n.d <= reachD)) delete S.u[n.id]; S.dm = 0; S.dmRun = 0; S.mass = 0; S.rad = 0; S.voidT = 0; S.pulseN = -1; S.horizon = 0; }
   if (next >= 5) { if (next === 5) { S.dm += gain; S.dmLife += gain; S.dmRun += gain; S.st.bestD = Math.max(S.st.bestD || 0, gain); } for (const n of WEB.star) if (!(keepS || n.d <= reachS)) delete S.u[n.id]; S.stars = 0; S.starsRun = 0; S.port = 0; }
   if (next >= 4) { if (next === 4) { S.stars += gain; S.starsLife += gain; S.starsRun += gain; S.st.bestS = Math.max(S.st.bestS || 0, gain); } for (const n of WEB.lab) if (!(keepL || n.d <= reachL)) delete S.u[n.id]; S.elems = 0; S.elemsRun = 0; S.starT = 0; S.slots = [null, null]; S.title = 0; }
   if (next >= 3) {
@@ -1037,6 +1059,7 @@ const ACH = [
   ['Endless', '25 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star, WEB.void).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 25], ['Infinite', '200 endless levels', () => WEB.coin.concat(WEB.gem, WEB.volt, WEB.lab, WEB.star, WEB.void).filter((n) => n.kind === 'inf').reduce((a, n) => a + lvl(n), 0) >= 200],
   ['Chemist', 'Get your first elements', () => S.st.ups[3] >= 1], ['Eureka', 'Discover a recipe', () => foundN() >= 1], ['Alchemist', 'Discover 10 recipes', () => foundN() >= 10], ['Creator', 'Discover 20 recipes', () => foundN() >= 20], ['Lab rat', 'Own 30 lab nodes', () => owned('lab').length >= 30],
   ['Stargazer', 'Get your first stars', () => S.st.ups[4] >= 1], ['Astronaut', 'Bring back a ship', () => S.st.trips >= 1], ['Collector', 'Find 10 relics', () => (S.relicN || 0) >= 10], ['Deep diver', 'Return from deep space with a relic', () => S.st.deep >= 1], ['Star web', 'Own 40 star nodes', () => owned('star').length >= 40],
+  ['Eclipse', 'Collapse the void', () => S.horizonBest >= 1], ['Black hole sun', 'Reach the Black hole', () => S.horizonBest >= 3], ['Big crunch', 'Reach the Big crunch', () => S.horizonBest >= 5],
   ['Liftoff', 'Expand the Star Port', () => S.portBest >= 1], ['Shipwright', 'Build a Starship yard', () => S.portBest >= 3], ['Galactic', 'Found a Galactic empire', () => S.portBest >= 5],
   ['Graduate', 'Earn your first title', () => S.titleBest >= 1], ['Master of arts', 'Become a Master', () => S.titleBest >= 3], ['Philosopher', 'Become a Philosopher', () => S.titleBest >= 5],
   ['Electrician', 'Upgrade the grid', () => S.gradeBest >= 1], ['Power plant', 'Reach the Power plant', () => S.gradeBest >= 3], ['Storm chaser', 'Reach the Storm grid', () => S.gradeBest >= 5],
@@ -1064,6 +1087,7 @@ function step(dt) {
   const cut = Math.min(S.burst > 0 ? S.burst : Infinity, S.rush > 0 ? S.rush : Infinity);
   if (cut < dt - 1e-9) { step(cut); step(dt - cut); return; }
   const c = coinRate() * dt; S.coins = fin(S.coins + c); S.run = fin(S.run + c); S.life = fin(S.life + c); S.runT += dt; S.starT += dt; S.st.played += dt;
+  while (S.horizon < S.horizonBest && S.dmRun >= horizonReq(S.horizon)) { S.horizon++; if (dt <= 1 && typeof toast === 'function') toast(`${horizonIcon(S.horizon)} ${horizonName(S.horizon)} again`, 'levels you reached before come back without a reset', COL.void); }
   while (S.port < S.portBest && S.starsRun >= portReq(S.port)) { S.port++; if (dt <= 1 && typeof toast === 'function') toast(`${portIcon(S.port)} ${portName(S.port)} again`, 'port levels you reached before come back without a reset', COL.star); }
   while (S.title < S.titleBest && S.elemsRun >= titleReq(S.title)) { S.title++; if (dt <= 1 && typeof toast === 'function') toast(`${titleIcon(S.title)} ${titleName(S.title)} again`, 'titles you earned before come back without a reset', COL.lab); }
   while (S.grade < S.gradeBest && S.voltsRun >= gradeReq(S.grade)) { S.grade++; if (dt <= 1 && typeof toast === 'function') toast(`${gradeIcon(S.grade)} ${gradeName(S.grade)} again`, 'grades you reached before come back without a reset', COL.volt); }
@@ -1207,6 +1231,11 @@ function renderScreen() {
     m.appendChild(g);
     const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'tool'; pb.textContent = `🔎 Prospect: move the veins · ${fmt(prospectCost())}💎`; pb.addEventListener('click', prospect); m.appendChild(pb);
   }
+  if (L === 'void') {
+    const k = pane('hzn', '🌀', 'Horizon');
+    k.innerHTML = `<h2><span data-k="hzn"></span><small data-k="hzm"></small></h2><div class="cap ember"><i data-k="hzf"></i><span data-k="hzt"></span></div><button class="wide" type="button" data-k="hzb" style="background:var(--void)"></button><div class="ladder" data-k="hzl" style="--coin:var(--void)"></div><p>Collapsing starts the dark matter of this run again (mass and radiation stay), but every level multiplies dark matter ×${HORIZON.mult} for good and brings a perk. After a layer up to sap, the levels you reached before come back by themselves as the dark matter comes in.</p>`;
+    k.querySelector('[data-k=hzb]').addEventListener('click', (e) => { const g = horizonGain(); if (g < 1) return; Sound.init(); flyTo(e.currentTarget, horizonIcon(S.horizon + g), COL.void); collapse(); });
+  }
   if (L === 'star') {
     const k = pane('port', '🛰️', 'Port');
     k.innerHTML = `<h2><span data-k="ptn"></span><small data-k="ptm"></small></h2><div class="cap violet"><i data-k="ptf"></i><span data-k="ptt"></span></div><button class="wide" type="button" data-k="ptb" style="background:var(--star)"></button><div class="ladder" data-k="ptl" style="--coin:var(--star)"></div><p>Expanding the port starts the stars of this run again, but every level multiplies stars ×${PORT.mult} for good and brings a perk. Ships, relics and the star web stay. After a layer up to dark matter, the levels you reached before come back by themselves as the stars come in.</p>`;
@@ -1342,7 +1371,7 @@ function numbers(L, parts, rate) {
   if (L === 'volt') h += row('charge / s', `${fmt(chargeRate() * 100)} %`) + row('burst power', `×${fmt(burstBase())}`) + row('burst length', `${fmt(burstLen())} s`) + row('fills up to', `${Math.round(capMax() * 100)} %`) + row('bursts fired', String(S.st.bursts)) + row('grid', `${gradeName(S.grade)} · volts ×${fmt(gradeMult())}`) + row('upgrades', String(S.st.grades || 0));
   if (L === 'lab') h += row('recipes', `${foundN()}/${bookOf().length}`) + row('a reaction costs', `${fmt(reactCost())} 🧪`) + row('recipe power', `×${fmt(rxPow())}`) + row('title', `${titleName(S.title)} · elements ×${fmt(titleMult())}`) + row('graduations', String(S.st.titles || 0));
   if (L === 'grow') h += row('species', `${Object.keys(S.seeds).length}/${SPECIES.length}`) + row('harvests', String(S.st.harvests || 0)) + row('cross-breeds', String(S.st.hybrids || 0)) + row('growth', `×${fmt(growMult())}`) + row('sap per harvest', `×${fmt(sapMult())}`) + Object.keys(S.pollen).map((k) => row(`pollen · ${PKTXT[k]}`, `×${fmt(polMult(k))}`)).join('');
-  if (L === 'void') h += row('half-life', fmtT(halfLife())) + row('vault', `${Math.round(vaultShare() * 100)} %`) + row('gravity (mass)', `×${fmt(gravMult())}`) + row('radiation', `×${fmt(radMult())}`) + row('pulse', `×${fmt(pulseX())} every ${VOID.every} s`) + row('feeds', `${S.st.feeds || 0} (${S.st.pfeeds || 0} on the beat)`);
+  if (L === 'void') h += row('half-life', fmtT(halfLife())) + row('vault', `${Math.round(vaultShare() * 100)} %`) + row('gravity (mass)', `×${fmt(gravMult())}`) + row('radiation', `×${fmt(radMult())}`) + row('pulse', `×${fmt(pulseX())} every ${VOID.every} s`) + row('feeds', `${S.st.feeds || 0} (${S.st.pfeeds || 0} on the beat)`) + row('horizon', `${horizonName(S.horizon)} · dark matter ×${fmt(horizonMult())}`) + row('collapses', String(S.st.collapses || 0));
   if (L === 'star') h += row('ships', String(shipCount())) + row('relics', String(S.relicN || 0)) + row('artifacts', `${artN()}/8`) + row('stardust per trip', fmt(dustGain())) + row('port', `${portName(S.port)} · stars ×${fmt(portMult())}`) + row('expansions', String(S.st.ports || 0));
   return h + `<h3>All in all</h3>${row('achievements', `${achCount()}/${ACH.length} · ×${fmt(achMult())}`)}${row('robots', String(robN()))}${row('layer ups', String(S.st.ups.reduce((a, b) => a + b, 0)))}${row('time played', fmtT(S.st.played))}`;
 }
@@ -1407,14 +1436,14 @@ function refresh() {
   document.querySelectorAll('[data-rr]').forEach((e) => { const t = e.getAttribute('data-rr'), g = !robOn(t) ? -1 : t === 'autogem' ? gemGain() : t === 'autovolt' ? voltGain() : t === 'autoelem' ? elemGain() : -1, tx = g < 0 ? '' : `+${fmt(g * roboRate())}/s`; if (e.textContent !== tx) e.textContent = tx; });
   const pr = (v, q) => Math.max(0, Math.min(1, Math.log10(v + 1) / Math.log10(q))), idle = S.ships.slice(0, S.top >= 4 ? shipCount() : 0).filter((x) => !x || x.left <= 0).length;
   const TI = [[`🪙 ${fmt(S.coins)}`, `+${fmt(rate)}/s`, pr(S.run, REQ.gem), S.dealQ > 0 ? `🤝${S.dealQ}` : rankGain() >= 1 ? '⬆' : ''], [`💎 ${fmt(S.gems)}`, has('mine') ? `ore +${fmt(oreRate())}/s` : 'no mine yet', pr(S.ore, REQ.volt), depthGain() >= 1 ? '⬇' : ''],
-    [`⚡ ${fmt(S.volts)}`, `charge ${Math.floor(S.charge * 100)} %`, pr(S.voltsRun, REQ.elem), gradeGain() >= 1 ? '⬆' : S.top >= 2 && S.burst <= 0 && S.charge >= capMax() - 1e-6 ? '⚡' : ''], [`🧪 ${fmt(S.elems)}`, `${foundN()}/${bookOf().length} recipes`, pr(S.elemsRun, REQ.star), titleGain() >= 1 ? '🎓' : ''], [`🌌 ${fmt(S.stars)}`, `${S.relicN || 0} relics`, pr(S.starsRun, REQ.dm), portGain() >= 1 ? '🛰️' : idle ? `🛸${idle}` : ''], [`🌑 ${fmt(S.dm)}`, `mass ${fmt(S.mass)}`, pr(S.dmRun, REQ.sap), pulseOn() ? '💓' : ''], [`🍃 ${fmt(S.sap)}`, `${Object.keys(S.seeds).length}/${SPECIES.length} species`, pr(Object.keys(S.seeds).length, SPECIES.length), S.plots.some((x, i) => x && ripe(i)) ? '🌾' : '']];
+    [`⚡ ${fmt(S.volts)}`, `charge ${Math.floor(S.charge * 100)} %`, pr(S.voltsRun, REQ.elem), gradeGain() >= 1 ? '⬆' : S.top >= 2 && S.burst <= 0 && S.charge >= capMax() - 1e-6 ? '⚡' : ''], [`🧪 ${fmt(S.elems)}`, `${foundN()}/${bookOf().length} recipes`, pr(S.elemsRun, REQ.star), titleGain() >= 1 ? '🎓' : ''], [`🌌 ${fmt(S.stars)}`, `${S.relicN || 0} relics`, pr(S.starsRun, REQ.dm), portGain() >= 1 ? '🛰️' : idle ? `🛸${idle}` : ''], [`🌑 ${fmt(S.dm)}`, `mass ${fmt(S.mass)}`, pr(S.dmRun, REQ.sap), horizonGain() >= 1 ? '🌀' : pulseOn() ? '💓' : ''], [`🍃 ${fmt(S.sap)}`, `${Object.keys(S.seeds).length}/${SPECIES.length} species`, pr(Object.keys(S.seeds).length, SPECIES.length), S.plots.some((x, i) => x && ripe(i)) ? '🌾' : '']];
   const each = (a, f) => document.querySelectorAll(`[${a}]`).forEach((e) => { const t = TI[+e.getAttribute(a)]; if (t) f(e, t); }), txt = (e, t) => { if (e.textContent !== t) e.textContent = t; };
   each('data-v', (e, t) => txt(e, t[0])); each('data-v2', (e, t) => txt(e, t[1])); each('data-vp', (e, t) => { e.style.width = `${Math.round(t[2] * 100)}%`; }); each('data-vb', (e, t) => txt(e, t[2] >= 1 ? '▲' : t[3]));
-  const PB = { biz: rankGain() >= 1 ? '!' : '', deal: S.dealQ > 0 ? String(S.dealQ) : '', cap: S.burst <= 0 && S.charge >= 1 ? '!' : '', grid: gradeGain() >= 1 ? '!' : '', ttl: titleGain() >= 1 ? '!' : '', port: portGain() >= 1 ? '!' : '', ship: idle ? String(idle) : '', rift: pulseOn() ? '💓' : '', bed: S.plots.filter((x, i) => x && ripe(i)).length || '', shaft: depthGain() >= 1 ? '!' : '' };
+  const PB = { biz: rankGain() >= 1 ? '!' : '', deal: S.dealQ > 0 ? String(S.dealQ) : '', cap: S.burst <= 0 && S.charge >= 1 ? '!' : '', grid: gradeGain() >= 1 ? '!' : '', ttl: titleGain() >= 1 ? '!' : '', port: portGain() >= 1 ? '!' : '', hzn: horizonGain() >= 1 ? '!' : '', ship: idle ? String(idle) : '', rift: pulseOn() ? '💓' : '', bed: S.plots.filter((x, i) => x && ripe(i)).length || '', shaft: depthGain() >= 1 ? '!' : '' };
   document.querySelectorAll('[data-pb]').forEach((e) => txt(e, PB[e.getAttribute('data-pb')] || ''));
   const until = (need, per) => (need <= 0 ? 'now' : per > 0 ? fmtT(need / per / (S.speed || 1)) : '–');   // real time, also with dev speed
   txt($('goal'), '🎯 ' + (S.tab === 0 ? (rankGain() >= 1 ? 'your business can expand: 🏪 Business' : S.run >= REQ.gem ? 'the layer up is ready' : rankReq(S.rank) < REQ.gem ? `${rankName(S.rank + 1)} in ${until(rankReq(S.rank) - S.run, rate)}` : `gems in ${until(REQ.gem - S.run, rate)}`)
-    : S.tab === 1 ? (!has('mine') ? 'find the Mine in this web' : depthGain() >= 1 ? 'the mine can go deeper: 🪜 Shaft' : S.ore >= REQ.volt ? 'the layer up is ready' : `volts in ${until(REQ.volt - S.ore, oreRate())}`) : S.tab === 2 ? (gradeGain() >= 1 ? 'the grid can be upgraded: 🗼 Grid' : `${fmt(S.voltsRun)} / ${fmt(REQ.elem)} volts for elements`) : S.tab === 3 ? (titleGain() >= 1 ? 'a new title is ready: 🎓 Titles' : `${fmt(S.elemsRun)} / ${fmt(REQ.star)} elements for stars`) : S.tab === 4 ? (portGain() >= 1 ? 'the port can expand: 🛰️ Port' : S.starsRun >= REQ.dm ? 'the layer up is ready' : `${fmt(S.starsRun)} / ${fmt(REQ.dm)} stars for dark matter`) : S.tab === 5 ? (pulseOn() ? `💓 pulse: feed now ×${fmt(pulseX())}` : `next pulse in ${Math.ceil(pulseIn())} s · ${fmt(evapRate())} 🌑/s evaporating`) : (() => { const rn = S.plots.filter((x, i) => x && ripe(i)).length; if (rn) return `${rn} ripe: harvest them`; const left = S.plots.map((x) => (x ? SPX[x.s].t / growMult() - x.g : Infinity)).filter((v) => v < Infinity); return left.length ? `next plant ripe in ${fmtT(Math.min(...left) / (S.speed || 1))}` : 'plant a seed in the 🪴 Bed'; })()));
+    : S.tab === 1 ? (!has('mine') ? 'find the Mine in this web' : depthGain() >= 1 ? 'the mine can go deeper: 🪜 Shaft' : S.ore >= REQ.volt ? 'the layer up is ready' : `volts in ${until(REQ.volt - S.ore, oreRate())}`) : S.tab === 2 ? (gradeGain() >= 1 ? 'the grid can be upgraded: 🗼 Grid' : `${fmt(S.voltsRun)} / ${fmt(REQ.elem)} volts for elements`) : S.tab === 3 ? (titleGain() >= 1 ? 'a new title is ready: 🎓 Titles' : `${fmt(S.elemsRun)} / ${fmt(REQ.star)} elements for stars`) : S.tab === 4 ? (portGain() >= 1 ? 'the port can expand: 🛰️ Port' : S.starsRun >= REQ.dm ? 'the layer up is ready' : `${fmt(S.starsRun)} / ${fmt(REQ.dm)} stars for dark matter`) : S.tab === 5 ? (horizonGain() >= 1 ? 'the void can collapse: 🌀 Horizon' : pulseOn() ? `💓 pulse: feed now ×${fmt(pulseX())}` : `next pulse in ${Math.ceil(pulseIn())} s · ${fmt(evapRate())} 🌑/s evaporating`) : (() => { const rn = S.plots.filter((x, i) => x && ripe(i)).length; if (rn) return `${rn} ripe: harvest them`; const left = S.plots.map((x) => (x ? SPX[x.s].t / growMult() - x.g : Infinity)).filter((v) => v < Infinity); return left.length ? `next plant ripe in ${fmtT(Math.min(...left) / (S.speed || 1))}` : 'plant a seed in the 🪴 Bed'; })()));
   const html2 = (k, t) => { const e = document.querySelector(`[data-k=${k}]`); if (e && e._t !== t) { e._t = t; e.innerHTML = t; } };
   const bedEl = document.querySelector('[data-k=bed]');
   if (bedEl) {
@@ -1445,6 +1474,14 @@ function refresh() {
     document.querySelector('[data-k=bzf]').style.width = `${Math.round(pr(S.run, q) * 100)}%`; bz.disabled = g < 1;
     html2('bzb', g >= 1 ? `Expand: ${rankIcon(nx)} ${rankName(nx)}<small>coins ×${fmt(Math.pow(RANK.mult, g))} for good · coins and the coin web start again</small>` : `${S.rank < S.rankBest ? 'Comes back' : 'Next'}: ${rankIcon(nx)} ${rankName(nx)}<small>at ${fmt(q)} coins this run${S.rank < S.rankBest ? ', without a reset' : ''} · ${until(q - S.run, rate)}</small>`);
     html2('bzl', rows.map((r) => `<div class="rk${r <= S.rank ? ' on' : r === S.rank + 1 ? ' now' : ''}"><i>${rankIcon(r)}</i><b>${rankName(r)}${r <= S.rank ? ' ✓' : r <= S.rankBest ? ' ↩' : ''}</b><em>${fmt(rankReq(r - 1))} 🪙<br>×${fmt(rankMult(r))}</em><span>${[PERKS[r - 1], ringTxt(r)].filter(Boolean).join(' · ') || `coins ×${RANK.mult} more`}</span></div>`).join(''));
+  }
+  const hz = document.querySelector('[data-k=hzb]');
+  if (hz) {
+    const g = horizonGain(), nx = S.horizon + Math.max(1, g), q = horizonReq(S.horizon), rows = [1, 2, 3, 4, 5]; if (S.horizon >= 5) rows.push(S.horizon + 1);
+    html2('hzn', `${horizonIcon(S.horizon)} ${horizonName(S.horizon)}`); html2('hzm', `level ${S.horizon} · dark matter ×${fmt(horizonMult())}`); html2('hzt', `${fmt(S.dmRun)} / ${fmt(q)} dark matter this run`);
+    document.querySelector('[data-k=hzf]').style.width = `${Math.round(pr(S.dmRun, q) * 100)}%`; hz.disabled = g < 1;
+    html2('hzb', g >= 1 ? `Collapse: ${horizonIcon(nx)} ${horizonName(nx)}<small>dark matter ×${fmt(Math.pow(HORIZON.mult, g))} for good · the dark matter of this run starts again</small>` : `${S.horizon < S.horizonBest ? 'Comes back' : 'Next'}: ${horizonIcon(nx)} ${horizonName(nx)}<small>at ${fmt(q)} dark matter earned this run${S.horizon < S.horizonBest ? ', without a reset' : ''}</small>`);
+    html2('hzl', rows.map((r) => `<div class="rk${r <= S.horizon ? ' on' : r === S.horizon + 1 ? ' now' : ''}"><i>${horizonIcon(r)}</i><b>${horizonName(r)}${r <= S.horizon ? ' ✓' : r <= S.horizonBest ? ' ↩' : ''}</b><em>${fmt(horizonReq(r - 1))} 🌑<br>×${fmt(horizonMult(r))}</em><span>${HPERKS[r - 1] || `dark matter ×${HORIZON.mult} more`}</span></div>`).join(''));
   }
   const pb2 = document.querySelector('[data-k=ptb]');
   if (pb2) {
@@ -1582,7 +1619,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 addEventListener('pagehide', save);
 document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
 $('btnMute').textContent = S.muted ? '🔇' : '🔊';
-if (location.hash === '#bot') window.__game = { get S() { return S; }, sapGain, plant, harvest, ripe, SPECIES, portGain, expandPort, PORT, portReq, titleGain, graduate, TITLE, titleReq, gradeGain, gradeUp, GRADE, gradeReq, depthGain, digDown, DEPTH, depthReq, dmGain, feed, pulseOn, halfLife, vaultShare, gravMult, radMult, VOID, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh, RANK, RANKS, PERKS, rankReq, rankGain, rankUp, rankMult, rankName, ringMax };
+if (location.hash === '#bot') window.__game = { get S() { return S; }, horizonGain, collapse, HORIZON, horizonReq, sapGain, plant, harvest, ripe, SPECIES, portGain, expandPort, PORT, portReq, titleGain, graduate, TITLE, titleReq, gradeGain, gradeUp, GRADE, gradeReq, depthGain, digDown, DEPTH, depthReq, dmGain, feed, pulseOn, halfLife, vaultShare, gravMult, radMult, VOID, step, automate, buy, layerUp, tileAt, discharge, gemGain, voltGain, WEB, NODE, coinRate, oreRate, visible, reachable, needOk, maxed, costAt, render, checkAch, ACH, react, elemGain, RECIPES, ingredients, pickIngredient, starGain, launch, collect, DEST, shipCount, takeDeal, DEALS, dealEvery, fire, capMax, burstMult, refineCost, recipeOf, bookOf, ARTS, ROBOTS, robOn, rollVeins, veinMult, prospect, fixSave, REQ, dustGain, chargeRate, chargePow, burstLen, burstBase, reactCost, rxCost, roboRate, GAIN, GCAP, GEXP, FORM, starForm, rxPow, dealPow, artChance, artN, robN, side, foundN, refresh, RANK, RANKS, PERKS, rankReq, rankGain, rankUp, rankMult, rankName, ringMax };
 render(true);
 requestAnimationFrame(frame);
 if (S.speed > 1) setSpeed(S.speed);   // the ⏩ pill comes back after a reload
