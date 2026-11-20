@@ -213,6 +213,7 @@ body {
           <button class="btn" id="btnNew" type="button">Check in</button>
           <button class="btn" id="btnCh2" type="button" data-i18n="ch2Btn" hidden>Chapter 2</button>
           <button class="btn" id="btnCh3" type="button" data-i18n="ch3Btn" hidden>Chapter 3</button>
+          <button class="btn" id="btnCh4" type="button" data-i18n="ch4Btn" hidden>Chapter 4</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -260,7 +261,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -625,7 +626,7 @@ Object.assign(TXT.en, {
   ch3Btn: 'Chapter 3: The Manager’s Office', nextCh3: 'On to chapter 3', look: '🔍 Look closer', keyWord: 'Key',
   start3: 'The lift doors open onto a corridor that smells of leather and money. One desk lamp, a long red carpet, a wall of framed portraits and, at the end, a door with a gold plate: MANAGER. The lift closes behind you and goes back down without asking. The clock says 03:20. Somewhere a printer chatters: PURGE AT 04:00.',
   up3Eyebrow: '04:00 · purge', up3Title: 'Deleted', up3Text: 'The clock hits four. CONCIERGE says “Purge complete” in a very polite voice, and floor 4, with everyone on it, becomes a rumour again. (Or keep searching in overtime.)',
-  win3Eyebrow: 'Chapter 3 complete · the story is over', win3EyebrowOver: 'Chapter 3 complete, in overtime', win3Title: 'Floor 4 is back', true3Title: 'The true ending',
+  win3Eyebrow: 'Chapter 3 complete', win3EyebrowOver: 'Chapter 3 complete, in overtime', win3Title: 'Floor 4 is back', true3Title: 'The true ending',
   win3Text: (left, h, n) => `You turn the master key and pull the lever. Deep in the walls, CONCIERGE says: “Restoring floor 4.” Lights come on behind every door from 401 to 407. The trombone stops. The snoring stops. Seven very confused guests step out into a corridor that exists again, and the lift gets its brass 4 for good. Nothing is purged at 04:00. At 06:00 the morning paper prints: HOTEL FINDS MISSING FLOOR. Down at reception, Sam is waving. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
   trueText: 'One more thing: CONCIERGE prints a last reservation, typo-free this time: “THE MANAGER · ROOM 404 · checkout 12:00.” Somewhere, a door without a handle clicks shut.',
   trueMiss: 'Finish all three chapters without hints for the true ending.',
@@ -699,7 +700,7 @@ Object.assign(TXT.de, {
   ch3Btn: 'Kapitel 3: Das Büro der Direktion', nextCh3: 'Weiter zu Kapitel 3', look: '🔍 Genauer ansehen', keyWord: 'Schlüssel',
   start3: 'Die Aufzugtüren öffnen sich zu einem Flur, der nach Leder und Geld riecht. Eine Schreibtischlampe, ein langer roter Teppich, eine Wand voller gerahmter Porträts und am Ende eine Tür mit goldenem Schild: DIREKTION. Der Aufzug schließt sich hinter dir und fährt ungefragt wieder nach unten. Die Uhr zeigt 03:20. Irgendwo rattert ein Drucker: LÖSCHUNG UM 04:00.',
   up3Eyebrow: '04:00 · Löschung', up3Title: 'Gelöscht', up3Text: 'Die Uhr schlägt vier. CONCIERGE sagt sehr höflich „Löschung abgeschlossen“, und der 4. Stock wird mitsamt allen darauf wieder zum Gerücht. (Oder du suchst in der Nachspielzeit weiter.)',
-  win3Eyebrow: 'Kapitel 3 geschafft · die Geschichte ist zu Ende', win3EyebrowOver: 'Kapitel 3 geschafft, in der Nachspielzeit', win3Title: 'Der 4. Stock ist zurück', true3Title: 'Das wahre Ende',
+  win3Eyebrow: 'Kapitel 3 geschafft', win3EyebrowOver: 'Kapitel 3 geschafft, in der Nachspielzeit', win3Title: 'Der 4. Stock ist zurück', true3Title: 'Das wahre Ende',
   win3Text: (left, h, n) => `Du drehst den Generalschlüssel und ziehst den Hebel. Tief in den Wänden sagt CONCIERGE: „Stelle 4. Stock wieder her.“ Hinter jeder Tür von 401 bis 407 geht das Licht an. Die Posaune verstummt. Das Schnarchen verstummt. Sieben sehr verwirrte Gäste treten in einen Flur, den es wieder gibt, und der Aufzug bekommt seine Messing-4 für immer. Um 04:00 wird nichts gelöscht. Um 06:00 titelt die Morgenzeitung: HOTEL FINDET VERSCHWUNDENES STOCKWERK. Unten an der Rezeption winkt Sam. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
   trueText: 'Und noch etwas: CONCIERGE druckt eine letzte Reservierung, diesmal ohne Tippfehler: „DIE DIREKTION · ZIMMER 404 · Check-out 12:00.“ Irgendwo klickt eine Tür ohne Klinke ins Schloss.',
   trueMiss: 'Schaffe alle drei Kapitel ohne Tipps für das wahre Ende.',
@@ -781,6 +782,127 @@ let lang = (() => {
 const T = () => TXT[lang];
 const t = (k, ...a) => { const v = T()[k] !== undefined ? T()[k] : TXT.en[k]; return typeof v === 'function' ? v(...a) : Array.isArray(v) ? pick(v) : v; };
 
+// ---------- chapter 4 texts (English and German)
+Object.assign(TXT.en, {
+  ch4Btn: 'Chapter 4: The Basement', nextCh4: 'On to chapter 4',
+  start4: 'The lift does not stop at the lobby. It drops past −1, −2, −3 and lands with a sigh at a floor marked −4. The doors open onto a warm laundry room that smells of soap and old steam. A speaker crackles: “CONCIERGE BACKUP is booting. The guest of room 404 will be checked out at 06:00.” That guest is you. The clock says 05:20.',
+  up4Eyebrow: '06:00 · checkout', up4Title: 'Checked out', up4Text: 'The clock hits six. CONCIERGE BACKUP says “Thank you for staying at the Grand Paradox”, and you become a rumour, just like floor 4 used to be. (Or keep searching in overtime.)',
+  win4Eyebrow: 'Chapter 4 complete', win4EyebrowOver: 'Chapter 4 complete, in overtime', win4Title: 'Guest confirmed', true4Title: 'The truest ending',
+  win4Text: (left, h, n, y) => `You slide the old guest book into the core. The fans spin up, the screen reads page one, and CONCIERGE BACKUP goes very quiet. Then: “Guest of room 404, booked since ${y}. Checkout cancelled. Have a pleasant stay.” The tunnel grate swings open. At the end of the tunnel a narrow staircase climbs into the morning: the hotel garden, wet grass, birds, and the smell of breakfast. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  finalTime4: (tm, h) => `Final time for all four chapters: ${tm} (hints: ${h}).`, finalPartial4: 'Play the earlier chapters again to get a final time for the whole story.',
+  trueText4: 'On the last page of the guest book, in your own handwriting: “Room 404. I will be back.” You do not remember writing it. The ink is still wet.', trueMiss4: 'Finish all four chapters without hints for the truest ending.',
+  c4lift: 'The lift buttons only go down, and there is nothing below −4. Probably.',
+  toBoiler: 'The boiler room: hot, loud, and dark except for whatever still glows.', toLaundry: 'Back in the laundry. A washing machine hums to itself.',
+  toRecords: 'The record vault: cold, dry and silent. Shelves of guest books, a terminal older than the hotel’s lift, and a big grey box with a slot: CONCIERGE CORE.', backBoiler: 'Back in the boiler room. The pipes knock politely.',
+  rulesTitle: 'Laundry rules', rulesBody: '<div class="note">GRAND PARADOX · LAUNDRY RULES<br>Whites: 90 °C<br>Colours: 40 °C<br>Darks: 30 °C<br>Silk: 60 °C<br>Anything else: ask CONCIERGE (do not ask CONCIERGE).</div>',
+  machineTitle: (n) => `Washing machine ${n}`, machineBody: (what) => `<p>Through the round window you see ${what}. The temperature dial has rusted solid.</p>`,
+  fabrics: { white: 'white bedsheets, very white', colour: 'bright red towels', dark: 'black socks, a frightening number of black socks', silk: 'one single silk scarf, alone in the drum' },
+  binTitle: 'Lost and found', binBody: '<p>A big wire bin: LOST & FOUND · LEVEL −4. A padlock with four digits. Scratched into the lid: “machines 1 to 4, washed by the rules, tens only”.</p>',
+  binOpened: 'Click. Inside the bin: odd socks, a dented trumpet and a paper bag with a fuse in it.', binEmpty: 'The lost and found: odd socks and a dented trumpet. Nobody will ever miss the trumpet.',
+  coatSay4: 'An old porter’s coat on the rack, with a name tag: SAM. In the pocket: a heavy torch and a crumpled note.', coatAgain4: 'Just the coat now. It smells of mothballs and adventure.',
+  chute4: 'The linen chute. Far above you, something rumbles: the hotel is waking up.',
+  fuseboxTitle: 'Fuse box', fuseboxNeed: '<p>Five fuses glow. One slot is empty, labelled BOILER.</p>', fuseboxDone: '<p>All six fuses glow. The boiler has power.</p>',
+  fuseNeed: 'One slot in the fuse box is empty: BOILER. You need a fuse.', fuseIn: 'The fuse clicks in. Lights come on all over the boiler room, and the pressure gauge wakes up.',
+  darkCorner: 'A dark corner behind the boiler. Something metal glints, but it is far too dark to read.',
+  plaqueTitle: 'Brass plaque', plaqueBody: (y, k) => `<div class="note">GRAND PARADOX · BOILER No. 1<br>Installed in ${y}.<br>Room 404 opened its door ${k} years later.</div>`,
+  plaqueSay: 'The torch beam finds a brass plaque behind the boiler.',
+  valvesTitle: 'Boiler valves', valvesBody: (tg) => `Each handle lets in the pressure written on it. The red line on the gauge sits at <b>${tg} bar</b>. Open exactly the right handles.`,
+  valvesNoPower: 'The valves are cold and the gauge is dead. The boiler has no power.', valvesDone: 'The needle stops exactly on the red line. Steam hisses through the pipes towards the record vault, and somewhere, ice cracks.',
+  valveOpen: 'open', valveShut: 'shut', bar: 'bar',
+  vaultFrozen: 'A steel door to the record vault, frozen solid: ice in the lock, frost on the handle. It needs heat.',
+  grateLocked: 'A heavy grate to the service tunnel. A sign: “Opens for confirmed guests only.” CONCIERGE sounds very sure about that.',
+  term4Title: 'CONCIERGE v0.1', term4Body: '<p>A terminal with a green screen and a keyboard the size of a piano. “CONCIERGE v0.1, first edition. Question: in which year was room 404 first booked?”</p>',
+  term4Ok: 'CORRECT. The glass door of that shelf unlocks. (CONCIERGE v0.1 is very polite and very old.)',
+  shelfTitle: 'Guest books', shelfBody: '<p>Twelve leather guest books, one per year, behind a glass door.</p>', shelfLocked: 'The guest books sit behind a locked glass door. The old terminal controls it.',
+  wrongBook: (y) => `${y}: you flip through it. Room 404 is not in this one.`, tookBook: 'You take the guest book. Page one: room 404, first guest. The name is smudged, but the handwriting looks… familiar.',
+  coreSay: 'The CONCIERGE CORE: a grey box the size of a fridge, humming, with a slot labelled PROOF OF STAY.', coreNeed: 'The core blinks: PROOF OF STAY REQUIRED. The slot is about the size of a book.',
+  bookGo: 'You slide the guest book into the slot.',
+});
+Object.assign(TXT.en.views, { laundry4: 'Laundry, level −4', boiler: 'Boiler room', records: 'Record vault' });
+Object.assign(TXT.en.svg, { rules: 'RULES', lf4: 'LOST & FOUND', boilerNo: 'BOILER No. 1', core: 'CONCIERGE CORE', proof: 'PROOF OF STAY', tunnel: 'SERVICE TUNNEL', minus4: '−4', toBoiler: 'boiler room ⟶', toLaundry: '⟵ laundry', toRecords: 'record vault ⟶', backBoiler: '⟵ boiler room', vault: 'RECORDS', yearQ: 'YEAR?' });
+Object.assign(TXT.en.aria, { washScene4: 'The laundry on level −4', boilerScene: 'The boiler room', recordsScene: 'The record vault', c4lift: 'Lift', rules: 'Laundry rules card', machine: (n) => `Washing machine ${n}`, bin: 'Lost and found bin', coat4: 'Coat rack', chute4: 'Linen chute', goBoiler: 'Door to the boiler room', goLaundry: 'Back to the laundry', fusebox: 'Fuse box', corner: 'Dark corner behind the boiler', valves: 'Boiler valves', vaultDoor: 'Door to the record vault', grate: 'Tunnel grate', term4: 'Old terminal', shelf: 'Shelf of guest books', core: 'CONCIERGE core', r4back: 'Back to the boiler room' });
+Object.assign(TXT.en.items, {
+  fuse4: ['Fuse', '', 'A ceramic fuse, 30 amps, labelled BOILER.'],
+  torch: ['Torch', '', 'A heavy old torch. It still works, mostly.'],
+  book: ['Guest book', '', 'The first guest book with room 404 in it. Leather, dusty, a little warm.'],
+});
+Object.assign(TXT.en.notes, {
+  lf4: ['Note in the paper bag', 'Fuse for boiler 1. If the basement goes dark again, it is CONCIERGE switching things off. It does that when it is scared. — Sam'],
+  coat4: ['Crumpled note in the coat', 'Night porter’s rule number one: down here the clock runs on CONCIERGE time. At 06:00 the backup wakes up and tidies away everything it cannot find in the records. Make sure it can find you. — S.'],
+  boiler4: ['Logbook on the boiler', '05:01 Backup scheduled. 05:02 Guest list compared with the records. 05:03 Mismatch: room 404, guest unknown. 05:04 Planned action at 06:00: CHECKOUT (permanent).'],
+  term4: ['Terminal printout', 'RECORDS v0.1 · Room 404 · first booking: see the guest book of that year · Guest: THE MANAGER (crossed out) (crossed out) (handwritten: YOU).'],
+  book4: ['First page of the guest book', 'Room 404. Arrived: today. Leaving: hopefully never. Room was lovely, door had no handle, would stay again. Signed in a hurry, in your handwriting.'],
+});
+Object.assign(TXT.en.hints, {
+  c4_bin: ['The lost-and-found bin wants four digits. Read the card on the wall and look into every washing machine.', 'For each machine 1 to 4: what is inside, and which temperature do the rules want for it? Take the tens digit.', (c) => `The padlock code is ${c}.`],
+  c4_torch: ['The basement is dark in places. Someone left a coat here.', 'Check the coat rack in the laundry.', 'Tap the coat rack and take the torch from the pocket.'],
+  c4_fuse: ['The boiler has no power. Look at the fuse box in the boiler room.', 'One slot is empty. The lost-and-found bin had something for it.', 'Select the fuse and tap the fuse box.'],
+  c4_plaque: ['Something glints in the dark corner behind the boiler.', 'It is too dark to read. Bring light.', 'Select the torch and tap the dark corner.'],
+  c4_valves: ['The vault door is frozen. The boiler could send hot steam.', 'Open the valves so the pressures add up exactly to the red line on the gauge.', (tg) => `Open the handles that add up to exactly ${tg} bar.`],
+  c4_year: ['The old terminal in the record vault asks a question.', 'The brass plaque in the boiler room knows when the boiler came and how many years later room 404 opened.', (y) => `The year is ${y}.`],
+  c4_book: ['The terminal unlocked the shelf.', 'Find the guest book of the right year.', (y) => `Tap the shelf and take the book from ${y}.`],
+  c4_core: ['CONCIERGE wants proof that you stayed here.', 'The core has a slot for a proof of stay.', 'Select the guest book and tap the CONCIERGE core.'],
+});
+Object.assign(TXT.de, {
+  ch4Btn: 'Kapitel 4: Der Keller', nextCh4: 'Weiter zu Kapitel 4',
+  start4: 'Der Aufzug hält nicht in der Lobby. Er rauscht an −1, −2 und −3 vorbei und landet mit einem Seufzer auf einem Stockwerk mit der Aufschrift −4. Die Türen öffnen sich zu einer warmen Wäscherei, die nach Seife und altem Dampf riecht. Ein Lautsprecher knistert: „CONCIERGE BACKUP fährt hoch. Der Gast von Zimmer 404 wird um 06:00 ausgecheckt.“ Dieser Gast bist du. Die Uhr zeigt 05:20.',
+  up4Eyebrow: '06:00 · Check-out', up4Title: 'Ausgecheckt', up4Text: 'Die Uhr schlägt sechs. CONCIERGE BACKUP sagt „Danke für Ihren Aufenthalt im Grand Paradox“, und du wirst zu einem Gerücht, so wie früher der 4. Stock. (Oder such in der Verlängerung weiter.)',
+  win4Eyebrow: 'Kapitel 4 geschafft', win4EyebrowOver: 'Kapitel 4 geschafft, in der Verlängerung', win4Title: 'Gast bestätigt', true4Title: 'Das allerwahrste Ende',
+  win4Text: (left, h, n, y) => `Du schiebst das alte Gästebuch in den Kern. Die Lüfter heulen auf, der Bildschirm liest die erste Seite, und CONCIERGE BACKUP wird ganz still. Dann: „Gast von Zimmer 404, gebucht seit ${y}. Check-out storniert. Angenehmen Aufenthalt.“ Das Tunnelgitter schwingt auf. Am Ende des Tunnels führt eine schmale Treppe hinauf in den Morgen: der Hotelgarten, nasses Gras, Vögel und der Duft von Frühstück. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  finalTime4: (tm, h) => `Gesamtzeit für alle vier Kapitel: ${tm} (Tipps: ${h}).`, finalPartial4: 'Spiel die früheren Kapitel noch einmal, dann bekommst du eine Gesamtzeit für die ganze Geschichte.',
+  trueText4: 'Auf der letzten Seite des Gästebuchs steht in deiner eigenen Handschrift: „Zimmer 404. Ich komme wieder.“ Du kannst dich nicht erinnern, das geschrieben zu haben. Die Tinte ist noch feucht.', trueMiss4: 'Schaff alle vier Kapitel ohne Tipps für das allerwahrste Ende.',
+  c4lift: 'Die Aufzugknöpfe gehen nur nach unten, und unter −4 ist nichts mehr. Wahrscheinlich.',
+  toBoiler: 'Der Heizungskeller: heiß, laut und dunkel, bis auf das, was noch leuchtet.', toLaundry: 'Zurück in der Wäscherei. Eine Waschmaschine summt vor sich hin.',
+  toRecords: 'Das Archiv: kalt, trocken und still. Regale voller Gästebücher, ein Terminal, das älter ist als der Aufzug, und ein großer grauer Kasten mit einem Schlitz: CONCIERGE-KERN.', backBoiler: 'Zurück im Heizungskeller. Die Rohre klopfen höflich.',
+  rulesTitle: 'Waschregeln', rulesBody: '<div class="note">GRAND PARADOX · WASCHREGELN<br>Weißes: 90 °C<br>Buntes: 40 °C<br>Dunkles: 30 °C<br>Seide: 60 °C<br>Alles andere: CONCIERGE fragen (CONCIERGE nicht fragen).</div>',
+  machineTitle: (n) => `Waschmaschine ${n}`, machineBody: (what) => `<p>Durch das runde Fenster siehst du ${what}. Der Temperaturregler ist festgerostet.</p>`,
+  fabrics: { white: 'weiße Bettlaken, sehr weiß', colour: 'knallrote Handtücher', dark: 'schwarze Socken, beängstigend viele schwarze Socken', silk: 'ein einzelnes Seidentuch, ganz allein in der Trommel' },
+  binTitle: 'Fundsachen', binBody: '<p>Ein großer Drahtkorb: FUNDSACHEN · EBENE −4. Ein Vorhängeschloss mit vier Ziffern. In den Deckel gekratzt: „Maschine 1 bis 4, nach Vorschrift gewaschen, nur die Zehner“.</p>',
+  binOpened: 'Klick. Im Korb: einzelne Socken, eine verbeulte Trompete und eine Papiertüte mit einer Sicherung.', binEmpty: 'Die Fundsachen: einzelne Socken und eine verbeulte Trompete. Die Trompete wird niemand je vermissen.',
+  coatSay4: 'Ein alter Portiersmantel an der Garderobe, mit Namensschild: SAM. In der Tasche: eine schwere Taschenlampe und ein zerknüllter Zettel.', coatAgain4: 'Nur noch der Mantel. Er riecht nach Mottenkugeln und Abenteuer.',
+  chute4: 'Der Wäscheschacht. Weit über dir rumpelt etwas: Das Hotel wacht auf.',
+  fuseboxTitle: 'Sicherungskasten', fuseboxNeed: '<p>Fünf Sicherungen leuchten. Ein Steckplatz ist leer, beschriftet mit HEIZUNG.</p>', fuseboxDone: '<p>Alle sechs Sicherungen leuchten. Die Heizung hat Strom.</p>',
+  fuseNeed: 'Ein Steckplatz im Sicherungskasten ist leer: HEIZUNG. Du brauchst eine Sicherung.', fuseIn: 'Die Sicherung rastet ein. Überall im Heizungskeller gehen Lichter an, und das Manometer erwacht.',
+  darkCorner: 'Eine dunkle Ecke hinter dem Kessel. Etwas Metallisches glänzt, aber es ist viel zu dunkel zum Lesen.',
+  plaqueTitle: 'Messingschild', plaqueBody: (y, k) => `<div class="note">GRAND PARADOX · KESSEL Nr. 1<br>Eingebaut im Jahr ${y}.<br>Zimmer 404 öffnete seine Tür ${k} Jahre später.</div>`,
+  plaqueSay: 'Der Lichtkegel der Taschenlampe findet ein Messingschild hinter dem Kessel.',
+  valvesTitle: 'Kesselventile', valvesBody: (tg) => `Jeder Griff lässt so viel Druck herein, wie auf ihm steht. Die rote Linie am Manometer liegt bei <b>${tg} bar</b>. Öffne genau die richtigen Griffe.`,
+  valvesNoPower: 'Die Ventile sind kalt und das Manometer ist tot. Die Heizung hat keinen Strom.', valvesDone: 'Die Nadel bleibt genau auf der roten Linie stehen. Dampf zischt durch die Rohre zum Archiv, und irgendwo knackt Eis.',
+  valveOpen: 'offen', valveShut: 'zu', bar: 'bar',
+  vaultFrozen: 'Eine Stahltür zum Archiv, komplett zugefroren: Eis im Schloss, Reif auf dem Griff. Da muss Wärme her.',
+  grateLocked: 'Ein schweres Gitter zum Versorgungstunnel. Ein Schild: „Öffnet nur für bestätigte Gäste.“ CONCIERGE klingt sehr sicher.',
+  term4Title: 'CONCIERGE v0.1', term4Body: '<p>Ein Terminal mit grünem Bildschirm und einer Tastatur so groß wie ein Klavier. „CONCIERGE v0.1, erste Ausgabe. Frage: In welchem Jahr wurde Zimmer 404 zum ersten Mal gebucht?“</p>',
+  term4Ok: 'RICHTIG. Die Glastür des passenden Regals springt auf. (CONCIERGE v0.1 ist sehr höflich und sehr alt.)',
+  shelfTitle: 'Gästebücher', shelfBody: '<p>Zwölf lederne Gästebücher, eins pro Jahr, hinter einer Glastür.</p>', shelfLocked: 'Die Gästebücher stehen hinter einer verschlossenen Glastür. Das alte Terminal steuert sie.',
+  wrongBook: (y) => `${y}: Du blätterst durch. Zimmer 404 steht hier nicht drin.`, tookBook: 'Du nimmst das Gästebuch. Seite eins: Zimmer 404, erster Gast. Der Name ist verschmiert, aber die Handschrift kommt dir … bekannt vor.',
+  coreSay: 'Der CONCIERGE-KERN: ein grauer Kasten so groß wie ein Kühlschrank, er summt, mit einem Schlitz: AUFENTHALTSNACHWEIS.', coreNeed: 'Der Kern blinkt: AUFENTHALTSNACHWEIS ERFORDERLICH. Der Schlitz ist ungefähr so groß wie ein Buch.',
+  bookGo: 'Du schiebst das Gästebuch in den Schlitz.',
+});
+Object.assign(TXT.de.views, { laundry4: 'Wäscherei, Ebene −4', boiler: 'Heizungskeller', records: 'Archiv' });
+Object.assign(TXT.de.svg, { rules: 'REGELN', lf4: 'FUNDSACHEN', boilerNo: 'KESSEL Nr. 1', core: 'CONCIERGE-KERN', proof: 'NACHWEIS', tunnel: 'VERSORGUNGSTUNNEL', minus4: '−4', toBoiler: 'Heizungskeller ⟶', toLaundry: '⟵ Wäscherei', toRecords: 'Archiv ⟶', backBoiler: '⟵ Heizungskeller', vault: 'ARCHIV', yearQ: 'JAHR?' });
+Object.assign(TXT.de.aria, { washScene4: 'Die Wäscherei auf Ebene −4', boilerScene: 'Der Heizungskeller', recordsScene: 'Das Archiv', c4lift: 'Aufzug', rules: 'Karte mit Waschregeln', machine: (n) => `Waschmaschine ${n}`, bin: 'Fundsachenkorb', coat4: 'Garderobe', chute4: 'Wäscheschacht', goBoiler: 'Tür zum Heizungskeller', goLaundry: 'Zurück in die Wäscherei', fusebox: 'Sicherungskasten', corner: 'Dunkle Ecke hinter dem Kessel', valves: 'Kesselventile', vaultDoor: 'Tür zum Archiv', grate: 'Tunnelgitter', term4: 'Altes Terminal', shelf: 'Regal mit Gästebüchern', core: 'CONCIERGE-Kern', r4back: 'Zurück in den Heizungskeller' });
+Object.assign(TXT.de.items, {
+  fuse4: ['Sicherung', '', 'Eine Keramiksicherung, 30 Ampere, beschriftet mit HEIZUNG.'],
+  torch: ['Taschenlampe', '', 'Eine schwere alte Taschenlampe. Funktioniert noch, meistens.'],
+  book: ['Gästebuch', '', 'Das erste Gästebuch, in dem Zimmer 404 steht. Leder, staubig, ein bisschen warm.'],
+});
+Object.assign(TXT.de.notes, {
+  lf4: ['Zettel in der Papiertüte', 'Sicherung für Kessel 1. Wenn der Keller wieder dunkel wird, schaltet CONCIERGE Sachen ab. Das macht es, wenn es Angst hat. — Sam'],
+  coat4: ['Zerknüllter Zettel im Mantel', 'Portiersregel Nummer eins: Hier unten läuft die Uhr nach CONCIERGE-Zeit. Um 06:00 wacht das Backup auf und räumt alles weg, was es nicht in den Akten findet. Sorg dafür, dass es dich findet. — S.'],
+  boiler4: ['Logbuch am Kessel', '05:01 Backup geplant. 05:02 Gästeliste mit den Akten verglichen. 05:03 Abweichung: Zimmer 404, Gast unbekannt. 05:04 Geplante Aktion um 06:00: CHECK-OUT (dauerhaft).'],
+  term4: ['Ausdruck vom Terminal', 'AKTEN v0.1 · Zimmer 404 · erste Buchung: siehe Gästebuch jenes Jahres · Gast: DIE DIREKTION (durchgestrichen) (durchgestrichen) (handschriftlich: DU).'],
+  book4: ['Erste Seite des Gästebuchs', 'Zimmer 404. Angekommen: heute. Abreise: hoffentlich nie. Zimmer war schön, Tür hatte keine Klinke, würde wiederkommen. Hastig unterschrieben, in deiner Handschrift.'],
+});
+Object.assign(TXT.de.hints, {
+  c4_bin: ['Der Fundsachenkorb will vier Ziffern. Lies die Karte an der Wand und schau in jede Waschmaschine.', 'Für jede Maschine 1 bis 4: Was ist drin, und welche Temperatur wollen die Regeln dafür? Nimm die Zehnerstelle.', (c) => `Der Code für das Schloss ist ${c}.`],
+  c4_torch: ['Der Keller ist an manchen Stellen dunkel. Jemand hat hier einen Mantel vergessen.', 'Schau an der Garderobe in der Wäscherei nach.', 'Tippe auf die Garderobe und nimm die Taschenlampe aus der Tasche.'],
+  c4_fuse: ['Die Heizung hat keinen Strom. Sieh dir den Sicherungskasten im Heizungskeller an.', 'Ein Steckplatz ist leer. Im Fundsachenkorb war etwas dafür.', 'Wähle die Sicherung und tippe auf den Sicherungskasten.'],
+  c4_plaque: ['In der dunklen Ecke hinter dem Kessel glänzt etwas.', 'Es ist zu dunkel zum Lesen. Bring Licht mit.', 'Wähle die Taschenlampe und tippe auf die dunkle Ecke.'],
+  c4_valves: ['Die Archivtür ist zugefroren. Der Kessel könnte heißen Dampf schicken.', 'Öffne die Ventile so, dass der Druck genau die rote Linie am Manometer trifft.', (tg) => `Öffne die Griffe, die zusammen genau ${tg} bar ergeben.`],
+  c4_year: ['Das alte Terminal im Archiv stellt eine Frage.', 'Das Messingschild im Heizungskeller verrät, wann der Kessel kam und wie viele Jahre später Zimmer 404 öffnete.', (y) => `Das Jahr ist ${y}.`],
+  c4_book: ['Das Terminal hat das Regal entsperrt.', 'Such das Gästebuch aus dem richtigen Jahr.', (y) => `Tippe auf das Regal und nimm das Buch von ${y}.`],
+  c4_core: ['CONCIERGE will einen Beweis, dass du hier übernachtet hast.', 'Der Kern hat einen Schlitz für einen Aufenthaltsnachweis.', 'Wähle das Gästebuch und tippe auf den CONCIERGE-Kern.'],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -841,7 +963,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch === 2 || S.ch === 3) { const m2 = (S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch === 2 || S.ch === 3 || S.ch === 4) { const m2 = (S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1057,6 +1179,7 @@ const HOTS = {
 function useItem(id, h) {
   if (S.ch === 2) return useItem2(id, h);
   if (S.ch === 3) return useItem3(id, h);
+  if (S.ch === 4) return useItem4(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -1780,7 +1903,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -1806,6 +1929,176 @@ function escape3() {
 }
 function newGame3() { S = freshState3(); save(); begin(); say(t('start3')); }
 
+// ---------- chapter 4: the basement (level −4)
+const TOTAL4 = 40 * 60;
+Object.assign(ICONS, { fuse4: '🔌', torch: '🔦', book: '📖' });
+const noteIds4 = ['lf4', 'coat4', 'boiler4', 'term4', 'book4'];
+const FAB = { white: 9, colour: 4, dark: 3, silk: 6 };   // the tens digit of each fabric's temperature on the rules card
+// four valves; the target is the sum of 2 or 3 of them and no other set of handles may hit it
+function makeValves() {
+  for (let n = 0; n < 500; n++) {
+    const v = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 4), idx = shuffle([0, 1, 2, 3]).slice(0, 2 + Math.floor(Math.random() * 2)), tg = idx.reduce((a, i) => a + v[i], 0);
+    let count = 0; for (let m = 1; m < 16; m++) { let sum = 0; for (let i = 0; i < 4; i++) if (m & (1 << i)) sum += v[i]; if (sum === tg) count++; }
+    if (count === 1) return { v, tg };
+  }
+  return { v: [1, 2, 4, 8], tg: 5 };
+}
+function freshState4() {
+  const fab = shuffle(['white', 'colour', 'dark', 'silk']), inst = 1900 + Math.floor(Math.random() * 11), k = 3 + Math.floor(Math.random() * 7), year = inst + k, y0 = year - Math.floor(Math.random() * 12), vv = makeValves();
+  return { v: 1, ch: 4, started: Date.now(), left: TOTAL4, ot: 0, hints: 0, hintSeen: {}, view: 'laundry4', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    fab, bcode: fab.map((x) => FAB[x]).join(''), inst, k, year, years: Array.from({ length: 12 }, (_, i) => y0 + i), valves: vv.v, target: vv.tg, vopen: [false, false, false, false] };
+}
+const noteCount4 = () => noteIds4.filter((n) => S.f['note_' + n]).length;
+// ----- chapter 4 scenes
+Object.assign(TXT.en.aria, { wm1: 'Washing machine 1', wm2: 'Washing machine 2', wm3: 'Washing machine 3', wm4: 'Washing machine 4', blog: 'Logbook on the boiler' });
+Object.assign(TXT.de.aria, { wm1: 'Waschmaschine 1', wm2: 'Waschmaschine 2', wm3: 'Waschmaschine 3', wm4: 'Waschmaschine 4', blog: 'Logbuch am Kessel' });
+const FABCOL = { white: '#f4f1ea', colour: '#e8453c', dark: '#26262e', silk: '#c79bff' };
+function sceneLaundry() {
+  const f = S.f;
+  const machines = S.fab.map((fb, i) => { const x = 250 + i * 130;
+    return hot('wm' + (i + 1), `<rect x="${x}" y="250" width="116" height="190" rx="10" fill="#e9eef2" stroke="#10181c" stroke-width="5"/><rect x="${x + 10}" y="262" width="96" height="22" rx="4" fill="#c9d3da"/><circle cx="${x + 86}" cy="273" r="7" fill="#8a949a"/>
+      <text x="${x + 24}" y="280" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#10181c">${i + 1}</text>
+      <circle cx="${x + 58}" cy="355" r="42" fill="#5b6b75" stroke="#10181c" stroke-width="5"/><circle cx="${x + 58}" cy="355" r="32" fill="${FABCOL[fb]}" opacity="0.92"/><path d="M${x + 40} 340 q18 -14 36 0" stroke="#fff" stroke-width="4" fill="none" opacity="0.5"/>`); }).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('washScene4')}">
+  <defs><pattern id="tile4" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#cfd8d2"/><path d="M0 0 H40 V40" fill="none" stroke="#aebbb3" stroke-width="2"/></pattern></defs>
+  <rect width="1000" height="460" fill="url(#tile4)"/><rect y="440" width="1000" height="20" fill="#7f8c86"/><rect y="460" width="1000" height="140" fill="#6d5a4a"/>
+  <path d="M0 470 H1000" stroke="#5a483a" stroke-width="4"/><circle cx="560" cy="80" r="24" fill="#fff6c8" opacity="0.9"/><path d="M560 0 V56" stroke="#10181c" stroke-width="4"/>
+  ${hot('c4lift', `<rect x="20" y="140" width="190" height="320" fill="#5d6b72" stroke="#10181c" stroke-width="6"/><rect x="32" y="152" width="82" height="308" fill="#9aa8ae"/><rect x="116" y="152" width="82" height="308" fill="#8a989e"/><rect x="80" y="100" width="70" height="34" rx="6" fill="#10181c"/><text x="115" y="125" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="24" fill="#ff5a4e">${W('minus4')}</text>`)}
+  ${hot('rules', `<rect x="300" y="120" width="120" height="96" fill="#fffaf0" stroke="#6b5f4a" stroke-width="3" transform="rotate(-3 360 168)"/><text x="360" y="150" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#2a1a10" transform="rotate(-3 360 168)">${W('rules')}</text><path d="M318 166 h84 M318 180 h70 M318 194 h78" stroke="#6b5f4a" stroke-width="3" transform="rotate(-3 360 168)"/>`)}
+  ${machines}
+  ${hot('bin', `<rect x="770" y="350" width="120" height="100" fill="none" stroke="#5b6b75" stroke-width="5"/><path d="M770 370 h120 M770 395 h120 M770 420 h120 M800 350 v100 M830 350 v100 M860 350 v100" stroke="#5b6b75" stroke-width="3"/>${f.binOpen ? '<path d="M770 350 l-10 -60 h120 l10 60" fill="#3b4950" opacity="0.6" stroke="#5b6b75" stroke-width="4"/>' : '<rect x="766" y="342" width="128" height="14" fill="#5b6b75"/><rect x="818" y="356" width="24" height="26" rx="4" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/>'}<text x="830" y="476" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#ffd23f">${W('lf4')}</text>`)}
+  ${hot('coat4', `<rect x="918" y="150" width="10" height="300" fill="#4b3324"/><path d="M895 450 h56" stroke="#4b3324" stroke-width="10" stroke-linecap="round"/><path d="M898 172 q25 -12 50 0 l12 170 h-74z" fill="#7a2a3a" stroke="#10181c" stroke-width="4"/><rect x="912" y="200" width="22" height="10" fill="#d9a74a"/>${f.coat4 ? '' : '<rect x="934" y="270" width="12" height="32" rx="3" fill="#2a2a3a"/>'}`)}
+  ${hot('chute4', `<rect x="660" y="110" width="80" height="70" fill="#8a949a" stroke="#10181c" stroke-width="5"/><rect x="670" y="120" width="60" height="50" fill="#5b6b75"/><circle cx="700" cy="145" r="6" fill="#10181c"/>`)}
+  ${hot('goBoiler', `<rect x="250" y="490" width="500" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="527" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('toBoiler')}</text>`)}
+  </svg>`;
+}
+function sceneBoiler() {
+  const f = S.f, on = !!f.power;
+  const vx = [430, 510, 590, 670];
+  const valves = S.valves.map((v, i) => `<g><rect x="${vx[i] - 4}" y="300" width="8" height="40" fill="#8a949a"/><circle cx="${vx[i]}" cy="292" r="26" fill="none" stroke="${S.vopen[i] ? '#3fae6a' : '#c0392b'}" stroke-width="7"/><path d="M${vx[i] - 26} 292 h52 M${vx[i]} 266 v52" stroke="${S.vopen[i] ? '#3fae6a' : '#c0392b'}" stroke-width="5"/><text x="${vx[i]}" y="${on ? 252 : 252}" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="20" fill="${on ? '#ffd23f' : '#4a4a4a'}">${v}</text></g>`).join('');
+  const pr = S.valves.reduce((a, v, i) => a + (S.vopen[i] ? v : 0), 0), maxP = S.valves.reduce((a, v) => a + v, 0), ang = (p) => -120 + 240 * (p / Math.max(1, maxP));
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('boilerScene')}">
+  <rect width="1000" height="470" fill="${on ? '#3a3330' : '#141110'}"/><rect y="470" width="1000" height="130" fill="${on ? '#2a2420' : '#0c0a09'}"/>
+  <path d="M0 90 H1000 M0 120 H1000" stroke="${on ? '#6b5a4a' : '#2a2420'}" stroke-width="14"/>
+  ${hot('goLaundry', `<rect x="20" y="150" width="150" height="300" fill="${on ? '#4a5a62' : '#1e2428'}" stroke="#10181c" stroke-width="6"/><circle cx="148" cy="300" r="8" fill="#d9a74a"/><text x="95" y="140" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="20" fill="#fff">${W('toLaundry')}</text>`)}
+  ${hot('fusebox', `<rect x="200" y="170" width="110" height="140" rx="6" fill="${on ? '#7f8c86' : '#2a2e2c'}" stroke="#10181c" stroke-width="5"/>${[0, 1, 2, 3, 4, 5].map((i) => `<rect x="${214 + (i % 3) * 30}" y="${190 + Math.floor(i / 3) * 56}" width="20" height="40" rx="3" fill="${i === 5 && !on ? '#10181c' : on ? '#ffd23f' : '#6b5a2a'}" stroke="#10181c" stroke-width="2"/>`).join('')}`)}
+  <rect x="380" y="150" width="340" height="300" rx="40" fill="${on ? '#8a3a1a' : '#2e1609'}" stroke="#10181c" stroke-width="6"/><text x="550" y="200" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="22" fill="${on ? '#ffd23f' : '#4a3a1a'}">${W('boilerNo')}</text>
+  ${hot('valves', `<rect x="400" y="230" width="300" height="130" fill="#000" opacity="0"/>${valves}<circle cx="550" cy="410" r="34" fill="#efe6d2" stroke="#10181c" stroke-width="5"/><path d="M550 410 L${550 + 26 * Math.sin(ang(S.target) * Math.PI / 180)} ${410 - 26 * Math.cos(ang(S.target) * Math.PI / 180)}" stroke="#e8453c" stroke-width="4" opacity="${on ? 0.9 : 0.2}"/><path d="M550 410 L${550 + 28 * Math.sin(ang(pr) * Math.PI / 180)} ${410 - 28 * Math.cos(ang(pr) * Math.PI / 180)}" stroke="#10181c" stroke-width="4"/>`)}
+  ${hot('blog', `<rect x="640" y="330" width="56" height="44" fill="#efe6d2" stroke="#6b5f4a" stroke-width="2" transform="rotate(8 668 352)"/><path d="M648 342 h40 M648 352 h34 M648 362 h38" stroke="#6b5f4a" stroke-width="3" transform="rotate(8 668 352)"/>`)}
+  ${hot('corner', `<rect x="730" y="360" width="110" height="100" fill="#000" opacity="${f.plaque ? 0.25 : 0.85}"/>${f.plaque ? '<rect x="752" y="390" width="66" height="40" rx="4" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/>' : '<circle cx="790" cy="420" r="4" fill="#d9a74a" opacity="0.6"/>'}`)}
+  ${hot('vaultDoor', `<rect x="860" y="150" width="120" height="300" fill="${f.thawed ? '#0b0910' : '#9fb4c0'}" stroke="#10181c" stroke-width="6"/>${f.thawed ? '<path d="M860 150 L900 170 L900 432 L860 450Z" fill="#5b6b75"/>' : '<path d="M870 170 l20 30 l-14 10 M940 190 l16 26 M880 380 l26 -20 l10 24" stroke="#fff" stroke-width="3" fill="none" opacity="0.8"/><circle cx="960" cy="300" r="10" fill="#cfe8f5" stroke="#10181c" stroke-width="3"/>'}<text x="920" y="140" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#ffd23f">${W('vault')}</text>`)}
+  ${hot('grate', `<rect x="240" y="480" width="200" height="100" fill="#0b0910" stroke="#5b6b75" stroke-width="5"/><path d="M265 480 v100 M290 480 v100 M315 480 v100 M340 480 v100 M365 480 v100 M390 480 v100 M415 480 v100" stroke="#5b6b75" stroke-width="5"/><text x="340" y="596" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="15" fill="#8a949a">${W('tunnel')}</text>`)}
+  ${on ? '' : '<rect width="1000" height="600" fill="#000" opacity="0.35" pointer-events="none"/>'}
+  </svg>`;
+}
+function sceneRecords() {
+  const f = S.f;
+  const books = S.years.map((y, i) => `<g><rect x="${120 + i * 34}" y="${f.shelfOpen && y === S.year && f.bookTaken ? 300 : 210}" width="28" height="${f.shelfOpen && y === S.year && f.bookTaken ? 0 : 110}" fill="${['#7a2a3a', '#2f6a9a', '#3c8a66', '#9a6a2a'][i % 4]}" stroke="#10181c" stroke-width="2"/><text x="${134 + i * 34}" y="350" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="11" fill="#d9a74a">${y}</text></g>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('recordsScene')}">
+  <rect width="1000" height="470" fill="#20262c"/><rect y="470" width="1000" height="130" fill="#15191d"/>
+  ${hot('shelf', `<rect x="100" y="180" width="430" height="190" fill="#3a2a1e" stroke="#10181c" stroke-width="6"/>${books}<rect x="108" y="190" width="414" height="172" fill="${f.shelfOpen ? '#9fd4ff' : '#cfe8f5'}" opacity="${f.shelfOpen ? 0.05 : 0.28}" stroke="#cfe8f5" stroke-width="2"/>`)}
+  ${hot('term4', `<rect x="580" y="250" width="160" height="120" rx="10" fill="#c9bfa4" stroke="#10181c" stroke-width="5"/><rect x="596" y="264" width="128" height="80" fill="#0b2a12"/><text x="606" y="290" font-family="IBM Plex Mono, monospace" font-size="14" fill="#5dff8f">${f.termOk4 ? 'OK ' + S.year : W('yearQ') + ' _'}</text><rect x="560" y="370" width="200" height="40" rx="6" fill="#a99f86" stroke="#10181c" stroke-width="4"/>`)}
+  ${hot('core', `<rect x="790" y="150" width="170" height="300" rx="8" fill="#6b747a" stroke="#10181c" stroke-width="6"/><text x="875" y="185" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#fff">${W('core')}</text><circle cx="875" cy="240" r="26" fill="${S.done ? '#3fae6a' : '#e8453c'}" opacity="0.85"/><rect x="825" y="320" width="100" height="14" rx="4" fill="#10181c"/><text x="875" y="360" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="13" fill="#ffd23f">${W('proof')}</text>`)}
+  ${hot('r4back', `<rect x="300" y="520" width="400" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('backBoiler')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { laundry4: sceneLaundry, boiler: sceneBoiler, records: sceneRecords });
+// ----- chapter 4 close-ups and actions
+function openBin() {
+  openCodePad(t('binTitle'), t('binBody'), S.bcode, (msg) => {
+    S.f.binOpen = true; give('fuse4'); msg.textContent = t('binOpened'); say(t('binOpened')); renderScene();
+    setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('lf4'); } }, 1300);
+  });
+}
+function openPlaque() { openModal(t('plaqueTitle'), t('plaqueBody', S.inst, S.k)); }
+function openValves() {
+  const sum = () => S.valves.reduce((a, v, i) => a + (S.vopen[i] ? v : 0), 0);
+  openModal(t('valvesTitle'), `<p>${t('valvesBody', S.target)}</p><div class="row" id="vRow"></div><p class="tip" id="vMsg"></p>`, (b) => {
+    const row = b.querySelector('#vRow'), msg = b.querySelector('#vMsg');
+    const draw = () => {
+      row.innerHTML = '';
+      S.valves.forEach((v, i) => { const btn = mk('button', 'key wide', `${v} ${t('bar')} · ${S.vopen[i] ? t('valveOpen') : t('valveShut')}`); btn.setAttribute('data-act', 'valve' + i); btn.setAttribute('aria-pressed', String(S.vopen[i]));
+        btn.addEventListener('click', () => { if (S.f.thawed) return; S.vopen[i] = !S.vopen[i]; Sound.click();
+          if (sum() === S.target) { S.f.thawed = true; Sound.unlock(); Sound.win(); say(t('valvesDone')); }
+          save(); draw(); renderScene(); });
+        row.appendChild(btn); });
+      msg.textContent = S.f.thawed ? t('valvesDone') : `${sum()} / ${S.target} ${t('bar')}`;
+    };
+    draw();
+  });
+}
+function openTerm4() {
+  if (S.f.termOk4) { openNote('term4'); return; }
+  openCodePad(t('term4Title'), t('term4Body'), String(S.year), (msg) => {
+    S.f.termOk4 = true; S.f.shelfOpen = true; msg.textContent = t('term4Ok'); say(t('term4Ok')); renderScene();
+    setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('term4'); } }, 1300);
+  });
+}
+function openShelf() {
+  openModal(t('shelfTitle'), `${t('shelfBody')}<div class="row" id="bRow"></div><p class="tip" id="bMsg"></p>`, (b) => {
+    const row = b.querySelector('#bRow'), msg = b.querySelector('#bMsg');
+    for (const y of S.years) {
+      const btn = mk('button', 'key', `📕 ${y}`); btn.setAttribute('data-act', 'book' + y); btn.disabled = y === S.year && S.f.bookTaken;
+      btn.addEventListener('click', () => {
+        Sound.click();
+        if (y !== S.year) { msg.textContent = t('wrongBook', y); return; }
+        if (S.f.bookTaken) return;
+        S.f.bookTaken = true; give('book'); msg.textContent = t('tookBook'); say(t('tookBook')); renderScene();
+        setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('book4'); } }, 1400);
+      });
+      row.appendChild(btn);
+    }
+  });
+}
+Object.assign(HOTS, {
+  c4lift: () => { Sound.nope(); say(t('c4lift')); },
+  rules: () => openModal(t('rulesTitle'), t('rulesBody')),
+  wm1: () => openModal(t('machineTitle', 1), t('machineBody', T().fabrics[S.fab[0]])),
+  wm2: () => openModal(t('machineTitle', 2), t('machineBody', T().fabrics[S.fab[1]])),
+  wm3: () => openModal(t('machineTitle', 3), t('machineBody', T().fabrics[S.fab[2]])),
+  wm4: () => openModal(t('machineTitle', 4), t('machineBody', T().fabrics[S.fab[3]])),
+  bin: () => { if (S.f.binOpen) say(t('binEmpty')); else openBin(); },
+  coat4: () => { if (!S.f.coat4) { S.f.coat4 = true; give('torch'); say(t('coatSay4')); renderScene(); openNote('coat4'); } else say(t('coatAgain4')); },
+  chute4: () => say(t('chute4')),
+  goBoiler: () => { go('boiler'); say(t('toBoiler')); },
+  goLaundry: () => { go('laundry4'); say(t('toLaundry')); },
+  fusebox: () => { if (!S.f.power) say(t('fuseNeed')); openModal(t('fuseboxTitle'), S.f.power ? t('fuseboxDone') : t('fuseboxNeed')); },
+  corner: () => { if (S.f.plaque) openPlaque(); else say(t('darkCorner')); },
+  valves: () => { if (!S.f.power) { Sound.nope(); say(t('valvesNoPower')); } else openValves(); },
+  blog: () => openNote('boiler4'),
+  vaultDoor: () => { if (S.f.thawed) { go('records'); say(t('toRecords')); } else { Sound.nope(); say(t('vaultFrozen')); } },
+  grate: () => { Sound.nope(); say(t('grateLocked')); },
+  term4: () => openTerm4(),
+  shelf: () => { if (!S.f.shelfOpen) { Sound.nope(); say(t('shelfLocked')); } else openShelf(); },
+  core: () => say(S.f.bookTaken ? t('coreNeed') : t('coreSay')),
+  r4back: () => { go('boiler'); say(t('backBoiler')); },
+});
+function useItem4(id, h) {
+  const f = S.f;
+  if (id === 'fuse4' && h === 'fusebox') { take('fuse4'); f.power = true; Sound.unlock(); say(t('fuseIn')); renderScene(); return true; }
+  if (id === 'torch' && h === 'corner') { S.sel = null; f.plaque = true; say(t('plaqueSay')); renderScene(); renderInv(); openPlaque(); return true; }
+  if (id === 'book' && h === 'core') { take('book'); say(t('bookGo')); Sound.door(); setTimeout(escape4, 1500); return true; }
+  return false;
+}
+function escape4() {
+  if (!S || S.done || S.ch !== 4) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best4 = Math.max(profile.best4 || 0, left);
+  profile.ch4done = true; recordRun(); store.del(SAVE_KEY);
+  const R = profile.runs, all = [1, 2, 3, 4].every((c) => R[c]);
+  const isTrue = all && [1, 2, 3, 4].every((c) => R[c].hints === 0);
+  if (isTrue) profile.trueEnd4 = true;
+  saveProfile();
+  let text = t('win4Text', mmss(left), S.hints, noteCount4(), S.year);
+  text += ' ' + (all ? t('finalTime4', hms([1, 2, 3, 4].reduce((a, c) => a + R[c].used, 0)), [1, 2, 3, 4].reduce((a, c) => a + R[c].hints, 0)) : t('finalPartial4'));
+  text += ' ' + (isTrue ? t('trueText4') : t('trueMiss4'));
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win4EyebrowOver') : t('win4Eyebrow'), isTrue ? t('true4Title') : t('win4Title'), text, left, false);
+  $('screenEnd').classList.toggle('golden', isTrue);
+}
+function newGame4() { S = freshState4(); save(); begin(); say(t('start4')); }
+
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
   ['remote', () => S.f.remote], ['batteries', () => S.f.batteries], ['combine', () => S.f.remoteWorks], ['tv', () => S.f.tvOn],
@@ -1821,9 +2114,13 @@ const GOALS3 = [
   ['c3_door', () => S.f.mdoorOpen], ['c3_wheel', () => S.f.wheelTaken], ['c3_pass', () => S.f.termOk], ['c3_cab', () => S.f.filmATaken], ['c3_filmB', () => S.f.coat],
   ['c3_films', () => S.f.films], ['c3_arch', () => S.f.archOpen], ['c3_patch', () => S.f.patched], ['c3_net', () => S.f.net || S.f.mkey], ['c3_key', () => S.f.mkey], ['c3_lever', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS4 = [
+  ['c4_bin', () => S.f.binOpen], ['c4_torch', () => S.f.coat4], ['c4_fuse', () => S.f.power], ['c4_plaque', () => S.f.plaque], ['c4_valves', () => S.f.thawed],
+  ['c4_year', () => S.f.termOk4], ['c4_book', () => S.f.bookTaken], ['c4_core', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -1859,8 +2156,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 3); $('btnNextCh').textContent = t(S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 4); $('btnNextCh').textContent = t(S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -1868,7 +2165,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -1881,8 +2178,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -1909,6 +2206,12 @@ $('btnCh3').addEventListener('click', () => {
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
 });
+let armedCh4 = 0;
+$('btnCh4').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh4 > 4000) { armedCh4 = Date.now(); $('btnCh4').textContent = t('confirmNew'); return; }
+  armedCh4 = 0; newGame4();
+});
 $('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say(t('back')); });
 $('btnMenu').addEventListener('click', () => { paused = true; save(); showStart(); });
 $('navL').addEventListener('click', () => go(S.view === 'bed' ? 'desk' : 'bed'));
@@ -1931,6 +2234,7 @@ function showStart() {
   $('btnNew').textContent = saved && !saved.done ? t('newGame') : t('checkIn'); armedNew = 0;
   $('btnCh2').hidden = !profile.ch1done; $('btnCh2').textContent = t('ch2Btn'); armedCh2 = 0;
   $('btnCh3').hidden = !profile.ch2done; $('btnCh3').textContent = t('ch3Btn'); armedCh3 = 0;
+  $('btnCh4').hidden = !profile.ch3done; $('btnCh4').textContent = t('ch4Btn'); armedCh4 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
