@@ -1,3 +1,22 @@
+// Leaderboard run ticket (anticheat, 2026-11-22): the first visit of a page on a device gets a signed ticket from the Worker and
+// keeps it; every score post gets it added, and the Worker only accepts scores that fit the time since that ticket.
+(() => {
+  'use strict';
+  const LB = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev', KEY = 'lb-ticket:' + location.pathname, plain = window.fetch.bind(window);
+  if (location.hostname !== 'lennify44.github.io') return;
+  const load = async () => {
+    try { const t = localStorage.getItem(KEY); if (t) return t; } catch (e) { /* storage blocked */ }
+    try { const r = await plain(LB + '/ticket', { method: 'POST' }); const d = await r.json(); if (d.ticket) { try { localStorage.setItem(KEY, d.ticket); } catch (e) { /* storage blocked */ } return d.ticket; } } catch (e) { /* offline */ }
+    return '';
+  };
+  const ready = load();
+  window.fetch = async (url, opt) => {
+    if (typeof url === 'string' && url.startsWith(LB + '/scores') && opt && opt.method === 'POST' && typeof opt.body === 'string') {
+      try { const b = JSON.parse(opt.body); b.ticket = await ready; opt = Object.assign({}, opt, { body: JSON.stringify(b) }); } catch (e) { /* not JSON: send as is */ }
+    }
+    return plain(url, opt);
+  };
+})();
 // Feedback for every Lennify game: adds a "Feedback" button next to the "All games" link and on the end screen
 // (a floating one where neither exists) and sends a rating plus a short text to the leaderboard Worker.
 // Added to every page by build-site.py; works only on the public site (the Worker accepts only that origin).
