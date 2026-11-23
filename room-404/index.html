@@ -218,6 +218,7 @@ body {
           <button class="btn" id="btnCh6" type="button" data-i18n="ch6Btn" hidden>Chapter 6</button>
           <button class="btn" id="btnCh7" type="button" data-i18n="ch7Btn" hidden>Chapter 7</button>
           <button class="btn" id="btnCh8" type="button" data-i18n="ch8Btn" hidden>Chapter 8</button>
+          <button class="btn" id="btnCh9" type="button" data-i18n="ch9Btn" hidden>Chapter 9</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -265,7 +266,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1228,6 +1229,74 @@ Object.assign(TXT.de.hints, {
   c8_plan: ['Schieb die Stockwerke in die Reihenfolge 1 bis 8, die Lücke unten rechts.', 'Bring zuerst die obere Reihe 1 2 3 in Ordnung, dann den Rest.', (m) => `Nächste Züge: schieb ${m}. Frag später nochmal nach mehr.`],
   c8_lift: ['Der Aufzug hat ein leeres Loch über der 12.', 'Hinter dem Etagenplan war ein Messingknopf.', 'Wähl den Messingknopf und tippe auf den Aufzug.'],
 });
+Object.assign(TXT.en, {
+  ch9Btn: 'Chapter 9: Floor 13', nextCh9: 'On to chapter 9',
+  start9: 'The lift doors open with a sigh. Floor 13. Gas lamps flicker along a corridor that smells of 1912: dust, lavender and coal smoke. Doors 1301 to 1306, a luggage cart, and far away, a clock ticking the wrong way. Somewhere up here is the guest from 1912. The lift will only wait until 10:00.',
+  up9Eyebrow: '10:00 · the lift leaves', up9Title: 'Going down', up9Text: 'Ding. The lift closes without you, and floor 13 slowly fades like an old photo. You wake up in room 404. (Or keep searching in overtime.)',
+  win9Eyebrow: 'Chapter 9 complete', win9EyebrowOver: 'Chapter 9 complete, in overtime', win9Title: 'Room 1313',
+  win9Text: (left, h, n) => `The four dials click, and door 1313 swings open. A small room, a chair by the window, and in it the guest from 1912. They turn round. They have your face, only much, much older. “Finally,” they say. “Now we can both check out.” Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  hall13: 'Floor 13: six doors, a luggage cart, a telegram on a little table. The gas lamps hiss.', toEnd13: 'The end of the corridor: a tall grandfather clock, faded wallpaper, a window full of fog.', backHall13: 'Back among the six doors.',
+  doorLocked13: (n) => `Door ${n}. Locked. Behind it, someone snores in 1912.`, doorWrong13: 'The key doesn’t fit this door.', closetOpen13: (n) => `Door ${n} is not a room, it is a linen closet. Towels, candles, and on a hook: a brass winding key with a note.`, closetEmpty13: 'Towels from 1912. Very fluffy.',
+  cartTitle13: 'Luggage cart', cartBody13: 'Twelve luggage tags hang face down. Flip two at a time and find all six pairs.', cartPairs13: (n) => `${n} of 6 pairs`, cartDone13: (n) => `All pairs found! A key slides out of the last suitcase. Its wooden tag says ${n}.`, cartEmpty13: 'An empty luggage cart. The tags flutter.',
+  clockBack13: 'A grandfather clock. Its hands run backwards, tick by tick. The winding hole is empty.', clockWound13: 'You wind the clock. It stops, shivers, then runs forwards, faster and faster, and strikes: one, two… thirteen. In the wallpaper, a door draws itself: 1313.', clockOk13: 'The clock ticks forwards now, proud of itself.',
+  wall13: 'Faded wallpaper with a pattern of tiny keys.',
+  lockTitle13: 'Door 1313', lockBody13: 'Four dials, five symbols, no symbol twice. Tap a dial to turn it, then try the handle. The door answers: ● right symbol in the right place, ○ right symbol in the wrong place.', lockTry13: 'Try the handle', lockNone13: 'nothing',
+  telegram13: 'A telegram on a little table.', window13: 'Fog, and through the fog, the city in 1912: horse carts and a tram. A note is tucked into the window frame.',
+});
+Object.assign(TXT.en.views, { hall13: 'Floor 13', end13: 'End of the corridor' });
+Object.assign(TXT.en.svg, { toEnd13: 'clock ⟶', toHall13: '⟵ the doors', door1313: '1313' });
+Object.assign(TXT.en.aria, { hallScene13: 'The corridor on floor 13', endScene13: 'The end of the corridor', cart13: 'Luggage cart', tel13: 'Telegram', goEnd13: 'To the end of the corridor', clock13: 'Grandfather clock', wall13: 'Wallpaper', door1313: 'Door 1313', window13: 'Window', goHall13: 'Back to the doors', d1301: 'Door 1301', d1302: 'Door 1302', d1303: 'Door 1303', d1304: 'Door 1304', d1305: 'Door 1305', d1306: 'Door 1306' });
+Object.assign(TXT.en.items, {
+  key13: ['Room key', '', 'An old key with a wooden tag.'],
+  wind13: ['Winding key', '', 'A brass key for winding a big clock.'],
+});
+Object.assign(TXT.en.notes, {
+  tel13n: ['Telegram', 'GRAND PARADOX FLOOR 13 STOP GUEST IN 1313 REFUSES TO CHECK OUT STOP SAYS WAITING FOR SOMEONE STOP'],
+  cart13n: ['Tag on the last suitcase', 'Property of the guest in 1313. Do not open. Do not lose. Do not, under any circumstances, let the clock run forwards.'],
+  closet13n: ['Note on the winding key', 'Housekeeping 1912: the clock on 13 runs backwards so that nobody ever gets older here. Wind it only if you want to leave.'],
+  clock13n: ['Engraving inside the clock', 'Made in 1912 for the Grand Paradox. “Time is a guest. Sooner or later it checks out.”'],
+  window13n: ['Note in the window frame', 'Four symbols open 1313. Sun, moon, star, heart, key: four of them, each once. I forgot the order a hundred years ago.'],
+});
+Object.assign(TXT.en.hints, {
+  c9_cart: ['The luggage cart has tags hanging face down.', 'Flip two tags at a time and remember what you saw. Matching pairs stay open.', (p) => `Pairs (counted 1-12, left to right, top to bottom): ${p}.`],
+  c9_closet: ['The key from the cart fits one of the six doors.', 'Look at the wooden tag on the key.', (n) => `Select the room key and tap door ${n}.`],
+  c9_clock: ['The grandfather clock at the end of the corridor runs backwards.', 'The linen closet had a winding key.', 'Select the winding key and tap the grandfather clock.'],
+  c9_lock: ['Door 1313 has four symbol dials. Each try tells you how close you are.', '● means a symbol is right and in the right place, ○ means right symbol, wrong place. Change one dial at a time.', (c) => `The code is ${c}.`],
+});
+Object.assign(TXT.de, {
+  ch9Btn: 'Kapitel 9: Der 13. Stock', nextCh9: 'Weiter zu Kapitel 9',
+  start9: 'Die Aufzugtüren öffnen sich mit einem Seufzer. 13. Stock. Gaslampen flackern in einem Flur, der nach 1912 riecht: Staub, Lavendel und Kohlenrauch. Türen 1301 bis 1306, ein Gepäckwagen, und weit hinten tickt eine Uhr in die falsche Richtung. Irgendwo hier oben ist der Gast aus 1912. Der Aufzug wartet nur bis 10:00.',
+  up9Eyebrow: '10:00 · der Aufzug fährt', up9Title: 'Abwärts', up9Text: 'Ding. Der Aufzug schließt sich ohne dich, und der 13. Stock verblasst langsam wie ein altes Foto. Du wachst in Zimmer 404 auf. (Oder such in der Verlängerung weiter.)',
+  win9Eyebrow: 'Kapitel 9 geschafft', win9EyebrowOver: 'Kapitel 9 geschafft, in der Verlängerung', win9Title: 'Zimmer 1313',
+  win9Text: (left, h, n) => `Die vier Rädchen klicken, und Tür 1313 schwingt auf. Ein kleines Zimmer, ein Stuhl am Fenster, und darauf der Gast aus 1912. Er dreht sich um. Er hat dein Gesicht, nur viel, viel älter. „Endlich“, sagt er. „Jetzt können wir beide auschecken.“ Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  hall13: 'Der 13. Stock: sechs Türen, ein Gepäckwagen, ein Telegramm auf einem Tischchen. Die Gaslampen zischen.', toEnd13: 'Das Ende des Flurs: eine hohe Standuhr, verblichene Tapete, ein Fenster voller Nebel.', backHall13: 'Zurück bei den sechs Türen.',
+  doorLocked13: (n) => `Tür ${n}. Abgeschlossen. Dahinter schnarcht jemand im Jahr 1912.`, doorWrong13: 'Der Schlüssel passt nicht in diese Tür.', closetOpen13: (n) => `Hinter Tür ${n} ist kein Zimmer, sondern eine Wäschekammer. Handtücher, Kerzen und an einem Haken: ein Aufziehschlüssel aus Messing mit einem Zettel.`, closetEmpty13: 'Handtücher von 1912. Sehr flauschig.',
+  cartTitle13: 'Gepäckwagen', cartBody13: 'Zwölf Kofferanhänger hängen verdeckt. Dreh immer zwei um und finde alle sechs Paare.', cartPairs13: (n) => `${n} von 6 Paaren`, cartDone13: (n) => `Alle Paare gefunden! Aus dem letzten Koffer rutscht ein Schlüssel. Auf dem Holzanhänger steht ${n}.`, cartEmpty13: 'Ein leerer Gepäckwagen. Die Anhänger flattern.',
+  clockBack13: 'Eine Standuhr. Ihre Zeiger laufen rückwärts, Tick für Tick. Das Aufziehloch ist leer.', clockWound13: 'Du ziehst die Uhr auf. Sie bleibt stehen, zittert, läuft dann vorwärts, schneller und schneller, und schlägt: eins, zwei… dreizehn. In der Tapete zeichnet sich eine Tür: 1313.', clockOk13: 'Die Uhr tickt jetzt vorwärts und ist sehr stolz darauf.',
+  wall13: 'Verblichene Tapete mit einem Muster aus winzigen Schlüsseln.',
+  lockTitle13: 'Tür 1313', lockBody13: 'Vier Rädchen, fünf Symbole, kein Symbol doppelt. Tippe ein Rädchen an, um es zu drehen, dann drück die Klinke. Die Tür antwortet: ● richtiges Symbol am richtigen Platz, ○ richtiges Symbol am falschen Platz.', lockTry13: 'Klinke drücken', lockNone13: 'nichts',
+  telegram13: 'Ein Telegramm auf einem Tischchen.', window13: 'Nebel, und durch den Nebel die Stadt im Jahr 1912: Pferdekutschen und eine Straßenbahn. Im Fensterrahmen steckt ein Zettel.',
+});
+Object.assign(TXT.de.views, { hall13: '13. Stock', end13: 'Ende des Flurs' });
+Object.assign(TXT.de.svg, { toEnd13: 'Uhr ⟶', toHall13: '⟵ zu den Türen', door1313: '1313' });
+Object.assign(TXT.de.aria, { hallScene13: 'Der Flur im 13. Stock', endScene13: 'Das Ende des Flurs', cart13: 'Gepäckwagen', tel13: 'Telegramm', goEnd13: 'Zum Ende des Flurs', clock13: 'Standuhr', wall13: 'Tapete', door1313: 'Tür 1313', window13: 'Fenster', goHall13: 'Zurück zu den Türen', d1301: 'Tür 1301', d1302: 'Tür 1302', d1303: 'Tür 1303', d1304: 'Tür 1304', d1305: 'Tür 1305', d1306: 'Tür 1306' });
+Object.assign(TXT.de.items, {
+  key13: ['Zimmerschlüssel', '', 'Ein alter Schlüssel mit Holzanhänger.'],
+  wind13: ['Aufziehschlüssel', '', 'Ein Messingschlüssel zum Aufziehen einer großen Uhr.'],
+});
+Object.assign(TXT.de.notes, {
+  tel13n: ['Telegramm', 'GRAND PARADOX 13. STOCK STOP GAST IN 1313 WEIGERT SICH AUSZUCHECKEN STOP SAGT ER WARTET AUF JEMANDEN STOP'],
+  cart13n: ['Anhänger am letzten Koffer', 'Eigentum des Gastes in 1313. Nicht öffnen. Nicht verlieren. Auf keinen Fall die Uhr vorwärts laufen lassen.'],
+  closet13n: ['Zettel am Aufziehschlüssel', 'Housekeeping 1912: Die Uhr im 13. Stock läuft rückwärts, damit hier niemand älter wird. Nur aufziehen, wenn du gehen willst.'],
+  clock13n: ['Gravur in der Uhr', 'Gefertigt 1912 für das Grand Paradox. „Die Zeit ist ein Gast. Früher oder später checkt sie aus.“'],
+  window13n: ['Zettel im Fensterrahmen', 'Vier Symbole öffnen 1313. Sonne, Mond, Stern, Herz, Schlüssel: vier davon, jedes einmal. Die Reihenfolge habe ich vor hundert Jahren vergessen.'],
+});
+Object.assign(TXT.de.hints, {
+  c9_cart: ['Am Gepäckwagen hängen verdeckte Anhänger.', 'Dreh immer zwei um und merk dir, was du gesehen hast. Passende Paare bleiben offen.', (p) => `Paare (gezählt 1-12, von links nach rechts, von oben nach unten): ${p}.`],
+  c9_closet: ['Der Schlüssel vom Gepäckwagen passt in eine der sechs Türen.', 'Sieh dir den Holzanhänger am Schlüssel an.', (n) => `Wähl den Zimmerschlüssel und tippe auf Tür ${n}.`],
+  c9_clock: ['Die Standuhr am Ende des Flurs läuft rückwärts.', 'In der Wäschekammer war ein Aufziehschlüssel.', 'Wähl den Aufziehschlüssel und tippe auf die Standuhr.'],
+  c9_lock: ['Tür 1313 hat vier Symbol-Rädchen. Jeder Versuch sagt dir, wie nah du dran bist.', '● heißt: Symbol richtig und am richtigen Platz, ○ heißt: richtiges Symbol, falscher Platz. Ändere immer nur ein Rädchen.', (c) => `Der Code ist ${c}.`],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1288,7 +1357,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1509,6 +1578,7 @@ function useItem(id, h) {
   if (S.ch === 6) return useItem6(id, h);
   if (S.ch === 7) return useItem7(id, h);
   if (S.ch === 8) return useItem8(id, h);
+  if (S.ch === 9) return useItem9(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2232,7 +2302,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -2867,6 +2937,107 @@ function escape8() {
   showEnd(S.overtime ? t('win8EyebrowOver') : t('win8Eyebrow'), t('win8Title'), t('win8Text', mmss(left), S.hints, noteCount8()), left, false);
 }
 function newGame8() { S = freshState8(); save(); begin(); say(t('start8')); }
+// ---------- chapter 9: floor 13 (luggage pairs, backwards clock, code breaker)
+const TOTAL9 = 40 * 60;
+Object.assign(ICONS, { key13: '🗝️', wind13: '⚙️' });
+const noteIds9 = ['tel13n', 'cart13n', 'closet13n', 'clock13n', 'window13n'];
+const SYM9 = ['☀️', '🌙', '⭐', '❤️', '🔑'], CARD9 = ['🎩', '🧳', '🌂', '🎻', '🕰️', '🐦'], DOORS9 = [1301, 1302, 1303, 1304, 1305, 1306];
+function freshState9() {
+  const code = shuffle([0, 1, 2, 3, 4]).slice(0, 4);
+  let dials; do { dials = shuffle([0, 1, 2, 3, 4]).slice(0, 4); } while (dials.join() === code.join());
+  return { v: 1, ch: 9, started: Date.now(), left: TOTAL9, ot: 0, hints: 0, hintSeen: {}, view: 'hall13', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    cards: shuffle([0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]), found: Array(12).fill(false), door: pick(DOORS9), code, dials, tries: [] };
+}
+const noteCount9 = () => noteIds9.filter((n) => S.f['note_' + n]).length;
+const pairs9 = () => { const out = []; for (let i = 0; i < 12; i++) if (!S.found[i]) { const j = S.cards.findIndex((c, k) => k > i && c === S.cards[i]); if (j > 0 && !S.found[j]) out.push(`${i + 1}+${j + 1}`); } return out.join(', '); };
+const score9 = (g) => { const hit = g.filter((x, i) => x === S.code[i]).length, common = S.code.filter((x) => g.includes(x)).length; return { hit, near: common - hit }; };
+function sceneHall13() {
+  const f = S.f;
+  const doors = DOORS9.map((n, k) => { const x = 30 + k * 160, open = f.closet && n === S.door;
+    return hot('d' + n, `<rect x="${x}" y="170" width="120" height="260" fill="${open ? '#0b0910' : '#5a3a2a'}" stroke="#2a1a10" stroke-width="5"/>${open ? `<rect x="${x + 10}" y="200" width="100" height="10" fill="#efe6d2"/><rect x="${x + 14}" y="230" width="40" height="30" fill="#e9dcc0"/>` : `<rect x="${x + 14}" y="190" width="92" height="100" fill="none" stroke="#3a2a1a" stroke-width="4"/><circle cx="${x + 100}" cy="320" r="7" fill="#d9a74a"/>`}<rect x="${x + 30}" y="146" width="60" height="22" rx="4" fill="#d9a74a"/><text x="${x + 60}" y="163" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="16" fill="#2a1a10">${n}</text>`); }).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('hallScene13')}">
+  <rect width="1000" height="440" fill="#2f4a3a"/>${Array.from({ length: 25 }, (_, i) => `<circle cx="${20 + i * 40}" cy="${60 + (i % 2) * 30}" r="4" fill="#3f5a4a"/>`).join('')}<rect y="440" width="1000" height="160" fill="#4a2a2a"/><path d="M0 440 H1000" stroke="#2a1a1a" stroke-width="6"/><path d="M60 600 L400 440 H600 L940 600" fill="#6b2a2a" opacity="0.6"/>
+  ${[110, 430, 750].map((x) => `<path d="M${x + 60} 60 v40" stroke="#d9a74a" stroke-width="4"/><path d="M${x + 48} 100 h24 l-4 24 h-16z" fill="#ffd58a"/><circle cx="${x + 60}" cy="112" r="26" fill="#ffd58a" opacity="0.18"/>`).join('')}
+  ${doors}
+  ${hot('cart13', `<rect x="380" y="470" width="240" height="14" fill="#d9a74a"/><path d="M390 470 V380 M610 470 V380" stroke="#d9a74a" stroke-width="7"/><rect x="400" y="420" width="90" height="50" rx="6" fill="#8a5a2a" stroke="#2a1a10" stroke-width="3"/><rect x="500" y="400" width="100" height="70" rx="6" fill="#6b3a2a" stroke="#2a1a10" stroke-width="3"/>${f.cart ? '' : Array.from({ length: 6 }, (_, k) => `<rect x="${410 + k * 32}" y="${486 + (k % 2) * 6}" width="22" height="30" rx="3" fill="#efe6d2" stroke="#6b5f4a" stroke-width="2"/>`).join('')}<circle cx="410" cy="500" r="14" fill="#2a1a10"/><circle cx="590" cy="500" r="14" fill="#2a1a10"/>`)}
+  ${hot('tel13', `<rect x="70" y="470" width="120" height="12" fill="#6b4a2a"/><rect x="85" y="482" width="10" height="70" fill="#6b4a2a"/><rect x="165" y="482" width="10" height="70" fill="#6b4a2a"/><rect x="95" y="452" width="70" height="20" fill="#efe6d2" stroke="#6b5f4a" stroke-width="2" transform="rotate(-6 130 462)"/>`)}
+  ${hot('goEnd13', `<rect x="700" y="530" width="270" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="835" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toEnd13')}</text>`)}
+  </svg>`;
+}
+function sceneEnd13() {
+  const f = S.f, back = !f.wound;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('endScene13')}">
+  <rect width="1000" height="460" fill="#2f4a3a"/>${Array.from({ length: 60 }, (_, i) => `<text x="${20 + (i % 15) * 66}" y="${50 + Math.floor(i / 15) * 100}" font-size="18" fill="#3f5a4a">🗝</text>`).join('')}<rect y="460" width="1000" height="140" fill="#4a2a2a"/>
+  ${hot('clock13', `<rect x="140" y="90" width="150" height="380" rx="10" fill="#6b3a2a" stroke="#2a1a10" stroke-width="6"/><circle cx="215" cy="170" r="52" fill="#efe6d2" stroke="#d9a74a" stroke-width="6"/>${Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6; return `<circle cx="${(215 + Math.sin(a) * 42).toFixed(1)}" cy="${(170 - Math.cos(a) * 42).toFixed(1)}" r="3" fill="#2a1a10"/>`; }).join('')}<path d="M215 170 L${back ? 190 : 215} ${back ? 150 : 128} M215 170 L${back ? 245 : 241} ${back ? 186 : 170}" stroke="#2a1a10" stroke-width="5" stroke-linecap="round"/><rect x="175" y="250" width="80" height="190" fill="#2a1a10"/><path d="M215 255 V400" stroke="#d9a74a" stroke-width="4"/><circle cx="215" cy="410" r="18" fill="#d9a74a"/>${back ? '<text x="215" y="80" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="22" fill="#ffd58a">↺</text>' : ''}`)}
+  ${f.wound ? hot('door1313', `<rect x="420" y="170" width="140" height="290" fill="#3a1a2a" stroke="#d9a74a" stroke-width="6"/><rect x="455" y="140" width="70" height="26" rx="4" fill="#d9a74a"/><text x="490" y="160" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="18" fill="#2a1a10">${W('door1313')}</text>${[0, 1, 2, 3].map((k) => `<circle cx="${448 + k * 28}" cy="320" r="11" fill="#d9a74a" stroke="#2a1a10" stroke-width="3"/>`).join('')}`) : hot('wall13', `<rect x="420" y="170" width="140" height="290" fill="#000" opacity="0.001"/>`)}
+  ${hot('window13', `<rect x="680" y="110" width="230" height="230" fill="#cfd6d8" stroke="#6b3a2a" stroke-width="10"/><path d="M795 110 V340 M680 225 H910" stroke="#6b3a2a" stroke-width="7"/><path d="M700 300 q40 -30 80 0 t80 0 t60 0" stroke="#fff" stroke-width="10" fill="none" opacity="0.5"/><rect x="884" y="300" width="20" height="26" fill="#ffe9a8" transform="rotate(10 894 313)"/>`)}
+  ${hot('goHall13', `<rect x="640" y="530" width="300" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="790" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toHall13')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { hall13: sceneHall13, end13: sceneEnd13 });
+function openCart9() {
+  openModal(t('cartTitle13'), `<p>${t('cartBody13')}</p><div id="cGrid" style="display:grid;grid-template-columns:repeat(4,64px);gap:8px;justify-content:center"></div><p class="tip" id="cMsg"></p>`, (b) => {
+    const grid = b.querySelector('#cGrid'), msg = b.querySelector('#cMsg'); let first = -1, shown = [], busy = false;
+    const draw = () => {
+      grid.innerHTML = '';
+      S.cards.forEach((c, i) => { const up = S.found[i] || shown.includes(i), btn = mk('button', 'key', up ? `<span style="font-size:30px">${CARD9[c]}</span>` : '<span style="font-size:22px;opacity:.5">?</span>');
+        btn.setAttribute('data-act', 'card' + i); btn.style.minHeight = '72px'; if (S.found[i]) btn.style.background = 'rgba(93,255,143,0.18)';
+        btn.addEventListener('click', () => { if (busy || S.found[i] || shown.includes(i) || S.f.cart) return; Sound.click();
+          if (first < 0) { first = i; shown = [i]; draw(); return; }
+          shown = [first, i];
+          if (S.cards[first] === S.cards[i]) { S.found[first] = S.found[i] = true; first = -1; shown = []; Sound.tone(660, 0.15, 'triangle', 0.12);
+            if (S.found.every(Boolean)) { S.f.cart = true; give('key13'); Sound.win(); say(t('cartDone13', S.door)); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('cart13n'); } }, 1500); }
+            save(); renderScene(); draw(); }
+          else { busy = true; draw(); setTimeout(() => { busy = false; first = -1; shown = []; if (grid.isConnected) draw(); }, 800); } });
+        grid.appendChild(btn); });
+      msg.textContent = S.f.cart ? t('cartDone13', S.door) : t('cartPairs13', S.found.filter(Boolean).length / 2);
+    };
+    draw();
+  });
+}
+function openLock9() {
+  openModal(t('lockTitle13'), `<p>${t('lockBody13')}</p><div id="lDials" style="display:flex;gap:8px;justify-content:center"></div><button class="btn" id="lTry" type="button" data-act="try">${t('lockTry13')}</button><div id="lHist" style="display:grid;gap:4px;justify-content:center;font-size:20px"></div>`, (b) => {
+    const row = b.querySelector('#lDials'), hist = b.querySelector('#lHist');
+    const draw = () => {
+      row.innerHTML = '';
+      S.dials.forEach((d, i) => { const btn = mk('button', 'key', `<span style="font-size:30px">${SYM9[d]}</span>`); btn.setAttribute('data-act', 'dial' + i); btn.style.minHeight = '72px'; btn.style.width = '64px';
+        btn.addEventListener('click', () => { if (S.done) return; S.dials[i] = (S.dials[i] + 1) % 5; Sound.click(); save(); draw(); });
+        row.appendChild(btn); });
+      hist.innerHTML = S.tries.slice(-6).map((tr) => `<div>${tr.g.map((x) => SYM9[x]).join(' ')} &nbsp; <b>${'●'.repeat(tr.hit) + '○'.repeat(tr.near) || t('lockNone13')}</b></div>`).join('');
+    };
+    b.querySelector('#lTry').addEventListener('click', () => { if (S.done) return; const g = S.dials.slice(), r = score9(g); S.tries.push({ g, hit: r.hit, near: r.near });
+      if (r.hit === 4) { Sound.unlock(); Sound.door(); save(); draw(); setTimeout(escape9, 1200); } else { Sound.nope(); save(); draw(); } });
+    draw();
+  });
+}
+const door9 = (n) => () => { if (S.f.closet && n === S.door) { say(t('closetEmpty13')); return; } Sound.nope(); say(t('doorLocked13', n)); };
+Object.assign(HOTS, Object.fromEntries(DOORS9.map((n) => ['d' + n, door9(n)])), {
+  cart13: () => { if (S.f.cart) { say(t('cartEmpty13')); return; } openCart9(); },
+  tel13: () => { say(t('telegram13')); openNote('tel13n'); },
+  goEnd13: () => { go('end13'); say(t('toEnd13')); },
+  goHall13: () => { go('hall13'); say(t('backHall13')); },
+  clock13: () => { if (S.f.wound) { say(t('clockOk13')); openNote('clock13n'); } else say(t('clockBack13')); },
+  wall13: () => say(t('wall13')),
+  window13: () => { say(t('window13')); openNote('window13n'); },
+  door1313: () => openLock9(),
+});
+function useItem9(id, h) {
+  if (id === 'key13' && /^d13\d\d$/.test(h)) { const n = +h.slice(1); if (n !== S.door) { Sound.nope(); say(t('doorWrong13')); return true; }
+    take('key13'); S.f.closet = true; give('wind13'); Sound.door(); say(t('closetOpen13', n)); renderScene(); openNote('closet13n'); return true; }
+  if (id === 'wind13' && h === 'clock13') { take('wind13'); S.f.wound = true; Sound.unlock(); for (let k = 0; k < 13; k++) Sound.tone(523, 0.25, 'sine', 0.08, 0, k * 0.18); say(t('clockWound13')); renderScene(); return true; }
+  return false;
+}
+function escape9() {
+  if (!S || S.done || S.ch !== 9) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best9 = Math.max(profile.best9 || 0, left);
+  profile.ch9done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  if (!$('modal').hidden) closeModal();
+  showEnd(S.overtime ? t('win9EyebrowOver') : t('win9Eyebrow'), t('win9Title'), t('win9Text', mmss(left), S.hints, noteCount9()), left, false);
+}
+function newGame9() { S = freshState9(); save(); begin(); say(t('start9')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -2899,9 +3070,12 @@ const GOALS7 = [
 const GOALS8 = [
   ['c8_piano', () => S.f.piano], ['c8_coat', () => S.f.coat], ['c8_frame', () => S.f.frameOpen], ['c8_plan', () => S.f.planDone], ['c8_lift', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS9 = [
+  ['c9_cart', () => S.f.cart], ['c9_closet', () => S.f.closet], ['c9_clock', () => S.f.wound], ['c9_lock', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -2937,8 +3111,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 8); $('btnNextCh').textContent = t(S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 9); $('btnNextCh').textContent = t(S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -2946,7 +3120,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -2959,8 +3133,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -2986,6 +3160,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh9 = 0;
+$('btnCh9').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh9 > 4000) { armedCh9 = Date.now(); $('btnCh9').textContent = t('confirmNew'); return; }
+  armedCh9 = 0; newGame9();
 });
 let armedCh8 = 0;
 $('btnCh8').addEventListener('click', () => {
@@ -3044,6 +3224,7 @@ function showStart() {
   $('btnCh6').hidden = !profile.ch5done; $('btnCh6').textContent = t('ch6Btn'); armedCh6 = 0;
   $('btnCh7').hidden = !profile.ch6done; $('btnCh7').textContent = t('ch7Btn'); armedCh7 = 0;
   $('btnCh8').hidden = !profile.ch7done; $('btnCh8').textContent = t('ch8Btn'); armedCh8 = 0;
+  $('btnCh9').hidden = !profile.ch8done; $('btnCh9').textContent = t('ch9Btn'); armedCh9 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
