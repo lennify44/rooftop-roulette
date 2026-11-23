@@ -215,6 +215,7 @@ body {
           <button class="btn" id="btnCh3" type="button" data-i18n="ch3Btn" hidden>Chapter 3</button>
           <button class="btn" id="btnCh4" type="button" data-i18n="ch4Btn" hidden>Chapter 4</button>
           <button class="btn" id="btnCh5" type="button" data-i18n="ch5Btn" hidden>Chapter 5</button>
+          <button class="btn" id="btnCh6" type="button" data-i18n="ch6Btn" hidden>Chapter 6</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -262,7 +263,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -993,6 +994,92 @@ Object.assign(TXT.de.hints, {
   c5_dumb: ['Der Speiseaufzug fährt hoch zur Lobby, mit der richtigen Karte.', 'Im Ofen lag eine Servicekarte.', 'Wähle die Servicekarte und tippe auf den Speiseaufzug.'],
   c5_bell: ['Sam ist irgendwo hinter der Rezeption.', 'In der Speisekammer war eine Tischglocke.', 'Wähle die Tischglocke und tippe auf die Rezeption.'],
 });
+Object.assign(TXT.en, {
+  ch6Btn: 'Chapter 6: Room 405', nextCh6: 'On to chapter 6',
+  start6: 'Sam’s brass key turns, and the door of room 405 clicks shut behind you. It is your room. Exactly your room, but flipped, like in a mirror. The lights are dead, a radio crackles on the desk, and the wake-up call is set for 07:45. Somebody has been asking for you. Find out who.',
+  up6Eyebrow: '07:45 · wake-up call', up6Title: 'Ring ring', up6Text: 'The phone rings. A cheerful voice says “Good morning, room 404!”, and you wake up in your old bed. Room 405 has to wait for another try. (Or keep searching in overtime.)',
+  win6Eyebrow: 'Chapter 6 complete', win6EyebrowOver: 'Chapter 6 complete, in overtime', win6Title: 'Through the looking glass',
+  win6Text: (left, h, n) => `The card reader blinks green. The door does not open onto the corridor, but onto a narrow staircase that only goes up. Cold air and the sound of pigeons come down from above. The letter in your pocket is signed “the guest from 404, 1912”. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  room6: 'Room 405: your bed, your desk, your wardrobe, all on the wrong side. A big mirror hangs opposite the bed.', toBath6: 'The bathroom: a sink, a towel and an old bathroom scale.', backRoom6: 'Back in the mirrored bedroom.',
+  mirrorTitle6: 'The mirror', mirrorBody6: 'In the mirror you see the room behind you, and the wall clock above the door. The clock itself hangs with its face to the wall’s shadow; you can only read it in the mirror.',
+  safeTitle6: 'Wardrobe safe', safeBody6: '<p>A small safe in the wardrobe. A label: “Set to the time on the wall clock. HH MM.”</p>', safeOpened6: 'The safe beeps and opens. Inside: a fat battery and a folded note.', safeEmpty6: 'An empty safe.',
+  panelDead6: 'The light panel by the door is dead. Its battery slot is empty.', panelPower6: 'The battery clicks in. The panel’s switches glow faintly.',
+  panelTitle6: 'Light panel', panelBody6: 'Nine switches. Each one flips its own light and the lights right next to it. Get all nine on.', panelDone6: 'All nine lights on. The room is bright, and now you see it: a suitcase under the bed.', panelOn6: 'All the lights are on.',
+  dark6: 'Too dark to see anything there.',
+  bedCase6: 'Under the bed: a heavy old suitcase with a three-digit lock and a luggage tag: “Weight on arrival: see scale.” You take it.', bed6: 'Your bed, mirrored. The pillow is on the wrong end.',
+  bathDark6: 'Somewhere in the dark there must be a bathroom door. You can’t find the handle.',
+  scaleTitle6: 'Bathroom scale', scaleEmpty6: (kg) => `The scale shows ${kg} with nothing on it. It is old and never quite reaches zero.`, scaleCase6: (kg) => `With the suitcase on it, the scale shows ${kg}.`, kg6: (n) => `${(n / 10).toFixed(1)} kg`,
+  scaleOn6: 'You put the suitcase on the scale. The numbers flicker and settle.',
+  caseTitle6: 'Suitcase', caseBody6: '<p>The suitcase lock has three wheels. The tag says: “Code = my real weight. Kilos and the first decimal, no comma.”</p>', caseOpened6: 'The lock snaps open. Inside: a roof access card and an old letter.', caseEmpty6: 'The suitcase is empty now, except for the smell of 1912.',
+  doorLocked6: 'The door has no keyhole on this side, only a card reader: ROOF ACCESS.', doorPass6: 'You hold the card to the reader.',
+  radio6: 'The radio crackles: “...this is Radio Paradox. The time is... wrong. Don’t trust clocks in 405. Trust the mirror...”', sink6: 'Cold water. Your reflection looks tired, and the right way round.', towel6: 'The towel is embroidered: GRAND PARADOX · 405. Something is pinned to it.',
+});
+Object.assign(TXT.en.views, { room405: 'Room 405', bath405: 'Bathroom 405' });
+Object.assign(TXT.en.svg, { door6: '405', panel6: 'LIGHT', bath6: 'BATH', toRoom6: '⟵ back to the room', safe6: 'SAFE' });
+Object.assign(TXT.en.aria, { roomScene6: 'Room 405, a mirror image of your room', bathScene6: 'The bathroom of room 405', mirror6: 'Big mirror', safe6: 'Wardrobe safe', panel6: 'Light panel', bed6: 'Bed', radio6: 'Radio', door6: 'Room door', bath6: 'Bathroom door', scale6: 'Bathroom scale', case6: 'Suitcase on the scale', sink6: 'Sink', towel6: 'Towel', goRoom6: 'Back to the room' });
+Object.assign(TXT.en.items, {
+  batt6: ['Battery', '', 'A fat old battery. Still warm, somehow.'],
+  case6: ['Suitcase', '', 'Heavy, leather, with a three-digit lock. The tag says: weigh me.'],
+  pass6: ['Roof card', '', 'A key card: ROOF ACCESS · STAFF AND GHOSTS ONLY.'],
+});
+Object.assign(TXT.en.notes, {
+  safe6n: ['Note in the safe', 'If the lights are wired like the rest of this room, flipping one switch flips its neighbours too. Patience. — 405'],
+  case6n: ['Letter in the suitcase', 'To whoever wakes up in 404 next: I got out over the roof. The hotel tries to keep everyone, but it cannot keep the sky. Watch out for the pigeons. — the guest from 404, 1912'],
+  radio6n: ['Radio frequency sticker', 'Radio Paradox · 40.4 MHz · “Only station that knows what time it really is.”'],
+  towel6n: ['Card pinned to the towel', 'Housekeeping: room 405 cleaned. Scale still broken (never shows zero). Please subtract. — Housekeeping'],
+  mirror6n: ['Lipstick on the mirror', 'Written backwards, so it reads right in the mirror: “LEFT IS RIGHT. EARLY IS LATE.”'],
+});
+Object.assign(TXT.en.hints, {
+  c6_safe: ['The safe wants the time on the wall clock. You can only see that clock in the mirror.', 'A mirror flips left and right: read the clock hands backwards. A hand that points to 2 in the mirror really points to 10.', (c) => `The safe code is ${c}.`],
+  c6_power: ['The light panel by the door has no power.', 'The safe had a battery.', 'Select the battery and tap the light panel.'],
+  c6_lights: ['Get all nine lights on. Each switch flips itself and its neighbours.', 'Try pressing a switch twice: it undoes itself. Work row by row.', (p) => `Press these switches once each (counted 1-9, left to right, top to bottom): ${p}.`],
+  c6_weigh: ['Something heavy was hiding under the bed. It wants to be weighed.', 'The bathroom has a scale. Select the suitcase and tap the scale.', 'Select the suitcase and tap the bathroom scale.'],
+  c6_case: ['The suitcase code is its real weight. The scale is broken.', 'Subtract what the empty scale shows from what it shows with the suitcase on it.', (w) => `The suitcase code is ${w}.`],
+  c6_door: ['The room door has a card reader.', 'The suitcase had a roof card.', 'Select the roof card and tap the room door.'],
+});
+Object.assign(TXT.de, {
+  ch6Btn: 'Kapitel 6: Zimmer 405', nextCh6: 'Weiter zu Kapitel 6',
+  start6: 'Sams Messingschlüssel dreht sich, und die Tür von Zimmer 405 fällt hinter dir ins Schloss. Es ist dein Zimmer. Genau dein Zimmer, nur gespiegelt. Das Licht ist tot, auf dem Schreibtisch knistert ein Radio, und der Weckruf ist auf 07:45 gestellt. Jemand hat nach dir gefragt. Finde heraus, wer.',
+  up6Eyebrow: '07:45 · Weckruf', up6Title: 'Klingeling', up6Text: 'Das Telefon klingelt. Eine fröhliche Stimme sagt „Guten Morgen, Zimmer 404!“, und du wachst in deinem alten Bett auf. Zimmer 405 muss auf einen neuen Versuch warten. (Oder such in der Verlängerung weiter.)',
+  win6Eyebrow: 'Kapitel 6 geschafft', win6EyebrowOver: 'Kapitel 6 geschafft, in der Verlängerung', win6Title: 'Hinter den Spiegeln',
+  win6Text: (left, h, n) => `Das Kartenlesegerät blinkt grün. Die Tür führt nicht in den Flur, sondern auf eine schmale Treppe, die nur nach oben geht. Von oben weht kalte Luft herunter, und man hört Tauben. Der Brief in deiner Tasche ist unterschrieben mit „der Gast aus 404, 1912“. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  room6: 'Zimmer 405: dein Bett, dein Schreibtisch, dein Schrank, alles auf der falschen Seite. Gegenüber vom Bett hängt ein großer Spiegel.', toBath6: 'Das Bad: ein Waschbecken, ein Handtuch und eine alte Personenwaage.', backRoom6: 'Zurück im gespiegelten Schlafzimmer.',
+  mirrorTitle6: 'Der Spiegel', mirrorBody6: 'Im Spiegel siehst du das Zimmer hinter dir und die Wanduhr über der Tür. Die Uhr selbst hängt im Schatten; lesen kannst du sie nur im Spiegel.',
+  safeTitle6: 'Schranktresor', safeBody6: '<p>Ein kleiner Tresor im Schrank. Ein Etikett: „Auf die Zeit der Wanduhr stellen. HH MM.“</p>', safeOpened6: 'Der Tresor piept und geht auf. Drinnen: eine dicke Batterie und ein gefalteter Zettel.', safeEmpty6: 'Ein leerer Tresor.',
+  panelDead6: 'Das Lichtpanel neben der Tür ist tot. Das Batteriefach ist leer.', panelPower6: 'Die Batterie rastet ein. Die Schalter des Panels glimmen schwach.',
+  panelTitle6: 'Lichtpanel', panelBody6: 'Neun Schalter. Jeder schaltet sein eigenes Licht um und die Lichter direkt daneben. Bring alle neun zum Leuchten.', panelDone6: 'Alle neun Lichter an. Das Zimmer ist hell, und jetzt siehst du ihn: einen Koffer unter dem Bett.', panelOn6: 'Alle Lichter sind an.',
+  dark6: 'Zu dunkel, da ist nichts zu erkennen.',
+  bedCase6: 'Unter dem Bett: ein schwerer alter Koffer mit Zahlenschloss (drei Stellen) und einem Gepäckanhänger: „Gewicht bei Ankunft: siehe Waage.“ Du nimmst ihn.', bed6: 'Dein Bett, gespiegelt. Das Kissen liegt am falschen Ende.',
+  bathDark6: 'Irgendwo im Dunkeln muss eine Badezimmertür sein. Du findest die Klinke nicht.',
+  scaleTitle6: 'Personenwaage', scaleEmpty6: (kg) => `Die Waage zeigt ${kg}, obwohl nichts drauf steht. Sie ist alt und kommt nie ganz auf null.`, scaleCase6: (kg) => `Mit dem Koffer drauf zeigt die Waage ${kg}.`, kg6: (n) => `${(n / 10).toFixed(1).replace('.', ',')} kg`,
+  scaleOn6: 'Du stellst den Koffer auf die Waage. Die Ziffern flackern und bleiben stehen.',
+  caseTitle6: 'Koffer', caseBody6: '<p>Das Kofferschloss hat drei Rädchen. Auf dem Anhänger steht: „Code = mein echtes Gewicht. Kilo und erste Nachkommastelle, ohne Komma.“</p>', caseOpened6: 'Das Schloss springt auf. Drinnen: eine Dachzugangskarte und ein alter Brief.', caseEmpty6: 'Der Koffer ist jetzt leer, bis auf den Geruch von 1912.',
+  doorLocked6: 'Die Tür hat auf dieser Seite kein Schlüsselloch, nur ein Kartenlesegerät: DACHZUGANG.', doorPass6: 'Du hältst die Karte an das Lesegerät.',
+  radio6: 'Das Radio knistert: „...hier ist Radio Paradox. Es ist... falsch. Trau keiner Uhr in 405. Trau dem Spiegel...“', sink6: 'Kaltes Wasser. Dein Spiegelbild sieht müde aus, und richtig herum.', towel6: 'Ins Handtuch ist gestickt: GRAND PARADOX · 405. Daran ist etwas festgesteckt.',
+});
+Object.assign(TXT.de.views, { room405: 'Zimmer 405', bath405: 'Bad 405' });
+Object.assign(TXT.de.svg, { door6: '405', panel6: 'LICHT', bath6: 'BAD', toRoom6: '⟵ zurück ins Zimmer', safe6: 'TRESOR' });
+Object.assign(TXT.de.aria, { roomScene6: 'Zimmer 405, ein Spiegelbild deines Zimmers', bathScene6: 'Das Bad von Zimmer 405', mirror6: 'Großer Spiegel', safe6: 'Schranktresor', panel6: 'Lichtpanel', bed6: 'Bett', radio6: 'Radio', door6: 'Zimmertür', bath6: 'Badezimmertür', scale6: 'Personenwaage', case6: 'Koffer auf der Waage', sink6: 'Waschbecken', towel6: 'Handtuch', goRoom6: 'Zurück ins Zimmer' });
+Object.assign(TXT.de.items, {
+  batt6: ['Batterie', '', 'Eine dicke alte Batterie. Irgendwie noch warm.'],
+  case6: ['Koffer', '', 'Schwer, Leder, mit dreistelligem Zahlenschloss. Auf dem Anhänger: wieg mich.'],
+  pass6: ['Dachkarte', '', 'Eine Schlüsselkarte: DACHZUGANG · NUR PERSONAL UND GESPENSTER.'],
+});
+Object.assign(TXT.de.notes, {
+  safe6n: ['Zettel im Tresor', 'Wenn das Licht so verkabelt ist wie der Rest dieses Zimmers, schaltet jeder Schalter auch seine Nachbarn um. Geduld. — 405'],
+  case6n: ['Brief im Koffer', 'An wen auch immer als Nächstes in 404 aufwacht: Ich bin über das Dach raus. Das Hotel versucht, alle zu behalten, aber den Himmel kann es nicht behalten. Pass auf die Tauben auf. — der Gast aus 404, 1912'],
+  radio6n: ['Frequenz-Aufkleber am Radio', 'Radio Paradox · 40,4 MHz · „Der einzige Sender, der weiß, wie spät es wirklich ist.“'],
+  towel6n: ['Karte am Handtuch', 'Housekeeping: Zimmer 405 gereinigt. Waage immer noch kaputt (zeigt nie null). Bitte abziehen. — Housekeeping'],
+  mirror6n: ['Lippenstift auf dem Spiegel', 'Spiegelverkehrt geschrieben, damit man es im Spiegel lesen kann: „LINKS IST RECHTS. FRÜH IST SPÄT.“'],
+});
+Object.assign(TXT.de.hints, {
+  c6_safe: ['Der Tresor will die Zeit der Wanduhr. Die Uhr siehst du nur im Spiegel.', 'Ein Spiegel vertauscht links und rechts: Lies die Zeiger andersherum. Ein Zeiger, der im Spiegel auf 2 zeigt, zeigt in Wirklichkeit auf 10.', (c) => `Der Tresorcode ist ${c}.`],
+  c6_power: ['Das Lichtpanel neben der Tür hat keinen Strom.', 'Im Tresor war eine Batterie.', 'Wähl die Batterie und tippe auf das Lichtpanel.'],
+  c6_lights: ['Bring alle neun Lichter zum Leuchten. Jeder Schalter schaltet sich selbst und seine Nachbarn um.', 'Drück einen Schalter zweimal: Dann ist alles wie vorher. Geh Reihe für Reihe vor.', (p) => `Drück diese Schalter je einmal (gezählt 1-9, von links nach rechts, von oben nach unten): ${p}.`],
+  c6_weigh: ['Unter dem Bett war etwas Schweres versteckt. Es will gewogen werden.', 'Im Bad steht eine Waage. Wähl den Koffer und tippe auf die Waage.', 'Wähl den Koffer und tippe auf die Personenwaage.'],
+  c6_case: ['Der Koffercode ist sein echtes Gewicht. Die Waage ist kaputt.', 'Zieh ab, was die leere Waage zeigt, von dem, was sie mit Koffer zeigt.', (w) => `Der Koffercode ist ${w}.`],
+  c6_door: ['Die Zimmertür hat ein Kartenlesegerät.', 'Im Koffer war eine Dachkarte.', 'Wähl die Dachkarte und tippe auf die Zimmertür.'],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1053,7 +1140,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1271,6 +1358,7 @@ function useItem(id, h) {
   if (S.ch === 3) return useItem3(id, h);
   if (S.ch === 4) return useItem4(id, h);
   if (S.ch === 5) return useItem5(id, h);
+  if (S.ch === 6) return useItem6(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -1994,7 +2082,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -2287,6 +2375,100 @@ function escape5() {
   showEnd(S.overtime ? t('win5EyebrowOver') : t('win5Eyebrow'), t('win5Title'), t('win5Text', mmss(left), S.hints, noteCount5()), left, false);
 }
 function newGame5() { S = freshState5(); save(); begin(); say(t('start5')); }
+// ---------- chapter 6: room 405 (mirror room, bathroom)
+const TOTAL6 = 40 * 60;
+Object.assign(ICONS, { batt6: '🔋', case6: '🧳', pass6: '💳' });
+const noteIds6 = ['safe6n', 'case6n', 'radio6n', 'towel6n', 'mirror6n'];
+const NB6 = (i) => [i, i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter((j) => j >= 0 && j < 9);
+function freshState6() {
+  let H, M;
+  do { H = 1 + Math.floor(Math.random() * 12); M = 5 * Math.floor(Math.random() * 12); } while ((((12 - H - (M ? 1 : 0)) + 11) % 12) + 1 === H && (60 - M) % 60 === M);
+  const lit = Array(9).fill(true), presses = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]).slice(0, 3 + Math.floor(Math.random() * 3));
+  for (const p of presses) for (const j of NB6(p)) lit[j] = !lit[j];
+  return { v: 1, ch: 6, started: Date.now(), left: TOTAL6, ot: 0, hints: 0, hintSeen: {}, view: 'room405', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    H, M, code: String(H).padStart(2, '0') + String(M).padStart(2, '0'), lit, sol: presses.map((p) => p + 1).sort((a, b) => a - b).join(', '),
+    z: 5 + Math.floor(Math.random() * 31), w: 120 + Math.floor(Math.random() * 180) };
+}
+const noteCount6 = () => noteIds6.filter((n) => S.f['note_' + n]).length;
+// the wall clock, drawn as the real clock and flipped left-right (numbers come out backwards, like in a real mirror)
+function clock6(cx, cy, r) {
+  const ha = ((S.H % 12) * 30 + S.M * 0.5) * Math.PI / 180, ma = S.M * 6 * Math.PI / 180;
+  const nums = Array.from({ length: 12 }, (_, i) => { const a = (i + 1) * 30 * Math.PI / 180; return `<text x="${(cx + Math.sin(a) * r * 0.78).toFixed(1)}" y="${(cy - Math.cos(a) * r * 0.78 + r * 0.09).toFixed(1)}" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="${(r * 0.24).toFixed(1)}" fill="#2a1a10">${i + 1}</text>`; }).join('');
+  return `<g transform="translate(${2 * cx} 0) scale(-1 1)"><circle cx="${cx}" cy="${cy}" r="${r}" fill="#f4f1ea" stroke="#2a1a10" stroke-width="${(r * 0.07).toFixed(1)}"/>${nums}
+    <path d="M${cx} ${cy} L${(cx + Math.sin(ha) * r * 0.5).toFixed(1)} ${(cy - Math.cos(ha) * r * 0.5).toFixed(1)}" stroke="#2a1a10" stroke-width="${(r * 0.09).toFixed(1)}" stroke-linecap="round"/>
+    <path d="M${cx} ${cy} L${(cx + Math.sin(ma) * r * 0.74).toFixed(1)} ${(cy - Math.cos(ma) * r * 0.74).toFixed(1)}" stroke="#2a1a10" stroke-width="${(r * 0.05).toFixed(1)}" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="${(r * 0.06).toFixed(1)}" fill="#e8453c"/></g>`;
+}
+function sceneRoom6() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('roomScene6')}">
+  <rect width="1000" height="470" fill="#5a4a6a"/><rect y="470" width="1000" height="130" fill="#3a2a3a"/><path d="M0 470 H1000" stroke="#2a1a2a" stroke-width="6"/>
+  ${hot('door6', `<rect x="30" y="180" width="120" height="290" fill="#7a4a2a" stroke="#2a1a10" stroke-width="5"/><text x="90" y="225" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="26" fill="#d9a74a">${W('door6')}</text><rect x="118" y="300" width="22" height="34" rx="4" fill="#10181c"/><circle cx="129" cy="310" r="4" fill="${f.lit ? '#5dff8f' : '#e8453c'}"/>`)}
+  ${hot('panel6', `<rect x="165" y="270" width="44" height="64" rx="6" fill="#d8cfc0" stroke="#2a1a10" stroke-width="4"/>${[0, 1, 2].map((r) => `<rect x="174" y="${280 + r * 16}" width="26" height="9" rx="3" fill="${f.lit ? '#ffd23f' : f.power ? '#8a7a4a' : '#6b5f4a'}"/>`).join('')}<text x="187" y="262" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="14" fill="#efe6d2">${W('panel6')}</text>`)}
+  ${hot('safe6', `<rect x="230" y="150" width="150" height="320" fill="#8a5a3a" stroke="#2a1a10" stroke-width="5"/><path d="M305 150 V470" stroke="#2a1a10" stroke-width="4"/><rect x="245" y="330" width="50" height="50" rx="4" fill="#4a5258" stroke="#10181c" stroke-width="3"/><rect x="252" y="338" width="36" height="12" fill="#0b2a12"/><text x="270" y="348" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#5dff8f">${f.safeOpen ? 'OPEN' : '----'}</text>`)}
+  <rect x="410" y="330" width="170" height="16" fill="#6b4a2a"/><rect x="420" y="346" width="14" height="124" fill="#6b4a2a"/><rect x="556" y="346" width="14" height="124" fill="#6b4a2a"/>
+  ${hot('radio6', `<rect x="440" y="282" width="100" height="48" rx="8" fill="#b0603a" stroke="#2a1a10" stroke-width="4"/><circle cx="465" cy="306" r="13" fill="#2a1a10"/><rect x="490" y="296" width="38" height="6" fill="#ffd23f"/><path d="M500 282 L520 250" stroke="#2a1a10" stroke-width="3"/>`)}
+  ${hot('mirror6', `<rect x="600" y="60" width="220" height="230" rx="14" fill="#9ab8c8" stroke="#d9a74a" stroke-width="7"/><path d="M630 90 l40 -20 M640 120 l70 -40" stroke="#fff" stroke-width="5" opacity="0.4"/>${clock6(710, 175, 52)}`)}
+  ${hot('bed6', `<rect x="590" y="360" width="250" height="80" rx="10" fill="#efe6d2" stroke="#2a1a10" stroke-width="5"/><rect x="790" y="330" width="50" height="40" rx="10" fill="#fff" stroke="#2a1a10" stroke-width="4"/><rect x="590" y="400" width="250" height="40" fill="#7a2a3a"/><rect x="595" y="440" width="12" height="30" fill="#2a1a10"/><rect x="823" y="440" width="12" height="30" fill="#2a1a10"/>${f.lit && !f.caseTaken ? '<rect x="650" y="444" width="110" height="26" rx="5" fill="#8a5a2a" stroke="#2a1a10" stroke-width="3"/>' : ''}`)}
+  ${hot('bath6', `<rect x="870" y="180" width="110" height="290" fill="#6b5f7a" stroke="#2a1a10" stroke-width="5"/><circle cx="885" cy="330" r="7" fill="#d9a74a"/><text x="925" y="225" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#efe6d2">${W('bath6')}</text>`)}
+  <rect width="1000" height="600" fill="#05040a" opacity="${f.lit ? 0 : 0.55}" pointer-events="none"/>
+  </svg>`;
+}
+function sceneBath6() {
+  const f = S.f, kg = t('kg6', S.z + (f.caseOnScale ? S.w : 0));
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('bathScene6')}">
+  <rect width="1000" height="470" fill="#cfe3e6"/>${Array.from({ length: 10 }, (_, i) => `<path d="M${i * 100} 0 V470" stroke="#b5ccd0" stroke-width="3"/>`).join('')}<rect y="470" width="1000" height="130" fill="#e9e4da"/>
+  ${hot('sink6', `<rect x="140" y="90" width="160" height="130" rx="10" fill="#9ab8c8" stroke="#8a949a" stroke-width="6"/><path d="M120 300 h200 l-24 50 h-152z" fill="#fff" stroke="#8a949a" stroke-width="5"/><rect x="212" y="350" width="16" height="120" fill="#c0c8cc"/><path d="M220 270 v-24 h22" stroke="#8a949a" stroke-width="6" fill="none"/>`)}
+  ${hot('towel6', `<path d="M400 200 H560" stroke="#8a949a" stroke-width="8"/><rect x="420" y="204" width="120" height="170" rx="6" fill="#f4f1ea" stroke="#b5a98a" stroke-width="4"/><path d="M420 340 H540" stroke="#d9a74a" stroke-width="6"/>${f.note_towel6n ? '' : '<rect x="462" y="250" width="36" height="28" fill="#ffe9a8" stroke="#6b5f4a" stroke-width="2"/>'}`)}
+  ${hot('scale6', `<rect x="600" y="466" width="270" height="62" rx="14" fill="#e0e0e0" stroke="#10181c" stroke-width="5"/><rect x="640" y="474" width="190" height="46" rx="6" fill="#0b2a12"/><text x="735" y="508" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="32" fill="#5dff8f">${kg}</text>`)}
+  ${f.caseOnScale ? hot('case6', `<rect x="665" y="340" width="140" height="125" rx="12" fill="#8a5a2a" stroke="#2a1a10" stroke-width="5"/><path d="M710 340 v-24 h50 v24" stroke="#2a1a10" stroke-width="6" fill="none"/><rect x="718" y="392" width="34" height="20" rx="3" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/>${f.caseOpen ? '<path d="M665 360 H805" stroke="#2a1a10" stroke-width="4"/>' : ''}`) : ''}
+  ${hot('goRoom6', `<rect x="300" y="530" width="300" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="450" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toRoom6')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { room405: sceneRoom6, bath405: sceneBath6 });
+function openPanel6() {
+  openModal(t('panelTitle6'), `<p>${t('panelBody6')}</p><div id="lgGrid" style="display:grid;grid-template-columns:repeat(3,64px);gap:10px;justify-content:center"></div>`, (b) => {
+    const grid = b.querySelector('#lgGrid');
+    const draw = () => {
+      grid.innerHTML = '';
+      S.lit.forEach((on, i) => { const btn = mk('button', 'key', on ? '💡' : '⚫'); btn.setAttribute('data-act', 'sw' + i); btn.setAttribute('aria-pressed', String(on)); btn.setAttribute('aria-label', `${i + 1}`);
+        btn.addEventListener('click', () => { if (S.f.lit) return; for (const j of NB6(i)) S.lit[j] = !S.lit[j]; Sound.click();
+          if (S.lit.every(Boolean)) { S.f.lit = true; Sound.unlock(); Sound.win(); say(t('panelDone6')); } save(); draw(); renderScene(); });
+        grid.appendChild(btn); });
+    };
+    draw();
+  });
+}
+Object.assign(HOTS, {
+  mirror6: () => { openModal(t('mirrorTitle6'), `<p>${t('mirrorBody6')}</p><svg viewBox="0 0 300 300" style="width:min(70vw,260px);display:block;margin:0 auto;background:#9ab8c8;border:6px solid #d9a74a;border-radius:14px">${clock6(150, 150, 120)}</svg><div class="note">${esc(T().notes.mirror6n[1])}</div>`); S.f.note_mirror6n = true; save(); },
+  safe6: () => { if (S.f.safeOpen) { say(t('safeEmpty6')); return; } openCodePad(t('safeTitle6'), t('safeBody6'), S.code, (msg) => { S.f.safeOpen = true; give('batt6'); msg.textContent = t('safeOpened6'); say(t('safeOpened6')); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('safe6n'); } }, 1300); }); },
+  panel6: () => { if (!S.f.power) { Sound.nope(); say(t('panelDead6')); return; } if (S.f.lit) { say(t('panelOn6')); return; } openPanel6(); },
+  bed6: () => { if (!S.f.lit) { say(t('dark6')); return; } if (!S.f.caseTaken) { S.f.caseTaken = true; give('case6'); say(t('bedCase6')); renderScene(); } else say(t('bed6')); },
+  radio6: () => { say(t('radio6')); openNote('radio6n'); },
+  bath6: () => { if (!S.f.lit) { Sound.nope(); say(t('bathDark6')); return; } go('bath405'); say(t('toBath6')); },
+  door6: () => { Sound.nope(); say(t('doorLocked6')); },
+  goRoom6: () => { go('room405'); say(t('backRoom6')); },
+  sink6: () => say(t('sink6')),
+  towel6: () => { say(t('towel6')); openNote('towel6n'); renderScene(); },
+  scale6: () => openModal(t('scaleTitle6'), `<p>${S.f.caseOnScale ? t('scaleCase6', t('kg6', S.z + S.w)) : t('scaleEmpty6', t('kg6', S.z))}</p>`),
+  case6: () => { if (S.f.caseOpen) { say(t('caseEmpty6')); return; } openCodePad(t('caseTitle6'), t('caseBody6'), String(S.w), (msg) => { S.f.caseOpen = true; give('pass6'); msg.textContent = t('caseOpened6'); say(t('caseOpened6')); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('case6n'); } }, 1300); }); },
+});
+function useItem6(id, h) {
+  const f = S.f;
+  if (id === 'batt6' && h === 'panel6') { take('batt6'); f.power = true; Sound.unlock(); say(t('panelPower6')); renderScene(); setTimeout(openPanel6, 500); return true; }
+  if (id === 'case6' && h === 'scale6') { take('case6'); f.caseOnScale = true; Sound.click(); say(t('scaleOn6')); renderScene(); return true; }
+  if (id === 'pass6' && h === 'door6') { take('pass6'); say(t('doorPass6')); Sound.unlock(); renderScene(); setTimeout(escape6, 1500); return true; }
+  return false;
+}
+function escape6() {
+  if (!S || S.done || S.ch !== 6) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best6 = Math.max(profile.best6 || 0, left);
+  profile.ch6done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win6EyebrowOver') : t('win6Eyebrow'), t('win6Title'), t('win6Text', mmss(left), S.hints, noteCount6()), left, false);
+}
+function newGame6() { S = freshState6(); save(); begin(); say(t('start6')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -2310,9 +2492,12 @@ const GOALS4 = [
 const GOALS5 = [
   ['c5_shed', () => S.f.shedOpen], ['c5_door', () => S.f.kdoor], ['c5_oven', () => S.f.ovenOpen], ['c5_scale', () => S.f.pantryOpen], ['c5_dumb', () => S.f.lifted], ['c5_bell', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS6 = [
+  ['c6_safe', () => S.f.safeOpen], ['c6_power', () => S.f.power], ['c6_lights', () => S.f.lit], ['c6_weigh', () => S.f.caseOnScale], ['c6_case', () => S.f.caseOpen], ['c6_door', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -2348,8 +2533,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 5); $('btnNextCh').textContent = t(S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 6); $('btnNextCh').textContent = t(S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -2357,7 +2542,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -2370,8 +2555,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -2397,6 +2582,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh6 = 0;
+$('btnCh6').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh6 > 4000) { armedCh6 = Date.now(); $('btnCh6').textContent = t('confirmNew'); return; }
+  armedCh6 = 0; newGame6();
 });
 let armedCh5 = 0;
 $('btnCh5').addEventListener('click', () => {
@@ -2434,6 +2625,7 @@ function showStart() {
   $('btnCh3').hidden = !profile.ch2done; $('btnCh3').textContent = t('ch3Btn'); armedCh3 = 0;
   $('btnCh4').hidden = !profile.ch3done; $('btnCh4').textContent = t('ch4Btn'); armedCh4 = 0;
   $('btnCh5').hidden = !profile.ch4done; $('btnCh5').textContent = t('ch5Btn'); armedCh5 = 0;
+  $('btnCh6').hidden = !profile.ch5done; $('btnCh6').textContent = t('ch6Btn'); armedCh6 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
