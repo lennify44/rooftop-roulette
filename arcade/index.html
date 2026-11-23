@@ -77,6 +77,20 @@ footer { margin-top: 26px; color: var(--haze); font-size: 13px; }
 @media (min-width: 700px) { .game.hero { display: grid; grid-template-columns: 1.3fr 1fr; align-items: stretch; } .game.hero .art { aspect-ratio: auto; min-height: 260px; } }
 .game.hero .name { font-size: 1.6em; }
 .badge.new { background: #ff4fa3; color: #fff; } .badge.upd { background: #46e0a4; color: #140f22; }
+/* phones: a compact header and a 2-column grid of game tiles under the featured game (2026-11-23: one huge card per game meant 17 screens of scrolling) */
+@media (max-width: 699px) {
+  header { margin-bottom: 14px; gap: 2px; } h1 { font-size: 44px; } h1 br { display: none; } h1 span { margin-left: 0.25em; }
+  .lede { font-size: 14px; } .lede small { display: none; }
+  .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .game:not(.hero) .body { gap: 4px; padding: 8px 10px 10px; }
+  .game:not(.hero) .name { font-size: 20px; }
+  .game:not(.hero) .pitch, .game:not(.hero) .tags, .game:not(.hero) .alt, .game:not(.hero) .saved, .game:not(.hero) .scores dt { display: none; }
+  .game:not(.hero) .scores { grid-template-columns: 1fr; gap: 0; }
+  .game:not(.hero) .scores dd { font-size: 14px; }
+  .game:not(.hero) .play { font-size: 16px; padding: 0.2em 0.9em; }
+  .game:not(.hero) .badge { top: 6px; left: 6px; font-size: 9px; padding: 1px 5px; }
+  .game.hero .pitch { font-size: 14px; }
+}
 .hero-tag { display: inline-block; margin: 0 0 6px; padding: 2px 8px; border-radius: 6px; background: #ff4fa3; color: #fff; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 </style>
 <!-- /source:head -->
@@ -244,8 +258,8 @@ const GAMES = [
     best: () => { const p = read('airborne-profile'); return p && p.best ? [fmt(p.best), `${fmt(p.bestDist)} m`] : null; },
     world: (e) => [fmt(e.score), `${fmt(e.dist)} m`] },
   { id: 'layer', name: 'Layer <span>Up</span>', url: 'layer-up/', accent: '#ff4fa3', board: 'layer', badge: 'New · idle', tags: ['incremental', 'idle', 'layers'],
-    pitch: 'Five layers, each with a hidden 2D upgrade web: coins, gems and a mine, volts and a capacitor, elements and a reactor with 20 secret recipes, stars and space expeditions.',
-    best: () => { const p = read('layer-up-save-v3'); return p && p.life ? [`${['🪙', '💎', '⚡', '🧪', '🌌'][p.top || 0]} layer ${(p.top || 0) + 1}`, `${fmtShort(p.life)} coins ever`] : null; },
+    pitch: 'Seven layers from a street stall to the World tree: hidden 2D upgrade webs, a ladder of small resets in every layer, a mine, a capacitor, a reactor, space expeditions, a black hole and a greenhouse. Now with an ending.',
+    best: () => { const p = read('layer-up-save-v3'); return p && p.life ? [`${p.st && p.st.finale ? '🌳 finished' : `${['🪙', '💎', '⚡', '🧪', '🌌', '🌑', '🍃'][p.top || 0]} layer ${(p.top || 0) + 1}`}`, `${fmtShort(p.life)} coins ever`] : null; },
     world: (e) => [fmtShort(e.score), `layer ${e.dist}`] },
   { id: 'fire', name: 'Fire <span>Escape</span>', url: 'fire-escape/', accent: '#ffd23f', board: null, badge: 'New · platformer', tags: ['platformer', 'hard', 'wall-jump'],
     pitch: 'The tower comes down tonight and you are still on the top floor. Run, wall-jump and dash down 24 floors to the river.',
