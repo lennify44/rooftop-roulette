@@ -77,6 +77,11 @@ body {
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(56px, 13vw, 112px); line-height: 0.84; }
 .logo span { background: linear-gradient(90deg, var(--cyan), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .lede { margin: 0 0 18px; max-width: 40ch; font-size: 17px; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.howto { margin-top: 12px; max-width: 46ch; }
+.howto summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-body); font-weight: 700; font-size: 16px; color: var(--chalk); text-decoration: underline; text-underline-offset: 4px; }
+.howto p { margin: 4px 0 0; font-size: 15px; color: var(--haze); line-height: 1.5; }
+@media (max-width: 699px) { .lede { font-size: 16px; margin-bottom: 14px; } }
 .cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .sub-row { margin-top: 10px; }
 .btn { min-height: 56px; border: 0; cursor: pointer; padding: 0.3em 1.6em; color: #120a26; background: linear-gradient(90deg, var(--cyan), #9affd8); font-family: var(--font-display); font-weight: 900; font-size: 32px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 0 0 24px rgba(62, 242, 255, 0.5), 5px 5px 0 rgba(0, 0, 0, 0.35); }
@@ -128,9 +133,20 @@ body {
       <div>
         <p class="eyebrow">Lennify Arcade</p>
         <h1 class="logo">De<span>flector</span></h1>
-        <p class="lede">The bots want your core. Drag to swing the shield, bounce their shots right back and blow them up. Hit the shield's centre for a perfect parry.</p>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><radialGradient id="a20" cx="0.5" cy="0.55" r="0.7"><stop offset="0" stop-color="#3a1a78"/><stop offset="1" stop-color="#0c0618"/></radialGradient></defs><rect width="320" height="160" fill="url(#a20)"/>
+    ${Array.from({ length: 26 }, (_, i) => `<rect x="${(i * 97) % 320}" y="${(i * 53) % 160}" width="2" height="2" fill="#fff" opacity="${0.3 + (i % 4) * 0.15}"/>`).join('')}
+    <ellipse cx="160" cy="84" rx="140" ry="64" fill="none" stroke="#ff4fa3" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+    ${[[40, 70, '#3ef2ff'], [268, 54, '#b48aff'], [232, 134, '#ff9a3b'], [84, 136, '#3ef2ff']].map(([x, y, c]) => `<g transform="translate(${x} ${y})"><circle r="13" fill="${c}" stroke="#0c0618" stroke-width="3"/><circle cx="2" r="5" fill="#0c0618"/><circle cx="3" r="2.4" fill="#ff4fa3"/></g>`).join('')}
+    <path d="M196 92 L262 58" stroke="#3ef2ff" stroke-width="7" stroke-linecap="round" opacity="0.45"/><circle cx="246" cy="66" r="7" fill="#3ef2ff"/>
+    <path d="M60 76 L128 84" stroke="#ff9a3b" stroke-width="5" stroke-linecap="round" opacity="0.4"/><circle cx="118" cy="83" r="6" fill="#ff9a3b"/>
+    <circle cx="160" cy="86" r="34" fill="#ffd23f" opacity="0.18"/><circle cx="160" cy="86" r="24" fill="#ffb02e" stroke="#0c0618" stroke-width="3"/>
+    <ellipse cx="152" cy="82" rx="3" ry="4" fill="#0c0618"/><ellipse cx="168" cy="82" rx="3" ry="4" fill="#0c0618"/><path d="M153 92 Q160 98 167 92" stroke="#0c0618" stroke-width="2.5" fill="none"/>
+    <path d="M196 64 A42 42 0 0 1 200 104" stroke="#3ef2ff" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M199 78 A42 42 0 0 1 200 90" stroke="#fff" stroke-width="7" fill="none"/>
+    <text x="300" y="30" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#3ef2ff">PERFECT!</text></svg>
+        <p class="lede">Swing the shield. Bounce their shots back. Protect the core.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
         <p class="best" id="bestStart"></p>
+        <details class="howto"><summary>How to play</summary><p>The bots want your core. Drag anywhere to swing your shield around it. Shots that hit the shield bounce off; catch them with the middle of the shield for a perfect parry that fires them straight back at the bots. Drones fly in: bash them with the shield before they reach the core. Bombs are slow: deflect them into a group of bots. Between waves you pick an upgrade.</p></details>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">

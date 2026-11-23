@@ -69,6 +69,11 @@ body {
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(56px, 13vw, 112px); line-height: 0.84; }
 .logo span { background: linear-gradient(90deg, var(--sun), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .lede { margin: 0 0 18px; max-width: 40ch; font-size: 17px; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.howto { margin-top: 12px; max-width: 46ch; }
+.howto summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-body); font-weight: 700; font-size: 16px; color: var(--chalk); text-decoration: underline; text-underline-offset: 4px; }
+.howto p { margin: 4px 0 0; font-size: 15px; color: var(--haze); line-height: 1.5; }
+@media (max-width: 699px) { .lede { font-size: 16px; margin-bottom: 14px; } }
 .cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .sub-row { margin-top: 10px; }
 .btn { min-height: 56px; border: 0; cursor: pointer; padding: 0.3em 1.6em; color: #1a1238; background: linear-gradient(90deg, var(--sun), #ffe36a); font-family: var(--font-display); font-weight: 900; font-size: 32px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 0 0 24px rgba(255, 181, 46, 0.5), 5px 5px 0 rgba(0, 0, 0, 0.35); }
@@ -131,10 +136,18 @@ body {
       <div>
         <p class="eyebrow">Lennify Arcade</p>
         <h1 class="logo">Air<br><span>borne</span></h1>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="a15" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58b8ff"/><stop offset="1" stop-color="#c8f0ff"/></linearGradient></defs><rect width="320" height="160" fill="url(#a15)"/>
+    <rect x="0" y="0" width="22" height="160" fill="#5a1e7a" opacity="0.55"/>
+    ${[[40, 112, 110], [190, 86, 90], [270, 124, 60]].map(([x, y, w]) => `<path d="M${x} ${y + 6} L${x + w} ${y + 6} L${x + w * 0.75} ${y + 30} L${x + w * 0.45} ${y + 42} L${x + w * 0.2} ${y + 26}Z" fill="#9a6a3a" stroke="#1a1238" stroke-width="2.5"/><rect x="${x - 3}" y="${y - 3}" width="${w + 6}" height="11" rx="5" fill="#5fcf6a" stroke="#1a1238" stroke-width="2.5"/>`).join('')}
+    <path d="M110 104 Q150 30 196 82" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="5 6"/>
+    <g transform="translate(150 50)"><circle r="15" fill="#ff9ad0" stroke="#1a1238" stroke-width="2.5"/><circle cy="2" r="6" fill="#1a1238"/></g>
+    <g transform="translate(150 30)"><path d="M-6 -8 L-12 4 M6 -8 L12 4" stroke="#1a1238" stroke-width="5" stroke-linecap="round"/><ellipse cy="-18" rx="9" ry="10" fill="#ff5aa8" stroke="#1a1238" stroke-width="2.5"/><circle cx="1" cy="-32" r="7" fill="#ffd9b0" stroke="#1a1238" stroke-width="2.5"/><path d="M-7 -34 A8 8 0 0 1 9 -34Z" fill="#ffb52e"/></g>
+    <text x="300" y="30" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#fff" stroke="#1a1238" stroke-width="1">CHAIN ×3</text></svg>
         <p class="lede">Run, jump, stomp drones. Outrun the storm.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
         <p class="best" id="bestStart"></p>
         <div class="suits-wrap"><p class="label" id="suitLabel">Suit</p><div class="suits" id="suits"></div></div>
+        <details class="howto"><summary>How to play</summary><p>Use the left and right buttons to run and the jump button to jump; tap jump again in the air for a double jump (hold it for a higher jump). Land on drones from above: they bounce you up and give your double jump back. Chain stomps without touching an island for ×2, ×3, ×4 … The storm behind you never stops.</p></details>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">

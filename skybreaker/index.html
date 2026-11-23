@@ -67,6 +67,11 @@ body {
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(54px, 13vw, 110px); line-height: 0.84; letter-spacing: 0.01em; }
 .logo span { background: linear-gradient(90deg, var(--volt), var(--hot)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .lede { margin: 0 0 18px; max-width: 40ch; font-size: 17px; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.howto { margin-top: 12px; max-width: 46ch; }
+.howto summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-body); font-weight: 700; font-size: 16px; color: var(--chalk); text-decoration: underline; text-underline-offset: 4px; }
+.howto p { margin: 4px 0 0; font-size: 15px; color: var(--haze); line-height: 1.5; }
+@media (max-width: 699px) { .logo { font-size: clamp(48px, 15vw, 80px); } .lede { font-size: 16px; margin-bottom: 14px; } }
 .cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .sub-row { margin-top: 10px; }
 .btn { min-height: 56px; border: 0; cursor: pointer; padding: 0.3em 1.6em; color: #12082a; background: linear-gradient(90deg, var(--volt), #8affc1); font-family: var(--font-display); font-weight: 900; font-size: 32px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 0 0 24px rgba(62, 242, 255, 0.5), 5px 5px 0 rgba(0, 0, 0, 0.35); }
@@ -127,9 +132,17 @@ body {
       <div>
         <p class="eyebrow">Lennify Arcade</p>
         <h1 class="logo">Sky<br><span>breaker</span></h1>
-        <p class="lede">Tap to dash. Smash a drone and your dash comes back. Chain them into the sky before the storm eats you. Watch your health: flankers on the edges only die to the one shot an aim bubble gives you.</p>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="a14" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a8a"/><stop offset="1" stop-color="#ff7a7a"/></linearGradient></defs><rect width="320" height="160" fill="url(#a14)"/>
+    <path d="M0 150 Q40 130 80 146 T160 140 T240 148 T320 138 L320 160 L0 160Z" fill="#2a1048"/>
+    ${[[70, 46, '#3ef2ff'], [250, 40, '#ffd23f'], [214, 104, '#ff7ad8']].map(([x, y, c]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#1a1030" stroke-width="3"/><circle r="8" fill="#1a1030"/><circle cx="2" cy="1" r="4" fill="#ff4fa3"/><rect x="-11" y="-24" width="22" height="3" rx="1.5" fill="#fff" opacity="0.7"/></g>`).join('')}
+    <g transform="translate(110 70)"><circle r="34" fill="none" stroke="#fff" stroke-width="4" opacity="0.8"/>${Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2; return `<circle cx="${(Math.cos(a) * 44).toFixed(1)}" cy="${(Math.sin(a) * 44).toFixed(1)}" r="4" fill="${i % 2 ? '#3ef2ff' : '#ffffff'}"/>`; }).join('')}</g>
+    <path d="M150 118 L120 82" stroke="#3ef2ff" stroke-width="10" stroke-linecap="round" opacity="0.5"/>
+    <g transform="translate(156 122)"><path d="M-4 -4 Q-24 -12 -36 0" stroke="#ff4fa3" stroke-width="5" fill="none"/><ellipse cy="6" rx="12" ry="13" fill="#ff7a2f" stroke="#1a1030" stroke-width="2.5"/><circle cy="-10" r="11" fill="#fff" stroke="#1a1030" stroke-width="2.5"/><ellipse cx="3" cy="-10" rx="7" ry="4.5" fill="#3ef2ff"/></g>
+    <text x="300" y="30" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#ff4fa3">×7</text></svg>
+        <p class="lede">Tap to dash. Smash drones to reload. Climb before the storm eats you.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
         <p class="best" id="bestStart"></p>
+        <details class="howto"><summary>How to play</summary><p>Tap anywhere to dash towards that spot. Smash a drone and your dash comes back, so chain them upwards. The storm below climbs after you. Watch your health: flankers on the edges only die to the one shot an aim bubble gives you. New suits and dash trails unlock as your best score grows.</p></details>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">
