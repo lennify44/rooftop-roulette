@@ -267,7 +267,7 @@ const GAMES = [
     best: () => { const p = read('fire-escape-progress-v1'); if (!p) return null; const hats = p.hats ? p.hats.filter(Boolean).length : 0; return [`floor ${(p.reached | 0) + 1} of 24`, `${hats} hard hat${hats === 1 ? '' : 's'}`]; },
     world: () => null },
   { id: 'magnet', name: 'Magnet <span>Core</span>', url: 'magnet-core/', accent: '#ff6a2b', board: 'magnet', badge: 'New · action', tags: ['action', 'arena', 'big blasts'],
-    pitch: 'Drag your magnet core through a junkyard. Every piece of scrap sticks. Ram the robots, then blow the whole blob up for a MEGA BLAST.',
+    pitch: 'Drag your magnet core through a junkyard. Every piece of scrap sticks, and so do the robots. Let them pile on, then blow the whole blob up for a MEGA BLAST.',
     best: () => { const p = read('magnet-core-profile'); return p && p.best ? [fmt(p.best), `wave ${p.bestWave}`] : null; },
     world: (e) => [fmt(e.score), `wave ${e.dist}`] },
   { id: 'deflect', name: 'De<span>flector</span>', url: 'deflector/', accent: '#3ef2ff', board: 'deflect', badge: 'New · action', tags: ['action', 'reflex', 'bosses'],
@@ -323,7 +323,7 @@ function link(a, url) {
   if (!onSite) { a.target = '_blank'; a.rel = 'noopener'; }   // same tab on the public site, a new tab inside previews
 }
 // what's new: badges come from the dates, newest games first, the newest one gets the big banner
-const DATES = { magnet: ['2026-11-24', '2026-11-24'], rooftop: ['2026-09-01', '2026-09-20'], layer: ['2026-11-08', '2026-11-22'], fire: ['2026-11-08', '2026-11-08'], deflect: ['2026-11-06', '2026-11-06'], empire: ['2026-11-02', '2026-11-08'], air: ['2026-11-02', '2026-11-03'], sky: ['2026-11-01', '2026-11-08'], shutter: ['2026-10-31', '2026-11-06'], echo: ['2026-10-31', '2026-11-06'], ghost: ['2026-10-31', '2026-11-06'], crane: ['2026-10-31', '2026-11-07'], bakery: ['2026-10-30', '2026-10-30'], weather: ['2026-10-30', '2026-11-02'], rogue: ['2026-10-28', '2026-11-08'], volcano: ['2026-10-28', '2026-11-02'], room404: ['2026-10-28', '2026-11-23'], elevator: ['2026-10-27', '2026-11-05'], pigeon: ['2026-10-20', '2026-11-02'] };
+const DATES = { magnet: ['2026-11-23', '2026-11-23'], rooftop: ['2026-09-01', '2026-09-20'], layer: ['2026-11-08', '2026-11-22'], fire: ['2026-11-08', '2026-11-08'], deflect: ['2026-11-06', '2026-11-06'], empire: ['2026-11-02', '2026-11-08'], air: ['2026-11-02', '2026-11-03'], sky: ['2026-11-01', '2026-11-08'], shutter: ['2026-10-31', '2026-11-06'], echo: ['2026-10-31', '2026-11-06'], ghost: ['2026-10-31', '2026-11-06'], crane: ['2026-10-31', '2026-11-07'], bakery: ['2026-10-30', '2026-10-30'], weather: ['2026-10-30', '2026-11-02'], rogue: ['2026-10-28', '2026-11-08'], volcano: ['2026-10-28', '2026-11-02'], room404: ['2026-10-28', '2026-11-23'], elevator: ['2026-10-27', '2026-11-05'], pigeon: ['2026-10-20', '2026-11-02'] };
 const DAY = 86400000, NOW = Date.now(), ageOf = (d) => (NOW - Date.parse(d + 'T12:00:00Z')) / DAY;
 for (const g of GAMES) {
   const [added, updated] = DATES[g.id] || ['2026-01-01', '2026-01-01'], genre = (g.badge || '').split('·')[1];
