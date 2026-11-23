@@ -211,8 +211,11 @@ const KINDS = {
   thief: { r: 16, hp: 1, speed: 170, col: '#4ad8ff', pts: 200, drop: 2 },
   bomber: { r: 19, hp: 2, speed: 72, col: '#ff3b5c', pts: 180, drop: 2 },
   sniper: { r: 18, hp: 2, speed: 45, col: '#c9a2ff', pts: 160, drop: 2 },
-  boss: { r: 58, hp: 24, speed: 34, col: '#ffd23f', pts: 3000, drop: 15 },
+  boss: { r: 58, hp: 24, speed: 34, col: '#ffd23f', pts: 3000, drop: 15, name: 'CRUSHER' },
+  queen: { r: 50, hp: 30, speed: 22, col: '#ff4fa3', pts: 4000, drop: 15, name: 'TURRET QUEEN' },
+  magboss: { r: 52, hp: 26, speed: 52, col: '#4ad8ff', pts: 5000, drop: 15, name: 'MAGNET THIEF' },
 };
+const BOSSES = new Set(['boss', 'queen', 'magboss']);
 const SCRAP_COLS = ['#c9d3d8', '#9aa8b0', '#ffb02e', '#ff6a2b', '#ffd23f', '#8aff6a', '#c9d3d8'];
 const CARDS = [
   { id: 'reach', icon: '🧲', name: 'Strong magnet', desc: 'Scrap is pulled in from much further away.', max: 3 },
@@ -315,7 +318,7 @@ function nextWave() {
   for (let i = 0; i < has('stash') * 5; i++) game.pieces.push(newPiece());
   scatterScrap(Math.max(0, 8 - game.free.length));
   game.call = { text: boss ? `WAVE ${game.wave} · BOSS` : `WAVE ${game.wave}`, t: 0, big: true };
-  if (boss) spawn('boss');
+  if (boss) { const k = ['boss', 'queen', 'magboss'][(game.wave / 5 - 1) % 3]; spawn(k); game.call.text = `WAVE ${game.wave} · ${KINDS[k].name}`; }
   updateHud();
 }
 function spawn(kind) {
@@ -328,7 +331,7 @@ function spawn(kind) {
   }
   const K = KINDS[kind], side = Math.floor(Math.random() * 4), m = K.r + 10;
   const x = side === 0 ? -m : side === 1 ? AW + m : rnd(40, AW - 40), y = side === 2 ? -m : side === 3 ? L.AH + m : rnd(40, L.AH - 40);
-  const hp = K.hp + (kind === 'boss' ? Math.floor(w / 5) * 10 : Math.floor(Math.max(0, w - 1) / 5));
+  const hp = K.hp + (BOSSES.has(kind) ? Math.floor(w / 5) * 10 : Math.floor(Math.max(0, w - 1) / 5));
   game.foes.push({ kind, x, y, r: K.r, hp, maxHp: hp, kx: 0, ky: 0, flash: 0, ramCd: 0, fireT: rnd(1, 2.2), state: 'walk', stT: 0, dx: 0, dy: 0, stolen: 0, flee: false, spin: 0, summonT: 5, cling: false, clingA: 0, chewT: 0, fuse: 0 });
 }
 const speedMul = () => 1 + Math.min(game.wave, 20) * 0.035 + Math.max(0, game.wave - 20) * 0.015;
@@ -413,17 +416,26 @@ function update(dtReal) {
       if (f.state === 'walk' && d < 220 && f.stT <= 0) { f.state = 'wind'; f.stT = 0.75; f.dx = ux; f.dy = uy; }
       else if (f.state === 'wind') { sp = 0; f.dx = ux; f.dy = uy; if (f.stT <= 0) { f.state = 'dash'; f.stT = 0.55; Sound.tone(180, 0.3, 'sawtooth', 0.05, 200); } }
       else if (f.state === 'dash') { mx = f.dx; my = f.dy; sp = 480; if (f.stT <= 0) { f.state = 'walk'; f.stT = 1.4; } }
+    } else if (f.kind === 'queen') {
+      // the Turret Queen: aimed volleys, and a spiral every few seconds
+      f.fireT -= dt; if (f.fireT <= 0) { for (const o of [-0.22, 0, 0.22]) shoot(f, Math.atan2(dy, dx) + o, 230); f.fireT = Math.max(0.9, 1.6 - game.wave * 0.02); }
+      f.summonT -= dt; if (f.summonT <= 0) { f.summonT = 3.2; for (let i = 0; i < 10; i++) shoot(f, (i / 10) * Math.PI * 2 + f.spin * 2, 150); }
+      if (d < 200) { mx = -ux; my = -uy; }
+    } else if (f.kind === 'magboss') {
+      // the Magnet Thief pulls loose scrap to itself and eats it to heal; touching your blob it rips off 5 pieces
+      for (const sc of game.free) { const ex = f.x - sc.x, ey = f.y - sc.y, ed = Math.hypot(ex, ey) || 1; if (ed < 230) { sc.vx += (ex / ed) * 900 * dt; sc.vy += (ey / ed) * 900 * dt; if (ed < f.r) { sc.dead = true; f.hp = Math.min(f.maxHp, f.hp + 1); f.flash = 0.06; } } }
+      game.free = game.free.filter((sc) => !sc.dead);
     } else if (f.kind === 'boss') {
       f.fireT -= dt; if (f.fireT <= 0) { for (let i = 0; i < 12; i++) shoot(f, (i / 12) * Math.PI * 2 + f.spin, 170); f.fireT = Math.max(1.6, 3 - game.wave * 0.04); }
       f.summonT -= dt; if (f.summonT <= 0) { f.summonT = 6; for (let i = 0; i < 2; i++) { spawn('walker'); const n = game.foes[game.foes.length - 1]; n.x = f.x + rnd(-40, 40); n.y = f.y + rnd(-40, 40); } }
     }
     // robots stuck to the blob ride along and chew pieces off until a blast blows them away
     if (f.cling) {
-      if (!game.pieces.length && f.kind !== 'boss') { f.cling = false; f.kx = Math.cos(f.clingA) * 420; f.ky = Math.sin(f.clingA) * 420; }
+      if (!game.pieces.length && !BOSSES.has(f.kind)) { f.cling = false; f.kx = Math.cos(f.clingA) * 420; f.ky = Math.sin(f.clingA) * 420; }
       else {
         const RR = blobR() + f.r * 0.55; f.x = c.x + Math.cos(f.clingA) * RR; f.y = c.y + Math.sin(f.clingA) * RR;
         if (f.kind === 'bomber') { f.fuse -= dt; if (f.fuse <= 0) { f.dead = true; game.rings.push({ x: f.x, y: f.y, r: 10, max: 90, life: 0.4, c: '#ff3b5c' }); burst(f.x, f.y, '#ff3b5c', 30, 380); Sound.boom(); game.shake = Math.min(24, game.shake + 14); pop('KABOOM -6', f.x, f.y - 30, '#ff3b5c', 1, 1.2); if (game.pieces.length) knockPieces(f.clingA, 6); else hurtCore(); continue; } }
-        f.chewT -= dt; if (f.chewT <= 0) { f.chewT = f.kind === 'boss' ? 0.5 : 1.1; if (game.pieces.length) knockPieces(f.clingA, 1); else hurtCore(); }
+        f.chewT -= dt; if (f.chewT <= 0) { f.chewT = BOSSES.has(f.kind) ? 0.5 : 1.1; if (game.pieces.length) knockPieces(f.clingA, 1); else hurtCore(); }
         continue;
       }
     }
@@ -433,6 +445,7 @@ function update(dtReal) {
     const RR = blobR();
     if (d < RR + f.r * 0.8) {
       if (game.pieces.length) {
+        if (f.kind === 'magboss' && f.ramCd <= 0) { const n = Math.min(5, game.pieces.length); game.pieces.splice(game.pieces.length - n, n); f.stolen += n; f.ramCd = 1.2; f.kx = -ux * 380; f.ky = -uy * 380; pop(`-${n} STOLEN`, f.x, f.y - 40, '#4ad8ff', 1, 1.2); Sound.knock(); continue; }
         if (f.kind === 'thief' && !f.flee) { const n = Math.min(3, game.pieces.length); game.pieces.splice(game.pieces.length - n, n); f.stolen += n; f.flee = true; pop(`-${n} STOLEN`, f.x, f.y - 24, '#4ad8ff', 0.9); Sound.knock(); continue; }
         if (f.ramCd <= 0) {
           f.ramCd = 0.35;
@@ -507,13 +520,13 @@ function hitFoe(f, dmg, how) {
   const pts = K.pts * mult; game.score += pts;
   pop(mult > 1 ? `+${fmt(pts)} ×${mult}` : `+${fmt(pts)}`, f.x, f.y - 20, mult >= 5 ? '#ff6a2b' : mult >= 3 ? '#ffd23f' : '#ffffff', 0.9, Math.min(1.8, 0.9 + mult * 0.06));
   const CALLS = { 3: 'NICE!', 5: 'SMASHING!', 10: 'MEGA BLAST!', 15: 'SCRAPOCALYPSE!', 25: 'JUNKYARD KING!' }; if ((how === 'blast' || how === 'chain') && CALLS[game.blastKills]) { game.call = { text: CALLS[game.blastKills], t: 0, big: game.blastKills >= 10 }; Sound.perfect(); }
-  burst(f.x, f.y, K.col, f.kind === 'boss' ? 60 : 16, f.kind === 'boss' ? 520 : 300); burst(f.x, f.y, '#ffffff', 5, 200);
+  burst(f.x, f.y, K.col, BOSSES.has(f.kind) ? 60 : 16, BOSSES.has(f.kind) ? 520 : 300); burst(f.x, f.y, '#ffffff', 5, 200);
   game.rings.push({ x: f.x, y: f.y, r: f.r, max: f.r * 2.6, life: 0.3, c: K.col });
-  game.shake = Math.min(22, game.shake + (f.kind === 'boss' ? 20 : 4)); game.freeze = Math.max(game.freeze, f.kind === 'boss' ? 0.12 : 0.02);
+  game.shake = Math.min(22, game.shake + (BOSSES.has(f.kind) ? 20 : 4)); game.freeze = Math.max(game.freeze, BOSSES.has(f.kind) ? 0.12 : 0.02);
   Sound.boom();
   dropScrap(f.x, f.y, K.drop + f.stolen);
   if (f.kind === 'splitter') for (let i = 0; i < 2; i++) { spawn('runner'); const n = game.foes[game.foes.length - 1]; n.x = f.x + rnd(-20, 20); n.y = f.y + rnd(-20, 20); n.kx = rnd(-300, 300); n.ky = rnd(-300, 300); }
-  if (f.kind === 'boss') { game.slow = 1; game.call = { text: 'BOSS DOWN!', t: 0, big: true }; game.hp = Math.min(game.maxHp, game.hp + 1); }
+  if (BOSSES.has(f.kind)) { game.slow = 1; game.call = { text: 'BOSS DOWN!', t: 0, big: true }; game.hp = Math.min(game.maxHp, game.hp + 1); }
   if (how === 'blast' && has('chain')) { game.rings.push({ x: f.x, y: f.y, r: 8, max: 80, life: 0.3, c: '#4ad8ff' }); for (const o of game.foes) if (!o.dead && o !== f && Math.hypot(o.x - f.x, o.y - f.y) < 80 + o.r) hitFoe(o, 1, 'chain'); }
 }
 function hurtCore() {
@@ -550,18 +563,18 @@ function drawFoe(f) {
   ctx.rotate(face);
   // legs wiggle as they walk
   ctx.strokeStyle = '#0f1418'; ctx.lineWidth = 4; for (const s of [-1, 1]) { const w = Math.sin(f.spin * 14 + s) * 5; ctx.beginPath(); ctx.moveTo(-f.r * 0.3, s * f.r * 0.6); ctx.lineTo(-f.r * 0.9 + w, s * f.r * 1.05); ctx.stroke(); }
-  if (f.kind === 'shooter' || f.kind === 'boss') { ctx.fillStyle = '#0f1418'; ctx.fillRect(f.r * 0.5, -5, f.r * 0.8, 10); }
+  if (f.kind === 'shooter' || BOSSES.has(f.kind)) { ctx.fillStyle = '#0f1418'; ctx.fillRect(f.r * 0.5, -5, f.r * 0.8, 10); }
   if (f.kind === 'sniper') { ctx.fillStyle = '#0f1418'; ctx.fillRect(f.r * 0.4, -3, f.r * 1.5, 6); }
   if (f.kind === 'bomber') { ctx.fillStyle = '#0f1418'; ctx.fillRect(-f.r * 1.2, -3, f.r * 0.6, 6); ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(-f.r * 1.25, 0, 3 + Math.sin(game.t * 20), 0, Math.PI * 2); ctx.fill(); }
   const body = f.flash > 0 ? '#ffffff' : K.col;
   const g = ctx.createRadialGradient(-f.r * 0.3, -f.r * 0.3, 2, 0, 0, f.r); g.addColorStop(0, '#fff'); g.addColorStop(0.3, body); g.addColorStop(1, '#1b252c');
   ctx.fillStyle = g; ctx.strokeStyle = '#0f1418'; ctx.lineWidth = 3; ctx.beginPath();
-  if (f.kind === 'charger' || f.kind === 'boss') { const n = f.kind === 'boss' ? 10 : 6; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; ctx.lineTo(Math.cos(a) * f.r * (i % 2 ? 0.85 : 1.08), Math.sin(a) * f.r * (i % 2 ? 0.85 : 1.08)); } ctx.closePath(); }
+  if (f.kind === 'charger' || BOSSES.has(f.kind)) { const n = BOSSES.has(f.kind) ? 10 : 6; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; ctx.lineTo(Math.cos(a) * f.r * (i % 2 ? 0.85 : 1.08), Math.sin(a) * f.r * (i % 2 ? 0.85 : 1.08)); } ctx.closePath(); }
   else if (f.kind === 'thief') { ctx.moveTo(f.r, 0); ctx.lineTo(-f.r * 0.8, f.r * 0.8); ctx.lineTo(-f.r * 0.4, 0); ctx.lineTo(-f.r * 0.8, -f.r * 0.8); ctx.closePath(); }
   else ctx.arc(0, 0, f.r, 0, Math.PI * 2);
   ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#0f1418'; ctx.beginPath(); ctx.arc(f.r * 0.2, 0, f.r * 0.38, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = f.kind === 'boss' ? '#ff3b5c' : '#ff4fa3'; ctx.beginPath(); ctx.arc(f.r * 0.3, 0, f.r * 0.18, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = BOSSES.has(f.kind) ? '#ff3b5c' : '#ff4fa3'; ctx.beginPath(); ctx.arc(f.r * 0.3, 0, f.r * 0.18, 0, Math.PI * 2); ctx.fill();
   ctx.rotate(-face);
   if (f.stolen) { ctx.font = '900 16px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#4ad8ff'; ctx.fillText(`🧲${f.stolen}`, 0, -f.r - 6); }
   if (f.maxHp > 1) { const w = f.r * 1.8; ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(-w / 2, -f.r - 14, w, 6); ctx.fillStyle = K.col; ctx.fillRect(-w / 2, -f.r - 14, w * clamp(f.hp / f.maxHp, 0, 1), 6); }
