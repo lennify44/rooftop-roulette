@@ -214,6 +214,7 @@ body {
           <button class="btn" id="btnCh2" type="button" data-i18n="ch2Btn" hidden>Chapter 2</button>
           <button class="btn" id="btnCh3" type="button" data-i18n="ch3Btn" hidden>Chapter 3</button>
           <button class="btn" id="btnCh4" type="button" data-i18n="ch4Btn" hidden>Chapter 4</button>
+          <button class="btn" id="btnCh5" type="button" data-i18n="ch5Btn" hidden>Chapter 5</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -261,7 +262,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -903,6 +904,95 @@ Object.assign(TXT.de.hints, {
   c4_book: ['Das Terminal hat das Regal entsperrt.', 'Such das Gästebuch aus dem richtigen Jahr.', (y) => `Tippe auf das Regal und nimm das Buch von ${y}.`],
   c4_core: ['CONCIERGE will einen Beweis, dass du hier übernachtet hast.', 'Der Kern hat einen Schlitz für einen Aufenthaltsnachweis.', 'Wähle das Gästebuch und tippe auf den CONCIERGE-Kern.'],
 });
+// ---------- chapter 5 texts (English and German)
+Object.assign(TXT.en, {
+  ch5Btn: 'Chapter 5: Room Service', nextCh5: 'On to chapter 5',
+  start5: 'The tunnel stairs end in the hotel garden. Dew, birdsong, and a gate that clicks shut behind you. Inside, through the kitchen window, you see the front desk light: Sam is still on night shift until 07:00, and only Sam can sign you out properly. The clock says 06:20. The only way back in is the kitchen.',
+  up5Eyebrow: '07:00 · shift change', up5Title: 'Sam went home', up5Text: 'The clock hits seven. Sam hangs up the porter’s cap and goes home, and the day manager has never heard of room 404. You will have to start this morning again. (Or keep searching in overtime.)',
+  win5Eyebrow: 'Chapter 5 complete', win5EyebrowOver: 'Chapter 5 complete, in overtime', win5Title: 'Checked out',
+  win5Text: (left, h, n) => `You ring the bell. Sam shuffles out from the back office, reads the register, laughs, and signs: “Room 404, checked out. Took you long enough.” Then Sam slides a brass key across the desk. It says 405. “Somebody has been asking for you,” Sam whispers. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  garden5: 'The hotel garden: wet grass, four flower beds, a little shed with a padlock, and the kitchen’s back door.', toKitchen5: 'The kitchen: steel, steam and the smell of toast. Nobody here yet.', toLobby5: 'The dumbwaiter rattles up and opens behind the front desk. The lobby is empty; the desk lamp still burns.', backKitchen5: 'Back in the kitchen. The oven ticks as it cools.',
+  signTitle5: 'Garden sign', signBody5: (order) => `<div class="note">THE GARDENER’S ORDER<br>${order}<br>(Sam keeps the shed code the same way: count, then write it down in this order.)</div>`,
+  bedTitle5: (c) => `${c} flower bed`, bedBody5: (n, c) => `<p>You count them carefully: <b>${n}</b> ${c} flowers.</p>`,
+  colours5: { red: 'red', yellow: 'yellow', blue: 'blue', white: 'white' },
+  shedTitle5: 'Garden shed', shedBody5: '<p>A wooden shed with a four-digit padlock. Someone painted a tiny flower on each wheel of the lock.</p>', shedOpened5: 'The padlock pops. Inside: rakes, a wheelbarrow, and a kitchen key on a hook with a note.', shedEmpty5: 'Rakes and a wheelbarrow. Nothing else you need.',
+  doorLocked5: 'The kitchen’s back door is locked. A sticker says: “Staff key only.”',
+  bookTitle5: 'Cookbook', bookBody5: (tm, mins) => `<div class="note">SAM’S EMERGENCY BREAKFAST<br>Oven: ${tm} °C<br>Bake for ${mins} minutes<br>Then do NOT forget the tray.</div>`,
+  ovenTitle5: 'Oven', ovenBody5: '<p>A big steel oven with a keypad: temperature, then minutes, no spaces. The door stays locked until it is set right.</p>', ovenOpened5: 'The oven hums, the lock clicks, and the door swings open. On the tray: no breakfast, but a laminated service card.', ovenEmpty5: 'An empty, slightly warm oven.',
+  scaleTitle5: 'Spice scale', scaleBody5: (g) => `Put jars on the scale. The pantry lock wants exactly <b>${g} g</b>.`, scaleDone5: 'The scale pings. Behind you, the pantry door unlocks with a polite click.', grams5: 'g', onScale5: 'on', offScale5: 'off',
+  pantryLocked5: 'The pantry door has no keyhole, just a little sign: “Weigh the spices right.”', pantrySay5: 'The pantry: flour sacks, jam jars and, on a shelf, a shiny brass desk bell with a note.', pantryEmpty5: 'Flour, jam, more flour.',
+  dumbNeed5: 'A small service lift. The slot says: SERVICE CARD.', dumbGo5: 'The service card slides in. The dumbwaiter is tight, but you fit.',
+  deskSay5: 'The front desk: a guest register, a desk lamp and Sam’s empty chair. The back office door is ajar.', deskBell5: 'You place the bell on the desk and ring it. Ding!',
+  chair5: 'Sam’s chair is still warm. On the seat: a crossword, half finished.', register5: 'The register is open at today: ROOM 404 · CHECKOUT: _____ (signature of the night porter).',
+  lift5: 'The dumbwaiter is too small to stand in twice. Once was enough.',
+});
+Object.assign(TXT.en.views, { garden5: 'Hotel garden', kitchen5: 'Hotel kitchen', lobby5: 'Lobby' });
+Object.assign(TXT.en.svg, { shed5: 'SHED', sign5: 'GARDEN', oven5: 'OVEN', pantry5: 'PANTRY', dumb5: 'SERVICE', desk5: 'RECEPTION', toKitchen5: 'kitchen ⟶', toGarden5: '⟵ garden', downKitchen5: '⟵ down to the kitchen' });
+Object.assign(TXT.en.aria, { gardenScene5: 'The hotel garden', kitchenScene5: 'The hotel kitchen', lobbyScene5: 'The lobby', sign5: 'Garden sign', bed5a: 'Flower bed 1', bed5b: 'Flower bed 2', bed5c: 'Flower bed 3', bed5d: 'Flower bed 4', shed5: 'Garden shed', kdoor5: 'Kitchen back door', book5: 'Cookbook', oven5: 'Oven', scale5: 'Spice scale', pantry5: 'Pantry door', dumb5: 'Dumbwaiter', goGarden5: 'Back to the garden', desk5: 'Front desk', chair5: 'Sam’s chair', register5: 'Guest register', goKitchen5: 'Back down to the kitchen' });
+Object.assign(TXT.en.items, {
+  kkey5: ['Kitchen key', '', 'A steel key on a ring shaped like a spoon.'],
+  card5: ['Service card', '', 'A laminated card: SERVICE LIFT · STAFF ONLY.'],
+  bell5: ['Desk bell', '', 'A shiny brass bell. It wants to be rung.'],
+});
+Object.assign(TXT.en.notes, {
+  shed5n: ['Note on the key hook', 'Kitchen key. If you are reading this, you are either the new gardener or the guest from 404. Either way: the oven knows the way up. — Sam'],
+  book5n: ['Scribble in the cookbook', 'Day manager starts at 07:00 and has never heard of floor 4, the basement, or you. Be quick. — S.'],
+  pantry5n: ['Note on the bell', 'Ring me. I am always in the back office pretending to sleep. — Sam'],
+  desk5n: ['Postcard on the desk', 'A postcard of the Grand Paradox from 1912. On the back, in Sam’s handwriting: “405 is next door. Nobody has opened it since the boiler was installed.”'],
+  chair5n: ['Crossword on the chair', 'Seven across: “a room that should not exist” (3 letters). Sam has written 404 in the boxes, which does not fit, but Sam did it anyway.'],
+});
+Object.assign(TXT.en.hints, {
+  c5_shed: ['The shed has a four-digit lock. Read the sign and look at the flower beds.', 'Count the flowers in each bed and write the counts in the order the sign gives the colours.', (c) => `The shed code is ${c}.`],
+  c5_door: ['The kitchen back door needs a key. The shed had one.', 'Select the kitchen key.', 'Select the kitchen key and tap the kitchen door.'],
+  c5_oven: ['The oven wants temperature and minutes. Somebody wrote a recipe down.', 'Read the cookbook in the kitchen: temperature, then minutes, typed without spaces.', (c) => `The oven code is ${c}.`],
+  c5_scale: ['The pantry opens when the spices weigh exactly right.', 'Put jars on the scale until it shows exactly the grams the pantry wants.', (g) => `Put on the jars that add up to exactly ${g} g.`],
+  c5_dumb: ['The dumbwaiter goes up to the lobby, with the right card.', 'The oven had a service card in it.', 'Select the service card and tap the dumbwaiter.'],
+  c5_bell: ['Sam is somewhere behind the front desk.', 'The pantry had a desk bell.', 'Select the desk bell and tap the front desk.'],
+});
+Object.assign(TXT.de, {
+  ch5Btn: 'Kapitel 5: Zimmerservice', nextCh5: 'Weiter zu Kapitel 5',
+  start5: 'Die Tunneltreppe endet im Hotelgarten. Tau, Vogelgezwitscher und ein Tor, das hinter dir ins Schloss fällt. Durch das Küchenfenster siehst du das Licht an der Rezeption: Sam hat noch bis 07:00 Nachtschicht, und nur Sam kann dich richtig auschecken. Die Uhr zeigt 06:20. Der einzige Weg zurück ins Hotel führt durch die Küche.',
+  up5Eyebrow: '07:00 · Schichtwechsel', up5Title: 'Sam ist heimgegangen', up5Text: 'Die Uhr schlägt sieben. Sam hängt die Portiersmütze an den Haken und geht nach Hause, und die Tagesleitung hat noch nie von Zimmer 404 gehört. Du musst diesen Morgen noch einmal anfangen. (Oder such in der Verlängerung weiter.)',
+  win5Eyebrow: 'Kapitel 5 geschafft', win5EyebrowOver: 'Kapitel 5 geschafft, in der Verlängerung', win5Title: 'Ausgecheckt',
+  win5Text: (left, h, n) => `Du klingelst. Sam schlurft aus dem Hinterzimmer, liest das Gästebuch, lacht und unterschreibt: „Zimmer 404, ausgecheckt. Hat ja lange genug gedauert.“ Dann schiebt Sam dir einen Messingschlüssel über den Tresen. Darauf steht 405. „Da hat jemand nach dir gefragt“, flüstert Sam. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  garden5: 'Der Hotelgarten: nasses Gras, vier Blumenbeete, ein kleiner Schuppen mit Vorhängeschloss und die Hintertür der Küche.', toKitchen5: 'Die Küche: Stahl, Dampf und der Duft von Toast. Noch niemand da.', toLobby5: 'Der Speiseaufzug rattert nach oben und öffnet sich hinter der Rezeption. Die Lobby ist leer, die Schreibtischlampe brennt noch.', backKitchen5: 'Zurück in der Küche. Der Ofen tickt beim Abkühlen.',
+  signTitle5: 'Gartenschild', signBody5: (order) => `<div class="note">DIE ORDNUNG DES GÄRTNERS<br>${order}<br>(Sam macht den Schuppencode genauso: zählen, dann in dieser Reihenfolge aufschreiben.)</div>`,
+  bedTitle5: (c) => `Beet mit ${c} Blumen`, bedBody5: (n, c) => `<p>Du zählst genau: <b>${n}</b> ${c} Blumen.</p>`,
+  colours5: { red: 'roten', yellow: 'gelben', blue: 'blauen', white: 'weißen' },
+  shedTitle5: 'Gartenschuppen', shedBody5: '<p>Ein Holzschuppen mit einem vierstelligen Vorhängeschloss. Auf jedes Rädchen hat jemand eine winzige Blume gemalt.</p>', shedOpened5: 'Das Schloss springt auf. Drinnen: Rechen, eine Schubkarre und ein Küchenschlüssel an einem Haken, mit einem Zettel.', shedEmpty5: 'Rechen und eine Schubkarre. Sonst nichts, was du brauchst.',
+  doorLocked5: 'Die Hintertür der Küche ist abgeschlossen. Ein Aufkleber: „Nur mit Personalschlüssel.“',
+  bookTitle5: 'Kochbuch', bookBody5: (tm, mins) => `<div class="note">SAMS NOTFALL-FRÜHSTÜCK<br>Ofen: ${tm} °C<br>Backen: ${mins} Minuten<br>Danach das Blech NICHT vergessen.</div>`,
+  ovenTitle5: 'Ofen', ovenBody5: '<p>Ein großer Stahlofen mit Tastenfeld: erst die Temperatur, dann die Minuten, ohne Leerzeichen. Die Tür bleibt zu, bis alles stimmt.</p>', ovenOpened5: 'Der Ofen brummt, das Schloss klickt, die Tür schwingt auf. Auf dem Blech: kein Frühstück, sondern eine laminierte Servicekarte.', ovenEmpty5: 'Ein leerer, noch etwas warmer Ofen.',
+  scaleTitle5: 'Gewürzwaage', scaleBody5: (g) => `Stell Gläser auf die Waage. Das Schloss der Speisekammer will genau <b>${g} g</b>.`, scaleDone5: 'Die Waage macht ping. Hinter dir entriegelt sich die Speisekammertür mit einem höflichen Klick.', grams5: 'g', onScale5: 'drauf', offScale5: 'runter',
+  pantryLocked5: 'Die Speisekammertür hat kein Schlüsselloch, nur ein kleines Schild: „Gewürze richtig abwiegen.“', pantrySay5: 'Die Speisekammer: Mehlsäcke, Marmeladengläser und im Regal eine glänzende Messingglocke mit einem Zettel.', pantryEmpty5: 'Mehl, Marmelade, noch mehr Mehl.',
+  dumbNeed5: 'Ein kleiner Speiseaufzug. Der Schlitz sagt: SERVICEKARTE.', dumbGo5: 'Die Servicekarte gleitet hinein. Der Speiseaufzug ist eng, aber du passt hinein.',
+  deskSay5: 'Die Rezeption: ein Gästebuch, eine Schreibtischlampe und Sams leerer Stuhl. Die Tür zum Hinterzimmer steht einen Spalt offen.', deskBell5: 'Du stellst die Glocke auf den Tresen und klingelst. Ding!',
+  chair5: 'Sams Stuhl ist noch warm. Auf dem Sitz: ein halb gelöstes Kreuzworträtsel.', register5: 'Das Gästebuch ist bei heute aufgeschlagen: ZIMMER 404 · CHECK-OUT: _____ (Unterschrift des Nachtportiers).',
+  lift5: 'Der Speiseaufzug ist zu eng, um zweimal darin zu stehen. Einmal reicht.',
+});
+Object.assign(TXT.de.views, { garden5: 'Hotelgarten', kitchen5: 'Hotelküche', lobby5: 'Lobby' });
+Object.assign(TXT.de.svg, { shed5: 'SCHUPPEN', sign5: 'GARTEN', oven5: 'OFEN', pantry5: 'SPEISEKAMMER', dumb5: 'SERVICE', desk5: 'REZEPTION', toKitchen5: 'Küche ⟶', toGarden5: '⟵ Garten', downKitchen5: '⟵ runter in die Küche' });
+Object.assign(TXT.de.aria, { gardenScene5: 'Der Hotelgarten', kitchenScene5: 'Die Hotelküche', lobbyScene5: 'Die Lobby', sign5: 'Gartenschild', bed5a: 'Blumenbeet 1', bed5b: 'Blumenbeet 2', bed5c: 'Blumenbeet 3', bed5d: 'Blumenbeet 4', shed5: 'Gartenschuppen', kdoor5: 'Hintertür der Küche', book5: 'Kochbuch', oven5: 'Ofen', scale5: 'Gewürzwaage', pantry5: 'Speisekammertür', dumb5: 'Speiseaufzug', goGarden5: 'Zurück in den Garten', desk5: 'Rezeption', chair5: 'Sams Stuhl', register5: 'Gästebuch', goKitchen5: 'Zurück runter in die Küche' });
+Object.assign(TXT.de.items, {
+  kkey5: ['Küchenschlüssel', '', 'Ein Stahlschlüssel an einem Ring in Löffelform.'],
+  card5: ['Servicekarte', '', 'Eine laminierte Karte: SPEISEAUFZUG · NUR PERSONAL.'],
+  bell5: ['Tischglocke', '', 'Eine glänzende Messingglocke. Sie will geläutet werden.'],
+});
+Object.assign(TXT.de.notes, {
+  shed5n: ['Zettel am Schlüsselhaken', 'Küchenschlüssel. Wenn du das liest, bist du entweder der neue Gärtner oder der Gast aus 404. So oder so: Der Ofen kennt den Weg nach oben. — Sam'],
+  book5n: ['Gekritzel im Kochbuch', 'Die Tagesleitung fängt um 07:00 an und hat noch nie vom 4. Stock, vom Keller oder von dir gehört. Beeil dich. — S.'],
+  pantry5n: ['Zettel an der Glocke', 'Klingel mich. Ich bin immer im Hinterzimmer und tu so, als würde ich schlafen. — Sam'],
+  desk5n: ['Postkarte auf dem Tresen', 'Eine Postkarte vom Grand Paradox aus dem Jahr 1912. Auf der Rückseite, in Sams Schrift: „405 ist gleich nebenan. Seit der Kessel eingebaut wurde, hat sie niemand mehr geöffnet.“'],
+  chair5n: ['Kreuzworträtsel auf dem Stuhl', 'Sieben waagrecht: „ein Zimmer, das es nicht geben dürfte“ (3 Buchstaben). Sam hat 404 eingetragen, was nicht passt, aber Sam hat es trotzdem gemacht.'],
+});
+Object.assign(TXT.de.hints, {
+  c5_shed: ['Der Schuppen hat ein vierstelliges Schloss. Lies das Schild und sieh dir die Blumenbeete an.', 'Zähl die Blumen in jedem Beet und schreib die Zahlen in der Reihenfolge der Farben auf dem Schild auf.', (c) => `Der Schuppencode ist ${c}.`],
+  c5_door: ['Die Hintertür der Küche braucht einen Schlüssel. Im Schuppen war einer.', 'Wähle den Küchenschlüssel.', 'Wähle den Küchenschlüssel und tippe auf die Küchentür.'],
+  c5_oven: ['Der Ofen will Temperatur und Minuten. Jemand hat ein Rezept aufgeschrieben.', 'Lies das Kochbuch in der Küche: erst die Temperatur, dann die Minuten, ohne Leerzeichen.', (c) => `Der Ofencode ist ${c}.`],
+  c5_scale: ['Die Speisekammer öffnet sich, wenn die Gewürze genau richtig wiegen.', 'Stell Gläser auf die Waage, bis sie genau die Gramm zeigt, die die Speisekammer will.', (g) => `Stell die Gläser drauf, die zusammen genau ${g} g ergeben.`],
+  c5_dumb: ['Der Speiseaufzug fährt hoch zur Lobby, mit der richtigen Karte.', 'Im Ofen lag eine Servicekarte.', 'Wähle die Servicekarte und tippe auf den Speiseaufzug.'],
+  c5_bell: ['Sam ist irgendwo hinter der Rezeption.', 'In der Speisekammer war eine Tischglocke.', 'Wähle die Tischglocke und tippe auf die Rezeption.'],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -963,7 +1053,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch === 2 || S.ch === 3 || S.ch === 4) { const m2 = (S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1180,6 +1270,7 @@ function useItem(id, h) {
   if (S.ch === 2) return useItem2(id, h);
   if (S.ch === 3) return useItem3(id, h);
   if (S.ch === 4) return useItem4(id, h);
+  if (S.ch === 5) return useItem5(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -1903,7 +1994,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -2098,6 +2189,104 @@ function escape4() {
   $('screenEnd').classList.toggle('golden', isTrue);
 }
 function newGame4() { S = freshState4(); save(); begin(); say(t('start4')); }
+// ---------- chapter 5: room service (garden, kitchen, lobby)
+const TOTAL5 = 40 * 60;
+Object.assign(ICONS, { kkey5: '🔑', card5: '🎫', bell5: '🔔' });
+const noteIds5 = ['shed5n', 'book5n', 'pantry5n', 'desk5n', 'chair5n'];
+const COL5 = { red: '#e8453c', yellow: '#ffd23f', blue: '#4a8ad9', white: '#f4f1ea' };
+function freshState5() {
+  const order = shuffle(['red', 'yellow', 'blue', 'white']), beds = shuffle(['red', 'yellow', 'blue', 'white']), count = {};
+  for (const c of beds) count[c] = 1 + Math.floor(Math.random() * 9);
+  const temp = pick([160, 180, 200, 220]), mins = 10 + Math.floor(Math.random() * 36), sc = makeValves();
+  return { v: 1, ch: 5, started: Date.now(), left: TOTAL5, ot: 0, hints: 0, hintSeen: {}, view: 'garden5', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    order, beds, count, scode: order.map((c) => count[c]).join(''), temp, mins, ocode: `${temp}${mins}`, jars: sc.v.map((x) => x * 10), grams: sc.tg * 10, jon: [false, false, false, false] };
+}
+const noteCount5 = () => noteIds5.filter((n) => S.f['note_' + n]).length;
+function sceneGarden5() {
+  const f = S.f;
+  const beds = S.beds.map((c, i) => { const x = 60 + i * 150, n = S.count[c];
+    const fl = Array.from({ length: n }, (_, k) => `<g transform="translate(${x + 18 + (k % 5) * 22} ${395 + Math.floor(k / 5) * 26})"><path d="M0 0 v18" stroke="#3fae6a" stroke-width="3"/><circle r="8" fill="${COL5[c]}" stroke="#2a1a10" stroke-width="2"/><circle r="3" fill="#ffd23f"/></g>`).join('');
+    return hot('bed5' + 'abcd'[i], `<rect x="${x}" y="380" width="130" height="70" rx="10" fill="#6b4a2a" stroke="#3a2a1a" stroke-width="4"/>${fl}`); }).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('gardenScene5')}">
+  <rect width="1000" height="360" fill="#bfe3ff"/><circle cx="470" cy="80" r="46" fill="#ffd58a" opacity="0.9"/><rect y="340" width="1000" height="260" fill="#5fae5a"/><g fill="#3f8f4a" stroke="#2a5a30" stroke-width="3"><circle cx="700" cy="470" r="38"/><circle cx="750" cy="455" r="44"/><circle cx="805" cy="475" r="34"/><circle cx="920" cy="500" r="40"/></g><path d="M640 540 q60 -20 120 0 t120 0" stroke="#e8e0c8" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <rect x="560" y="120" width="440" height="240" fill="#d8cfc0" stroke="#6b5f4a" stroke-width="5"/><rect x="600" y="160" width="110" height="80" fill="#ffe9a8" stroke="#6b5f4a" stroke-width="4"/>
+  ${hot('kdoor5', `<rect x="790" y="190" width="110" height="170" fill="${f.kdoor ? '#0b0910' : '#7a4a2a'}" stroke="#3a2a1a" stroke-width="5"/><circle cx="880" cy="280" r="7" fill="#d9a74a"/><text x="845" y="182" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="18" fill="#2a1a10">${W('toKitchen5')}</text>`)}
+  ${hot('shed5', `<path d="M60 340 L60 190 L170 130 L280 190 L280 340Z" fill="#9a6a3a" stroke="#3a2a1a" stroke-width="5"/><rect x="140" y="230" width="60" height="110" fill="${f.shedOpen ? '#2a1a10' : '#7a4a2a'}" stroke="#3a2a1a" stroke-width="4"/>${f.shedOpen ? '' : '<rect x="160" y="275" width="22" height="26" rx="4" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/>'}<text x="170" y="180" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#fff">${W('shed5')}</text>`)}
+  ${hot('sign5', `<rect x="370" y="250" width="10" height="110" fill="#6b4a2a"/><rect x="320" y="220" width="110" height="60" rx="6" fill="#efe6d2" stroke="#6b5f4a" stroke-width="3"/><text x="375" y="257" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#2a1a10">${W('sign5')}</text>`)}
+  ${beds}
+  </svg>`;
+}
+function sceneKitchen5() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('kitchenScene5')}">
+  <rect width="1000" height="470" fill="#dfe6e8"/><path d="M0 0 H1000 V40 H0Z" fill="#c9d3d6"/><path d="M280 70 H660" stroke="#5b6b75" stroke-width="6"/>${[320, 400, 480, 560, 620].map((x, i) => `<path d="M${x} 70 v${20 + i % 2 * 14}" stroke="#5b6b75" stroke-width="3"/><circle cx="${x}" cy="${110 + i % 2 * 14}" r="${18 + (i * 7) % 12}" fill="#b0603a" stroke="#10181c" stroke-width="3"/>`).join('')}<rect y="440" width="1000" height="160" fill="#7f8c86"/><path d="M0 440 H1000" stroke="#5b6b75" stroke-width="6"/>
+  ${hot('goGarden5', `<rect x="20" y="170" width="120" height="270" fill="#7a4a2a" stroke="#3a2a1a" stroke-width="5"/><text x="80" y="160" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="18" fill="#10181c">${W('toGarden5')}</text>`)}
+  ${hot('book5', `<rect x="170" y="300" width="90" height="20" fill="#6b4a2a"/><path d="M175 300 l40 -12 l40 12 l-40 8z" fill="#efe6d2" stroke="#6b5f4a" stroke-width="3"/><rect x="185" y="320" width="60" height="120" fill="#a99f86"/>`)}
+  ${hot('oven5', `<rect x="290" y="230" width="190" height="210" rx="10" fill="#8a949a" stroke="#10181c" stroke-width="6"/><rect x="310" y="290" width="150" height="120" rx="8" fill="${f.ovenOpen ? '#2a1a10' : '#1a1a1a'}" stroke="#10181c" stroke-width="4"/>${f.ovenOpen ? '' : '<rect x="330" y="310" width="110" height="50" fill="#ff8a3d" opacity="0.4"/>'}<rect x="320" y="244" width="70" height="30" rx="4" fill="#0b2a12"/><text x="355" y="265" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="#5dff8f">${f.ovenOpen ? 'OK' : '---'}</text><text x="440" y="266" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#fff">${W('oven5')}</text>`)}
+  ${hot('scale5', `<rect x="510" y="330" width="150" height="20" rx="6" fill="#c0c8cc" stroke="#10181c" stroke-width="4"/><rect x="560" y="350" width="50" height="40" fill="#8a949a" stroke="#10181c" stroke-width="4"/>${S.jars.map((g, i) => `<rect x="${515 + i * 36}" y="${S.jon[i] ? 296 : 400}" width="28" height="34" rx="5" fill="${['#e8453c', '#ffd23f', '#3fae6a', '#c79bff'][i]}" stroke="#10181c" stroke-width="3"/>`).join('')}`)}
+  ${hot('pantry5', `<rect x="690" y="150" width="130" height="290" fill="${f.pantryOpen ? '#0b0910' : '#b9a27a'}" stroke="#3a2a1a" stroke-width="5"/><text x="755" y="140" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="17" fill="#10181c">${W('pantry5')}</text>`)}
+  ${hot('dumb5', `<rect x="850" y="200" width="120" height="150" fill="#5b6b75" stroke="#10181c" stroke-width="6"/><rect x="866" y="216" width="88" height="118" fill="#3a4950"/><rect x="890" y="360" width="40" height="10" rx="3" fill="#10181c"/><text x="910" y="192" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#10181c">${W('dumb5')}</text>`)}
+  </svg>`;
+}
+function sceneLobby5() {
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('lobbyScene5')}">
+  <rect width="1000" height="470" fill="#4a2a3a"/><rect y="470" width="1000" height="130" fill="#2a1a24"/><circle cx="500" cy="200" r="220" fill="#ffd58a" opacity="0.12"/><rect x="330" y="60" width="340" height="150" rx="8" fill="#3a1a2a" stroke="#d9a74a" stroke-width="4"/>${Array.from({ length: 12 }, (_, i) => { const x = 360 + (i % 6) * 56, y = 95 + Math.floor(i / 6) * 60, empty = i === 11; return `<circle cx="${x}" cy="${y}" r="4" fill="#d9a74a"/>${empty ? `<text x="${x}" y="${y + 34}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#d9a74a">405</text>` : `<path d="M${x} ${y} v16" stroke="#d9a74a" stroke-width="3"/><circle cx="${x}" cy="${y + 22}" r="7" fill="none" stroke="#d9a74a" stroke-width="3"/>`}`; }).join('')}
+  ${hot('chair5', `<rect x="640" y="250" width="90" height="120" rx="12" fill="#7a2a3a" stroke="#10181c" stroke-width="5"/><rect x="636" y="360" width="98" height="20" fill="#5a1a2a"/>`)}
+  ${hot('desk5', `<rect x="230" y="330" width="540" height="140" fill="#6b4a2a" stroke="#2a1a10" stroke-width="6"/><rect x="230" y="320" width="540" height="20" fill="#d9a74a"/><text x="500" y="420" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="30" fill="#d9a74a">${W('desk5')}</text>${S.done ? '<circle cx="500" cy="306" r="14" fill="#d9a74a"/>' : ''}`)}
+  ${hot('register5', `<rect x="300" y="296" width="110" height="26" fill="#efe6d2" stroke="#6b5f4a" stroke-width="3"/>`)}
+  <rect x="250" y="220" width="12" height="100" fill="#2a1a10"/><path d="M220 220 h72 l-14 -40 h-44z" fill="#ffd58a"/>
+  ${hot('goKitchen5', `<rect x="300" y="520" width="400" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('downKitchen5')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { garden5: sceneGarden5, kitchen5: sceneKitchen5, lobby5: sceneLobby5 });
+function openScale5() {
+  const sum = () => S.jars.reduce((a, g, i) => a + (S.jon[i] ? g : 0), 0);
+  openModal(t('scaleTitle5'), `<p>${t('scaleBody5', S.grams)}</p><div class="row" id="jRow"></div><p class="tip" id="jMsg"></p>`, (b) => {
+    const row = b.querySelector('#jRow'), msg = b.querySelector('#jMsg');
+    const draw = () => {
+      row.innerHTML = '';
+      S.jars.forEach((g, i) => { const btn = mk('button', 'key wide', `${g} ${t('grams5')} · ${S.jon[i] ? t('onScale5') : t('offScale5')}`); btn.setAttribute('data-act', 'jar' + i); btn.setAttribute('aria-pressed', String(S.jon[i]));
+        btn.addEventListener('click', () => { if (S.f.pantryOpen) return; S.jon[i] = !S.jon[i]; Sound.click(); if (sum() === S.grams) { S.f.pantryOpen = true; Sound.unlock(); Sound.win(); say(t('scaleDone5')); } save(); draw(); renderScene(); });
+        row.appendChild(btn); });
+      msg.textContent = S.f.pantryOpen ? t('scaleDone5') : `${sum()} / ${S.grams} ${t('grams5')}`;
+    };
+    draw();
+  });
+}
+const bedHot5 = (i) => () => { const c = S.beds[i]; openModal(t('bedTitle5', T().colours5[c]), t('bedBody5', S.count[c], T().colours5[c])); };
+Object.assign(HOTS, {
+  sign5: () => openModal(t('signTitle5'), t('signBody5', S.order.map((c) => T().colours5[c]).join(' · '))),
+  bed5a: bedHot5(0), bed5b: bedHot5(1), bed5c: bedHot5(2), bed5d: bedHot5(3),
+  shed5: () => { if (S.f.shedOpen) { say(t('shedEmpty5')); return; } openCodePad(t('shedTitle5'), t('shedBody5'), S.scode, (msg) => { S.f.shedOpen = true; give('kkey5'); msg.textContent = t('shedOpened5'); say(t('shedOpened5')); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('shed5n'); } }, 1300); }); },
+  kdoor5: () => { if (S.f.kdoor) { go('kitchen5'); say(t('toKitchen5')); } else { Sound.nope(); say(t('doorLocked5')); } },
+  goGarden5: () => { go('garden5'); say(t('garden5')); },
+  book5: () => { openModal(t('bookTitle5'), t('bookBody5', S.temp, S.mins)); S.f.note_book5n = true; save(); },
+  oven5: () => { if (S.f.ovenOpen) { say(t('ovenEmpty5')); return; } openCodePad(t('ovenTitle5'), t('ovenBody5'), S.ocode, (msg) => { S.f.ovenOpen = true; give('card5'); msg.textContent = t('ovenOpened5'); say(t('ovenOpened5')); renderScene(); }); },
+  scale5: () => openScale5(),
+  pantry5: () => { if (!S.f.pantryOpen) { Sound.nope(); say(t('pantryLocked5')); return; } if (!S.f.bellTaken) { S.f.bellTaken = true; give('bell5'); say(t('pantrySay5')); openNote('pantry5n'); } else say(t('pantryEmpty5')); },
+  dumb5: () => { if (S.f.lifted) { go('lobby5'); say(t('toLobby5')); } else say(t('dumbNeed5')); },
+  desk5: () => { say(t('deskSay5')); openNote('desk5n'); },
+  chair5: () => { say(t('chair5')); openNote('chair5n'); },
+  register5: () => say(t('register5')),
+  goKitchen5: () => { go('kitchen5'); say(t('backKitchen5')); },
+});
+function useItem5(id, h) {
+  const f = S.f;
+  if (id === 'kkey5' && h === 'kdoor5') { take('kkey5'); f.kdoor = true; Sound.door(); renderScene(); setTimeout(() => { go('kitchen5'); say(t('toKitchen5')); }, 600); return true; }
+  if (id === 'card5' && h === 'dumb5') { take('card5'); f.lifted = true; say(t('dumbGo5')); Sound.door(); setTimeout(() => { go('lobby5'); say(t('toLobby5')); }, 900); return true; }
+  if (id === 'bell5' && (h === 'desk5' || h === 'register5')) { take('bell5'); say(t('deskBell5')); Sound.unlock(); setTimeout(escape5, 1500); return true; }
+  return false;
+}
+function escape5() {
+  if (!S || S.done || S.ch !== 5) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best5 = Math.max(profile.best5 || 0, left);
+  profile.ch5done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win5EyebrowOver') : t('win5Eyebrow'), t('win5Title'), t('win5Text', mmss(left), S.hints, noteCount5()), left, false);
+}
+function newGame5() { S = freshState5(); save(); begin(); say(t('start5')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -2118,9 +2307,12 @@ const GOALS4 = [
   ['c4_bin', () => S.f.binOpen], ['c4_torch', () => S.f.coat4], ['c4_fuse', () => S.f.power], ['c4_plaque', () => S.f.plaque], ['c4_valves', () => S.f.thawed],
   ['c4_year', () => S.f.termOk4], ['c4_book', () => S.f.bookTaken], ['c4_core', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS5 = [
+  ['c5_shed', () => S.f.shedOpen], ['c5_door', () => S.f.kdoor], ['c5_oven', () => S.f.ovenOpen], ['c5_scale', () => S.f.pantryOpen], ['c5_dumb', () => S.f.lifted], ['c5_bell', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -2156,8 +2348,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 4); $('btnNextCh').textContent = t(S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 5); $('btnNextCh').textContent = t(S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -2165,7 +2357,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -2178,8 +2370,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -2205,6 +2397,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh5 = 0;
+$('btnCh5').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh5 > 4000) { armedCh5 = Date.now(); $('btnCh5').textContent = t('confirmNew'); return; }
+  armedCh5 = 0; newGame5();
 });
 let armedCh4 = 0;
 $('btnCh4').addEventListener('click', () => {
@@ -2235,6 +2433,7 @@ function showStart() {
   $('btnCh2').hidden = !profile.ch1done; $('btnCh2').textContent = t('ch2Btn'); armedCh2 = 0;
   $('btnCh3').hidden = !profile.ch2done; $('btnCh3').textContent = t('ch3Btn'); armedCh3 = 0;
   $('btnCh4').hidden = !profile.ch3done; $('btnCh4').textContent = t('ch4Btn'); armedCh4 = 0;
+  $('btnCh5').hidden = !profile.ch4done; $('btnCh5').textContent = t('ch5Btn'); armedCh5 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
