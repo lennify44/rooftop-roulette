@@ -137,7 +137,7 @@ body {
         <p class="lede">Grab scrap. Grow huge. Let the robots pile on, then blow it all up.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
         <p class="best" id="bestStart"></p>
-        <details class="howto"><summary>How to play</summary><p>Drag anywhere and your magnet core follows your thumb. Every piece of scrap it touches sticks to it, and the blob grows. Robots that touch it get stuck and start chewing pieces off. Double-tap (or press Space) to BLAST: every stuck piece flies outward and wrecks the first robot it hits. The more robots one blast takes out, the more each one is worth. But a bigger blob is slower, and every bullet that hits it knocks a piece off. If the core itself is hit, you lose a heart. Smashed robots drop new scrap. Between waves you pick an upgrade; every fifth wave brings a boss.</p></details>
+        <details class="howto"><summary>How to play</summary><p>Drag anywhere and your magnet core follows your thumb. Every piece of scrap it touches sticks to it, and the blob grows. Robots that touch it get stuck and start chewing pieces off (and a bomber that sticks blows up after two seconds). Double-tap (or press Space) to BLAST: every stuck piece flies outward and wrecks the first robot it hits. The more robots one blast takes out, the more each one is worth. But a bigger blob is slower, and every bullet that hits it knocks a piece off. If the core itself is hit, you lose a heart. Smashed robots drop new scrap. Between waves you pick an upgrade; every fifth wave brings a boss.</p></details>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">
@@ -209,6 +209,8 @@ const KINDS = {
   charger: { r: 24, hp: 3, speed: 40, col: '#ff6a2b', pts: 150, drop: 2 },
   splitter: { r: 26, hp: 3, speed: 50, col: '#b48aff', pts: 120, drop: 2 },
   thief: { r: 16, hp: 1, speed: 170, col: '#4ad8ff', pts: 200, drop: 2 },
+  bomber: { r: 19, hp: 2, speed: 72, col: '#ff3b5c', pts: 180, drop: 2 },
+  sniper: { r: 18, hp: 2, speed: 45, col: '#c9a2ff', pts: 160, drop: 2 },
   boss: { r: 58, hp: 24, speed: 34, col: '#ffd23f', pts: 3000, drop: 15 },
 };
 const SCRAP_COLS = ['#c9d3d8', '#9aa8b0', '#ffb02e', '#ff6a2b', '#ffd23f', '#8aff6a', '#c9d3d8'];
@@ -321,13 +323,13 @@ function spawn(kind) {
   if (!kind) {
     const pool = ['walker', 'walker', 'walker'];
     if (w >= 2) pool.push('runner', 'runner'); if (w >= 3) pool.push('shooter'); if (w >= 4) pool.push('shooter'); if (w >= 5) pool.push('charger');
-    if (w >= 7) pool.push('splitter'); if (w >= 9) pool.push('thief'); if (w >= 11) pool.push('charger', 'shooter');
+    if (w >= 6) pool.push('bomber'); if (w >= 7) pool.push('splitter'); if (w >= 8) pool.push('sniper'); if (w >= 9) pool.push('thief'); if (w >= 12) pool.push('bomber', 'sniper'); if (w >= 11) pool.push('charger', 'shooter');
     kind = pick(pool);
   }
   const K = KINDS[kind], side = Math.floor(Math.random() * 4), m = K.r + 10;
   const x = side === 0 ? -m : side === 1 ? AW + m : rnd(40, AW - 40), y = side === 2 ? -m : side === 3 ? L.AH + m : rnd(40, L.AH - 40);
   const hp = K.hp + (kind === 'boss' ? Math.floor(w / 5) * 10 : Math.floor(Math.max(0, w - 1) / 5));
-  game.foes.push({ kind, x, y, r: K.r, hp, maxHp: hp, kx: 0, ky: 0, flash: 0, ramCd: 0, fireT: rnd(1, 2.2), state: 'walk', stT: 0, dx: 0, dy: 0, stolen: 0, flee: false, spin: 0, summonT: 5, cling: false, clingA: 0, chewT: 0 });
+  game.foes.push({ kind, x, y, r: K.r, hp, maxHp: hp, kx: 0, ky: 0, flash: 0, ramCd: 0, fireT: rnd(1, 2.2), state: 'walk', stT: 0, dx: 0, dy: 0, stolen: 0, flee: false, spin: 0, summonT: 5, cling: false, clingA: 0, chewT: 0, fuse: 0 });
 }
 const speedMul = () => 1 + Math.min(game.wave, 20) * 0.035 + Math.max(0, game.wave - 20) * 0.015;
 function shoot(f, a, speed) { const v = speed || Math.min(380, 190 + game.wave * 8); game.bullets.push({ x: f.x + Math.cos(a) * (f.r + 4), y: f.y + Math.sin(a) * (f.r + 4), vx: Math.cos(a) * v, vy: Math.sin(a) * v }); Sound.shoot(); }
@@ -405,6 +407,7 @@ function update(dtReal) {
     if (f.stun > 0) { f.stun -= dt; sp = 0; }
     if (f.kind === 'thief' && f.flee) { const ex = f.x < AW / 2 ? -1 : 1; mx = ex; my = 0; sp *= 1.2; if (f.x < -40 || f.x > AW + 40) { f.dead = true; f.gone = true; continue; } }
     else if (f.kind === 'shooter') { if (d < 210) { mx = -uy; my = ux; sp *= 0.6; } if (!f.cling) f.fireT -= dt; if (f.fireT <= 0) { shoot(f, Math.atan2(dy, dx)); f.fireT = Math.max(1.1, 2.6 - game.wave * 0.06) * rnd(0.85, 1.2); } }
+    else if (f.kind === 'sniper') { if (d < 270) { mx = -ux; my = -uy; } else if (d < 330) sp = 0; if (!f.cling) f.fireT -= dt; if (f.fireT <= 0) { shoot(f, Math.atan2(dy, dx), 560); f.fireT = Math.max(2, 3.6 - game.wave * 0.05); } }
     else if (f.kind === 'charger') {
       f.stT -= dt;
       if (f.state === 'walk' && d < 220 && f.stT <= 0) { f.state = 'wind'; f.stT = 0.75; f.dx = ux; f.dy = uy; }
@@ -419,6 +422,7 @@ function update(dtReal) {
       if (!game.pieces.length && f.kind !== 'boss') { f.cling = false; f.kx = Math.cos(f.clingA) * 420; f.ky = Math.sin(f.clingA) * 420; }
       else {
         const RR = blobR() + f.r * 0.55; f.x = c.x + Math.cos(f.clingA) * RR; f.y = c.y + Math.sin(f.clingA) * RR;
+        if (f.kind === 'bomber') { f.fuse -= dt; if (f.fuse <= 0) { f.dead = true; game.rings.push({ x: f.x, y: f.y, r: 10, max: 90, life: 0.4, c: '#ff3b5c' }); burst(f.x, f.y, '#ff3b5c', 30, 380); Sound.boom(); game.shake = Math.min(24, game.shake + 14); pop('KABOOM -6', f.x, f.y - 30, '#ff3b5c', 1, 1.2); if (game.pieces.length) knockPieces(f.clingA, 6); else hurtCore(); continue; } }
         f.chewT -= dt; if (f.chewT <= 0) { f.chewT = f.kind === 'boss' ? 0.5 : 1.1; if (game.pieces.length) knockPieces(f.clingA, 1); else hurtCore(); }
         continue;
       }
@@ -434,7 +438,7 @@ function update(dtReal) {
           f.ramCd = 0.35;
           if (has('spikes')) hitFoe(f, has('spikes'), 'ram');
           if (f.state === 'dash') knockPieces(Math.atan2(-uy, -ux), 3);
-          if (!f.dead && f.kind !== 'thief') { f.cling = true; f.clingA = Math.atan2(-uy, -ux); f.chewT = 1.1; f.state = 'walk'; Sound.tone(300, 0.08, 'square', 0.05, 200); }
+          if (!f.dead && f.kind !== 'thief') { f.cling = true; f.clingA = Math.atan2(-uy, -ux); f.chewT = 1.1; f.fuse = 2.2; f.state = 'walk'; Sound.tone(300, 0.08, 'square', 0.05, 200); }
           else if (!f.dead) { f.kx = -ux * 420; f.ky = -uy * 420; }
         }
       } else if (d < CORE_R + f.r && !(f.stun > 0)) { f.kx = -ux * 560; f.ky = -uy * 560; f.stun = 1.2; if (f.kind === 'thief') f.flee = true; hurtCore(); }
@@ -540,11 +544,15 @@ function drawFoe(f) {
   ctx.save(); ctx.translate(f.x, f.y);
   const face = Math.atan2(c.y - f.y, c.x - f.x);
   if (f.kind === 'charger' && f.state === 'wind') { ctx.strokeStyle = `rgba(255,106,43,${0.4 + 0.5 * Math.sin(game.t * 30) ** 2})`; ctx.lineWidth = 4; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(f.dx * 240, f.dy * 240); ctx.stroke(); ctx.setLineDash([]); ctx.translate(rnd(-2, 2), rnd(-2, 2)); }
+  if (f.kind === 'sniper' && f.fireT < 1 && !f.cling) { ctx.strokeStyle = `rgba(201,162,255,${0.25 + (1 - f.fireT) * 0.6})`; ctx.lineWidth = 1.5 + (1 - f.fireT) * 2.5; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(c.x - f.x, c.y - f.y); ctx.stroke(); ctx.setLineDash([]); }
+  if (f.kind === 'bomber' && f.cling) { const k = clamp(f.fuse / 2.2, 0, 1); ctx.strokeStyle = Math.floor(game.t * (12 - k * 8)) % 2 ? '#ff3b5c' : '#ffd23f'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, f.r + 7, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke(); }
   if (f.kind === 'shooter' && f.fireT < 0.45) { ctx.fillStyle = `rgba(255,79,163,${0.5 - f.fireT})`; ctx.beginPath(); ctx.arc(0, 0, f.r * 1.6, 0, Math.PI * 2); ctx.fill(); }
   ctx.rotate(face);
   // legs wiggle as they walk
   ctx.strokeStyle = '#0f1418'; ctx.lineWidth = 4; for (const s of [-1, 1]) { const w = Math.sin(f.spin * 14 + s) * 5; ctx.beginPath(); ctx.moveTo(-f.r * 0.3, s * f.r * 0.6); ctx.lineTo(-f.r * 0.9 + w, s * f.r * 1.05); ctx.stroke(); }
   if (f.kind === 'shooter' || f.kind === 'boss') { ctx.fillStyle = '#0f1418'; ctx.fillRect(f.r * 0.5, -5, f.r * 0.8, 10); }
+  if (f.kind === 'sniper') { ctx.fillStyle = '#0f1418'; ctx.fillRect(f.r * 0.4, -3, f.r * 1.5, 6); }
+  if (f.kind === 'bomber') { ctx.fillStyle = '#0f1418'; ctx.fillRect(-f.r * 1.2, -3, f.r * 0.6, 6); ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(-f.r * 1.25, 0, 3 + Math.sin(game.t * 20), 0, Math.PI * 2); ctx.fill(); }
   const body = f.flash > 0 ? '#ffffff' : K.col;
   const g = ctx.createRadialGradient(-f.r * 0.3, -f.r * 0.3, 2, 0, 0, f.r); g.addColorStop(0, '#fff'); g.addColorStop(0.3, body); g.addColorStop(1, '#1b252c');
   ctx.fillStyle = g; ctx.strokeStyle = '#0f1418'; ctx.lineWidth = 3; ctx.beginPath();
