@@ -216,6 +216,7 @@ body {
           <button class="btn" id="btnCh4" type="button" data-i18n="ch4Btn" hidden>Chapter 4</button>
           <button class="btn" id="btnCh5" type="button" data-i18n="ch5Btn" hidden>Chapter 5</button>
           <button class="btn" id="btnCh6" type="button" data-i18n="ch6Btn" hidden>Chapter 6</button>
+          <button class="btn" id="btnCh7" type="button" data-i18n="ch7Btn" hidden>Chapter 7</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -263,7 +264,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1080,6 +1081,78 @@ Object.assign(TXT.de.hints, {
   c6_case: ['Der Koffercode ist sein echtes Gewicht. Die Waage ist kaputt.', 'Zieh ab, was die leere Waage zeigt, von dem, was sie mit Koffer zeigt.', (w) => `Der Koffercode ist ${w}.`],
   c6_door: ['Die Zimmertür hat ein Kartenlesegerät.', 'Im Koffer war eine Dachkarte.', 'Wähl die Dachkarte und tippe auf die Zimmertür.'],
 });
+Object.assign(TXT.en, {
+  ch7Btn: 'Chapter 7: The Roof', nextCh7: 'On to chapter 7',
+  start7: 'The narrow stairs end in a hatch, and the hatch opens onto the hotel roof. Wind, chimneys, the back of the giant GRAND PARADOX sign, and pigeons. So many pigeons. The fire escape is the way down, but its gate is locked, and the pigeons are sitting on it like they own it. The church bells say 07:50. At 08:30 the roofers arrive and lock the hatch for good.',
+  up7Eyebrow: '08:30 · roofers', up7Title: 'Hatch locked', up7Text: 'The roofers arrive, whistle, and padlock the hatch behind you. You spend the day with the pigeons, and the night in room 404 again. (Or keep searching in overtime.)',
+  win7Eyebrow: 'Chapter 7 complete', win7EyebrowOver: 'Chapter 7 complete, in overtime', win7Title: 'Down the fire escape',
+  win7Text: (left, h, n) => `The gate swings open. You climb down the rattling fire escape, jump the last two metres onto the street and walk round to the front of the hotel. Free! The doorman tips his hat: “Welcome to the Grand Paradox! You must be our new guest. Your room is 404.” Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  roof7: 'The roof: chimneys, a water tank, an antenna with a blinking lamp, a toolbox, a pigeon coop and the fire-escape gate.', toSign7: 'Behind the sign: giant neon letters, back to front, and a grey junction box.', backRoof7: 'Back on the open roof. The pigeons watch you.',
+  lampTitle7: 'Antenna lamp', lampBody7: 'The red lamp on the antenna blinks in groups, then pauses, then starts again. Count the flashes in each group.', lampAgain7: 'Watch again',
+  boxTitle7: 'Toolbox', boxBody7: '<p>A rusty toolbox with a three-digit lock. Scratched into the lid: “Same as the lamp. Roofers can’t remember numbers.”</p>', boxOpened7: 'The lock gives. Inside: a big wrench and a note.', boxEmpty7: 'Bent nails and a sandwich wrapper.',
+  jboxShut7: 'A grey junction box, screwed shut with four big bolts. You need a tool.', jboxOpen7: 'You crank the bolts loose. The lid falls open: a grid of wire tiles, all twisted the wrong way.',
+  wiresTitle7: 'Junction box', wiresBody7: 'Tap a tile to turn it. Connect the power cable on the left to the sign cable on the right.', wiresDone7: 'Bzzzt! The sign roars to life: GRAND PARADOX in red neon. On the other side of the roof, a hundred pigeons explode into the air. Something small clinks onto the roof.', wiresOn7: 'The sign is buzzing happily.',
+  gateBirds7: 'The fire-escape gate is locked, and covered in pigeons. They hiss at you. Pigeons should not hiss.', gateLocked7: 'The gate is locked. The pigeons are gone, at least.', gateOpen7: 'The key fits.',
+  keyTake7: 'Among the feathers: a small brass key on a ring, with a pigeon leg tag that says GATE.',
+  hatch7: 'The hatch back down. The stairs only go to 405, and 405 only goes to 404. No.', tank7: 'A water tank, humming. Somebody painted a note on its side.', coop7: 'A pigeon coop with a sign: PROPERTY OF THE GRAND PARADOX. Each nest has a name tag.', chimney7: 'A warm chimney. It smells like breakfast.',
+});
+Object.assign(TXT.en.views, { roof7: 'Hotel roof', sign7: 'Behind the sign' });
+Object.assign(TXT.en.svg, { toSign7: 'sign ⟶', toRoof7: '⟵ back to the roof', box7: 'TOOLS', gate7: 'FIRE ESCAPE' });
+Object.assign(TXT.en.aria, { roofScene7: 'The hotel roof', signScene7: 'Behind the neon sign', lamp7: 'Antenna lamp', box7: 'Toolbox', tank7: 'Water tank', coop7: 'Pigeon coop', gate7: 'Fire-escape gate', hatch7: 'Stair hatch', chimney7: 'Chimney', key7: 'Small key on the roof', goSign7: 'Catwalk to the sign', jbox7: 'Junction box', graf7: 'Graffiti', goRoof7: 'Back to the roof' });
+Object.assign(TXT.en.items, {
+  wrench7: ['Wrench', '', 'A heavy wrench. It could open anything bolted shut.'],
+  gkey7: ['Gate key', '', 'A small brass key with a pigeon leg tag: GATE.'],
+});
+Object.assign(TXT.en.notes, {
+  tool7n: ['Note in the toolbox', 'Junction box is a mess again. Every tile has to point the right way or the sign stays dark. And PLEASE stop feeding the pigeons. — Roofing crew'],
+  coop7n: ['Name tags in the coop', 'Nests: Gustav, Lotte, Admiral, Mrs. Pebbles, and one empty nest labelled “404”. Of course.'],
+  tank7n: ['Paint on the water tank', 'In white paint, very old: “1912. The sign scares them. The pigeons keep the key.”'],
+  graf7n: ['Graffiti behind the letters', 'Behind the X of PARADOX someone wrote: “Every way out of this hotel is a way in.”'],
+  hatch7n: ['Scratches on the hatch', 'Tally marks. Hundreds of them. Next to them: “Checked out 312 times. Checked in 313.”'],
+});
+Object.assign(TXT.en.hints, {
+  c7_box: ['The toolbox wants three digits. Something on the roof keeps blinking.', 'Look at the antenna lamp and count the flashes in each group.', (c) => `The toolbox code is ${c}.`],
+  c7_open: ['The junction box behind the sign is bolted shut.', 'The toolbox had a wrench.', 'Select the wrench and tap the junction box.'],
+  c7_wires: ['Turn the tiles until the wire runs from the left cable to the right cable.', 'Start at the left cable and follow the wire tile by tile. Tiles that are not on the path don’t matter.', (p) => `Tap these tiles (counted 1-9, left to right, top to bottom): ${p}.`],
+  c7_key: ['The pigeons dropped something when the sign lit up.', 'Look on the roof near the gate.', 'Tap the small key on the roof.'],
+  c7_gate: ['The fire-escape gate is the way down.', 'You have the gate key.', 'Select the gate key and tap the fire-escape gate.'],
+});
+Object.assign(TXT.de, {
+  ch7Btn: 'Kapitel 7: Das Dach', nextCh7: 'Weiter zu Kapitel 7',
+  start7: 'Die schmale Treppe endet an einer Luke, und die Luke führt aufs Hoteldach. Wind, Schornsteine, die Rückseite des riesigen GRAND-PARADOX-Schilds und Tauben. Sehr viele Tauben. Die Feuertreppe ist der Weg nach unten, aber ihr Tor ist abgeschlossen, und die Tauben sitzen darauf, als gehöre es ihnen. Die Kirchenglocken schlagen 07:50. Um 08:30 kommen die Dachdecker und schließen die Luke für immer ab.',
+  up7Eyebrow: '08:30 · Dachdecker', up7Title: 'Luke zu', up7Text: 'Die Dachdecker kommen, pfeifen und hängen ein Vorhängeschloss an die Luke. Du verbringst den Tag mit den Tauben und die Nacht wieder in Zimmer 404. (Oder such in der Verlängerung weiter.)',
+  win7Eyebrow: 'Kapitel 7 geschafft', win7EyebrowOver: 'Kapitel 7 geschafft, in der Verlängerung', win7Title: 'Die Feuertreppe runter',
+  win7Text: (left, h, n) => `Das Tor schwingt auf. Du kletterst die klappernde Feuertreppe hinunter, springst die letzten zwei Meter auf die Straße und gehst um das Hotel herum nach vorn. Frei! Der Portier lüpft die Mütze: „Willkommen im Grand Paradox! Sie sind sicher unser neuer Gast. Ihr Zimmer ist die 404.“ Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  roof7: 'Das Dach: Schornsteine, ein Wassertank, eine Antenne mit blinkender Lampe, ein Werkzeugkasten, ein Taubenschlag und das Tor zur Feuertreppe.', toSign7: 'Hinter dem Schild: riesige Neonbuchstaben, von hinten gesehen, und ein grauer Schaltkasten.', backRoof7: 'Zurück auf dem offenen Dach. Die Tauben beobachten dich.',
+  lampTitle7: 'Antennenlampe', lampBody7: 'Die rote Lampe an der Antenne blinkt in Gruppen, macht Pause und fängt wieder an. Zähl die Blitze in jeder Gruppe.', lampAgain7: 'Nochmal ansehen',
+  boxTitle7: 'Werkzeugkasten', boxBody7: '<p>Ein rostiger Werkzeugkasten mit dreistelligem Zahlenschloss. In den Deckel gekratzt: „Wie die Lampe. Dachdecker können sich keine Zahlen merken.“</p>', boxOpened7: 'Das Schloss gibt nach. Drinnen: ein großer Schraubenschlüssel und ein Zettel.', boxEmpty7: 'Krumme Nägel und Butterbrotpapier.',
+  jboxShut7: 'Ein grauer Schaltkasten, mit vier dicken Schrauben zu. Du brauchst Werkzeug.', jboxOpen7: 'Du drehst die Schrauben los. Der Deckel klappt auf: ein Raster aus Kabelkacheln, alle falsch herum.',
+  wiresTitle7: 'Schaltkasten', wiresBody7: 'Tippe eine Kachel an, um sie zu drehen. Verbinde das Stromkabel links mit dem Schildkabel rechts.', wiresDone7: 'Bzzzt! Das Schild erwacht: GRAND PARADOX in rotem Neon. Auf der anderen Seite des Dachs explodieren hundert Tauben in die Luft. Etwas Kleines klimpert aufs Dach.', wiresOn7: 'Das Schild summt zufrieden.',
+  gateBirds7: 'Das Tor zur Feuertreppe ist abgeschlossen und voller Tauben. Sie fauchen dich an. Tauben sollten nicht fauchen.', gateLocked7: 'Das Tor ist abgeschlossen. Wenigstens sind die Tauben weg.', gateOpen7: 'Der Schlüssel passt.',
+  keyTake7: 'Zwischen den Federn: ein kleiner Messingschlüssel an einem Ring, mit einem Taubenring, auf dem TOR steht.',
+  hatch7: 'Die Luke nach unten. Die Treppe führt nur nach 405, und 405 führt nur nach 404. Nein.', tank7: 'Ein brummender Wassertank. Jemand hat etwas an die Seite gemalt.', coop7: 'Ein Taubenschlag mit Schild: EIGENTUM DES GRAND PARADOX. Jedes Nest hat ein Namensschild.', chimney7: 'Ein warmer Schornstein. Es riecht nach Frühstück.',
+});
+Object.assign(TXT.de.views, { roof7: 'Hoteldach', sign7: 'Hinter dem Schild' });
+Object.assign(TXT.de.svg, { toSign7: 'Schild ⟶', toRoof7: '⟵ zurück aufs Dach', box7: 'WERKZEUG', gate7: 'FEUERTREPPE' });
+Object.assign(TXT.de.aria, { roofScene7: 'Das Hoteldach', signScene7: 'Hinter dem Neonschild', lamp7: 'Antennenlampe', box7: 'Werkzeugkasten', tank7: 'Wassertank', coop7: 'Taubenschlag', gate7: 'Tor zur Feuertreppe', hatch7: 'Treppenluke', chimney7: 'Schornstein', key7: 'Kleiner Schlüssel auf dem Dach', goSign7: 'Laufsteg zum Schild', jbox7: 'Schaltkasten', graf7: 'Graffiti', goRoof7: 'Zurück aufs Dach' });
+Object.assign(TXT.de.items, {
+  wrench7: ['Schraubenschlüssel', '', 'Ein schwerer Schraubenschlüssel. Damit geht alles auf, was verschraubt ist.'],
+  gkey7: ['Torschlüssel', '', 'Ein kleiner Messingschlüssel mit Taubenring: TOR.'],
+});
+Object.assign(TXT.de.notes, {
+  tool7n: ['Zettel im Werkzeugkasten', 'Der Schaltkasten ist schon wieder durcheinander. Jede Kachel muss richtig zeigen, sonst bleibt das Schild dunkel. Und BITTE hört auf, die Tauben zu füttern. — Dachdecker-Team'],
+  coop7n: ['Namensschilder im Taubenschlag', 'Nester: Gustav, Lotte, Admiral, Frau Kiesel und ein leeres Nest mit der Aufschrift „404“. Natürlich.'],
+  tank7n: ['Farbe am Wassertank', 'In weißer Farbe, sehr alt: „1912. Das Schild erschreckt sie. Die Tauben haben den Schlüssel.“'],
+  graf7n: ['Graffiti hinter den Buchstaben', 'Hinter das X von PARADOX hat jemand geschrieben: „Jeder Weg aus diesem Hotel ist ein Weg hinein.“'],
+  hatch7n: ['Kratzer an der Luke', 'Strichlisten. Hunderte. Daneben: „312-mal ausgecheckt. 313-mal eingecheckt.“'],
+});
+Object.assign(TXT.de.hints, {
+  c7_box: ['Der Werkzeugkasten will drei Ziffern. Irgendwas auf dem Dach blinkt die ganze Zeit.', 'Sieh dir die Antennenlampe an und zähl die Blitze in jeder Gruppe.', (c) => `Der Code für den Werkzeugkasten ist ${c}.`],
+  c7_open: ['Der Schaltkasten hinter dem Schild ist zugeschraubt.', 'Im Werkzeugkasten war ein Schraubenschlüssel.', 'Wähl den Schraubenschlüssel und tippe auf den Schaltkasten.'],
+  c7_wires: ['Dreh die Kacheln, bis das Kabel vom linken zum rechten Anschluss läuft.', 'Fang beim linken Kabel an und folge dem Draht Kachel für Kachel. Kacheln abseits des Weges sind egal.', (p) => `Tippe diese Kacheln an (gezählt 1-9, von links nach rechts, von oben nach unten): ${p}.`],
+  c7_key: ['Die Tauben haben etwas fallen lassen, als das Schild anging.', 'Sieh auf dem Dach beim Tor nach.', 'Tippe auf den kleinen Schlüssel auf dem Dach.'],
+  c7_gate: ['Das Tor zur Feuertreppe ist der Weg nach unten.', 'Du hast den Torschlüssel.', 'Wähl den Torschlüssel und tippe auf das Tor zur Feuertreppe.'],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1140,7 +1213,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1359,6 +1432,7 @@ function useItem(id, h) {
   if (S.ch === 4) return useItem4(id, h);
   if (S.ch === 5) return useItem5(id, h);
   if (S.ch === 6) return useItem6(id, h);
+  if (S.ch === 7) return useItem7(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2082,7 +2156,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -2469,6 +2543,142 @@ function escape6() {
   showEnd(S.overtime ? t('win6EyebrowOver') : t('win6Eyebrow'), t('win6Title'), t('win6Text', mmss(left), S.hints, noteCount6()), left, false);
 }
 function newGame6() { S = freshState6(); save(); begin(); say(t('start6')); }
+// ---------- chapter 7: the roof (antenna lamp, junction box, pigeons)
+const TOTAL7 = 40 * 60;
+Object.assign(ICONS, { wrench7: '🔧', gkey7: '🔑' });
+const noteIds7 = ['tool7n', 'coop7n', 'tank7n', 'graf7n', 'hatch7n'];
+const DR7 = [-1, 0, 1, 0], DC7 = [0, 1, 0, -1];
+const open7 = (type, rot) => (type === 's' ? [rot % 4, (rot + 2) % 4] : [rot % 4, (rot + 1) % 4]);
+// follow the wire from the left cable; returns the connected cells and whether it reaches the right cable
+function trace7(st) {
+  const cells = []; let r = st.wa, c = 0, from = 3;
+  for (let n = 0; n < 9; n++) {
+    const i = r * 3 + c, o = open7(st.wt[i], st.wr[i]);
+    if (!o.includes(from)) return { cells, ok: false };
+    cells.push(i); const out = o[0] === from ? o[1] : o[0];
+    if (c === 2 && out === 1) return { cells, ok: r === st.wb };
+    r += DR7[out]; c += DC7[out]; from = (out + 2) % 4;
+    if (r < 0 || r > 2 || c < 0 || c > 2) return { cells, ok: false };
+  }
+  return { cells, ok: false };
+}
+function makeWires7() {
+  for (let n = 0; n < 200; n++) {
+    const wa = Math.floor(Math.random() * 3), wb = Math.floor(Math.random() * 3), path = [];
+    const seen = new Set();
+    const dfs = (r, c) => { path.push([r, c]); seen.add(r * 3 + c); if (c === 2 && r === wb) return true;
+      for (const d of shuffle([0, 1, 2, 3])) { const nr = r + DR7[d], nc = c + DC7[d]; if (nr >= 0 && nr < 3 && nc >= 0 && nc < 3 && !seen.has(nr * 3 + nc) && dfs(nr, nc)) return true; }
+      path.pop(); return false; };
+    if (!dfs(wa, 0) || path.length < 4) continue;
+    const wt = Array.from({ length: 9 }, () => pick(['s', 'c'])), want = {};
+    path.forEach(([r, c], k) => {
+      const prev = k ? path[k - 1] : [r, -1], next = k < path.length - 1 ? path[k + 1] : [r, 3];
+      const dirTo = ([r2, c2]) => (r2 < r ? 0 : c2 > c ? 1 : r2 > r ? 2 : 3);
+      const x = dirTo(prev), y = dirTo(next), i = r * 3 + c;
+      if ((x + 2) % 4 === y) { wt[i] = 's'; want[i] = [x % 2, x % 2 + 2]; } else { wt[i] = 'c'; want[i] = [(x + 1) % 4 === y ? x : y]; }
+    });
+    const st = { wa, wb, wt, wr: Array.from({ length: 9 }, () => Math.floor(Math.random() * 4)), want };
+    if (!trace7(st).ok) return st;
+  }
+  return { wa: 1, wb: 1, wt: ['c', 's', 'c', 's', 's', 's', 'c', 's', 'c'], wr: [0, 0, 0, 0, 0, 0, 0, 0, 0], want: { 3: [1, 3], 4: [1, 3], 5: [1, 3] } };
+}
+function freshState7() {
+  const blink = [0, 0, 0].map(() => 1 + Math.floor(Math.random() * 9));
+  return Object.assign({ v: 1, ch: 7, started: Date.now(), left: TOTAL7, ot: 0, hints: 0, hintSeen: {}, view: 'roof7', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    blink, bcode: blink.join('') }, makeWires7());
+}
+const noteCount7 = () => noteIds7.filter((n) => S.f['note_' + n]).length;
+// taps still needed on the path tiles, for the last hint: "2 ×1, 5 ×3"
+const wireTaps7 = () => Object.keys(S.want).map((i) => { const k = Math.min(...S.want[i].map((tg) => (tg - S.wr[i] + 4) % 4)); return k ? `${+i + 1} ×${k}` : ''; }).filter(Boolean).join(', ') || '-';
+function pigeon7(x, y, s = 1) { return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="0" rx="16" ry="11" fill="#8a949a" stroke="#2a2a2a" stroke-width="2.5"/><circle cx="12" cy="-10" r="7" fill="#6b7880" stroke="#2a2a2a" stroke-width="2.5"/><path d="M18 -10 l7 2 l-7 2z" fill="#e8a33d"/><circle cx="13" cy="-11" r="1.6" fill="#e8453c"/><path d="M8 -4 q-6 4 -2 8" stroke="#3fae6a" stroke-width="3" fill="none"/></g>`; }
+function sceneRoof7() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('roofScene7')}">
+  <rect width="1000" height="420" fill="#a9d4f0"/><circle cx="150" cy="80" r="40" fill="#ffe9a8"/><path d="M0 330 h80 v-60 h50 v60 h60 v-100 h40 v100 h90 v-40 h70 v40 h610 v90 H0Z" fill="#9aa8b8" opacity="0.6"/><rect y="420" width="1000" height="180" fill="#6b6b75"/><path d="M0 420 H1000" stroke="#3a3a44" stroke-width="6"/>
+  ${hot('gate7', `<rect x="20" y="250" width="150" height="190" fill="none" stroke="#2a2a2a" stroke-width="8"/>${[45, 70, 95, 120, 145].map((x) => `<path d="M${x} 250 V440" stroke="#2a2a2a" stroke-width="5"/>`).join('')}<rect x="80" y="330" width="26" height="30" rx="4" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/><text x="95" y="238" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#2a1a10">${W('gate7')}</text>${f.lit ? '' : [40, 75, 110, 145].map((x, k) => pigeon7(x, 238 + (k % 2) * 4, k % 2 ? -1 : 1)).join('') + pigeon7(70, 300) + pigeon7(130, 380, -1)}`)}
+  ${f.lit && !f.keyTaken ? hot('key7', `<circle cx="215" cy="520" r="26" fill="#ffd23f" opacity="0.25"/><path d="M200 520 h22 m-6 0 v8 m-6 -8 v6" stroke="#d9a74a" stroke-width="5" fill="none"/><circle cx="196" cy="520" r="8" fill="none" stroke="#d9a74a" stroke-width="5"/><ellipse cx="250" cy="540" rx="10" ry="4" fill="#c0c8cc"/><ellipse cx="180" cy="548" rx="8" ry="3" fill="#c0c8cc"/>`) : ''}
+  ${hot('hatch7', `<rect x="230" y="440" width="120" height="60" fill="#4a4a54" stroke="#2a2a2a" stroke-width="5"/><path d="M240 450 h100" stroke="#8a8a94" stroke-width="4"/>`)}
+  ${hot('box7', `<rect x="380" y="450" width="110" height="56" rx="6" fill="#c0392b" stroke="#2a1a10" stroke-width="4"/><rect x="415" y="438" width="40" height="14" rx="4" fill="none" stroke="#2a1a10" stroke-width="4"/><rect x="425" y="470" width="20" height="16" rx="3" fill="#d9a74a"/><text x="435" y="500" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="12" fill="#fff">${W('box7')}</text>`)}
+  ${hot('tank7', `<rect x="520" y="190" width="140" height="170" rx="16" fill="#8a6a4a" stroke="#2a1a10" stroke-width="5"/>${[230, 280, 330].map((y) => `<path d="M520 ${y} H660" stroke="#5a4a3a" stroke-width="4"/>`).join('')}<path d="M535 360 V430 M645 360 V430" stroke="#2a1a10" stroke-width="8"/><text x="590" y="262" text-anchor="middle" font-family="Fraunces, serif" font-size="16" fill="#efe6d2">1912</text>`)}
+  ${hot('lamp7', `<path d="M720 430 V140 M690 430 L720 300 L750 430 M700 220 h40 M705 260 h30" stroke="#3a3a44" stroke-width="6" fill="none"/><circle cx="720" cy="130" r="16" fill="#e8453c" stroke="#2a2a2a" stroke-width="4"/><circle cx="720" cy="130" r="30" fill="#e8453c" opacity="0.25"/>`)}
+  ${hot('coop7', `<path d="M780 300 l60 -40 l60 40 v130 h-120z" fill="#b9a27a" stroke="#2a1a10" stroke-width="5"/>${[0, 1, 2].map((k) => `<rect x="${795 + k * 36}" y="330" width="26" height="26" rx="13" fill="#2a1a10"/>`).join('')}${f.lit ? '' : pigeon7(840, 395)}`)}
+  ${hot('chimney7', `<rect x="930" y="250" width="56" height="180" fill="#9a4a3a" stroke="#2a1a10" stroke-width="5"/><path d="M958 240 q-14 -30 6 -60 q18 -30 -2 -60" stroke="#e0e0e0" stroke-width="10" fill="none" opacity="0.6"/>`)}
+  ${hot('goSign7', `<rect x="760" y="520" width="220" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="870" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('toSign7')}</text>`)}
+  ${f.lit ? [[300, 110], [380, 70], [460, 130], [820, 90], [900, 60]].map(([x, y], k) => pigeon7(x, y, k % 2 ? -0.8 : 0.8)).join('') : ''}
+  </svg>`;
+}
+function sceneSign7() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('signScene7')}">
+  <rect width="1000" height="600" fill="#7fa8c8"/><rect y="470" width="1000" height="130" fill="#5a5a64"/>
+  ${[100, 300, 500, 700, 900].map((x) => `<path d="M${x} 470 V120" stroke="#3a3a44" stroke-width="10"/>`).join('')}<path d="M40 180 H960 M40 330 H960" stroke="#3a3a44" stroke-width="8"/>
+  <g transform="translate(1000 0) scale(-1 1)"><text x="500" y="300" text-anchor="middle" font-family="Fraunces, serif" font-weight="900" font-size="128" fill="${f.lit ? '#ff4a3d' : '#4a4a54'}" stroke="${f.lit ? '#ffd0c0' : '#2a2a2a'}" stroke-width="4" ${f.lit ? 'style="filter:drop-shadow(0 0 14px #ff4a3d)"' : ''}>GRAND</text><text x="500" y="440" text-anchor="middle" font-family="Fraunces, serif" font-weight="900" font-size="128" fill="${f.lit ? '#ff4a3d' : '#4a4a54'}" stroke="${f.lit ? '#ffd0c0' : '#2a2a2a'}" stroke-width="4">PARADOX</text></g>
+  ${hot('jbox7', `<rect x="420" y="470" width="160" height="110" rx="6" fill="#8a949a" stroke="#10181c" stroke-width="5"/>${f.jbox ? '<rect x="436" y="486" width="128" height="78" fill="#2a2a2a"/>' : [[434, 484], [566, 484], [434, 566], [566, 566]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#5a5a64"/>`).join('')}<path d="M500 470 V440" stroke="#10181c" stroke-width="6"/><text x="500" y="535" text-anchor="middle" font-size="34">⚡</text>`)}
+  ${hot('graf7', `<rect x="130" y="380" width="120" height="60" fill="#000" opacity="0.001"/><path d="M140 420 q20 -30 40 0 t40 0" stroke="#ffd23f" stroke-width="5" fill="none"/><text x="190" y="400" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="#ffd23f">?!</text>`)}
+  ${hot('goRoof7', `<rect x="640" y="520" width="320" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="800" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('toRoof7')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { roof7: sceneRoof7, sign7: sceneSign7 });
+function openLamp7() {
+  openModal(t('lampTitle7'), `<p>${t('lampBody7')}</p><svg viewBox="0 0 200 200" style="width:min(50vw,180px);display:block;margin:0 auto"><path d="M100 200 V120" stroke="#3a3a44" stroke-width="10"/><circle id="lamp7" cx="100" cy="90" r="50" fill="#3a1a1a" stroke="#2a2a2a" stroke-width="6"/></svg>`, (b) => {
+    const lamp = b.querySelector('#lamp7'), steps = [];
+    for (const d of S.blink) { for (let k = 0; k < d; k++) steps.push([1, 320], [0, 320]); steps.push([0, 1000]); }
+    steps.push([0, 1600]);
+    let n = 0;
+    const tick = () => { if (!lamp.isConnected || $('modal').hidden) return; const [on, ms] = steps[n % steps.length]; n++;
+      lamp.setAttribute('fill', on ? '#ff4a3d' : '#3a1a1a'); lamp.style.filter = on ? 'drop-shadow(0 0 18px #ff4a3d)' : ''; if (on) Sound.click(); setTimeout(tick, ms); };
+    setTimeout(tick, 600);
+  });
+}
+function openWires7() {
+  openModal(t('wiresTitle7'), `<p>${t('wiresBody7')}</p><div id="wGrid" style="display:grid;grid-template-columns:28px repeat(3,64px) 28px;gap:6px;justify-content:center;align-items:center"></div>`, (b) => {
+    const grid = b.querySelector('#wGrid');
+    const draw = () => {
+      const live = new Set(trace7(S).cells); grid.innerHTML = '';
+      for (let r = 0; r < 3; r++) {
+        grid.appendChild(mk('span', '', r === S.wa ? '⚡' : ''));
+        for (let c = 0; c < 3; c++) { const i = r * 3 + c, col = S.f.lit || live.has(i) ? '#5dff8f' : '#d9a74a';
+          const lines = open7(S.wt[i], S.wr[i]).map((d) => `<path d="M30 30 L${30 + DC7[d] * 30} ${30 + DR7[d] * 30}" stroke="${col}" stroke-width="10" stroke-linecap="round"/>`).join('');
+          const btn = mk('button', 'key', `<svg viewBox="0 0 60 60" width="52" height="52"><rect width="60" height="60" fill="#1a1a22"/>${lines}<circle cx="30" cy="30" r="6" fill="${col}"/></svg>`);
+          btn.setAttribute('data-act', 'tile' + i); btn.setAttribute('aria-label', `${i + 1}`); btn.style.padding = '4px';
+          btn.addEventListener('click', () => { if (S.f.lit) return; S.wr[i] = (S.wr[i] + 1) % 4; Sound.click();
+            if (trace7(S).ok) { S.f.lit = true; S.f.keyDropped = true; Sound.unlock(); Sound.win(); say(t('wiresDone7')); } save(); draw(); renderScene(); });
+          grid.appendChild(btn); }
+        grid.appendChild(mk('span', '', r === S.wb ? '💡' : ''));
+      }
+    };
+    draw();
+  });
+}
+Object.assign(HOTS, {
+  lamp7: () => openLamp7(),
+  box7: () => { if (S.f.boxOpen) { say(t('boxEmpty7')); return; } openCodePad(t('boxTitle7'), t('boxBody7'), S.bcode, (msg) => { S.f.boxOpen = true; give('wrench7'); msg.textContent = t('boxOpened7'); say(t('boxOpened7')); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('tool7n'); } }, 1300); }); },
+  goSign7: () => { go('sign7'); say(t('toSign7')); },
+  goRoof7: () => { go('roof7'); say(t('backRoof7')); },
+  jbox7: () => { if (!S.f.jbox) { Sound.nope(); say(t('jboxShut7')); return; } if (S.f.lit) { say(t('wiresOn7')); return; } openWires7(); },
+  graf7: () => openNote('graf7n'),
+  gate7: () => { Sound.nope(); say(S.f.lit ? t('gateLocked7') : t('gateBirds7')); },
+  key7: () => { if (S.f.keyTaken) return; S.f.keyTaken = true; give('gkey7'); say(t('keyTake7')); renderScene(); },
+  hatch7: () => { say(t('hatch7')); openNote('hatch7n'); },
+  tank7: () => { say(t('tank7')); openNote('tank7n'); },
+  coop7: () => { say(t('coop7')); openNote('coop7n'); },
+  chimney7: () => say(t('chimney7')),
+});
+function useItem7(id, h) {
+  if (id === 'wrench7' && h === 'jbox7') { take('wrench7'); S.f.jbox = true; Sound.door(); say(t('jboxOpen7')); renderScene(); setTimeout(openWires7, 600); return true; }
+  if (id === 'gkey7' && h === 'gate7') { take('gkey7'); say(t('gateOpen7')); Sound.unlock(); Sound.door(); renderScene(); setTimeout(escape7, 1500); return true; }
+  return false;
+}
+function escape7() {
+  if (!S || S.done || S.ch !== 7) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best7 = Math.max(profile.best7 || 0, left);
+  profile.ch7done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win7EyebrowOver') : t('win7Eyebrow'), t('win7Title'), t('win7Text', mmss(left), S.hints, noteCount7()), left, false);
+}
+function newGame7() { S = freshState7(); save(); begin(); say(t('start7')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -2495,9 +2705,12 @@ const GOALS5 = [
 const GOALS6 = [
   ['c6_safe', () => S.f.safeOpen], ['c6_power', () => S.f.power], ['c6_lights', () => S.f.lit], ['c6_weigh', () => S.f.caseOnScale], ['c6_case', () => S.f.caseOpen], ['c6_door', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS7 = [
+  ['c7_box', () => S.f.boxOpen], ['c7_open', () => S.f.jbox], ['c7_wires', () => S.f.lit], ['c7_key', () => S.f.keyTaken], ['c7_gate', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -2533,8 +2746,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 6); $('btnNextCh').textContent = t(S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 7); $('btnNextCh').textContent = t(S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -2542,7 +2755,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -2555,8 +2768,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -2582,6 +2795,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh7 = 0;
+$('btnCh7').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh7 > 4000) { armedCh7 = Date.now(); $('btnCh7').textContent = t('confirmNew'); return; }
+  armedCh7 = 0; newGame7();
 });
 let armedCh6 = 0;
 $('btnCh6').addEventListener('click', () => {
@@ -2626,6 +2845,7 @@ function showStart() {
   $('btnCh4').hidden = !profile.ch3done; $('btnCh4').textContent = t('ch4Btn'); armedCh4 = 0;
   $('btnCh5').hidden = !profile.ch4done; $('btnCh5').textContent = t('ch5Btn'); armedCh5 = 0;
   $('btnCh6').hidden = !profile.ch5done; $('btnCh6').textContent = t('ch6Btn'); armedCh6 = 0;
+  $('btnCh7').hidden = !profile.ch6done; $('btnCh7').textContent = t('ch7Btn'); armedCh7 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
