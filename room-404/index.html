@@ -217,6 +217,7 @@ body {
           <button class="btn" id="btnCh5" type="button" data-i18n="ch5Btn" hidden>Chapter 5</button>
           <button class="btn" id="btnCh6" type="button" data-i18n="ch6Btn" hidden>Chapter 6</button>
           <button class="btn" id="btnCh7" type="button" data-i18n="ch7Btn" hidden>Chapter 7</button>
+          <button class="btn" id="btnCh8" type="button" data-i18n="ch8Btn" hidden>Chapter 8</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -264,7 +265,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1153,6 +1154,80 @@ Object.assign(TXT.de.hints, {
   c7_key: ['Die Tauben haben etwas fallen lassen, als das Schild anging.', 'Sieh auf dem Dach beim Tor nach.', 'Tippe auf den kleinen Schlüssel auf dem Dach.'],
   c7_gate: ['Das Tor zur Feuertreppe ist der Weg nach unten.', 'Du hast den Torschlüssel.', 'Wähl den Torschlüssel und tippe auf das Tor zur Feuertreppe.'],
 });
+Object.assign(TXT.en, {
+  ch8Btn: 'Chapter 8: Check-in', nextCh8: 'On to chapter 8',
+  start8: 'The doorman leads you through the revolving door. The lobby is bright, busy and smells of coffee. Behind the desk, a smiling day manager already holds out a key: “Welcome back! Room 404, as always.” Not again. There has to be another way up, before the 09:15 bus of new guests arrives and the loop closes.',
+  up8Eyebrow: '09:15 · the bus arrives', up8Title: 'Room 404, as always', up8Text: 'Forty new guests pour into the lobby, and in the crowd somebody presses the key to 404 into your hand. You wake up in the old bed. (Or keep searching in overtime.)',
+  win8Eyebrow: 'Chapter 8 complete', win8EyebrowOver: 'Chapter 8 complete, in overtime', win8Title: 'Going up',
+  win8Text: (left, h, n) => `The brass button clicks into the panel. 13. You press it. As the doors slide shut, the day manager drops her coffee and shouts “Not thirteen! We don’t HAVE a thirteen!” The lift goes up, and up, and up. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  lobby8: 'The lobby by day: the reception desk, a framed floor plan, the cloakroom and the lift.', toLounge8: 'The lounge: a player piano, a bar, and an armchair nobody sits in.', backLobby8: 'Back in the busy lobby.',
+  desk8: 'The day manager beams at you: “Room 404, as always! Breakfast is until ten.” You smile and step away from the key.', door8: 'The revolving door. Outside is the street, and you just came from there.',
+  pianoTitle8: 'Player piano', pianoBody8: 'The piano plays a little tune all by itself, then waits. Play it back exactly.', listen8: 'Listen again', pianoWrong8: 'A sour note. The piano huffs and plays its tune again.', pianoDone8: 'The piano plays a happy chord, and the bench lid pops up. Inside: a cloakroom ticket.', pianoEmpty8: 'The piano hums its tune quietly to itself.', pianoProgress8: (n) => `${n} of 5 notes right`,
+  cloakNeed8: 'The cloakroom attendant smiles: “Ticket, please.”', cloakGive8: 'The attendant takes the ticket and hands you a long coat. Is it yours? It fits perfectly. In the pocket: a tiny key and a note.', cloakEmpty8: '“Have a lovely stay!”',
+  frameLocked8: 'The floor plan of the hotel, behind locked glass. The floors look shuffled.', frameOpen8: 'The tiny key opens the glass. The floor plan is made of sliding tiles.',
+  planTitle8: 'Floor plan', planBody8: 'Slide the floors back into order: 1 to 8, the gap at the bottom right. Tap a tile next to the gap.', planDone8: 'Click. The floors are in order, and the whole frame swings aside. Behind it, in a dusty niche: a brass lift button marked 13.', planEmpty8: 'An empty niche behind the floor plan.',
+  liftNeed8: 'The lift panel has buttons 1 to 12, and one empty hole above 12.', liftIn8: 'The brass button fits the empty hole perfectly.',
+  bar8: 'The barkeeper polishes a glass that is already clean. A coaster on the bar has writing on it.', chair8: 'A big green armchair. Under the cushion: crumbs. A lot of crumbs.',
+});
+Object.assign(TXT.en.views, { lobby8: 'Lobby by day', lounge8: 'Lounge' });
+Object.assign(TXT.en.svg, { desk8: 'RECEPTION', cloak8: 'CLOAKROOM', toLounge8: 'lounge ⟶', toLobby8: '⟵ lobby', lift8: 'LIFT', bar8: 'BAR' });
+Object.assign(TXT.en.aria, { lobbyScene8: 'The hotel lobby by day', loungeScene8: 'The hotel lounge', desk8: 'Reception and the day manager', door8: 'Revolving door', plan8: 'Framed floor plan', cloak8: 'Cloakroom', lift8: 'Lift', goLounge8: 'To the lounge', piano8: 'Player piano', bar8: 'Bar', chair8: 'Armchair', goLobby8: 'Back to the lobby' });
+Object.assign(TXT.en.items, {
+  ticket8: ['Cloakroom ticket', '', 'A paper ticket: CLOAKROOM · No. 404. Of course.'],
+  fkey8: ['Tiny key', '', 'A tiny key from the coat pocket, tagged “floor plan”.'],
+  button8: ['Brass button', '', 'A lift button. It says 13.'],
+});
+Object.assign(TXT.en.notes, {
+  piano8n: ['Sheet music on the bench', 'Song title: “Room Service Waltz”. Somebody has added in pencil: “the piano remembers everyone who ever played it.”'],
+  coat8n: ['Note in the coat pocket', 'If you are wearing this coat, you are the guest from 404. The floor plan has a secret floor. Count them. — 1912'],
+  plan8n: ['Label on the floor plan', 'GRAND PARADOX HOTEL · 12 FLOORS. Somebody has scratched out 12 and written 13.'],
+  desk8n: ['Guest register by day', 'Today’s arrivals: 40 guests on the 09:15 bus. Room 404: “the usual guest”. Room 13xx: (left blank, page torn).'],
+  bar8n: ['Coaster on the bar', 'Happy hour: 13:00 to 13:00. “It’s always happy hour on the thirteenth floor.”'],
+});
+Object.assign(TXT.en.hints, {
+  c8_piano: ['The player piano in the lounge plays a tune. It wants it back.', 'Watch which keys light up, in which order, and tap them the same way.', (m) => `Play: ${m}.`],
+  c8_coat: ['The cloakroom wants a ticket.', 'The piano bench had a cloakroom ticket.', 'Select the cloakroom ticket and tap the cloakroom.'],
+  c8_frame: ['The floor plan is behind locked glass.', 'The coat pocket had a tiny key.', 'Select the tiny key and tap the floor plan.'],
+  c8_plan: ['Slide the floors into order 1 to 8, the gap at the bottom right.', 'Get the top row 1 2 3 right first, then the rest.', (m) => `Next moves: slide ${m}. Ask again later for more.`],
+  c8_lift: ['The lift has an empty hole above 12.', 'The floor plan hid a brass button.', 'Select the brass button and tap the lift.'],
+});
+Object.assign(TXT.de, {
+  ch8Btn: 'Kapitel 8: Check-in', nextCh8: 'Weiter zu Kapitel 8',
+  start8: 'Der Portier führt dich durch die Drehtür. Die Lobby ist hell, voller Leute und riecht nach Kaffee. Hinter dem Tresen hält dir eine lächelnde Tagesmanagerin schon einen Schlüssel hin: „Willkommen zurück! Zimmer 404, wie immer.“ Nicht schon wieder. Es muss einen anderen Weg nach oben geben, bevor um 09:15 der Bus mit neuen Gästen kommt und sich die Schleife schließt.',
+  up8Eyebrow: '09:15 · der Bus kommt', up8Title: 'Zimmer 404, wie immer', up8Text: 'Vierzig neue Gäste strömen in die Lobby, und im Gedränge drückt dir jemand den Schlüssel zu 404 in die Hand. Du wachst im alten Bett auf. (Oder such in der Verlängerung weiter.)',
+  win8Eyebrow: 'Kapitel 8 geschafft', win8EyebrowOver: 'Kapitel 8 geschafft, in der Verlängerung', win8Title: 'Aufwärts',
+  win8Text: (left, h, n) => `Der Messingknopf rastet im Bedienfeld ein. 13. Du drückst ihn. Während die Türen zugleiten, lässt die Tagesmanagerin ihren Kaffee fallen und ruft: „Nicht die Dreizehn! Wir HABEN keine Dreizehn!“ Der Aufzug fährt nach oben, und weiter, und weiter. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  lobby8: 'Die Lobby bei Tag: der Empfang, ein gerahmter Etagenplan, die Garderobe und der Aufzug.', toLounge8: 'Die Lounge: ein selbstspielendes Klavier, eine Bar und ein Sessel, in dem nie jemand sitzt.', backLobby8: 'Zurück in der vollen Lobby.',
+  desk8: 'Die Tagesmanagerin strahlt dich an: „Zimmer 404, wie immer! Frühstück gibt es bis zehn.“ Du lächelst und gehst einen Schritt weg vom Schlüssel.', door8: 'Die Drehtür. Draußen ist die Straße, und von da kommst du gerade.',
+  pianoTitle8: 'Selbstspielendes Klavier', pianoBody8: 'Das Klavier spielt ganz von allein eine kleine Melodie und wartet dann. Spiel sie genau nach.', listen8: 'Nochmal anhören', pianoWrong8: 'Ein schiefer Ton. Das Klavier schnaubt und spielt seine Melodie noch einmal.', pianoDone8: 'Das Klavier spielt einen fröhlichen Akkord, und der Deckel der Klavierbank springt auf. Drinnen: eine Garderobenmarke.', pianoEmpty8: 'Das Klavier summt leise seine Melodie vor sich hin.', pianoProgress8: (n) => `${n} von 5 Tönen richtig`,
+  cloakNeed8: 'Die Garderobiere lächelt: „Ihre Marke, bitte.“', cloakGive8: 'Die Garderobiere nimmt die Marke und reicht dir einen langen Mantel. Ist das deiner? Er passt perfekt. In der Tasche: ein winziger Schlüssel und ein Zettel.', cloakEmpty8: '„Einen schönen Aufenthalt!“',
+  frameLocked8: 'Der Etagenplan des Hotels, hinter abgeschlossenem Glas. Die Stockwerke sehen durcheinander aus.', frameOpen8: 'Der winzige Schlüssel öffnet das Glas. Der Etagenplan besteht aus Schiebeplättchen.',
+  planTitle8: 'Etagenplan', planBody8: 'Schieb die Stockwerke wieder in die richtige Reihenfolge: 1 bis 8, die Lücke unten rechts. Tippe ein Plättchen neben der Lücke an.', planDone8: 'Klick. Die Stockwerke sind in Ordnung, und der ganze Rahmen schwingt zur Seite. Dahinter, in einer staubigen Nische: ein Aufzugknopf aus Messing mit der Aufschrift 13.', planEmpty8: 'Eine leere Nische hinter dem Etagenplan.',
+  liftNeed8: 'Das Bedienfeld im Aufzug hat Knöpfe von 1 bis 12 und ein leeres Loch über der 12.', liftIn8: 'Der Messingknopf passt genau in das leere Loch.',
+  bar8: 'Der Barkeeper poliert ein Glas, das schon sauber ist. Auf einem Bierdeckel steht etwas.', chair8: 'Ein großer grüner Sessel. Unter dem Kissen: Krümel. Sehr viele Krümel.',
+});
+Object.assign(TXT.de.views, { lobby8: 'Lobby bei Tag', lounge8: 'Lounge' });
+Object.assign(TXT.de.svg, { desk8: 'EMPFANG', cloak8: 'GARDEROBE', toLounge8: 'Lounge ⟶', toLobby8: '⟵ Lobby', lift8: 'AUFZUG', bar8: 'BAR' });
+Object.assign(TXT.de.aria, { lobbyScene8: 'Die Hotellobby bei Tag', loungeScene8: 'Die Hotellounge', desk8: 'Empfang und Tagesmanagerin', door8: 'Drehtür', plan8: 'Gerahmter Etagenplan', cloak8: 'Garderobe', lift8: 'Aufzug', goLounge8: 'Zur Lounge', piano8: 'Selbstspielendes Klavier', bar8: 'Bar', chair8: 'Sessel', goLobby8: 'Zurück in die Lobby' });
+Object.assign(TXT.de.items, {
+  ticket8: ['Garderobenmarke', '', 'Eine Papiermarke: GARDEROBE · Nr. 404. Natürlich.'],
+  fkey8: ['Winziger Schlüssel', '', 'Ein winziger Schlüssel aus der Manteltasche, Anhänger: „Etagenplan“.'],
+  button8: ['Messingknopf', '', 'Ein Aufzugknopf. Darauf steht 13.'],
+});
+Object.assign(TXT.de.notes, {
+  piano8n: ['Noten auf der Klavierbank', 'Titel: „Zimmerservice-Walzer“. Jemand hat mit Bleistift dazugeschrieben: „Das Klavier erinnert sich an alle, die je darauf gespielt haben.“'],
+  coat8n: ['Zettel in der Manteltasche', 'Wenn du diesen Mantel trägst, bist du der Gast aus 404. Der Etagenplan hat ein geheimes Stockwerk. Zähl nach. — 1912'],
+  plan8n: ['Schild am Etagenplan', 'GRAND PARADOX HOTEL · 12 ETAGEN. Jemand hat die 12 weggekratzt und 13 hingeschrieben.'],
+  desk8n: ['Gästebuch bei Tag', 'Heutige Anreisen: 40 Gäste mit dem Bus um 09:15. Zimmer 404: „der übliche Gast“. Zimmer 13xx: (leer, Seite ausgerissen).'],
+  bar8n: ['Bierdeckel auf der Bar', 'Happy Hour: 13:00 bis 13:00. „Im dreizehnten Stock ist immer Happy Hour.“'],
+});
+Object.assign(TXT.de.hints, {
+  c8_piano: ['Das Klavier in der Lounge spielt eine Melodie. Es will sie zurück.', 'Achte darauf, welche Tasten in welcher Reihenfolge aufleuchten, und tippe sie genauso an.', (m) => `Spiel: ${m}.`],
+  c8_coat: ['Die Garderobe will eine Marke.', 'In der Klavierbank war eine Garderobenmarke.', 'Wähl die Garderobenmarke und tippe auf die Garderobe.'],
+  c8_frame: ['Der Etagenplan ist hinter abgeschlossenem Glas.', 'In der Manteltasche war ein winziger Schlüssel.', 'Wähl den winzigen Schlüssel und tippe auf den Etagenplan.'],
+  c8_plan: ['Schieb die Stockwerke in die Reihenfolge 1 bis 8, die Lücke unten rechts.', 'Bring zuerst die obere Reihe 1 2 3 in Ordnung, dann den Rest.', (m) => `Nächste Züge: schieb ${m}. Frag später nochmal nach mehr.`],
+  c8_lift: ['Der Aufzug hat ein leeres Loch über der 12.', 'Hinter dem Etagenplan war ein Messingknopf.', 'Wähl den Messingknopf und tippe auf den Aufzug.'],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1213,7 +1288,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `0${Math.floor(m2 / 60)}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1433,6 +1508,7 @@ function useItem(id, h) {
   if (S.ch === 5) return useItem5(id, h);
   if (S.ch === 6) return useItem6(id, h);
   if (S.ch === 7) return useItem7(id, h);
+  if (S.ch === 8) return useItem8(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2156,7 +2232,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -2679,6 +2755,118 @@ function escape7() {
   showEnd(S.overtime ? t('win7EyebrowOver') : t('win7Eyebrow'), t('win7Title'), t('win7Text', mmss(left), S.hints, noteCount7()), left, false);
 }
 function newGame7() { S = freshState7(); save(); begin(); say(t('start7')); }
+// ---------- chapter 8: check-in (lobby by day, lounge)
+const TOTAL8 = 40 * 60;
+Object.assign(ICONS, { ticket8: '🎫', fkey8: '🗝️', button8: '🔘' });
+const noteIds8 = ['piano8n', 'coat8n', 'plan8n', 'desk8n', 'bar8n'];
+const NOTES8 = ['C', 'D', 'E', 'F', 'G'], FREQ8 = [262, 294, 330, 349, 392], KEYCOL8 = ['#e8453c', '#ff8a3d', '#ffd23f', '#3fae6a', '#4a8ad9'];
+const SOLVED8 = '123456780';
+const slideNb8 = (z) => [z - 3, z + 3, z % 3 ? z - 1 : -1, z % 3 < 2 ? z + 1 : -1].filter((j) => j >= 0 && j < 9);
+// shortest list of tiles to slide from this board to 1..8 + gap (breadth-first, at most 9!/2 boards)
+function slide8(board) {
+  const start = board.join(''); if (start === SOLVED8) return [];
+  const prev = new Map([[start, null]]); let q = [start];
+  while (q.length) { const nq = [];
+    for (const b of q) { const z = b.indexOf('0');
+      for (const j of slideNb8(z)) { const a = b.split(''); a[z] = a[j]; a[j] = '0'; const nb = a.join('');
+        if (prev.has(nb)) continue; prev.set(nb, [b, b[j]]);
+        if (nb === SOLVED8) { const path = []; let k = nb; while (prev.get(k)) { path.unshift(prev.get(k)[1]); k = prev.get(k)[0]; } return path; }
+        nq.push(nb); } }
+    q = nq; }
+  return [];
+}
+function freshState8() {
+  let melody; do { melody = Array.from({ length: 5 }, () => Math.floor(Math.random() * 5)); } while (melody.some((m, i) => i > 1 && m === melody[i - 1] && m === melody[i - 2]) || new Set(melody).size < 3);
+  let board, len; do { board = SOLVED8.split(''); let last = -1;
+    for (let n = 0; n < 18; n++) { const z = board.indexOf('0'), opts = slideNb8(z).filter((j) => j !== last), j = pick(opts); board[z] = board[j]; board[j] = '0'; last = z; }
+    len = slide8(board).length;
+  } while (len < 8 || len > 16);
+  return { v: 1, ch: 8, started: Date.now(), left: TOTAL8, ot: 0, hints: 0, hintSeen: {}, view: 'lobby8', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false, melody, board };
+}
+const noteCount8 = () => noteIds8.filter((n) => S.f['note_' + n]).length;
+function sceneLobby8() {
+  const f = S.f;
+  const plan = f.planDone ? '<rect x="190" y="130" width="100" height="160" fill="#3a2a1a"/><circle cx="240" cy="230" r="10" fill="#d9a74a" opacity="0.5"/>'
+    : S.board.map((v, i) => v === '0' ? '' : `<rect x="${192 + (i % 3) * 32}" y="${150 + Math.floor(i / 3) * 44}" width="30" height="42" fill="#efe6d2" stroke="#6b5f4a" stroke-width="2"/><text x="${207 + (i % 3) * 32}" y="${178 + Math.floor(i / 3) * 44}" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="20" fill="#2a1a10">${v}</text>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('lobbyScene8')}">
+  <rect width="1000" height="470" fill="#efe2c8"/>${Array.from({ length: 20 }, (_, i) => `<rect x="${i * 50}" y="470" width="50" height="130" fill="${i % 2 ? '#c9b48a' : '#e9dcc0'}"/>`).join('')}<path d="M0 470 H1000" stroke="#8a6a4a" stroke-width="6"/>
+  ${hot('door8', `<rect x="20" y="180" width="130" height="290" fill="#cfe7f2" stroke="#8a6a4a" stroke-width="6"/><path d="M85 180 V470 M20 325 H150" stroke="#8a6a4a" stroke-width="5"/><path d="M40 200 l30 30 M100 200 l30 30" stroke="#fff" stroke-width="4" opacity="0.7"/>`)}
+  ${hot('plan8', `<rect x="180" y="110" width="120" height="190" fill="#3a2a1a" stroke="#d9a74a" stroke-width="7"/>${plan}${f.frameOpen || f.planDone ? '' : '<rect x="186" y="116" width="108" height="178" fill="#bfe3ff" opacity="0.35"/>'}`)}
+  ${hot('desk8', `<circle cx="490" cy="270" r="30" fill="#e8b48a" stroke="#2a1a10" stroke-width="4"/><path d="M462 262 q28 -40 56 0" fill="#6b3a2a"/><path d="M450 330 q40 -40 80 0z" fill="#4a8ad9" stroke="#2a1a10" stroke-width="4"/><rect x="330" y="330" width="320" height="140" fill="#8a5a3a" stroke="#2a1a10" stroke-width="6"/><rect x="330" y="320" width="320" height="18" fill="#d9a74a"/><text x="490" y="410" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="26" fill="#d9a74a">${W('desk8')}</text>`)}
+  ${hot('cloak8', `<rect x="680" y="200" width="140" height="270" fill="#6b4a2a" stroke="#2a1a10" stroke-width="5"/><path d="M690 230 H810" stroke="#2a1a10" stroke-width="5"/>${[700, 735, 770].map((x, k) => `<path d="M${x} 230 l-14 90 h${f.coat && k === 1 ? 0 : 28}z" fill="${['#4a2a3a', '#2a3a5a', '#3a4a2a'][k]}" opacity="${f.coat && k === 1 ? 0 : 1}"/>`).join('')}<rect x="670" y="380" width="160" height="22" fill="#d9a74a"/><text x="750" y="190" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="17" fill="#2a1a10">${W('cloak8')}</text>`)}
+  ${hot('lift8', `<rect x="850" y="160" width="130" height="310" fill="#c0c8cc" stroke="#2a1a10" stroke-width="6"/><path d="M915 175 V470" stroke="#2a1a10" stroke-width="4"/><rect x="886" y="120" width="58" height="30" rx="4" fill="#2a1a10"/><text x="915" y="142" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="18" fill="#ffd23f">${f.liftDone ? '13' : 'G'}</text><text x="915" y="105" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#2a1a10">${W('lift8')}</text>`)}
+  ${hot('goLounge8', `<rect x="330" y="520" width="240" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="450" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('toLounge8')}</text>`)}
+  </svg>`;
+}
+function sceneLounge8() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('loungeScene8')}">
+  <rect width="1000" height="470" fill="#5a3a2a"/>${Array.from({ length: 10 }, (_, i) => `<path d="M${i * 100 + 50} 0 V470" stroke="#4a2a1a" stroke-width="4"/>`).join('')}<rect y="470" width="1000" height="130" fill="#3a1a1a"/>
+  ${hot('piano8', `<rect x="100" y="230" width="300" height="200" rx="8" fill="#1a1010" stroke="#000" stroke-width="5"/><rect x="110" y="330" width="280" height="40" fill="#f4f1ea"/>${Array.from({ length: 13 }, (_, i) => `<path d="M${110 + i * 21.5} 330 V370" stroke="#2a2a2a" stroke-width="2"/>`).join('')}${[1, 2, 4, 5, 6, 8, 9, 11, 12].map((i) => `<rect x="${104 + i * 21.5}" y="330" width="12" height="24" fill="#1a1010"/>`).join('')}<rect x="120" y="440" width="260" height="30" fill="${f.piano ? '#2a1a10' : '#3a2a2a'}" stroke="#000" stroke-width="4"/><path d="M140 250 h60 v50 h-60z" fill="#efe6d2" opacity="0.7"/>`)}
+  ${hot('chair8', `<rect x="450" y="340" width="110" height="110" rx="20" fill="#3f7a4a" stroke="#1a2a1a" stroke-width="5"/><rect x="440" y="380" width="130" height="60" rx="14" fill="#4f8f5a" stroke="#1a2a1a" stroke-width="5"/>`)}
+  ${hot('bar8', `<rect x="600" y="120" width="360" height="12" fill="#2a1a10"/>${Array.from({ length: 8 }, (_, i) => `<rect x="${615 + i * 42}" y="${70 + (i % 3) * 8}" width="18" height="${50 - (i % 3) * 8}" rx="4" fill="${['#3fae6a', '#e8453c', '#ffd23f', '#c79bff'][i % 4]}" opacity="0.85"/>`).join('')}<rect x="590" y="320" width="380" height="150" fill="#6b3a2a" stroke="#2a1a10" stroke-width="6"/><rect x="580" y="310" width="400" height="18" fill="#d9a74a"/><text x="780" y="410" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="30" fill="#d9a74a">${W('bar8')}</text>`)}
+  ${hot('goLobby8', `<rect x="380" y="520" width="240" height="56" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="557" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="24" fill="#fff">${W('toLobby8')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { lobby8: sceneLobby8, lounge8: sceneLounge8 });
+function openPiano8() {
+  openModal(t('pianoTitle8'), `<p>${t('pianoBody8')}</p><div id="pKeys" style="display:flex;gap:8px;justify-content:center"></div><p class="tip" id="pMsg"></p><button class="btn ghost" id="pListen" type="button" data-act="listen">${t('listen8')}</button>`, (b) => {
+    const row = b.querySelector('#pKeys'), msg = b.querySelector('#pMsg'), keys = []; let got = 0, busy = 0;
+    const flash = (i, ms = 380) => { keys[i].style.background = KEYCOL8[i]; keys[i].style.color = '#10181c'; Sound.tone(FREQ8[i], 0.45, 'triangle', 0.16); setTimeout(() => { keys[i].style.background = ''; keys[i].style.color = ''; }, ms); };
+    const play = () => { got = 0; msg.textContent = ''; busy = Date.now() + 600 + S.melody.length * 560; S.melody.forEach((m, k) => setTimeout(() => { if (row.isConnected) flash(m); }, 600 + k * 560)); };
+    NOTES8.forEach((n, i) => { const btn = mk('button', 'key', n); btn.setAttribute('data-act', 'pk' + i); btn.style.minHeight = '110px'; btn.style.width = '56px'; btn.style.fontSize = '22px'; btn.style.borderBottom = `8px solid ${KEYCOL8[i]}`;
+      btn.addEventListener('click', () => { if (S.f.piano || Date.now() < busy) return; flash(i, 200);
+        if (S.melody[got] === i) { got++; msg.textContent = t('pianoProgress8', got);
+          if (got === S.melody.length) { S.f.piano = true; give('ticket8'); Sound.win(); msg.textContent = t('pianoDone8'); say(t('pianoDone8')); save(); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('piano8n'); } }, 1600); } }
+        else { Sound.nope(); msg.textContent = t('pianoWrong8'); setTimeout(play, 700); } });
+      keys.push(btn); row.appendChild(btn); });
+    b.querySelector('#pListen').addEventListener('click', play);
+    play();
+  });
+}
+function openPlan8() {
+  openModal(t('planTitle8'), `<p>${t('planBody8')}</p><div id="sGrid" style="display:grid;grid-template-columns:repeat(3,72px);gap:6px;justify-content:center"></div>`, (b) => {
+    const grid = b.querySelector('#sGrid');
+    const draw = () => {
+      grid.innerHTML = '';
+      S.board.forEach((v, i) => { const btn = mk('button', 'key', v === '0' ? '' : `<b style="font-size:26px">${v}</b>`); btn.setAttribute('data-act', 'tile' + v); btn.style.minHeight = '72px'; if (v === '0') btn.style.visibility = 'hidden';
+        btn.addEventListener('click', () => { if (S.f.planDone) return; const z = S.board.indexOf('0'); if (!slideNb8(z).includes(i)) { Sound.nope(); return; }
+          S.board[z] = v; S.board[i] = '0'; Sound.click();
+          if (S.board.join('') === SOLVED8) { S.f.planDone = true; give('button8'); Sound.unlock(); Sound.win(); say(t('planDone8')); }
+          save(); draw(); renderScene(); });
+        grid.appendChild(btn); });
+    };
+    draw();
+  });
+}
+Object.assign(HOTS, {
+  desk8: () => { say(t('desk8')); openNote('desk8n'); },
+  door8: () => say(t('door8')),
+  goLounge8: () => { go('lounge8'); say(t('toLounge8')); },
+  goLobby8: () => { go('lobby8'); say(t('backLobby8')); },
+  piano8: () => { if (S.f.piano) { say(t('pianoEmpty8')); return; } openPiano8(); },
+  cloak8: () => say(S.f.coat ? t('cloakEmpty8') : t('cloakNeed8')),
+  plan8: () => { if (S.f.planDone) { say(t('planEmpty8')); openNote('plan8n'); return; } if (!S.f.frameOpen) { Sound.nope(); say(t('frameLocked8')); return; } openPlan8(); },
+  lift8: () => { Sound.nope(); say(t('liftNeed8')); },
+  bar8: () => { say(t('bar8')); openNote('bar8n'); },
+  chair8: () => say(t('chair8')),
+});
+function useItem8(id, h) {
+  if (id === 'ticket8' && h === 'cloak8') { take('ticket8'); S.f.coat = true; give('fkey8'); say(t('cloakGive8')); renderScene(); openNote('coat8n'); return true; }
+  if (id === 'fkey8' && h === 'plan8') { take('fkey8'); S.f.frameOpen = true; Sound.unlock(); say(t('frameOpen8')); renderScene(); setTimeout(openPlan8, 500); return true; }
+  if (id === 'button8' && h === 'lift8') { take('button8'); S.f.liftDone = true; say(t('liftIn8')); Sound.door(); renderScene(); setTimeout(escape8, 1500); return true; }
+  return false;
+}
+function escape8() {
+  if (!S || S.done || S.ch !== 8) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best8 = Math.max(profile.best8 || 0, left);
+  profile.ch8done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win8EyebrowOver') : t('win8Eyebrow'), t('win8Title'), t('win8Text', mmss(left), S.hints, noteCount8()), left, false);
+}
+function newGame8() { S = freshState8(); save(); begin(); say(t('start8')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -2708,9 +2896,12 @@ const GOALS6 = [
 const GOALS7 = [
   ['c7_box', () => S.f.boxOpen], ['c7_open', () => S.f.jbox], ['c7_wires', () => S.f.lit], ['c7_key', () => S.f.keyTaken], ['c7_gate', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS8 = [
+  ['c8_piano', () => S.f.piano], ['c8_coat', () => S.f.coat], ['c8_frame', () => S.f.frameOpen], ['c8_plan', () => S.f.planDone], ['c8_lift', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -2746,8 +2937,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 7); $('btnNextCh').textContent = t(S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 8); $('btnNextCh').textContent = t(S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -2755,7 +2946,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -2768,8 +2959,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -2795,6 +2986,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh8 = 0;
+$('btnCh8').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh8 > 4000) { armedCh8 = Date.now(); $('btnCh8').textContent = t('confirmNew'); return; }
+  armedCh8 = 0; newGame8();
 });
 let armedCh7 = 0;
 $('btnCh7').addEventListener('click', () => {
@@ -2846,6 +3043,7 @@ function showStart() {
   $('btnCh5').hidden = !profile.ch4done; $('btnCh5').textContent = t('ch5Btn'); armedCh5 = 0;
   $('btnCh6').hidden = !profile.ch5done; $('btnCh6').textContent = t('ch6Btn'); armedCh6 = 0;
   $('btnCh7').hidden = !profile.ch6done; $('btnCh7').textContent = t('ch7Btn'); armedCh7 = 0;
+  $('btnCh8').hidden = !profile.ch7done; $('btnCh8').textContent = t('ch8Btn'); armedCh8 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
