@@ -75,6 +75,7 @@ body {
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(50px, 10.5vw, 100px); line-height: 0.86; text-wrap: balance; }
 .logo span { color: var(--pigeon); }
 .lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.9; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
 .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
 .btn { border: 0; cursor: pointer; padding: 0.45em 1.5em; color: var(--night); background: var(--sodium); font-family: var(--font-display); font-weight: 900; font-size: 28px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
 .btn > span { display: inline-block; transform: skewX(12deg); }
@@ -138,7 +139,11 @@ body {
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Pigeon<br><span>Revenge</span></h1>
-        <p class="lede">The runners stole your rooftop. Now it’s your turn: swoop down on the street and snatch their hats, fries, ice cream and phones. Every snatch in a row raises your combo.</p>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="a2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f08a4b"/><stop offset="1" stop-color="#4b2a55"/></linearGradient></defs><rect width="320" height="160" fill="url(#a2)"/>
+    <rect y="126" width="320" height="34" fill="#2a1d33"/><rect x="40" y="56" width="5" height="70" fill="#1a1222"/><circle cx="42" cy="54" r="8" fill="#ffd27a"/>
+    <g transform="translate(170 64)"><ellipse cx="0" cy="0" rx="30" ry="15" fill="#9fb0c8"/><circle cx="26" cy="-10" r="11" fill="#9fb0c8"/><path d="M35 -10 L46 -7 L35 -5Z" fill="#ffb02e"/><circle cx="29" cy="-12" r="2" fill="#111"/><path d="M-8 -6 Q-30 -40 -50 -22 Q-30 -18 -10 4Z" fill="#7d8ea6"/><rect x="18" y="-30" width="16" height="9" fill="#2a1d33"/><rect x="14" y="-22" width="24" height="3" fill="#2a1d33"/></g>
+    <g fill="#1a1222"><circle cx="250" cy="104" r="7"/><rect x="245" y="111" width="10" height="16"/><circle cx="90" cy="108" r="6"/><rect x="85" y="114" width="10" height="13"/></g></svg>
+        <p class="lede">Swoop down. Snatch hats, fries and phones. Chain snatches for a bigger combo.</p>
         <div class="cta-row">
           <button class="btn" id="btnStart" type="button"><span>Fly</span></button>
           <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>

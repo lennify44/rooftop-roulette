@@ -72,6 +72,7 @@ body {
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(48px, 10vw, 96px); line-height: 0.86; text-wrap: balance; }
 .logo span { color: var(--steel); text-shadow: 0 0 22px rgba(224, 168, 58, 0.45); }
 .lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
 .cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .sub-row { margin-top: 10px; }
 .btn { border: 0; cursor: pointer; padding: 0.4em 1.4em; color: #161c2a; background: var(--steel); font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
@@ -131,7 +132,14 @@ body {
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Crane<br><span>Climb</span></h1>
-        <p class="lede">Climb a skyscraper under construction, wall to wall, beam by beam. Tools fall from above, beams go missing, crane hooks swing past, and a dust storm climbs after you.</p>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="a11" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a6aa8"/><stop offset="1" stop-color="#f0c8a0"/></linearGradient></defs><rect width="320" height="160" fill="url(#a11)"/>
+    <rect x="96" y="0" width="128" height="160" fill="rgba(20,24,36,0.5)"/><rect x="88" y="0" width="12" height="160" fill="#4a5068"/><rect x="220" y="0" width="12" height="160" fill="#4a5068"/>
+    ${[0, 1, 2, 3, 4].map((i) => `<rect x="100" y="${18 + i * 32}" width="40" height="9" fill="${i === 2 ? '#a0522d' : '#e0a83a'}"/>${i === 1 ? '' : `<rect x="180" y="${34 + i * 32 - 16}" width="40" height="9" fill="${i === 3 ? 'rgba(180,230,255,0.85)' : '#e0a83a'}"/>`}`).join('')}
+    <path d="M128 98 Q160 70 192 66" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 5"/>
+    <g transform="translate(160 76)"><rect x="-7" y="-22" width="14" height="16" fill="#ff8a3d"/><line x1="-4" y1="-6" x2="-8" y2="6" stroke="#1b1f2e" stroke-width="4" stroke-linecap="round"/><line x1="4" y1="-6" x2="10" y2="4" stroke="#1b1f2e" stroke-width="4" stroke-linecap="round"/><line x1="6" y1="-18" x2="16" y2="-28" stroke="#1b1f2e" stroke-width="4" stroke-linecap="round"/><circle cx="0" cy="-28" r="6" fill="#f0c8a0"/><path d="M-8 -30 A8 8 0 0 1 8 -30Z" fill="#ffd23f"/></g>
+    <text x="200" y="26" font-size="20">🔨</text><path d="M196 4 L210 4 L203 14Z" fill="#ff5a3c"/><line x1="268" y1="0" x2="268" y2="50" stroke="#333" stroke-width="2"/><text x="256" y="66" font-size="22">🪝</text>
+    <path d="M0 140 Q40 118 80 136 T160 132 T240 138 T320 130 L320 160 L0 160Z" fill="rgba(190,160,120,0.9)"/></svg>
+        <p class="lede">Leap wall to wall up a skyscraper. Dodge the falling tools. Beat the dust storm.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Climb</span></button><button class="link-btn" id="btnShop" type="button">Gear · 🪙 <span id="bankStart">0</span></button></div>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
         <p class="tip" id="bestStart"></p>

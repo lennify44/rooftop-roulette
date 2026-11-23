@@ -96,6 +96,7 @@ body {
 .btn { border: 0; cursor: pointer; padding: 0.35em 1.5em; color: var(--night); background: var(--gold); font-family: var(--font-display); font-weight: 900; font-size: 28px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35); }
 .btn > span { display: inline-block; transform: skewX(12deg); }
 .btn:disabled { opacity: 0.4; cursor: default; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
 .link-btn, a.link-btn { border: 0; background: none; padding: 6px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
 .link-btn:disabled { opacity: 0.4; cursor: default; }
 .hint { margin: 0; min-height: 2.9em; font-size: 14px; color: var(--haze); max-width: 40ch; }
@@ -179,7 +180,11 @@ body {
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Rogue<br><span>Ball</span></h1>
-        <p class="lede">For once, you are the ball, and you want out. Break the bank in five casinos to buy your freedom. The croupier calls a pocket, you pick the moment to drop into the spinning wheel. Win big, but quietly: when the heat reaches the top, security throws you out.</p>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><rect width="320" height="160" fill="#0f3d2a"/>
+    <g transform="translate(160 80)"><circle r="74" fill="#3b2414"/><circle r="64" fill="#8a5a32"/>${Array.from({ length: 25 }, (_, i) => { const a0 = (i * Math.PI * 2) / 25, a1 = ((i + 1) * Math.PI * 2) / 25; return `<path d="M${(Math.cos(a0) * 34).toFixed(1)} ${(Math.sin(a0) * 34).toFixed(1)} L${(Math.cos(a0) * 50).toFixed(1)} ${(Math.sin(a0) * 50).toFixed(1)} A50 50 0 0 1 ${(Math.cos(a1) * 50).toFixed(1)} ${(Math.sin(a1) * 50).toFixed(1)} L${(Math.cos(a1) * 34).toFixed(1)} ${(Math.sin(a1) * 34).toFixed(1)} A34 34 0 0 0 ${(Math.cos(a0) * 34).toFixed(1)} ${(Math.sin(a0) * 34).toFixed(1)}Z" fill="${i === 0 ? '#18925a' : i % 2 ? '#c8323a' : '#18181c'}"/>`; }).join('')}<circle r="33" fill="#7a4e22"/><circle r="6" fill="#e8c27a"/>
+    <g transform="translate(40 -36)"><circle r="11" fill="#f2f4f6"/><circle cx="-4" cy="-2" r="1.8" fill="#111"/><circle cx="4" cy="-2" r="1.8" fill="#111"/><path d="M-4 4 Q0 7 4 4" stroke="#111" stroke-width="1.5" fill="none"/></g></g>
+    <rect x="18" y="16" width="56" height="10" rx="5" fill="#000" opacity="0.5"/><rect x="18" y="16" width="38" height="10" rx="5" fill="#ff7a3d"/></svg>
+        <p class="lede">You are the roulette ball. Drop at the right moment, break the bank in five casinos, stay under the radar.</p>
         <div class="row" style="justify-content:flex-start"><button class="btn" id="btnStart" type="button"><span>Roll in</span></button></div>
         <div class="sub-row">
           <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
