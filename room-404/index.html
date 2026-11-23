@@ -219,6 +219,7 @@ body {
           <button class="btn" id="btnCh7" type="button" data-i18n="ch7Btn" hidden>Chapter 7</button>
           <button class="btn" id="btnCh8" type="button" data-i18n="ch8Btn" hidden>Chapter 8</button>
           <button class="btn" id="btnCh9" type="button" data-i18n="ch9Btn" hidden>Chapter 9</button>
+          <button class="btn" id="btnCh10" type="button" data-i18n="ch10Btn" hidden>Chapter 10</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -266,7 +267,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1297,6 +1298,82 @@ Object.assign(TXT.de.hints, {
   c9_clock: ['Die Standuhr am Ende des Flurs läuft rückwärts.', 'In der Wäschekammer war ein Aufziehschlüssel.', 'Wähl den Aufziehschlüssel und tippe auf die Standuhr.'],
   c9_lock: ['Tür 1313 hat vier Symbol-Rädchen. Jeder Versuch sagt dir, wie nah du dran bist.', '● heißt: Symbol richtig und am richtigen Platz, ○ heißt: richtiges Symbol, falscher Platz. Ändere immer nur ein Rädchen.', (c) => `Der Code ist ${c}.`],
 });
+Object.assign(TXT.en, {
+  ch10Btn: 'Chapter 10: Checkout', nextCh10: 'On to the final chapter',
+  start10: 'The old guest smiles your smile. “Room 1313 is room 404, a hundred years ago. We have been checking in and out of the same room forever. Checkout is at 12:00. If we both make it this time, the loop breaks.” They point at the big mirror. Through it you can see room 404 today. The clock says 11:20.',
+  up10Eyebrow: '12:00 · checkout', up10Title: 'Late guests stay forever', up10Text: 'The clock strikes twelve. The mirror fogs over, the old guest sighs, and you wake up in room 404 with a note on the pillow. You know the one. (Or keep trying in overtime.)',
+  win10Eyebrow: 'The end', win10EyebrowOver: 'The end, in overtime', win10Title: 'Checked out. For real.',
+  win10Text: (left, h, n) => `You turn the key. The door of room 404, which never had a handle, swings open. The old guest takes your arm, and together you walk down to the lobby. The day manager stamps two checkout slips with the same name, and for the first time in a hundred years the lobby clock says 12:00 and keeps going. Outside, the old oak rustles. THE END. Thank you for playing all ten chapters! Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  now10: 'Room 404, today. The same bed, the same door without a handle. The old safe in the corner looks a hundred years older than it did in 1912.', past10: 'Room 404 in 1912: the wallpaper is still wet, a brand-new safe stands in the corner, and the old guest sits by the window.',
+  toPast10: 'You step through the mirror into 1912. It smells of fresh paint.', toNow10: 'You step back through the mirror into today.',
+  safeNowTitle10: 'The old safe', safeNowBody10: '<p>The same safe, a hundred years older. The dial is rusty, but it still wants four digits.</p>', safeNowOpen10: 'The rusty safe creaks open, exactly with the code you chose a hundred years ago. Inside: an acorn and a note.', safeNowEmpty10: 'An empty, very old safe.',
+  safePastTitle10: 'The brand-new safe', safePastBody10: '<p>The installer’s card says: “Customer, please choose your code. RULES: four different digits, they must add up to 13, and the last digit must be 4.”</p>', safePastSet10: (c) => `Click! The safe accepts ${c} as its code. Better remember it, for the next hundred years.`, safePastDone10: (c) => `The safe is locked with your code: ${c}.`,
+  codeRule10: 'The safe beeps: four different digits, adding up to 13, ending in 4.',
+  windowNow10: 'Through the window: an empty courtyard with grey paving stones.', oak10: 'A huge old oak fills the courtyard, and a branch reaches right up to the window. In the trunk, at your height, there is a hollow.', oakKey10: 'In the hollow, wrapped in oilcloth from 1912: a heavy brass key with a tag. ROOM 404 · ORIGINAL.', oakEmpty10: 'The oak rustles. Somebody carved something into the bark.',
+  windowPast10: 'The courtyard in 1912 is just fresh soil. Workers are carrying bricks.', planted10: 'You lean out and push the acorn deep into the soil. The old guest nods: “Good. I will bury the original key right next to it. The tree will keep it safe for a hundred years.”', soilDone10: 'A little mound of soil with an acorn in it. And a key, buried next to it.',
+  doorNow10: 'The door has no handle. But below where a handle should be, there is a keyhole you have never noticed.', doorPast10: 'The door in 1912 is still being built. The keyhole is new.',
+  oldself10: 'The old guest: “I chose the safe code once. I forgot it. Don’t make my mistake.”', oldself10b: '“The hotel lets nothing pass through the mirror. Nothing except what grows.”',
+  bedNow10: 'Your bed. The note is still on the pillow.', plans10: 'Architect’s plans on a trestle.',
+});
+Object.assign(TXT.en.views, { now10: 'Room 404 · today', past10: 'Room 404 · 1912' });
+Object.assign(TXT.en.svg, { mirrorNow10: '1912 ⟶', mirrorPast10: '⟵ today' });
+Object.assign(TXT.en.aria, { nowScene10: 'Room 404 today', pastScene10: 'Room 404 in 1912', mirrorNow10: 'Mirror to 1912', mirrorPast10: 'Mirror back to today', safeNow10: 'Old safe', safePast10: 'Brand-new safe', windowNow10: 'Window to the courtyard', windowPast10: 'Window to the courtyard in 1912', doorNow10: 'Door without a handle', doorPast10: 'Door in 1912', old10: 'The old guest', bedNow10: 'Bed', plans10: 'Architect’s plans' });
+Object.assign(TXT.en.items, {
+  acorn10: ['Acorn', '', 'A shiny acorn. Living things can travel through time.'],
+  okey10: ['Original key', '', 'ROOM 404 · ORIGINAL. A hundred years old and still shiny.'],
+});
+Object.assign(TXT.en.notes, {
+  pillow10n: ['Note on the pillow', '“Checkout is at 12:00. Late guests stay forever.” Underneath, in very old ink, in your own handwriting: “Not this time.”'],
+  safe10n: ['Note in the old safe', 'If you are reading this, you remembered the code. I never did. Plant the acorn in 1912. — you, a long time ago'],
+  oldself10n: ['What the old guest says', '“Every time you escaped, the hotel put you back in 404. Escaping is not enough. You have to check out properly, with the original key.”'],
+  plans10n: ['Architect’s plans, 1912', 'GRAND PARADOX HOTEL · Floor 4: rooms 401-403. (Room 404 crossed out in red: “never build this room”.)'],
+  oak10n: ['Carving in the oak', 'A heart carved into the bark: “404 + 1312 = still the same guest. Planted 1912.”'],
+});
+Object.assign(TXT.en.hints, {
+  c10_code: ['The safe in 1912 is brand new and waiting for someone to choose a code.', 'Go through the mirror to 1912 and choose a code that follows the installer’s rules. Remember it!', (ex) => `For example ${ex}: four different digits, adding up to 13, ending in 4.`],
+  c10_safe: ['Today’s safe is the same safe, a hundred years older.', 'Open it today with the code you chose in 1912.', (c) => `Your code was ${c}.`],
+  c10_plant: ['The safe held an acorn. Living things can travel through time.', 'Plant the acorn in the courtyard in 1912.', 'Go to 1912, select the acorn and tap the window.'],
+  c10_key: ['The old guest promised to bury something next to the acorn.', 'Look out of the window today.', 'Today: tap the big oak outside the window.'],
+  c10_door: ['The door of 404 has a keyhole after all.', 'You have the original key.', 'Today: select the original key and tap the door.'],
+});
+Object.assign(TXT.de, {
+  ch10Btn: 'Kapitel 10: Check-out', nextCh10: 'Weiter zum letzten Kapitel',
+  start10: 'Der alte Gast lächelt dein Lächeln. „Zimmer 1313 ist Zimmer 404, vor hundert Jahren. Wir checken schon ewig im selben Zimmer ein und aus. Check-out ist um 12:00. Wenn wir es diesmal beide schaffen, bricht die Schleife.“ Er zeigt auf den großen Spiegel. Darin siehst du Zimmer 404 von heute. Die Uhr zeigt 11:20.',
+  up10Eyebrow: '12:00 · Check-out', up10Title: 'Wer zu spät kommt, bleibt für immer', up10Text: 'Die Uhr schlägt zwölf. Der Spiegel beschlägt, der alte Gast seufzt, und du wachst in Zimmer 404 auf, mit einem Zettel auf dem Kissen. Du weißt schon, welcher. (Oder versuch es in der Verlängerung weiter.)',
+  win10Eyebrow: 'Ende', win10EyebrowOver: 'Ende, in der Verlängerung', win10Title: 'Ausgecheckt. Wirklich.',
+  win10Text: (left, h, n) => `Du drehst den Schlüssel. Die Tür von Zimmer 404, die nie eine Klinke hatte, schwingt auf. Der alte Gast hakt sich bei dir unter, und zusammen geht ihr hinunter in die Lobby. Die Tagesmanagerin stempelt zwei Check-out-Zettel mit demselben Namen, und zum ersten Mal seit hundert Jahren zeigt die Uhr in der Lobby 12:00 und läuft einfach weiter. Draußen rauscht die alte Eiche. ENDE. Danke, dass du alle zehn Kapitel gespielt hast! Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  now10: 'Zimmer 404, heute. Dasselbe Bett, dieselbe Tür ohne Klinke. Der alte Tresor in der Ecke sieht hundert Jahre älter aus als 1912.', past10: 'Zimmer 404 im Jahr 1912: Die Tapete ist noch feucht, in der Ecke steht ein nagelneuer Tresor, und der alte Gast sitzt am Fenster.',
+  toPast10: 'Du steigst durch den Spiegel ins Jahr 1912. Es riecht nach frischer Farbe.', toNow10: 'Du steigst zurück durch den Spiegel ins Heute.',
+  safeNowTitle10: 'Der alte Tresor', safeNowBody10: '<p>Derselbe Tresor, hundert Jahre älter. Das Rad ist rostig, aber er will immer noch vier Ziffern.</p>', safeNowOpen10: 'Der rostige Tresor knarrt auf, genau mit dem Code, den du vor hundert Jahren gewählt hast. Drinnen: eine Eichel und ein Zettel.', safeNowEmpty10: 'Ein leerer, sehr alter Tresor.',
+  safePastTitle10: 'Der nagelneue Tresor', safePastBody10: '<p>Auf der Karte des Monteurs steht: „Werter Kunde, bitte wählen Sie Ihren Code. REGELN: vier verschiedene Ziffern, zusammen genau 13, und die letzte Ziffer ist eine 4.“</p>', safePastSet10: (c) => `Klick! Der Tresor nimmt ${c} als Code an. Den merkst du dir besser, für die nächsten hundert Jahre.`, safePastDone10: (c) => `Der Tresor ist mit deinem Code verschlossen: ${c}.`,
+  codeRule10: 'Der Tresor piept: vier verschiedene Ziffern, zusammen 13, die letzte ist eine 4.',
+  windowNow10: 'Durchs Fenster: ein leerer Innenhof mit grauen Pflastersteinen.', oak10: 'Eine riesige alte Eiche füllt den Innenhof, ein Ast reicht bis ans Fenster. Im Stamm, auf deiner Höhe, ist ein Astloch.', oakKey10: 'Im Astloch, in Wachstuch von 1912 gewickelt: ein schwerer Messingschlüssel mit Anhänger. ZIMMER 404 · ORIGINAL.', oakEmpty10: 'Die Eiche rauscht. Jemand hat etwas in die Rinde geschnitzt.',
+  windowPast10: 'Der Innenhof 1912 ist nur frische Erde. Arbeiter tragen Ziegel.', planted10: 'Du lehnst dich hinaus und drückst die Eichel tief in die Erde. Der alte Gast nickt: „Gut. Ich vergrabe den Originalschlüssel gleich daneben. Der Baum passt hundert Jahre darauf auf.“', soilDone10: 'Ein kleiner Erdhügel mit einer Eichel darin. Und daneben ein vergrabener Schlüssel.',
+  doorNow10: 'Die Tür hat keine Klinke. Aber dort, wo die Klinke sein sollte, ist ein Schlüsselloch, das dir nie aufgefallen ist.', doorPast10: 'Die Tür wird 1912 gerade erst eingebaut. Das Schlüsselloch ist neu.',
+  oldself10: 'Der alte Gast: „Ich habe den Tresorcode schon einmal gewählt. Und vergessen. Mach nicht meinen Fehler.“', oldself10b: '„Das Hotel lässt nichts durch den Spiegel. Nichts außer dem, was wächst.“',
+  bedNow10: 'Dein Bett. Der Zettel liegt noch auf dem Kissen.', plans10: 'Baupläne auf einem Bock.',
+});
+Object.assign(TXT.de.views, { now10: 'Zimmer 404 · heute', past10: 'Zimmer 404 · 1912' });
+Object.assign(TXT.de.svg, { mirrorNow10: '1912 ⟶', mirrorPast10: '⟵ heute' });
+Object.assign(TXT.de.aria, { nowScene10: 'Zimmer 404 heute', pastScene10: 'Zimmer 404 im Jahr 1912', mirrorNow10: 'Spiegel ins Jahr 1912', mirrorPast10: 'Spiegel zurück ins Heute', safeNow10: 'Alter Tresor', safePast10: 'Nagelneuer Tresor', windowNow10: 'Fenster zum Innenhof', windowPast10: 'Fenster zum Innenhof 1912', doorNow10: 'Tür ohne Klinke', doorPast10: 'Tür 1912', old10: 'Der alte Gast', bedNow10: 'Bett', plans10: 'Baupläne' });
+Object.assign(TXT.de.items, {
+  acorn10: ['Eichel', '', 'Eine glänzende Eichel. Lebendiges kann durch die Zeit reisen.'],
+  okey10: ['Originalschlüssel', '', 'ZIMMER 404 · ORIGINAL. Hundert Jahre alt und immer noch blank.'],
+});
+Object.assign(TXT.de.notes, {
+  pillow10n: ['Zettel auf dem Kissen', '„Check-out ist um 12:00. Wer zu spät kommt, bleibt für immer.“ Darunter, in sehr alter Tinte, in deiner eigenen Handschrift: „Diesmal nicht.“'],
+  safe10n: ['Zettel im alten Tresor', 'Wenn du das liest, hast du dir den Code gemerkt. Ich nie. Pflanz die Eichel im Jahr 1912. — du, vor langer Zeit'],
+  oldself10n: ['Was der alte Gast sagt', '„Jedes Mal, wenn du entkommen bist, hat dich das Hotel zurück in 404 gesteckt. Entkommen reicht nicht. Du musst richtig auschecken, mit dem Originalschlüssel.“'],
+  plans10n: ['Baupläne, 1912', 'GRAND PARADOX HOTEL · 4. Stock: Zimmer 401-403. (Zimmer 404 rot durchgestrichen: „dieses Zimmer nie bauen“.)'],
+  oak10n: ['Schnitzerei in der Eiche', 'Ein Herz in der Rinde: „404 + 1312 = immer noch derselbe Gast. Gepflanzt 1912.“'],
+});
+Object.assign(TXT.de.hints, {
+  c10_code: ['Der Tresor im Jahr 1912 ist nagelneu und wartet darauf, dass jemand einen Code wählt.', 'Geh durch den Spiegel ins Jahr 1912 und wähl einen Code nach den Regeln des Monteurs. Merk ihn dir!', (ex) => `Zum Beispiel ${ex}: vier verschiedene Ziffern, zusammen 13, die letzte ist eine 4.`],
+  c10_safe: ['Der Tresor von heute ist derselbe Tresor, hundert Jahre älter.', 'Öffne ihn heute mit dem Code, den du 1912 gewählt hast.', (c) => `Dein Code war ${c}.`],
+  c10_plant: ['Im Tresor war eine Eichel. Lebendiges kann durch die Zeit reisen.', 'Pflanz die Eichel im Jahr 1912 in den Innenhof.', 'Geh ins Jahr 1912, wähl die Eichel und tippe auf das Fenster.'],
+  c10_key: ['Der alte Gast wollte etwas neben der Eichel vergraben.', 'Sieh heute aus dem Fenster.', 'Heute: Tippe auf die große Eiche vor dem Fenster.'],
+  c10_door: ['Die Tür von 404 hat doch ein Schlüsselloch.', 'Du hast den Originalschlüssel.', 'Heute: Wähl den Originalschlüssel und tippe auf die Tür.'],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1357,7 +1434,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1579,6 +1656,7 @@ function useItem(id, h) {
   if (S.ch === 7) return useItem7(id, h);
   if (S.ch === 8) return useItem8(id, h);
   if (S.ch === 9) return useItem9(id, h);
+  if (S.ch === 10) return useItem10(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2155,14 +2233,14 @@ Object.assign(SCENES, { c3hall: sceneC3Hall, office: sceneOffice, archive: scene
 // ----- close-ups
 function openCodePad(title, html, answer, onOk) {
   openModal(title, `${html}<div class="row"><div class="display" id="cd"></div></div><div class="keypad" id="ck"></div><p class="tip" id="cMsg"></p>`, (b) => {
-    let typed = ''; const n = answer.length, pad = b.querySelector('#ck'), msg = b.querySelector('#cMsg');
+    let typed = ''; const fixed = typeof answer === 'string', n = fixed ? answer.length : answer.len, pad = b.querySelector('#ck'), msg = b.querySelector('#cMsg');
     const show = (ok) => { const d = b.querySelector('#cd'); d.textContent = (typed + '-'.repeat(n)).slice(0, n); d.classList.toggle('ok', !!ok); };
     for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK']) {
       const btn = mk('button', `key${k === 'C' || k === 'OK' ? ' wide' : ''}`, k); btn.setAttribute('data-key', k);
       btn.addEventListener('click', () => {
         Sound.click();
         if (k === 'C') typed = '';
-        else if (k === 'OK') { if (typed === answer) { show(true); Sound.unlock(); onOk(msg); save(); return; } Sound.nope(); msg.textContent = t('codeWrong'); typed = ''; }
+        else if (k === 'OK') { if (fixed ? typed === answer : answer.ok(typed)) { show(true); Sound.unlock(); onOk(msg, typed); save(); return; } Sound.nope(); msg.textContent = fixed ? t('codeWrong') : answer.why(typed); typed = ''; }
         else if (typed.length < n) typed += k;
         show();
       });
@@ -2302,7 +2380,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -3038,6 +3116,65 @@ function escape9() {
   showEnd(S.overtime ? t('win9EyebrowOver') : t('win9Eyebrow'), t('win9Title'), t('win9Text', mmss(left), S.hints, noteCount9()), left, false);
 }
 function newGame9() { S = freshState9(); save(); begin(); say(t('start9')); }
+// ---------- chapter 10 (finale): checkout (room 404 today and in 1912, the mirror between them)
+const TOTAL10 = 40 * 60;
+Object.assign(ICONS, { acorn10: '🌰', okey10: '🗝️' });
+const noteIds10 = ['pillow10n', 'safe10n', 'oldself10n', 'plans10n', 'oak10n'];
+const validCode10 = (c) => /^\d{4}$/.test(c) && new Set(c).size === 4 && [...c].reduce((a, d) => a + +d, 0) === 13 && c[3] === '4';
+const CODES10 = Array.from({ length: 1000 }, (_, i) => String(i).padStart(3, '0') + '4').filter(validCode10);
+function freshState10() {
+  return { v: 1, ch: 10, started: Date.now(), left: TOTAL10, ot: 0, hints: 0, hintSeen: {}, view: 'past10', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false, myCode: '', example: pick(CODES10) };
+}
+const noteCount10 = () => noteIds10.filter((n) => S.f['note_' + n]).length;
+function room10(past) {
+  const f = S.f, sepia = past ? '<rect width="1000" height="600" fill="#a07040" opacity="0.16" pointer-events="none"/>' : '';
+  const win = past
+    ? `<rect x="660" y="120" width="200" height="210" fill="#8a6a4a"/><rect x="660" y="250" width="200" height="80" fill="#5a3a1a"/>${f.planted ? '<path d="M740 268 q20 -24 40 0z" fill="#3a2a1a"/><path d="M760 262 v-16 m0 6 q8 -8 14 -2" stroke="#3fae6a" stroke-width="3" fill="none"/>' : ''}<rect x="690" y="190" width="40" height="24" fill="#b0603a" stroke="#5a2a1a" stroke-width="2"/>`
+    : `<rect x="660" y="120" width="200" height="210" fill="#bfe3ff"/>${f.planted ? '<rect x="735" y="200" width="50" height="130" fill="#6b4a2a"/><circle cx="700" cy="170" r="60" fill="#3f8f4a"/><circle cx="790" cy="140" r="70" fill="#4f9f5a"/><circle cx="830" cy="220" r="50" fill="#3f8f4a"/>' + (f.keyTaken ? '' : '<ellipse cx="760" cy="260" rx="10" ry="14" fill="#2a1a10"/>') : '<rect x="660" y="260" width="200" height="70" fill="#9aa0a6"/>'}`;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A(past ? 'pastScene10' : 'nowScene10')}">
+  <rect width="1000" height="470" fill="${past ? '#d8c8a0' : '#6b5a7a'}"/><rect y="470" width="1000" height="130" fill="${past ? '#8a6a4a' : '#3a2a3a'}"/><path d="M0 470 H1000" stroke="#2a1a10" stroke-width="6"/>
+  ${past ? '<path d="M20 40 H980 M20 40 V470 M980 40 V470" stroke="#8a6a4a" stroke-width="8" opacity="0.5"/>' : ''}
+  ${hot(past ? 'doorPast10' : 'doorNow10', `<rect x="40" y="180" width="130" height="290" fill="${past ? '#c09a6a' : '#7a4a2a'}" stroke="#2a1a10" stroke-width="5"/><text x="105" y="225" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="26" fill="#d9a74a">404</text><circle cx="150" cy="330" r="6" fill="#2a1a10"/>`)}
+  ${hot(past ? 'safePast10' : 'safeNow10', `<rect x="210" y="350" width="120" height="120" rx="6" fill="${past ? '#2f5a3a' : '#5a4a3a'}" stroke="#10181c" stroke-width="5"/><circle cx="270" cy="410" r="24" fill="${past ? '#d9a74a' : '#8a6a4a'}" stroke="#10181c" stroke-width="4"/><path d="M270 410 l12 -10" stroke="#10181c" stroke-width="4"/>${past ? '<rect x="222" y="360" width="40" height="16" fill="#efe6d2" transform="rotate(-8 242 368)"/>' : '<circle cx="225" cy="365" r="8" fill="#a0522d" opacity="0.6"/><circle cx="315" cy="450" r="10" fill="#a0522d" opacity="0.5"/>'}${f.safeOpen && !past ? '<rect x="216" y="356" width="108" height="108" fill="#10181c"/>' : ''}`)}
+  ${past ? hot('plans10', `<path d="M400 470 l30 -110 l30 110 M540 470 l30 -110 l30 110" stroke="#6b4a2a" stroke-width="7" fill="none"/><rect x="380" y="340" width="240" height="20" fill="#6b4a2a"/><rect x="400" y="300" width="200" height="44" fill="#cfe0f0" stroke="#4a6a8a" stroke-width="3" transform="rotate(-4 500 322)"/><path d="M420 312 h60 v20 h40" stroke="#4a6a8a" stroke-width="2" fill="none"/>`)
+    : hot('bedNow10', `<rect x="380" y="370" width="250" height="80" rx="10" fill="#efe6d2" stroke="#2a1a10" stroke-width="5"/><rect x="380" y="410" width="250" height="40" fill="#7a2a3a"/><rect x="390" y="340" width="70" height="40" rx="12" fill="#fff" stroke="#2a1a10" stroke-width="4"/><rect x="410" y="350" width="28" height="18" fill="#ffe9a8"/><rect x="386" y="450" width="12" height="20" fill="#2a1a10"/><rect x="612" y="450" width="12" height="20" fill="#2a1a10"/>`)}
+  ${hot(past ? 'windowPast10' : 'windowNow10', `${win}<rect x="660" y="120" width="200" height="210" fill="none" stroke="${past ? '#6b4a2a' : '#efe6d2'}" stroke-width="10"/><path d="M760 120 V330 M660 225 H860" stroke="${past ? '#6b4a2a' : '#efe6d2'}" stroke-width="6"/>`)}
+  ${past ? hot('old10', `<rect x="690" y="380" width="90" height="90" rx="8" fill="#6b3a2a" stroke="#2a1a10" stroke-width="4"/><circle cx="735" cy="330" r="26" fill="#e8c8a8" stroke="#2a1a10" stroke-width="4"/><path d="M712 322 q23 -30 46 0" fill="#efefef"/><path d="M705 400 q30 -50 60 0z" fill="#3a3a5a" stroke="#2a1a10" stroke-width="4"/><circle cx="726" cy="334" r="3" fill="#2a1a10"/><circle cx="744" cy="334" r="3" fill="#2a1a10"/><path d="M727 346 q8 6 16 0" stroke="#2a1a10" stroke-width="3" fill="none"/>`) : ''}
+  ${hot(past ? 'mirrorPast10' : 'mirrorNow10', `<rect x="885" y="130" width="100" height="250" rx="40" fill="${past ? '#6b5a7a' : '#d8c8a0'}" stroke="#d9a74a" stroke-width="8"/><path d="M905 170 l40 -20 M905 210 l60 -30" stroke="#fff" stroke-width="5" opacity="0.4"/><text x="935" y="410" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="20" fill="${past ? '#2a1a10' : '#fff'}">${W(past ? 'mirrorPast10' : 'mirrorNow10')}</text>`)}
+  ${sepia}
+  </svg>`;
+}
+Object.assign(SCENES, { now10: () => room10(false), past10: () => room10(true) });
+Object.assign(HOTS, {
+  mirrorNow10: () => { go('past10'); Sound.tone(880, 0.6, 'sine', 0.08, -440); say(t('toPast10')); },
+  mirrorPast10: () => { go('now10'); Sound.tone(440, 0.6, 'sine', 0.08, 440); say(t('toNow10')); },
+  safePast10: () => { if (S.f.codeSet) { say(t('safePastDone10', S.myCode)); return; }
+    openCodePad(t('safePastTitle10'), t('safePastBody10'), { len: 4, ok: validCode10, why: () => t('codeRule10') }, (msg, typed) => { S.myCode = typed; S.f.codeSet = true; msg.textContent = t('safePastSet10', typed); say(t('safePastSet10', typed)); renderScene(); }); },
+  safeNow10: () => { if (S.f.safeOpen) { say(t('safeNowEmpty10')); return; }
+    openCodePad(t('safeNowTitle10'), t('safeNowBody10'), S.f.codeSet ? S.myCode : { len: 4, ok: () => false, why: () => t('codeWrong') }, (msg) => { S.f.safeOpen = true; give('acorn10'); msg.textContent = t('safeNowOpen10'); say(t('safeNowOpen10')); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('safe10n'); } }, 1400); }); },
+  windowNow10: () => { if (!S.f.planted) { say(t('windowNow10')); return; } if (!S.f.keyTaken) { S.f.keyTaken = true; give('okey10'); Sound.unlock(); say(t('oak10') + ' ' + t('oakKey10')); renderScene(); return; } say(t('oakEmpty10')); openNote('oak10n'); },
+  windowPast10: () => say(S.f.planted ? t('soilDone10') : t('windowPast10')),
+  old10: () => { S.f.talk10 = (S.f.talk10 || 0) + 1; say(t(S.f.talk10 % 2 ? 'oldself10' : 'oldself10b')); openNote('oldself10n'); },
+  bedNow10: () => { say(t('bedNow10')); openNote('pillow10n'); },
+  plans10: () => { say(t('plans10')); openNote('plans10n'); },
+  doorNow10: () => say(t('doorNow10')),
+  doorPast10: () => say(t('doorPast10')),
+});
+function useItem10(id, h) {
+  if (id === 'acorn10' && h === 'windowPast10') { take('acorn10'); S.f.planted = true; Sound.tone(523, 0.3, 'triangle', 0.1); Sound.tone(784, 0.4, 'triangle', 0.1, 0, 0.2); say(t('planted10')); renderScene(); return true; }
+  if (id === 'okey10' && h === 'doorNow10') { take('okey10'); Sound.unlock(); Sound.door(); renderScene(); setTimeout(escape10, 1500); return true; }
+  return false;
+}
+function escape10() {
+  if (!S || S.done || S.ch !== 10) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700); setTimeout(() => Sound.win(), 1400);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best10 = Math.max(profile.best10 || 0, left);
+  profile.ch10done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  showEnd(S.overtime ? t('win10EyebrowOver') : t('win10Eyebrow'), t('win10Title'), t('win10Text', mmss(left), S.hints, noteCount10()), left, false);
+}
+function newGame10() { S = freshState10(); save(); begin(); say(t('start10')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -3073,9 +3210,12 @@ const GOALS8 = [
 const GOALS9 = [
   ['c9_cart', () => S.f.cart], ['c9_closet', () => S.f.closet], ['c9_clock', () => S.f.wound], ['c9_lock', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS10 = [
+  ['c10_code', () => S.f.codeSet], ['c10_safe', () => S.f.safeOpen], ['c10_plant', () => S.f.planted], ['c10_key', () => S.f.keyTaken], ['c10_door', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -3111,8 +3251,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 9); $('btnNextCh').textContent = t(S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 10); $('btnNextCh').textContent = t(S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -3120,7 +3260,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -3133,8 +3273,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -3160,6 +3300,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh10 = 0;
+$('btnCh10').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh10 > 4000) { armedCh10 = Date.now(); $('btnCh10').textContent = t('confirmNew'); return; }
+  armedCh10 = 0; newGame10();
 });
 let armedCh9 = 0;
 $('btnCh9').addEventListener('click', () => {
@@ -3225,6 +3371,7 @@ function showStart() {
   $('btnCh7').hidden = !profile.ch6done; $('btnCh7').textContent = t('ch7Btn'); armedCh7 = 0;
   $('btnCh8').hidden = !profile.ch7done; $('btnCh8').textContent = t('ch8Btn'); armedCh8 = 0;
   $('btnCh9').hidden = !profile.ch8done; $('btnCh9').textContent = t('ch9Btn'); armedCh9 = 0;
+  $('btnCh10').hidden = !profile.ch9done; $('btnCh10').textContent = t('ch10Btn'); armedCh10 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
