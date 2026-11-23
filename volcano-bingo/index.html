@@ -68,7 +68,8 @@ body {
 .menu > * { min-width: 0; }
 .eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
 .logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(50px, 10.5vw, 100px); line-height: 0.86; text-wrap: balance; }
-.logo span { color: var(--lava); }
+.logo span { color: var(--lava); }.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
+
 .lede { margin: 0 0 16px; max-width: 46ch; opacity: 0.92; }
 .cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .sub-row { margin-top: 10px; }
@@ -132,7 +133,10 @@ body {
       <div>
         <p class="eyebrow">From the makers of Rooftop Roulette</p>
         <h1 class="logo">Volcano<br><span>Bingo</span></h1>
-        <p class="lede">The volcano spits numbered lava rocks. Tap the ones on your card, ignore the rest, defuse the bombs. Five in a row is BINGO, then you pick a hotter card.</p>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0f2e"/><stop offset="1" stop-color="#7a2a2a"/></linearGradient><radialGradient id="g4"><stop offset="0" stop-color="rgba(255,120,40,0.7)"/><stop offset="1" stop-color="rgba(255,80,20,0)"/></radialGradient></defs><rect width="320" height="160" fill="url(#a4)"/>
+    <circle cx="160" cy="92" r="80" fill="url(#g4)"/><path d="M70 140 L140 92 Q160 98 180 92 L250 140Z" fill="#2a1726"/><ellipse cx="160" cy="93" rx="20" ry="5" fill="#ffb84a"/><rect y="138" width="320" height="22" fill="#1f3f66"/>
+    ${[[96, 52, '#3d8bff', 'B', 7], [150, 30, '#ff4d5e', 'I', 23], [214, 46, '#3fd28a', 'G', 52], [252, 82, '#ff8a1f', 'O', 68]].map(([x, y, c, l, n]) => `<g transform="translate(${x} ${y})"><circle r="17" fill="${c}" stroke="#fff" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="7" fill="#fff">${l}</text><text y="8" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="16" fill="#fff">${n}</text></g>`).join('')}</svg>
+        <p class="lede">Tap the lava rocks on your card, defuse the bombs, get five in a row.</p>
         <div class="cta-row"><button class="btn" id="btnStart" type="button"><span>Erupt</span></button></div>
         <div class="sub-row">
           <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a>
