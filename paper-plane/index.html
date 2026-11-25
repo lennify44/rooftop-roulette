@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="description" content="Fly paper planes across a street canyon into the lit windows before your inbox overflows.">
+<meta name="theme-color" content="#110e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Paper Plane">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<!-- source:head -->
+<title>Paper Plane Post</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  /* Layout: a street canyon on canvas; your mail room on the left, the building with the windows on the right; score, streak and hearts on top */
+  --night: #14182e;
+  --chalk: #fff7ee;
+  --haze: #b9c2e6;
+  --cyan: #7fd3ff;
+  --pink: #ff8a5c;
+  --gold: #ffd23f;
+  --font-display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Barlow", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html { height: 100%; box-sizing: border-box; overflow: hidden; background: var(--night); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%; margin: 0; overflow: hidden; background: var(--night); color: var(--chalk); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.score { font-family: var(--font-display); font-weight: 900; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; }
+.sub { margin-top: 2px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.hp { color: var(--pink); letter-spacing: 1px; }
+.hud-btns { display: flex; gap: 8px; pointer-events: auto; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--chalk); background: rgba(0, 0, 0, 0.35); cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+.hint { position: absolute; left: 50%; bottom: 10%; transform: translateX(-50%); width: max-content; max-width: 90%; padding: 8px 16px; border-radius: 999px; background: rgba(15, 20, 24, 0.78); font-family: var(--font-display); font-weight: 900; font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em; pointer-events: none; transition: opacity 0.6s; }
+.hint.fade { opacity: 0; }
+.cards { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 16px; background: rgba(15, 20, 24, 0.84); }
+.cards .box { width: 100%; max-width: 760px; text-align: center; }
+.cards h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 900; font-size: clamp(34px, 8vw, 56px); text-transform: uppercase; }
+.cards p { margin: 0 0 14px; color: var(--haze); }
+.cards .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.card { min-height: 120px; padding: 14px; border-radius: 16px; border: 3px solid var(--cyan); background: linear-gradient(160deg, #23313a, #141c22); color: var(--chalk); cursor: pointer; text-align: left; display: grid; gap: 4px; align-content: start; animation: pop 0.25s ease-out backwards; }
+.card:nth-child(2) { animation-delay: 0.06s; } .card:nth-child(3) { animation-delay: 0.12s; }
+@keyframes pop { from { transform: scale(0.7); opacity: 0; } }
+.card b { font-family: var(--font-display); font-weight: 900; font-size: 24px; text-transform: uppercase; line-height: 1; }
+.card span { font-size: 14px; color: var(--haze); }
+.card i { font-style: normal; font-size: 30px; }
+.screen {
+  position: absolute; inset: 0; display: grid; align-items: center; overflow-y: auto; touch-action: pan-y; z-index: 3;
+  padding-block: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-bottom)); padding-inline: max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right));
+  background: radial-gradient(ellipse at 50% 30%, rgba(255, 170, 90, 0.25), transparent 60%), linear-gradient(180deg, rgba(20, 24, 46, 0.86), rgba(20, 24, 46, 0.96));
+}
+.menu { width: 100%; max-width: 980px; margin-inline: auto; display: grid; align-items: center; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 44px; }
+.menu > * { min-width: 0; }
+.eyebrow, .label { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--haze); }
+.logo { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: clamp(56px, 13vw, 112px); line-height: 0.84; }
+.logo span { background: linear-gradient(90deg, var(--cyan), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { margin: 0 0 18px; max-width: 40ch; font-size: 17px; }
+.hero-art { display: block; overflow: hidden; width: 100%; max-width: 460px; height: auto; aspect-ratio: 2 / 1; margin: 0 0 14px; border-radius: 18px; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.12); }
+.howto { margin-top: 12px; max-width: 46ch; }
+.howto summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-body); font-weight: 700; font-size: 16px; color: var(--chalk); text-decoration: underline; text-underline-offset: 4px; }
+.howto p { margin: 4px 0 0; font-size: 15px; color: var(--haze); line-height: 1.5; }
+@media (max-width: 699px) { .lede { font-size: 16px; margin-bottom: 14px; } }
+.cta-row, .sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.sub-row { margin-top: 10px; }
+.btn { min-height: 56px; border: 0; cursor: pointer; padding: 0.3em 1.6em; color: #14182e; background: linear-gradient(90deg, #ffd23f, #fff3c4); font-family: var(--font-display); font-weight: 900; font-size: 32px; letter-spacing: 0.08em; text-transform: uppercase; transform: skewX(-12deg); box-shadow: 0 0 24px rgba(255, 210, 63, 0.5), 5px 5px 0 rgba(0, 0, 0, 0.35); }
+.btn > span { display: inline-block; transform: skewX(12deg); }
+.link-btn, a.link-btn { min-height: 44px; border: 0; background: none; padding: 10px 0; cursor: pointer; color: var(--chalk); font-family: var(--font-body); font-weight: 600; font-size: 16px; text-decoration: underline; text-underline-offset: 4px; }
+.side { display: grid; gap: 8px; align-content: start; }
+.best { font-family: var(--font-display); font-weight: 900; font-size: 22px; color: var(--gold); margin: 6px 0 0; }
+.stats { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.stats dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--haze); }
+.stats dd { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 32px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.skins { margin-top: 10px; display: grid; gap: 6px; }
+.skin-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.skin { width: 48px; height: 48px; padding: 0; border-radius: 50%; border: 3px solid rgba(255, 247, 238, 0.25); cursor: pointer; display: grid; place-items: center; }
+.skin[aria-pressed="true"] { border-color: var(--chalk); box-shadow: 0 0 14px rgba(255, 210, 63, 0.6); }
+.skin:disabled { cursor: default; }
+.skin span { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.lb-tabs { display: flex; gap: 6px; }
+.lb-tabs button { min-height: 32px; padding: 3px 10px; border: 1.5px solid rgba(255, 247, 238, 0.35); background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.lb-tabs button[aria-pressed="true"] { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.toplist { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.toplist li { display: grid; grid-template-columns: 22px 1.2fr 1fr 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.toplist b { font-family: var(--font-display); font-size: 17px; color: var(--cyan); }
+.toplist li span:last-child { font-family: var(--font-mono); font-size: 11px; color: var(--haze); }
+.toplist li.me span:nth-child(2) { color: var(--cyan); font-weight: 600; }
+.toplist .none { display: block; color: var(--haze); }
+.toplist a { color: var(--chalk); }
+.lb-post { display: grid; gap: 4px; margin: 10px 0 0; font-size: 13px; color: var(--haze); }
+.lb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lb-row input { width: 12em; max-width: 100%; min-height: 40px; padding: 6px 8px; border: 1.5px solid rgba(255, 247, 238, 0.4); background: rgba(15, 20, 24, 0.6); color: var(--chalk); font: 600 16px var(--font-body); }
+.tip { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+.icon-btn:focus-visible, .btn:focus-visible, .link-btn:focus-visible, .card:focus-visible, .lb-tabs button:focus-visible, .lb-row input:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+@media (max-height: 520px) { .logo { font-size: clamp(44px, 9vw, 70px); } .lede { font-size: 15px; } .btn { font-size: 26px; min-height: 48px; } .card { min-height: 90px; } }
+</style>
+<!-- /source:head -->
+</head>
+<body>
+<!-- source:body -->
+<div id="stage">
+  <canvas id="game" aria-label="The street canyon"></canvas>
+  <div class="hud" id="hud" hidden>
+    <div>
+      <div class="score" id="score">0</div>
+      <div class="sub"><span id="streak">streak 0</span> · <span class="hp" id="hp">♥♥♥</span></div>
+    </div>
+    <div class="hud-btns">
+      <button class="icon-btn" id="btnMute" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="muteWave" d="M17 9a4 4 0 0 1 0 6"/><path id="muteX" d="M17 9l5 6M22 9l-5 6" hidden/></svg></button>
+      <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    </div>
+  </div>
+  <div class="hint" id="hint" hidden>Tap to throw · hold = nose up</div>
+
+  <section class="screen" id="screenStart" aria-label="Start">
+    <div class="menu">
+      <div>
+        <p class="eyebrow">Lennify Arcade</p>
+        <h1 class="logo">Paper Plane<br><span>Post</span></h1>
+        <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="ppsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2f6a"/><stop offset="0.7" stop-color="#ff9a6a"/><stop offset="1" stop-color="#ffd58a"/></linearGradient></defs><rect width="320" height="160" fill="url(#ppsky)"/><rect x="0" y="40" width="60" height="120" fill="#3a3550"/><rect x="40" y="92" width="20" height="22" fill="#ffd58a"/><rect x="236" y="10" width="84" height="150" fill="#4a3f66"/><g fill="#2a2440"><rect x="236" y="26" width="14" height="18"/><rect x="236" y="62" width="14" height="18"/><rect x="236" y="134" width="14" height="18"/></g><rect x="236" y="98" width="14" height="18" fill="#ffe27a"/><rect x="236" y="98" width="14" height="18" fill="none" stroke="#fff" stroke-width="2"/><circle cx="243" cy="107" r="22" fill="#ffe27a" opacity="0.25"/><path d="M62 98 Q120 40 170 70 T228 104" stroke="#fff" stroke-width="2.5" stroke-dasharray="6 6" fill="none" opacity="0.8"/><g transform="translate(206 92) rotate(18)"><path d="M0 0 L-26 -8 L-20 0 L-26 8 Z" fill="#fff" stroke="#2a2440" stroke-width="2"/><path d="M0 0 L-20 0" stroke="#9aa8d0" stroke-width="1.5"/></g><g fill="#2a2440"><path d="M150 36 q6 -6 12 0 q6 -6 12 0" stroke="#2a2440" stroke-width="2.5" fill="none"/></g><rect y="146" width="320" height="14" fill="#2a2440"/><g fill="#ffd23f"><circle cx="270" cy="96" r="4"/><circle cx="280" cy="112" r="3"/><circle cx="262" cy="120" r="3"/></g><text x="306" y="40" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="24" fill="#ffe27a">PERFECT!</text></svg>
+        <p class="lede">Fly every letter into a lit window before the inbox overflows.</p>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
+        <p class="best" id="bestStart"></p>
+        <details class="howto"><summary>How to play</summary><p>Letters pile up in your inbox. Windows in the building across the street light up for a few seconds: that's who is waiting for mail. Tap to throw a paper plane. While it flies, hold your thumb down to pull its nose up (it climbs and slows down) and let go to dive (it speeds up). Fly it into a lit window. A hit dead in the middle is PERFECT and scores double, gold express letters score triple, and every delivery in a row raises your streak multiplier. A plane that hits the wall, a dark window, a pigeon or the street is lost. If more than 6 letters pile up, you lose a heart. Every 10 deliveries the next block gets windier and busier.</p></details>
+        <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
+      </div>
+      <div class="side">
+        <h2 class="label">World leaderboard <span id="lbWho"></span></h2>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenPause" aria-label="Paused" hidden>
+    <div class="menu"><div>
+      <p class="eyebrow">Paused</p>
+      <h1 class="logo" style="font-size: clamp(44px, 9vw, 80px)">Coffee<br><span>break</span></h1>
+      <div class="cta-row"><button class="btn" id="btnResume" type="button"><span>Resume</span></button><button class="link-btn" id="btnQuit" type="button">End the shift</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="screenOver" aria-label="Shift over" hidden>
+    <div class="menu">
+      <div>
+        <p class="eyebrow" id="overEyebrow">Shift over</p>
+        <h1 class="logo" id="overTitle" style="font-size: clamp(48px, 10vw, 90px)">0</h1>
+        <div class="cta-row"><button class="btn" id="btnAgain" type="button"><span>Again</span></button><button class="link-btn" id="btnMenu" type="button">Menu</button></div>
+        <dl class="stats">
+          <div><dt>Letters</dt><dd id="overLetters">0</dd></div>
+          <div><dt>Best streak</dt><dd id="overStreak">0</dd></div>
+          <div><dt>Perfects</dt><dd id="overPerfect">0</dd></div>
+          <div><dt>Best</dt><dd id="overBest">0</dd></div>
+        </dl>
+      </div>
+      <div class="side">
+        <p class="tip" id="overTip"></p>
+        <div class="lb-post" id="lbPost" hidden>
+          <label for="lbName">Your name on the world leaderboard</label>
+          <div class="lb-row"><input id="lbName" maxlength="16" autocomplete="nickname" spellcheck="false"><button class="link-btn" id="lbSend" type="button">Post score</button></div>
+        </div>
+        <p class="tip" id="lbResult"></p>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, k) => a + (b - a) * k;
+const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } },
+};
+const PROFILE_KEY = 'paper-plane-profile';
+const profile = Object.assign({ best: 0, bestLetters: 0, bestStreak: 0, runs: 0, name: '', deviceId: '', muted: false }, store.get(PROFILE_KEY, {}));
+if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
+const saveProfile = () => store.set(PROFILE_KEY, profile);
+function mk(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; if (tag === 'button') e.type = 'button'; return e; }
+
+// ---------- world: a street canyon 420 units wide; your mail room on the left, the facade with the windows on the right
+const AW = 420, FACADE = 318, STEP = 1 / 120, INBOX_MAX = 6;
+const L = { W: 0, H: 0, dpr: 1, s: 1, ox: 0, oy: 0, AH: 800 };
+function layout() {
+  const W = cv.clientWidth || innerWidth || 390, H = cv.clientHeight || innerHeight || 844, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const top = 64, s = Math.min(W / AW, (H - top - 8) / 560), AH = clamp((H - top - 8) / s, 560, 1000);
+  Object.assign(L, { W, H, dpr, s, AH, ox: (W - AW * s) / 2, oy: top + Math.max(0, (H - top - 8 - AH * s) / 2) });
+}
+addEventListener('resize', layout);
+const STREET = () => L.AH - 56, LAUNCH = () => ({ x: 74, y: L.AH * 0.58 });
+// floors of the building across the street: openings get smaller block by block
+function floors() {
+  const b = game.block, h = Math.max(22, 40 - (b - 1) * 4), gap = 58, out = [];
+  for (let y = 70, i = 0; y + h < STREET() - 20; y += gap, i++) out.push({ i, y, h });
+  return out;
+}
+// ---------- sound
+const Sound = {
+  ctx: null, master: null,
+  init() { if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; } try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = profile.muted ? 0 : 0.55; this.master.connect(this.ctx.destination); } catch (e) { this.ctx = null; } },
+  setMuted(m) { if (this.master) this.master.gain.value = m ? 0 : 0.55; },
+  tone(f, dur, type = 'sine', vol = 0.1, slide = 0, delay = 0) {
+    if (!this.ctx) return; const t0 = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol = 0.1, f0 = 1500) { if (!this.ctx) return; const n = Math.floor(this.ctx.sampleRate * dur), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain(); s.buffer = buf; f.type = 'lowpass'; f.frequency.value = f0; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(this.master); s.start(); },
+  shoot() { this.tone(300, 0.08, 'square', 0.03, -120); },
+  ping(n) { const f = 660 * Math.pow(1.05, Math.min(n, 24)); this.tone(f, 0.08, 'triangle', 0.08); },
+  perfect() { this.tone(1760, 0.25, 'sine', 0.08, -600); this.tone(2640, 0.18, 'triangle', 0.05); },
+  boom() { this.noise(0.35, 0.35, 900); this.tone(110, 0.3, 'sawtooth', 0.06, -50); },
+  hurt() { this.tone(140, 0.4, 'sawtooth', 0.12, -70); this.noise(0.4, 0.35, 500); },
+  clear() { [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.2, 'triangle', 0.08, 0, i * 0.08)); },
+  over() { this.tone(420, 1, 'sawtooth', 0.08, -340); this.noise(1, 0.3, 400); },
+  beatOn: false, step: 0, nextT: 0, timer: 0,
+  startBeat() { if (!this.ctx || this.beatOn) return; this.beatOn = true; this.step = 0; this.nextT = this.ctx.currentTime + 0.05; this.timer = setInterval(() => this.schedule(), 40); },
+  stopBeat() { this.beatOn = false; clearInterval(this.timer); },
+  schedule() {
+    if (!this.ctx || !this.beatOn) return;
+    const bpm = 112 + Math.min(56, game.wave * 4), stepT = 60 / bpm / 4, riff = [49, 0, 49, 0, 58.3, 0, 49, 65.4, 49, 0, 49, 0, 73.4, 0, 65.4, 0];
+    while (this.nextT < this.ctx.currentTime + 0.15) {
+      const t = this.nextT, st = this.step % 16, d = Math.max(0, t - this.ctx.currentTime);
+      if (st % 4 === 0) { const o = this.ctx.createOscillator(), g = this.ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.12); g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15); o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 0.16); }
+      if (st % 2 === 1) { const n = Math.floor(this.ctx.sampleRate * 0.03), buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), dd = buf.getChannelData(0); for (let i = 0; i < n; i++) dd[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain(); s.buffer = buf; f.type = 'highpass'; f.frequency.value = 7000; g.gain.value = st % 4 === 3 ? 0.045 : 0.02; s.connect(f); f.connect(g); g.connect(this.master); s.start(t); }
+      if (riff[st]) this.tone(riff[st], stepT * 1.6, 'sawtooth', 0.03, 0, d);
+      this.nextT += stepT; this.step++;
+    }
+  },
+};
+Object.assign(Sound, {
+  _old(n) { const f = 520 * Math.pow(1.03, Math.min(n, 40)); this.tone(f, 0.05, 'square', 0.035); },
+  knock() { this.tone(240, 0.12, 'square', 0.06, -120); },
+  blast(n) { this.noise(0.5, 0.4, 1400); this.tone(90, 0.5, 'sawtooth', 0.09, -40); this.tone(880, 0.2, 'triangle', 0.06, 600); },
+});
+Object.assign(Sound, {
+  whoosh() { this.noise(0.25, 0.12, 2600); this.tone(500, 0.2, 'sine', 0.04, 300); },
+  deliver(n) { const f = 523 * Math.pow(1.06, Math.min(n, 24)); [0, 0.07, 0.14].forEach((d, i) => this.tone(f * [1, 1.25, 1.5][i], 0.18, 'triangle', 0.08, 0, d)); },
+  crumple() { this.noise(0.25, 0.25, 900); },
+  ding() { this.tone(1320, 0.15, 'sine', 0.05); },
+});
+function renderMute() {
+  $('btnMute').setAttribute('aria-pressed', String(!profile.muted)); $('btnMute').setAttribute('aria-label', profile.muted ? 'Sound off' : 'Sound on');
+  $('muteWave').toggleAttribute('hidden', profile.muted); $('muteX').toggleAttribute('hidden', !profile.muted);
+}
+$('btnMute').addEventListener('click', () => { profile.muted = !profile.muted; saveProfile(); Sound.init(); Sound.setMuted(profile.muted); renderMute(); });
+
+// ---------- state
+const fresh = () => ({ running: false, paused: false, ended: false, dying: 0, t: 0, wave: 1, block: 1, score: 0, hp: 3, letters: 0, streak: 0, bestStreak: 0, perfects: 0, lost: 0,
+  inbox: [], inboxT: 1, lit: [], litT: 0.6, plane: null, pigeons: [], pigeonT: 4, drones: [], cleaner: null, wind: { x: 0, y: 0, ph: 0 },
+  why: {}, parts: [], pops: [], rings: [], shake: 0, freeze: 0, slow: 0, flash: 0, call: null, hurtT: 0, holding: false, coach: -1 });
+const game = fresh();
+const mult = () => Math.min(8, 1 + Math.floor(game.streak / 3));
+const newLetter = () => ({ express: game.block >= 2 && Math.random() < 0.15 });
+function startRun() {
+  Sound.init(); layout();
+  Object.assign(game, fresh(), { running: true });
+  game.inbox = [newLetter(), newLetter(), newLetter(), newLetter()];
+  ['screenStart', 'screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; });
+  $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade');
+  game.coach = profile.runs < 2 ? 0 : -1; $('hint').textContent = game.coach === 0 ? 'TAP to throw a plane!' : 'Tap to throw · hold = nose up'; if (game.coach < 0) setTimeout(() => $('hint').classList.add('fade'), 4000);
+  game.call = { text: 'BLOCK 1', t: 0, big: true }; Sound.startBeat(); updateHud();
+}
+function nextBlock() {
+  game.block++; game.wave = game.block;
+  const bonus = 1000 * game.block; game.score += bonus;
+  const adds = { 2: 'WIND', 3: 'PIGEONS', 4: 'WINDOW CLEANER', 5: 'DRONES' };
+  game.call = { text: `BLOCK ${game.block}${adds[game.block] ? ' · ' + adds[game.block] : ''}`, t: 0, big: true };
+  pop(`+${fmt(bonus)}`, AW / 2, L.AH * 0.4, '#7dffb2', 1.2, 1.3); Sound.clear();
+  game.lit = []; game.litT = 1.2;
+  if (game.block >= 4 && !game.cleaner) game.cleaner = { y: 120, dir: 1 };
+}
+function updateHud() { $('score').textContent = fmt(game.score); $('streak').textContent = `streak ${game.streak} · ×${mult()}`; $('hp').textContent = '♥'.repeat(Math.max(0, game.hp)) + '♡'.repeat(Math.max(0, 3 - game.hp)); }
+function pop(t, x, y, c, life = 0.8, size = 1) { game.pops.push({ t, x, y, c, life, max: life, size }); }
+function burst(x, y, c, n, sp = 300) { for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), v = rnd(sp * 0.3, sp); game.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.3, 0.8), max: 0.8, c, r: rnd(2, 5) }); } }
+function endRun() {
+  if (game.ended) return;
+  game.ended = true; game.running = false; Sound.stopBeat();
+  const sc = Math.floor(game.score), isBest = sc > profile.best;
+  profile.best = Math.max(profile.best, sc); profile.bestLetters = Math.max(profile.bestLetters, game.letters); profile.bestStreak = Math.max(profile.bestStreak, game.bestStreak); profile.runs++; saveProfile();
+  $('overEyebrow').textContent = isBest && sc > 0 ? 'New best score!' : 'The inbox won';
+  $('overTitle').textContent = fmt(sc);
+  $('overLetters').textContent = game.letters; $('overStreak').textContent = game.bestStreak; $('overPerfect').textContent = game.perfects; $('overBest').textContent = fmt(profile.best);
+  $('overTip').textContent = game.letters < 5 ? 'Hold to climb, let go to dive. Aim a little above the window: planes sink as they fly.' : game.perfects < 3 ? 'Hit the middle of a window for PERFECT: double points.' : 'Keep the streak alive: every 3 deliveries in a row raise the multiplier, up to ×8.';
+  $('hud').hidden = true; $('hint').hidden = true; $('screenOver').hidden = false;
+  lbAfterGame(sc, game.letters);
+}
+function pause(on) { if (!game.running) return; game.paused = on; $('screenPause').hidden = !on; if (on) Sound.stopBeat(); else Sound.startBeat(); }
+function loseHeart(why) {
+  if (game.hurtT > 0 || game.dying) return;
+  game.hp--; game.hurtT = 1; game.shake = 16; game.flash = 0.3; Sound.hurt(); pop(why, AW * 0.3, L.AH * 0.35, '#ff6b6b', 1.2, 1.2); updateHud();
+  if (game.hp <= 0) { game.dying = 1.2; Sound.over(); Sound.stopBeat(); game.call = { text: 'SHIFT OVER', t: 0, big: true }; }
+}
+function breakStreak() { if (game.streak >= 3) pop(`streak ${game.streak} lost`, AW * 0.5, L.AH * 0.2, '#ff9a8a', 0.9); game.streak = 0; updateHud(); }
+function throwPlane() {
+  if (!game.running || game.paused || game.dying || game.plane || !game.inbox.length) { if (game.running && !game.inbox.length && !game.plane) { pop('inbox empty', 70, LAUNCH().y - 40, '#b9c2e6', 0.6, 0.8); } return; }
+  const l = game.inbox.shift(), p = LAUNCH();
+  game.plane = { x: p.x, y: p.y, a: -0.28, v: 300, express: l.express, trail: [], t: 0 };
+  Sound.whoosh();
+  if (game.coach === 0) { game.coach = 1; $('hint').textContent = 'HOLD to pull the nose up, let go to dive!'; }
+}
+
+// ---------- update
+function update(dtReal) {
+  if (!game.running || game.paused) return;
+  if (game.freeze > 0) { game.freeze -= dtReal; return; }
+  game.slow = Math.max(0, game.slow - dtReal);
+  const dt = dtReal * (game.slow > 0 ? 0.35 : 1);
+  if (game.dying) { game.dying -= dtReal; tickFx(dt * 0.4); if (game.dying <= 0) endRun(); return; }
+  game.t += dt; game.hurtT = Math.max(0, game.hurtT - dt);
+  const b = game.block, FL = floors();
+  // the inbox fills up
+  game.inboxT -= dt;
+  if (game.inboxT <= 0) {
+    game.inboxT = Math.max(1.2, 2.6 - game.letters * 0.03);
+    game.inbox.push(newLetter()); Sound.ding();
+    if (game.inbox.length > INBOX_MAX) { game.inbox.length = INBOX_MAX; loseHeart('INBOX OVERFLOW!'); }
+  }
+  // lit windows
+  const maxLit = Math.min(3, 1 + Math.floor((b - 1) / 2) + (game.letters > 4 ? 1 : 0));
+  game.litT -= dt;
+  if (game.litT <= 0 && game.lit.length < maxLit) {
+    const free = FL.filter((f) => !game.lit.some((l) => l.i === f.i) && !(game.cleaner && Math.abs(game.cleaner.y - (f.y + f.h / 2)) < 50));
+    if (free.length) { const f = pick(free), dur = Math.max(3.8, rnd(7, 9.5) - b * 0.5); game.lit.push({ i: f.i, t: dur, max: dur }); }
+    game.litT = rnd(0.8, 1.6);
+  }
+  for (const l of game.lit) { l.t -= dt; if (l.t <= 0) { l.dead = true; const f = FL[l.i]; if (f) pop('missed', FACADE + 20, f.y, '#ff9a8a', 0.8, 0.8); breakStreak(); } }
+  game.lit = game.lit.filter((l) => !l.dead && FL[l.i]);
+  // wind from block 2: a slow gust cycle
+  game.wind.ph += dt * 0.6;
+  game.wind.x = b >= 2 ? -25 - b * 6 + Math.sin(game.wind.ph * 0.7) * 20 : 0;
+  game.wind.y = b >= 2 ? Math.sin(game.wind.ph) * (18 + b * 6) : 0;
+  // pigeons from block 3, drones from block 5, the window cleaner from block 4
+  if (b >= 3) { game.pigeonT -= dt; if (game.pigeonT <= 0) { game.pigeonT = Math.max(1.6, 5 - b * 0.4) * rnd(0.7, 1.3); const dir = Math.random() < 0.5 ? 1 : -1; game.pigeons.push({ x: dir > 0 ? 90 : FACADE - 10, y: rnd(80, STREET() - 60), vx: dir * rnd(50, 90), flap: 0 }); } }
+  for (const p of game.pigeons) { p.x += p.vx * dt; p.flap += dt * 12; p.y += Math.sin(p.flap * 0.4) * 10 * dt; if (p.x < 80 || p.x > FACADE) p.dead = true; }
+  game.pigeons = game.pigeons.filter((p) => !p.dead);
+  if (b >= 5 && game.drones.length < Math.min(3, b - 4)) game.drones.push({ x: rnd(150, 270), y: rnd(120, STREET() - 120), ph: rnd(0, 6), amp: rnd(60, 140) });
+  for (const d of game.drones) { d.ph += dt * 1.3; d.yy = d.y + Math.sin(d.ph) * d.amp; }
+  if (game.cleaner) { const c = game.cleaner; c.y += c.dir * (40 + b * 6) * dt; if (c.y < 70) c.dir = 1; if (c.y > STREET() - 80) c.dir = -1; }
+  // the plane
+  const p = game.plane;
+  if (p) {
+    p.t += dt;
+    if (game.holding) p.a = Math.max(-1, p.a - 1.9 * dt); else p.a = Math.min(0.95, p.a + 1.2 * dt);
+    p.v = clamp(p.v + (Math.sin(p.a) * 170 - 15) * dt, 115, 470);
+    if (p.v <= 118 && p.a < 0) p.a += 3 * dt;   // a stall drops the nose
+    p.x += Math.cos(p.a) * p.v * dt + game.wind.x * dt; p.y += Math.sin(p.a) * p.v * dt + (game.wind.y + 10) * dt;
+    // the mail magnet: close to the facade, a plane near a lit window gets pulled into it
+    if (p.x > FACADE - 110) { for (const l of game.lit) { const f = FL[l.i]; if (!f) continue; const cy = f.y + f.h / 2, dy = cy - p.y; if (Math.abs(dy) < f.h * 0.5 + 28) { if (p.entry == null) p.entry = Math.abs(dy); p.y += dy * Math.min(1, dt * 7); break; } } }
+    p.trail.push([p.x, p.y]); if (p.trail.length > 26) p.trail.shift();
+    if (game.coach === 1 && p.t > 0.4 && game.holding) { game.coach = 2; $('hint').textContent = 'Fly it into a LIT window!'; }
+    let lost = '';
+    for (const pg of game.pigeons) if (Math.hypot(pg.x - p.x, pg.y - p.y) < 18) { lost = 'PIGEON!'; burst(pg.x, pg.y, '#c9d3e8', 14, 200); pg.dead = true; }
+    for (const d of game.drones) if (Math.hypot(d.x - p.x, d.yy - p.y) < 20) lost = 'DRONE!';
+    if (p.y > STREET() - 4) lost = 'into the street';
+    if (p.y < -30 || p.x < 40) lost = 'gone with the wind';
+    if (!lost && p.x >= FACADE - 4) {
+      const f = FL.find((fl) => p.y > fl.y - 3 && p.y < fl.y + fl.h + 3), cl = game.cleaner && Math.abs(game.cleaner.y - p.y) < 24;
+      const hit = !cl && f && game.lit.find((l) => l.i === f.i);
+      if (hit) deliver(p, f, hit); else lost = cl ? 'WINDOW CLEANER!' : f ? 'dark window' : 'SPLAT';
+    }
+    if (lost) { game.why[lost] = (game.why[lost] || 0) + 1; burst(p.x, p.y, '#ffffff', 16, 220); Sound.crumple(); pop(lost, clamp(p.x, 60, 300), clamp(p.y - 20, 40, L.AH - 80), '#ff9a8a', 0.9, 0.9); game.lost++; breakStreak(); game.plane = null; game.shake = Math.max(game.shake, 6); }
+  }
+  tickFx(dt); updateHud();
+}
+function deliver(p, f, lit) {
+  const centre = f.y + f.h / 2, perfect = (p.entry == null ? Math.abs(p.y - centre) : p.entry) < f.h / 3;
+  game.streak++; game.bestStreak = Math.max(game.bestStreak, game.streak); game.letters++;
+  const pts = 100 * mult() * (perfect ? 2 : 1) * (p.express ? 3 : 1); game.score += pts;
+  lit.dead = true; game.lit = game.lit.filter((l) => !l.dead); game.plane = null;
+  if (perfect) { game.perfects++; game.slow = 0.25; game.flash = 0.18; }
+  pop(`+${fmt(pts)}${perfect ? ' PERFECT' : ''}`, FACADE - 40, centre - 18, perfect ? '#ffe27a' : '#ffffff', 1, perfect ? 1.4 : 1.1);
+  if (p.express) pop('EXPRESS ×3', FACADE - 40, centre + 14, '#ffd23f', 1, 1);
+  burst(FACADE, centre, '#ffe27a', perfect ? 30 : 18, 320); burst(FACADE, centre, '#ffd23f', 10, 200);
+  game.rings.push({ x: FACADE, y: centre, r: 6, max: perfect ? 70 : 44, life: 0.35, c: perfect ? '#ffe27a' : '#ffffff' });
+  game.shake = Math.min(14, game.shake + (perfect ? 8 : 4)); game.freeze = 0.04;
+  Sound.deliver(game.streak); if (perfect) Sound.perfect();
+  const CALLS = { 5: 'ON A ROLL!', 10: 'POSTAL HERO!', 15: 'AIR MAIL ACE!', 25: 'MAIL LEGEND!' }; if (CALLS[game.streak]) game.call = { text: CALLS[game.streak], t: 0 };
+  if (game.coach === 2 || game.coach === 1) { game.coach = 3; $('hint').textContent = 'Delivered! Keep the streak going.'; setTimeout(() => { $('hint').classList.add('fade'); $('hint').textContent = 'Tap to throw · hold = nose up'; }, 3000); }
+  if (game.letters % 10 === 0) nextBlock();
+}
+function tickFx(dt) {
+  game.shake = Math.max(0, game.shake - dt * 50); game.flash = Math.max(0, game.flash - dt);
+  for (let i = game.parts.length - 1; i >= 0; i--) { const q = game.parts[i]; q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.vx *= Math.pow(0.3, dt); if (q.life <= 0) game.parts.splice(i, 1); }
+  for (let i = game.pops.length - 1; i >= 0; i--) { const q = game.pops[i]; q.life -= dt; q.y -= 40 * dt; if (q.life <= 0) game.pops.splice(i, 1); }
+  for (let i = game.rings.length - 1; i >= 0; i--) { const r = game.rings[i]; r.life -= dt; r.r = lerp(r.r, r.max, 0.2); if (r.life <= 0) game.rings.splice(i, 1); }
+}
+
+// ---------- drawing
+const STARS = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random() * 0.4, r: rnd(0.6, 1.6) }));
+const CARS = Array.from({ length: 4 }, (_, i) => ({ x: i * 120, v: rnd(40, 90) * (i % 2 ? 1 : -1), c: ['#ff6a2b', '#4ad8ff', '#ffd23f', '#8aff6a'][i] }));
+function drawPlane(x, y, a, express, scale = 1) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.scale(scale, scale);
+  ctx.fillStyle = express ? '#ffe27a' : '#ffffff'; ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-14, -9); ctx.lineTo(-9, 0); ctx.lineTo(-14, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = express ? '#c9a020' : '#9aa8d0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, 0); ctx.stroke();
+  ctx.restore();
+}
+function drawFrame() {
+  const { W, H, s } = L, AH = L.AH, b = game.block, FL = floors();
+  ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  ctx.fillStyle = '#14182e'; ctx.fillRect(0, 0, W, H);
+  const sh = game.shake;
+  ctx.save(); ctx.translate(L.ox + (sh ? rnd(-sh, sh) * 0.5 : 0), L.oy + (sh ? rnd(-sh, sh) * 0.5 : 0)); ctx.scale(s, s);
+  // dusk sky that darkens block by block
+  const dusk = Math.min(1, (b - 1) / 5), sky = ctx.createLinearGradient(0, 0, 0, AH);
+  sky.addColorStop(0, `rgb(${lerp(58, 20, dusk)},${lerp(64, 24, dusk)},${lerp(130, 60, dusk)})`); sky.addColorStop(0.75, `rgb(${lerp(255, 120, dusk)},${lerp(154, 70, dusk)},${lerp(106, 90, dusk)})`); sky.addColorStop(1, '#ffd58a');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, AW, AH);
+  ctx.fillStyle = '#fff'; for (const st of STARS) { ctx.globalAlpha = dusk * 0.8; ctx.fillRect(st.x * AW, st.y * AH, st.r, st.r); } ctx.globalAlpha = 1;
+  // far skyline
+  ctx.fillStyle = 'rgba(42,36,64,0.45)'; for (let i = 0; i < 8; i++) { const x = 70 + i * 32, h = 80 + ((i * 53) % 90); ctx.fillRect(x, STREET() - h - 120, 26, h + 120); }
+  // your mail room building
+  ctx.fillStyle = '#3a3550'; ctx.fillRect(0, 0, 70, AH);
+  const lp = LAUNCH(); ctx.fillStyle = '#ffd58a'; ctx.fillRect(44, lp.y - 18, 26, 30); ctx.fillStyle = '#2a2440'; ctx.fillRect(44, lp.y + 12, 30, 5);
+  // the inbox: a stack of envelopes on the ledge, red when nearly full
+  for (let i = 0; i < game.inbox.length; i++) { const l = game.inbox[i]; ctx.fillStyle = l.express ? '#ffe27a' : '#f4f1ea'; ctx.strokeStyle = game.inbox.length >= INBOX_MAX - 1 ? '#ff3b5c' : '#2a2440'; ctx.lineWidth = 1.5; ctx.fillRect(10, lp.y + 26 + i * 11, 30, 9); ctx.strokeRect(10, lp.y + 26 + i * 11, 30, 9); }
+  ctx.font = '900 14px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = game.inbox.length >= INBOX_MAX - 1 ? '#ff6b6b' : '#ffe27a'; ctx.fillText(`📨 ${game.inbox.length}/${INBOX_MAX}`, 35, lp.y + 26 + INBOX_MAX * 11 + 16);
+  if (!game.plane && game.inbox.length && game.running) drawPlane(lp.x + 4, lp.y - 4, -0.28, game.inbox[0].express, 0.9 + 0.08 * Math.sin(game.t * 6));
+  // the building across the street, with its floors
+  ctx.fillStyle = '#4a3f66'; ctx.fillRect(FACADE, 0, AW - FACADE, AH);
+  for (const f of FL) {
+    const lit = game.lit.find((l) => l.i === f.i);
+    ctx.fillStyle = lit ? '#ffe27a' : '#2a2440'; ctx.fillRect(FACADE, f.y, 30, f.h);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(FACADE + 30, f.y, AW - FACADE - 30, f.h);
+    if (lit) {
+      const k = lit.t / lit.max;
+      ctx.fillStyle = 'rgba(255,226,122,0.22)'; ctx.beginPath(); ctx.arc(FACADE, f.y + f.h / 2, f.h * 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a2440'; ctx.beginPath(); ctx.arc(FACADE + 18, f.y + f.h * 0.42, f.h * 0.16, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(FACADE + 13, f.y + f.h * 0.58, 10, f.h * 0.42);
+      const wave = Math.sin(game.t * 10) * 0.5; ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(FACADE + 14, f.y + f.h * 0.62); ctx.lineTo(FACADE + 6, f.y + f.h * (0.32 + wave * 0.15)); ctx.stroke();
+      ctx.strokeStyle = k < 0.3 ? '#ff3b5c' : '#ffffff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(FACADE + 60, f.y + f.h / 2, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke();
+    }
+    ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 3; ctx.strokeRect(FACADE, f.y, 30, f.h);
+  }
+  // window cleaner's platform
+  if (game.cleaner) { const c = game.cleaner; ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(FACADE - 22, 0); ctx.lineTo(FACADE - 22, c.y - 14); ctx.moveTo(FACADE - 2, 0); ctx.lineTo(FACADE - 2, c.y - 14); ctx.stroke(); ctx.fillStyle = '#ff8a3d'; ctx.fillRect(FACADE - 30, c.y - 14, 32, 10); ctx.fillStyle = '#2a2440'; ctx.fillRect(FACADE - 30, c.y - 4, 32, 18); ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(FACADE - 14, c.y - 24, 7, 0, Math.PI * 2); ctx.fill(); }
+  // the street
+  ctx.fillStyle = '#2a2440'; ctx.fillRect(0, STREET(), AW, AH - STREET());
+  for (const car of CARS) { car.x = ((car.x + car.v / 60) % (AW + 80) + AW + 80) % (AW + 80); ctx.fillStyle = car.c; ctx.fillRect(car.x - 40, STREET() + 18, 34, 14); ctx.fillStyle = '#ffe27a'; ctx.fillRect(car.v > 0 ? car.x - 8 : car.x - 40, STREET() + 22, 3, 4); }
+  // wind flags
+  if (game.wind.x || game.wind.y) { for (const fx of [90, 300]) { ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx, 40); ctx.lineTo(fx, 70); ctx.stroke(); const wl = Math.hypot(game.wind.x, game.wind.y), wa = Math.atan2(game.wind.y, game.wind.x); ctx.fillStyle = '#ff6a2b'; ctx.beginPath(); ctx.moveTo(fx, 40); ctx.lineTo(fx + Math.cos(wa) * wl * 0.5, 44 + Math.sin(wa) * wl * 0.3 + Math.sin(game.t * 8) * 2); ctx.lineTo(fx, 50); ctx.fill(); } }
+  for (const pg of game.pigeons) { ctx.save(); ctx.translate(pg.x, pg.y); ctx.scale(pg.vx > 0 ? 1 : -1, 1); ctx.fillStyle = '#8a94aa'; ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(9, -5, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e8a33d'; ctx.beginPath(); ctx.moveTo(13, -5); ctx.lineTo(18, -4); ctx.lineTo(13, -3); ctx.fill(); const w = Math.sin(pg.flap) * 8; ctx.strokeStyle = '#5a6478'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(-8, -6 - w); ctx.stroke(); ctx.restore(); }
+  for (const d of game.drones) { ctx.save(); ctx.translate(d.x, d.yy); ctx.fillStyle = '#2a2440'; ctx.fillRect(-14, -4, 28, 8); ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-18, -8); ctx.lineTo(-6, -8); ctx.moveTo(6, -8); ctx.lineTo(18, -8); ctx.stroke(); ctx.fillStyle = '#ff3b5c'; ctx.beginPath(); ctx.arc(0, 4, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+  // the plane in flight
+  const p = game.plane;
+  if (p) { ctx.strokeStyle = p.express ? 'rgba(255,226,122,0.6)' : 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2; ctx.setLineDash([5, 6]); ctx.beginPath(); p.trail.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.setLineDash([]); drawPlane(p.x, p.y, p.a, p.express); }
+  for (const r of game.rings) { ctx.strokeStyle = r.c; ctx.globalAlpha = clamp(r.life * 3, 0, 1); ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  for (const q of game.parts) { ctx.globalAlpha = clamp(q.life / q.max * 1.5, 0, 1); ctx.fillStyle = q.c; ctx.fillRect(q.x - q.r / 2, q.y - q.r / 2, q.r, q.r); }
+  ctx.globalAlpha = 1;
+  for (const q of game.pops) { ctx.globalAlpha = clamp(q.life / q.max * 2, 0, 1); ctx.font = `900 ${Math.round(22 * q.size)}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,24,46,0.85)'; ctx.strokeText(q.t, q.x, q.y); ctx.fillStyle = q.c; ctx.fillText(q.t, q.x, q.y); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  if (game.call) { game.call.t += 1 / 60; const cl = game.call, a = clamp(1.4 - cl.t, 0, 1), sc = 1 + Math.max(0, 0.25 - cl.t) * 3; ctx.save(); ctx.translate(W / 2, H * 0.24); ctx.scale(sc, sc); ctx.rotate(-0.05); ctx.globalAlpha = a; ctx.font = `900 ${Math.round(Math.min(cl.big ? 56 : 48, W / 8.5))}px "Big Shoulders Display", Impact, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 8; ctx.strokeStyle = '#14182e'; ctx.strokeText(cl.text, 0, 0); ctx.fillStyle = cl.big ? '#ffe27a' : '#ff8a5c'; ctx.fillText(cl.text, 0, 0); ctx.restore(); ctx.globalAlpha = 1; if (cl.t > 1.4) game.call = null; }
+  if (game.slow > 0) { ctx.fillStyle = `rgba(255,226,122,${0.12 * Math.min(1, game.slow * 4)})`; ctx.fillRect(0, 0, W, H); }
+  if (game.flash > 0) { ctx.fillStyle = game.hurtT > 0.6 ? `rgba(255,59,92,${game.flash})` : `rgba(255,255,255,${game.flash * 0.7})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// ---------- loop and input: tap throws, holding lifts the nose
+let last = 0, acc = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+  acc += dt; while (acc >= STEP) { update(STEP); acc -= STEP; }
+  drawFrame();
+}
+function press() { Sound.init(); game.holding = true; if (!game.plane) throwPlane(); }
+function release() { game.holding = false; }
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+addEventListener('pointerup', release); addEventListener('pointercancel', release);
+addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); if (!e.repeat) press(); } if (e.key === 'p' || e.key === 'Escape') pause(!game.paused); });
+addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'ArrowUp') release(); });
+$('btnPause').addEventListener('click', () => pause(true));
+$('btnResume').addEventListener('click', () => { pause(false); last = 0; });
+$('btnQuit').addEventListener('click', () => { $('screenPause').hidden = true; game.paused = false; endRun(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+function showStart() { ['screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bestStart').textContent = profile.best ? `Best: ${fmt(profile.best)} · ${profile.bestLetters} letters · streak ${profile.bestStreak}` : ''; $('screenStart').hidden = false; renderLeaderboard(); layout(); }
+$('btnPlay').addEventListener('click', startRun);
+$('btnAgain').addEventListener('click', startRun);
+$('btnMenu').addEventListener('click', showStart);
+
+// ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
+const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
+const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/paper-plane/';
+const GAME_ID = 'plane', DAILY_ID = 'planed';
+const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
+const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
+function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function deviceId() { if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); } return profile.deviceId; }
+const LBC = {};
+async function lbFetch(force) {
+  if (!lbReachable()) return null;
+  const gid = LB.tab === 'challenge' ? DAILY_ID : GAME_ID, c = LBC[gid];
+  if (!force && c && Date.now() - c.at < 30000) return c.data;
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${gid}&date=${todayKey()}`); if (!r.ok) return null; LBC[gid] = { data: await r.json(), at: Date.now() }; return LBC[gid].data; } catch (e) { return null; }
+}
+function lbNote(list, text, link) { list.textContent = ''; const li = mk('li', 'none'); li.textContent = text; if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); } list.appendChild(li); }
+async function renderLeaderboard(force) {
+  const list = $('lbList');
+  $('lbWho').textContent = profile.name ? `· you are ${profile.name}` : '';
+  $('lbTabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-lb') === LB.tab)));
+  if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
+  const data = await lbFetch(force);
+  if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
+  const rows = (LB.tab === 'alltime' ? data.alltime : data.daily).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'challenge' ? 'Nobody has played today\'s challenge yet.' : LB.tab === 'daily' ? 'No deliveries today yet.' : 'No scores yet. Be the first.'); return; }
+  list.textContent = '';
+  rows.forEach((r, i) => { const li = mk('li', r.id === profile.deviceId ? 'me' : ''); const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank); for (const text of [r.name, fmt(r.score), `${r.dist} letters`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); } list.appendChild(li); });
+}
+$('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
+let lbLast = null;
+function lbAfterGame(score, wave) { const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true; if (!lbReachable() || score <= 0) return; lbLast = { game: game.daily ? DAILY_ID : GAME_ID, score, dist: wave, daily: true, date: todayKey() }; $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend(); }
+async function lbSend() {
+  const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
+  if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post your score.'; $('lbName').focus(); return; }
+  if (!lbLast || LB.posting) return;
+  if (name !== profile.name) { profile.name = name; saveProfile(); }
+  LB.posting = true; out.textContent = 'Posting…';
+  try {
+    const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
+    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; for (const k in LBC) delete LBC[k]; }
+  } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
+  LB.posting = false;
+}
+$('lbSend').addEventListener('click', lbSend);
+$('lbName').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); lbSend(); } });
+
+document.querySelectorAll('a[data-hub]').forEach((a) => { if (location.hostname === 'lennify44.github.io') a.removeAttribute('target'); });
+if (location.hash === '#bot') window.__game = { game, L, floors, throwPlane, FACADE, LAUNCH, STREET, loseHeart };
+renderMute(); layout(); showStart();
+requestAnimationFrame(frame);
+})();
+</script>
+<!-- /source:body -->
+<script src="../feedback.js" defer></script>
+</body>
+</html>
