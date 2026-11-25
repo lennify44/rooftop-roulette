@@ -327,7 +327,8 @@ function startRun() {
   Object.assign(game, fresh(), { running: true });
   game.core.x = game.target.x = AW / 2; game.core.y = game.target.y = L.AH / 2;
   ['screenStart', 'screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('cards').hidden = true;
-  $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade'); setTimeout(() => $('hint').classList.add('fade'), 4000);
+  $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade');
+  game.coach = profile.runs < 2 ? 0 : -1; if (game.coach < 0) setTimeout(() => $('hint').classList.add('fade'), 4000); else coachSay();
   scatterScrap(16); nextWave(); Sound.startBeat(); updateHud();
 }
 function nextWave() {
@@ -500,7 +501,18 @@ function update(dtReal) {
   game.foes = game.foes.filter((f) => !f.dead);
   // wave cleared
   if (game.toSpawn <= 0 && !game.foes.length) { const bonus = 400 * game.wave; game.score += bonus; pop(`WAVE CLEAR +${fmt(bonus)}`, AW / 2, L.AH * 0.35, '#7dffb2', 1.3, 1.3); game.bullets = []; offerCards(); }
-  tickFx(dt); updateHud();
+  coachTick(); tickFx(dt); updateHud();
+}
+// first two runs: a coach walks you through grab → let them stick → blast
+const COACH = ['Drag to move. Grab 5 scrap!', 'Robots stick to your blob. Let 2 pile on!', 'Now DOUBLE-TAP to BLAST!', 'BOOM! Bigger crowds, bigger points.'];
+function coachSay() { const h = $('hint'); h.textContent = COACH[game.coach]; h.classList.remove('fade'); h.hidden = false; }
+function coachDone() { game.coach = 3; coachSay(); Sound.clear(); setTimeout(() => { $('hint').classList.add('fade'); $('hint').textContent = 'Drag to move · double-tap to BLAST'; }, 3500); }
+function coachTick() {
+  if (game.coach == null || game.coach < 0 || game.coach > 2) return;
+  if (game.blasts > 0) { coachDone(); return; }
+  const stuck = game.foes.filter((f) => f.cling).length;
+  if (game.coach === 0 && game.pieces.length >= 5) { game.coach = 1; coachSay(); Sound.ping(8); }
+  else if (game.coach === 1 && (stuck >= 2 || (stuck >= 1 && game.pieces.length <= 3))) { game.coach = 2; coachSay(); Sound.ping(12); }
 }
 function knockPieces(a, n) {
   const c = game.core;
