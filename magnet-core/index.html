@@ -141,15 +141,15 @@ body {
         <h1 class="logo">Magnet<br><span>Core</span></h1>
         <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><radialGradient id="mcbg" cx="0.5" cy="0.6" r="0.8"><stop offset="0" stop-color="#2b3c46"/><stop offset="1" stop-color="#0f1418"/></radialGradient><radialGradient id="mccore" cx="0.35" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="0.35" stop-color="#4ad8ff"/><stop offset="1" stop-color="#1a5a8a"/></radialGradient></defs><rect width="320" height="160" fill="url(#mcbg)"/><g stroke="#ffffff" stroke-opacity="0.05" stroke-width="2"><path d="M0 40h320M0 80h320M0 120h320M40 0v160M120 0v160M200 0v160M280 0v160"/></g><g transform="translate(128 84)"><g fill="#c9d3d8" stroke="#0f1418" stroke-width="2"><rect x="-44" y="-10" width="16" height="12" rx="2" transform="rotate(20 -36 -4)"/><circle cx="38" cy="-14" r="8"/><rect x="26" y="14" width="18" height="10" rx="2" fill="#ffb02e"/><circle cx="-30" cy="24" r="7" fill="#ff6a2b"/><rect x="-10" y="-46" width="14" height="14" rx="2" fill="#9aa8b0"/><circle cx="8" cy="38" r="8" fill="#8aff6a"/><rect x="-46" y="8" width="12" height="16" rx="2" fill="#ffd23f"/><circle cx="24" cy="-38" r="7" fill="#ff6a2b"/><rect x="40" y="-2" width="12" height="12" rx="2"/><circle cx="-22" cy="-34" r="8" fill="#ffb02e"/></g><circle r="26" fill="url(#mccore)" stroke="#0f1418" stroke-width="3"/><ellipse cx="-8" cy="-4" rx="3.5" ry="5" fill="#0f1418"/><ellipse cx="8" cy="-4" rx="3.5" ry="5" fill="#0f1418"/><path d="M-8 8 Q0 15 8 8" stroke="#0f1418" stroke-width="3" fill="none"/></g><g stroke="#ffd23f" stroke-width="5" stroke-linecap="round"><path d="M196 58 L232 40"/><path d="M200 84 L246 84"/><path d="M196 110 L232 128"/></g><g transform="translate(266 44)"><circle r="14" fill="#8aff6a" stroke="#0f1418" stroke-width="3"/><circle cx="3" r="5" fill="#0f1418"/></g><g transform="translate(276 96)"><circle r="16" fill="#ff4fa3" stroke="#0f1418" stroke-width="3"/><circle cx="-3" r="6" fill="#0f1418"/></g><g fill="#ffd23f"><circle cx="250" cy="70" r="5"/><circle cx="262" cy="122" r="4"/><circle cx="244" cy="112" r="3"/></g><text x="306" y="150" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#ff6a2b">MEGA BLAST!</text></svg>
         <p class="lede">Grab scrap. Grow huge. Let the robots pile on, then blow it all up.</p>
-        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button><button class="link-btn" id="btnDaily" type="button">📅 Daily challenge</button></div>
         <p class="best" id="bestStart"></p>
         <div class="skins"><p class="label" id="skinLabel">Core</p><div class="skin-row" id="skinRow"></div></div>
-        <details class="howto"><summary>How to play</summary><p>Drag anywhere and your magnet core follows your thumb. Every piece of scrap it touches sticks to it, and the blob grows. Robots that touch it get stuck and start chewing pieces off (and a bomber that sticks blows up after two seconds). Double-tap (or press Space) to BLAST: every stuck piece flies outward and wrecks the first robot it hits. The more robots one blast takes out, the more each one is worth. But a bigger blob is slower, and every bullet that hits it knocks a piece off. If the core itself is hit, you lose a heart. Smashed robots drop new scrap. Between waves you pick an upgrade; every fifth wave brings a boss. New core colours unlock as your best score grows.</p></details>
+        <details class="howto"><summary>How to play</summary><p>Drag anywhere and your magnet core follows your thumb. Every piece of scrap it touches sticks to it, and the blob grows. Robots that touch it get stuck and start chewing pieces off (and a bomber that sticks blows up after two seconds). Double-tap (or press Space) to BLAST: every stuck piece flies outward and wrecks the first robot it hits. The more robots one blast takes out, the more each one is worth. But a bigger blob is slower, and every bullet that hits it knocks a piece off. If the core itself is hit, you lose a heart. Smashed robots drop new scrap. Between waves you pick an upgrade; every fifth wave brings a boss. New core colours unlock as your best score grows. The daily challenge gives everyone the same robots, scrap and upgrade offers for the day, with its own leaderboard.</p></details>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">
         <h2 class="label">World leaderboard <span id="lbWho"></span></h2>
-        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button><button type="button" data-lb="challenge" aria-pressed="false">Daily challenge</button></div>
         <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
       </div>
     </div>
@@ -196,6 +196,10 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, k) => a + (b - a) * k;
+// the daily challenge: robots, scrap and upgrade offers come from a seed that is the same for everyone today
+let srand = Math.random, srandF = Math.random, srandC = Math.random;   // robots, loose scrap, upgrade offers: separate streams
+function seeded(str) { let h = 1779033703; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } let a = h >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const srnd = (a, b) => a + srand() * (b - a), spick = (arr) => arr[Math.floor(srand() * arr.length)];
 const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -320,11 +324,12 @@ function dropScrap(x, y, n, speed = 220) {
   for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), v = rnd(speed * 0.4, speed), p = newPiece(); game.free.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: p.c, shape: p.shape, rot: p.rot, age: 0 }); }
   if (game.free.length > 220) game.free.splice(0, game.free.length - 220);
 }
-function scatterScrap(n) { for (let i = 0; i < n; i++) { const p = newPiece(); game.free.push({ x: rnd(40, AW - 40), y: rnd(40, L.AH - 40), vx: 0, vy: 0, c: p.c, shape: p.shape, rot: p.rot, age: 1 }); } }
+function scatterScrap(n) { for (let i = 0; i < n; i++) { const p = newPiece(); game.free.push({ x: 40 + srandF() * (AW - 80), y: 40 + srandF() * (L.AH - 80), vx: 0, vy: 0, c: p.c, shape: p.shape, rot: p.rot, age: 1 }); } }
 
-function startRun() {
+function startRun(daily) {
   Sound.init(); layout();
-  Object.assign(game, fresh(), { running: true });
+  daily = daily === true; const day = todayKey(); srand = daily ? seeded(`magnet-${day}`) : Math.random; srandF = daily ? seeded(`scrap-${day}`) : Math.random; srandC = daily ? seeded(`cards-${day}`) : Math.random;
+  Object.assign(game, fresh(), { running: true, daily });
   game.core.x = game.target.x = AW / 2; game.core.y = game.target.y = L.AH / 2;
   ['screenStart', 'screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('cards').hidden = true;
   $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade');
@@ -348,10 +353,10 @@ function spawn(kind) {
     const pool = ['walker', 'walker', 'walker'];
     if (w >= 2) pool.push('runner', 'runner'); if (w >= 3) pool.push('shooter'); if (w >= 4) pool.push('shooter'); if (w >= 5) pool.push('charger');
     if (w >= 6) pool.push('bomber'); if (w >= 7) pool.push('splitter'); if (w >= 8) pool.push('sniper'); if (w >= 9) pool.push('thief'); if (w >= 12) pool.push('bomber', 'sniper'); if (w >= 11) pool.push('charger', 'shooter');
-    kind = pick(pool);
+    kind = spick(pool);
   }
-  const K = KINDS[kind], side = Math.floor(Math.random() * 4), m = K.r + 10;
-  const x = side === 0 ? -m : side === 1 ? AW + m : rnd(40, AW - 40), y = side === 2 ? -m : side === 3 ? L.AH + m : rnd(40, L.AH - 40);
+  const K = KINDS[kind], side = Math.floor(srand() * 4), m = K.r + 10;
+  const x = side === 0 ? -m : side === 1 ? AW + m : srnd(40, AW - 40), y = side === 2 ? -m : side === 3 ? L.AH + m : srnd(40, L.AH - 40);
   const hp = K.hp + (BOSSES.has(kind) ? Math.floor(w / 5) * 10 : Math.floor(Math.max(0, w - 1) / 5));
   game.foes.push({ kind, x, y, r: K.r, hp, maxHp: hp, kx: 0, ky: 0, flash: 0, ramCd: 0, fireT: rnd(1, 2.2), state: 'walk', stT: 0, dx: 0, dy: 0, stolen: 0, flee: false, spin: 0, summonT: 5, cling: false, clingA: 0, chewT: 0, fuse: 0 });
 }
@@ -361,8 +366,9 @@ function endRun() {
   if (game.ended) return;
   game.ended = true; game.running = false; Sound.stopBeat();
   const sc = Math.floor(game.score), isBest = sc > profile.best;
+  if (game.daily) { const k = todayKey(); profile.daily = profile.daily && profile.daily.day === k ? profile.daily : { day: k, best: 0 }; profile.daily.best = Math.max(profile.daily.best, sc); }
   profile.best = Math.max(profile.best, sc); profile.bestWave = Math.max(profile.bestWave, game.wave); profile.bestBlast = Math.max(profile.bestBlast, game.bestBlast); profile.runs++; saveProfile();
-  $('overEyebrow').textContent = isBest && sc > 0 ? 'New best score!' : 'Core scrapped';
+  $('overEyebrow').textContent = game.daily ? `Daily challenge · today's best ${fmt(profile.daily.best)}` : isBest && sc > 0 ? 'New best score!' : 'Core scrapped';
   $('overTitle').textContent = fmt(sc);
   $('overWave').textContent = game.wave; $('overKills').textContent = game.kills; $('overBlast').textContent = game.bestBlast; $('overBest').textContent = fmt(profile.best);
   $('overTip').textContent = game.blasts < 2 ? 'Double-tap to BLAST: every stuck piece flies out and wrecks a robot.' : game.bestBlast < 5 ? 'Wait until robots crowd around you, then blast: every extra robot in one blast is worth more.' : 'Shooters knock pieces off your blob. Ram them first, or blast before they whittle you down.';
@@ -370,7 +376,7 @@ function endRun() {
   lbAfterGame(sc, game.wave);
 }
 function pause(on) { if (!game.running || game.picking) return; game.paused = on; $('screenPause').hidden = !on; if (on) Sound.stopBeat(); else Sound.startBeat(); }
-function updateHud() { $('score').textContent = fmt(game.score); $('wave').textContent = game.wave; $('hp').textContent = '♥'.repeat(Math.max(0, game.hp)) + '♡'.repeat(Math.max(0, game.maxHp - game.hp)); }
+function updateHud() { $('score').textContent = fmt(game.score); $('wave').textContent = game.daily ? `${game.wave} · daily` : game.wave; $('hp').textContent = '♥'.repeat(Math.max(0, game.hp)) + '♡'.repeat(Math.max(0, game.maxHp - game.hp)); }
 function pop(t, x, y, c, life = 0.8, size = 1) { game.pops.push({ t, x, y, c, life, max: life, size }); }
 function burst(x, y, c, n, sp = 300) { for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), v = rnd(sp * 0.3, sp); game.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.3, 0.7), max: 0.7, c, r: rnd(2, 5) }); } }
 
@@ -378,7 +384,7 @@ function burst(x, y, c, n, sp = 300) { for (let i = 0; i < n; i++) { const a = r
 function offerCards() {
   game.picking = true; Sound.clear();
   const open = CARDS.filter((c) => has(c.id) < c.max && !(c.id === 'repair' && game.hp >= game.maxHp));
-  const choice = []; while (choice.length < 3 && open.length) choice.push(open.splice(Math.floor(Math.random() * open.length), 1)[0]);
+  const choice = []; while (choice.length < 3 && open.length) choice.push(open.splice(Math.floor(srandC() * open.length), 1)[0]);
   $('cardsTitle').textContent = `Wave ${game.wave} cleared`;
   const row = $('cardRow'); row.textContent = '';
   for (const c of choice) {
@@ -703,22 +709,25 @@ function renderSkins() {
   }
 }
 function showStart() { renderSkins(); ['screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bestStart').textContent = profile.best ? `Best: ${fmt(profile.best)} · wave ${profile.bestWave} · blast ×${profile.bestBlast}` : ''; $('screenStart').hidden = false; renderLeaderboard(); layout(); }
-$('btnPlay').addEventListener('click', startRun);
-$('btnAgain').addEventListener('click', startRun);
+$('btnPlay').addEventListener('click', () => startRun(false));
+$('btnDaily').addEventListener('click', () => startRun(true));
+$('btnAgain').addEventListener('click', () => startRun(game.daily));
 $('btnMenu').addEventListener('click', showStart);
 
 // ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
 const LEADERBOARD_URL = 'https://rooftop-leaderboard.rooftop-b71afd.workers.dev';
 const PUBLIC_URL = 'https://lennify44.github.io/rooftop-roulette/magnet-core/';
-const GAME_ID = 'magnet';
+const GAME_ID = 'magnet', DAILY_ID = 'magnetd';
 const LB = { cache: null, at: 0, tab: 'alltime', posting: false };
 const lbReachable = () => !!LEADERBOARD_URL && location.hostname === 'lennify44.github.io';
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function deviceId() { if (!profile.deviceId) { profile.deviceId = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20); saveProfile(); } return profile.deviceId; }
+const LBC = {};
 async function lbFetch(force) {
   if (!lbReachable()) return null;
-  if (!force && LB.cache && Date.now() - LB.at < 30000) return LB.cache;
-  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${GAME_ID}&date=${todayKey()}`); if (!r.ok) return null; LB.cache = await r.json(); LB.at = Date.now(); return LB.cache; } catch (e) { return null; }
+  const gid = LB.tab === 'challenge' ? DAILY_ID : GAME_ID, c = LBC[gid];
+  if (!force && c && Date.now() - c.at < 30000) return c.data;
+  try { const r = await fetch(`${LEADERBOARD_URL}/scores?game=${gid}&date=${todayKey()}`); if (!r.ok) return null; LBC[gid] = { data: await r.json(), at: Date.now() }; return LBC[gid].data; } catch (e) { return null; }
 }
 function lbNote(list, text, link) { list.textContent = ''; const li = mk('li', 'none'); li.textContent = text; if (link) { const a = document.createElement('a'); a.href = PUBLIC_URL; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' Open it'; li.appendChild(a); } list.appendChild(li); }
 async function renderLeaderboard(force) {
@@ -728,14 +737,14 @@ async function renderLeaderboard(force) {
   if (!lbReachable()) { lbNote(list, 'The world leaderboard lives on the public version of the game.', true); return; }
   const data = await lbFetch(force);
   if (!data) { lbNote(list, 'Could not reach the leaderboard right now.'); return; }
-  const rows = (LB.tab === 'daily' ? data.daily : data.alltime).slice(0, 10);
-  if (!rows.length) { lbNote(list, LB.tab === 'daily' ? 'Nobody blasted today yet.' : 'No scores yet. Be the first.'); return; }
+  const rows = (LB.tab === 'alltime' ? data.alltime : data.daily).slice(0, 10);
+  if (!rows.length) { lbNote(list, LB.tab === 'challenge' ? 'Nobody has played today\'s challenge yet.' : LB.tab === 'daily' ? 'Nobody blasted today yet.' : 'No scores yet. Be the first.'); return; }
   list.textContent = '';
   rows.forEach((r, i) => { const li = mk('li', r.id === profile.deviceId ? 'me' : ''); const rank = mk('b'); rank.textContent = String(i + 1); li.appendChild(rank); for (const text of [r.name, fmt(r.score), `wave ${r.dist}`]) { const el = mk('span'); el.textContent = text; li.appendChild(el); } list.appendChild(li); });
 }
 $('lbTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; LB.tab = b.getAttribute('data-lb'); renderLeaderboard(); });
 let lbLast = null;
-function lbAfterGame(score, wave) { const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true; if (!lbReachable() || score <= 0) return; lbLast = { game: GAME_ID, score, dist: wave, daily: true, date: todayKey() }; $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend(); }
+function lbAfterGame(score, wave) { const box = $('lbPost'), out = $('lbResult'); out.textContent = ''; box.hidden = true; if (!lbReachable() || score <= 0) return; lbLast = { game: game.daily ? DAILY_ID : GAME_ID, score, dist: wave, daily: true, date: todayKey() }; $('lbName').value = profile.name; box.hidden = false; if (profile.name) lbSend(); }
 async function lbSend() {
   const name = $('lbName').value.trim().replace(/[^\p{L}\p{N} _.\-]/gu, '').slice(0, 16), out = $('lbResult');
   if (!name) { out.textContent = 'Type a name (letters, numbers, spaces) to post your score.'; $('lbName').focus(); return; }
@@ -746,7 +755,7 @@ async function lbSend() {
     const r = await fetch(`${LEADERBOARD_URL}/scores`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: deviceId(), name, ...lbLast }) });
     const res = await r.json().catch(() => ({}));
     if (!r.ok) out.textContent = r.status === 429 ? 'Too fast, try again in a few seconds.' : 'The leaderboard did not take this score.';
-    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; LB.at = 0; }
+    else { const rk = res.rank || {}; out.textContent = (rk.alltime ? `World rank #${rk.alltime}` : 'Not in the world top 50 yet') + (rk.daily ? ` · today #${rk.daily}` : '') + '.'; lbLast = null; for (const k in LBC) delete LBC[k]; }
   } catch (e) { out.textContent = 'Could not reach the leaderboard right now.'; }
   LB.posting = false;
 }
