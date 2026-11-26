@@ -3363,15 +3363,15 @@ function showStart() {
   const saved = store.get(SAVE_KEY, null);
   $('btnContinue').hidden = !saved || saved.done;
   $('btnNew').textContent = saved && !saved.done ? t('newGame') : t('checkIn'); armedNew = 0;
-  $('btnCh2').hidden = !profile.ch1done; $('btnCh2').textContent = t('ch2Btn'); armedCh2 = 0;
-  $('btnCh3').hidden = !profile.ch2done; $('btnCh3').textContent = t('ch3Btn'); armedCh3 = 0;
-  $('btnCh4').hidden = !profile.ch3done; $('btnCh4').textContent = t('ch4Btn'); armedCh4 = 0;
-  $('btnCh5').hidden = !profile.ch4done; $('btnCh5').textContent = t('ch5Btn'); armedCh5 = 0;
-  $('btnCh6').hidden = !profile.ch5done; $('btnCh6').textContent = t('ch6Btn'); armedCh6 = 0;
-  $('btnCh7').hidden = !profile.ch6done; $('btnCh7').textContent = t('ch7Btn'); armedCh7 = 0;
-  $('btnCh8').hidden = !profile.ch7done; $('btnCh8').textContent = t('ch8Btn'); armedCh8 = 0;
-  $('btnCh9').hidden = !profile.ch8done; $('btnCh9').textContent = t('ch9Btn'); armedCh9 = 0;
-  $('btnCh10').hidden = !profile.ch9done; $('btnCh10').textContent = t('ch10Btn'); armedCh10 = 0;
+  $('btnCh2').hidden = false; $('btnCh2').textContent = t('ch2Btn') + (profile.ch2done ? ' ✓' : ''); armedCh2 = 0;
+  $('btnCh3').hidden = false; $('btnCh3').textContent = t('ch3Btn') + (profile.ch3done ? ' ✓' : ''); armedCh3 = 0;
+  $('btnCh4').hidden = false; $('btnCh4').textContent = t('ch4Btn') + (profile.ch4done ? ' ✓' : ''); armedCh4 = 0;
+  $('btnCh5').hidden = false; $('btnCh5').textContent = t('ch5Btn') + (profile.ch5done ? ' ✓' : ''); armedCh5 = 0;
+  $('btnCh6').hidden = false; $('btnCh6').textContent = t('ch6Btn') + (profile.ch6done ? ' ✓' : ''); armedCh6 = 0;
+  $('btnCh7').hidden = false; $('btnCh7').textContent = t('ch7Btn') + (profile.ch7done ? ' ✓' : ''); armedCh7 = 0;
+  $('btnCh8').hidden = false; $('btnCh8').textContent = t('ch8Btn') + (profile.ch8done ? ' ✓' : ''); armedCh8 = 0;
+  $('btnCh9').hidden = false; $('btnCh9').textContent = t('ch9Btn') + (profile.ch9done ? ' ✓' : ''); armedCh9 = 0;
+  $('btnCh10').hidden = false; $('btnCh10').textContent = t('ch10Btn') + (profile.ch10done ? ' ✓' : ''); armedCh10 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
