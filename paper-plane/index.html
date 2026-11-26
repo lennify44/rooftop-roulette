@@ -131,7 +131,7 @@ body {
       <button class="icon-btn" id="btnPause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
     </div>
   </div>
-  <div class="hint" id="hint" hidden>Tap to throw · hold = nose up</div>
+  <div class="hint" id="hint" hidden>Tap at the height to throw · hold = nose up</div>
 
   <section class="screen" id="screenStart" aria-label="Start">
     <div class="menu">
@@ -142,7 +142,8 @@ body {
         <p class="lede">Fly every letter into a lit window before the inbox overflows.</p>
         <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
         <p class="best" id="bestStart"></p>
-        <details class="howto"><summary>How to play</summary><p>Letters pile up in your inbox. Windows in the building across the street light up for a few seconds: that's who is waiting for mail. Tap to throw a paper plane. While it flies, hold your thumb down to pull its nose up (it climbs and slows down) and let go to dive (it speeds up). Fly it into a lit window. A hit dead in the middle is PERFECT and scores double, gold express letters score triple, and every delivery in a row raises your streak multiplier. A plane that hits the wall, a dark window, a pigeon or the street is lost. If more than 6 letters pile up, you lose a heart. Every 10 deliveries the next block gets windier and busier.</p></details>
+        <div class="skins"><p class="label" id="skinLabel">Plane</p><div class="skin-row" id="skinRow"></div></div>
+        <details class="howto"><summary>How to play</summary><p>Letters pile up in your inbox. Windows in the building across the street light up for a few seconds: that's who is waiting for mail. Tap at the height of a lit window to throw a paper plane towards it. While it flies, hold your thumb down to pull its nose up (it climbs and slows down) and let go to dive (it speeds up). Fly it into a lit window. A hit dead in the middle is PERFECT and scores double, gold express letters score triple, pink love letters score ×5 and give a heart back if you fly them into a window with a heart, and every delivery in a row raises your streak multiplier. A plane that hits the wall, a dark window, a pigeon or the street is lost. If more than 6 letters pile up, you lose a heart. Every 10 deliveries the next block gets windier and busier. New plane designs unlock as your best score grows.</p></details>
         <div class="sub-row"><a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener">All games</a></div>
       </div>
       <div class="side">
@@ -203,6 +204,16 @@ const PROFILE_KEY = 'paper-plane-profile';
 const profile = Object.assign({ best: 0, bestLetters: 0, bestStreak: 0, runs: 0, name: '', deviceId: '', muted: false }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
+// plane designs unlock with the best score
+const PLANES = [
+  { id: 'classic', name: 'Classic', need: 0, fill: '#ffffff', line: '#9aa8d0' },
+  { id: 'sky', name: 'Sky', need: 3000, fill: '#9fdcff', line: '#3a7ab0' },
+  { id: 'mint', name: 'Mint', need: 8000, fill: '#8affc1', line: '#2a8a5a' },
+  { id: 'sunset', name: 'Sunset', need: 20000, fill: '#ff8a5c', line: '#a83a20' },
+  { id: 'royal', name: 'Royal', need: 50000, fill: '#c79bff', line: '#5a2aa8' },
+  { id: 'night', name: 'Night', need: 120000, fill: '#2a2f6a', line: '#ffe27a' },
+];
+const planeSkin = () => PLANES.find((x) => x.id === profile.plane && profile.best >= x.need) || PLANES[0];
 function mk(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; if (tag === 'button') e.type = 'button'; return e; }
 
 // ---------- world: a street canyon 420 units wide; your mail room on the left, the facade with the windows on the right
@@ -278,14 +289,15 @@ const fresh = () => ({ running: false, paused: false, ended: false, dying: 0, t:
   why: {}, parts: [], pops: [], rings: [], shake: 0, freeze: 0, slow: 0, flash: 0, call: null, hurtT: 0, holding: false, coach: -1 });
 const game = fresh();
 const mult = () => Math.min(8, 1 + Math.floor(game.streak / 3));
-const newLetter = () => ({ express: game.block >= 2 && Math.random() < 0.15 });
+// gold express letters (block 2+) score ×3; pink love letters score ×5 and give a heart back in a window with a heart
+const newLetter = () => { const r = Math.random(); return { express: game.block >= 2 && r < 0.15, love: r >= 0.88 }; };
 function startRun() {
   Sound.init(); layout();
   Object.assign(game, fresh(), { running: true });
   game.inbox = [newLetter(), newLetter(), newLetter(), newLetter()];
   ['screenStart', 'screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; });
   $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade');
-  game.coach = profile.runs < 2 ? 0 : -1; $('hint').textContent = game.coach === 0 ? 'TAP to throw a plane!' : 'Tap to throw · hold = nose up'; if (game.coach < 0) setTimeout(() => $('hint').classList.add('fade'), 4000);
+  game.coach = profile.runs < 2 ? 0 : -1; $('hint').textContent = game.coach === 0 ? 'TAP level with a LIT window to throw!' : 'Tap at the height to throw · hold = nose up'; if (game.coach < 0) setTimeout(() => $('hint').classList.add('fade'), 4000);
   game.call = { text: 'BLOCK 1', t: 0, big: true }; Sound.startBeat(); updateHud();
 }
 function nextBlock() {
@@ -308,7 +320,7 @@ function endRun() {
   $('overEyebrow').textContent = isBest && sc > 0 ? 'New best score!' : 'The inbox won';
   $('overTitle').textContent = fmt(sc);
   $('overLetters').textContent = game.letters; $('overStreak').textContent = game.bestStreak; $('overPerfect').textContent = game.perfects; $('overBest').textContent = fmt(profile.best);
-  $('overTip').textContent = game.letters < 5 ? 'Hold to climb, let go to dive. Aim a little above the window: planes sink as they fly.' : game.perfects < 3 ? 'Hit the middle of a window for PERFECT: double points.' : 'Keep the streak alive: every 3 deliveries in a row raise the multiplier, up to ×8.';
+  $('overTip').textContent = game.letters < 5 ? 'Tap level with a lit window to throw at it, then hold to climb and let go to dive. Aim a little high: planes sink.' : game.perfects < 3 ? 'Hit the middle of a window for PERFECT: double points.' : 'Keep the streak alive: every 3 deliveries in a row raise the multiplier, up to ×8.';
   $('hud').hidden = true; $('hint').hidden = true; $('screenOver').hidden = false;
   lbAfterGame(sc, game.letters);
 }
@@ -319,10 +331,12 @@ function loseHeart(why) {
   if (game.hp <= 0) { game.dying = 1.2; Sound.over(); Sound.stopBeat(); game.call = { text: 'SHIFT OVER', t: 0, big: true }; }
 }
 function breakStreak() { if (game.streak >= 3) pop(`streak ${game.streak} lost`, AW * 0.5, L.AH * 0.2, '#ff9a8a', 0.9); game.streak = 0; updateHud(); }
-function throwPlane() {
+function throwPlane(aimY) {
   if (!game.running || game.paused || game.dying || game.plane || !game.inbox.length) { if (game.running && !game.inbox.length && !game.plane) { pop('inbox empty', 70, LAUNCH().y - 40, '#b9c2e6', 0.6, 0.8); } return; }
   const l = game.inbox.shift(), p = LAUNCH();
-  game.plane = { x: p.x, y: p.y, a: -0.28, v: 300, express: l.express, trail: [], t: 0 };
+  // the plane leaves toward the height you tapped; holding and letting go then correct the flight
+  const a0 = aimY == null ? -0.28 : clamp(Math.atan2(aimY - p.y, FACADE - p.x), -1.1, 0.9);
+  game.plane = { x: p.x, y: p.y, a: a0, v: 260, express: l.express, love: l.love, trail: [], t: 0 };
   Sound.whoosh();
   if (game.coach === 0) { game.coach = 1; $('hint').textContent = 'HOLD to pull the nose up, let go to dive!'; }
 }
@@ -348,7 +362,7 @@ function update(dtReal) {
   game.litT -= dt;
   if (game.litT <= 0 && game.lit.length < maxLit) {
     const free = FL.filter((f) => !game.lit.some((l) => l.i === f.i) && !(game.cleaner && Math.abs(game.cleaner.y - (f.y + f.h / 2)) < 50));
-    if (free.length) { const f = pick(free), dur = Math.max(3.8, rnd(7, 9.5) - b * 0.5); game.lit.push({ i: f.i, t: dur, max: dur }); }
+    if (free.length) { const f = pick(free), dur = Math.max(3.8, rnd(7, 9.5) - b * 0.5); game.lit.push({ i: f.i, t: dur, max: dur, heart: !game.lit.some((l) => l.heart) && Math.random() < 0.3 }); }
     game.litT = rnd(0.8, 1.6);
   }
   for (const l of game.lit) { l.t -= dt; if (l.t <= 0) { l.dead = true; const f = FL[l.i]; if (f) pop('missed', FACADE + 20, f.y, '#ff9a8a', 0.8, 0.8); breakStreak(); } }
@@ -368,8 +382,8 @@ function update(dtReal) {
   const p = game.plane;
   if (p) {
     p.t += dt;
-    if (game.holding) p.a = Math.max(-1, p.a - 1.9 * dt); else p.a = Math.min(0.95, p.a + 1.2 * dt);
-    p.v = clamp(p.v + (Math.sin(p.a) * 170 - 15) * dt, 115, 470);
+    if (game.holding && p.t > 0.12) p.a = Math.max(-1.05, p.a - 2.2 * dt); else if (!game.holding) p.a = Math.min(1, p.a + 1.5 * dt);
+    p.v = clamp(p.v + (Math.sin(p.a) * 100 - 10) * dt, 115, 470);
     if (p.v <= 118 && p.a < 0) p.a += 3 * dt;   // a stall drops the nose
     p.x += Math.cos(p.a) * p.v * dt + game.wind.x * dt; p.y += Math.sin(p.a) * p.v * dt + (game.wind.y + 10) * dt;
     // the mail magnet: close to the facade, a plane near a lit window gets pulled into it
@@ -393,7 +407,9 @@ function update(dtReal) {
 function deliver(p, f, lit) {
   const centre = f.y + f.h / 2, perfect = (p.entry == null ? Math.abs(p.y - centre) : p.entry) < f.h / 3;
   game.streak++; game.bestStreak = Math.max(game.bestStreak, game.streak); game.letters++;
-  const pts = 100 * mult() * (perfect ? 2 : 1) * (p.express ? 3 : 1); game.score += pts;
+  const love = p.love && lit.heart;
+  const pts = 100 * mult() * (perfect ? 2 : 1) * (p.express ? 3 : 1) * (love ? 5 : 1); game.score += pts;
+  if (love) { pop('LOVE LETTER ×5', FACADE - 50, centre + 34, '#ff9ad5', 1.2, 1.1); if (game.hp < 3) { game.hp++; pop('+1 ♥', AW * 0.3, L.AH * 0.35, '#ff9ad5', 1.1, 1.3); } burst(FACADE, centre, '#ff9ad5', 24, 300); }
   lit.dead = true; game.lit = game.lit.filter((l) => !l.dead); game.plane = null;
   if (perfect) { game.perfects++; game.slow = 0.25; game.flash = 0.18; }
   pop(`+${fmt(pts)}${perfect ? ' PERFECT' : ''}`, FACADE - 40, centre - 18, perfect ? '#ffe27a' : '#ffffff', 1, perfect ? 1.4 : 1.1);
@@ -403,7 +419,7 @@ function deliver(p, f, lit) {
   game.shake = Math.min(14, game.shake + (perfect ? 8 : 4)); game.freeze = 0.04;
   Sound.deliver(game.streak); if (perfect) Sound.perfect();
   const CALLS = { 5: 'ON A ROLL!', 10: 'POSTAL HERO!', 15: 'AIR MAIL ACE!', 25: 'MAIL LEGEND!' }; if (CALLS[game.streak]) game.call = { text: CALLS[game.streak], t: 0 };
-  if (game.coach === 2 || game.coach === 1) { game.coach = 3; $('hint').textContent = 'Delivered! Keep the streak going.'; setTimeout(() => { $('hint').classList.add('fade'); $('hint').textContent = 'Tap to throw · hold = nose up'; }, 3000); }
+  if (game.coach === 2 || game.coach === 1) { game.coach = 3; $('hint').textContent = 'Delivered! Keep the streak going.'; setTimeout(() => { $('hint').classList.add('fade'); $('hint').textContent = 'Tap at the height to throw · hold = nose up'; }, 3000); }
   if (game.letters % 10 === 0) nextBlock();
 }
 function tickFx(dt) {
@@ -416,11 +432,13 @@ function tickFx(dt) {
 // ---------- drawing
 const STARS = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random() * 0.4, r: rnd(0.6, 1.6) }));
 const CARS = Array.from({ length: 4 }, (_, i) => ({ x: i * 120, v: rnd(40, 90) * (i % 2 ? 1 : -1), c: ['#ff6a2b', '#4ad8ff', '#ffd23f', '#8aff6a'][i] }));
-function drawPlane(x, y, a, express, scale = 1) {
+function drawPlane(x, y, a, letter, scale = 1) {
+  const sk = planeSkin(), express = letter && letter.express, love = letter && letter.love;
   ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.scale(scale, scale);
-  ctx.fillStyle = express ? '#ffe27a' : '#ffffff'; ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2;
+  ctx.fillStyle = express ? '#ffe27a' : love ? '#ff9ad5' : sk.fill; ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-14, -9); ctx.lineTo(-9, 0); ctx.lineTo(-14, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = express ? '#c9a020' : '#9aa8d0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, 0); ctx.stroke();
+  ctx.strokeStyle = express ? '#c9a020' : love ? '#c2457f' : sk.line; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, 0); ctx.stroke();
+  if (love) { ctx.fillStyle = '#c2457f'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('♥', -4, 4); }
   ctx.restore();
 }
 function drawFrame() {
@@ -440,14 +458,15 @@ function drawFrame() {
   ctx.fillStyle = '#3a3550'; ctx.fillRect(0, 0, 70, AH);
   const lp = LAUNCH(); ctx.fillStyle = '#ffd58a'; ctx.fillRect(44, lp.y - 18, 26, 30); ctx.fillStyle = '#2a2440'; ctx.fillRect(44, lp.y + 12, 30, 5);
   // the inbox: a stack of envelopes on the ledge, red when nearly full
-  for (let i = 0; i < game.inbox.length; i++) { const l = game.inbox[i]; ctx.fillStyle = l.express ? '#ffe27a' : '#f4f1ea'; ctx.strokeStyle = game.inbox.length >= INBOX_MAX - 1 ? '#ff3b5c' : '#2a2440'; ctx.lineWidth = 1.5; ctx.fillRect(10, lp.y + 26 + i * 11, 30, 9); ctx.strokeRect(10, lp.y + 26 + i * 11, 30, 9); }
+  for (let i = 0; i < game.inbox.length; i++) { const l = game.inbox[i]; ctx.fillStyle = l.express ? '#ffe27a' : l.love ? '#ff9ad5' : '#f4f1ea'; ctx.strokeStyle = game.inbox.length >= INBOX_MAX - 1 ? '#ff3b5c' : '#2a2440'; ctx.lineWidth = 1.5; ctx.fillRect(10, lp.y + 26 + i * 11, 30, 9); ctx.strokeRect(10, lp.y + 26 + i * 11, 30, 9); }
   ctx.font = '900 14px "Big Shoulders Display", Impact, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = game.inbox.length >= INBOX_MAX - 1 ? '#ff6b6b' : '#ffe27a'; ctx.fillText(`📨 ${game.inbox.length}/${INBOX_MAX}`, 35, lp.y + 26 + INBOX_MAX * 11 + 16);
-  if (!game.plane && game.inbox.length && game.running) drawPlane(lp.x + 4, lp.y - 4, -0.28, game.inbox[0].express, 0.9 + 0.08 * Math.sin(game.t * 6));
+  if (!game.plane && game.inbox.length && game.running) drawPlane(lp.x + 4, lp.y - 4, -0.28, game.inbox[0], 0.9 + 0.08 * Math.sin(game.t * 6));
   // the building across the street, with its floors
   ctx.fillStyle = '#4a3f66'; ctx.fillRect(FACADE, 0, AW - FACADE, AH);
   for (const f of FL) {
     const lit = game.lit.find((l) => l.i === f.i);
-    ctx.fillStyle = lit ? '#ffe27a' : '#2a2440'; ctx.fillRect(FACADE, f.y, 30, f.h);
+    ctx.fillStyle = lit ? (lit.heart ? '#ff9ad5' : '#ffe27a') : '#2a2440'; ctx.fillRect(FACADE, f.y, 30, f.h);
+    if (lit && lit.heart) { ctx.fillStyle = '#c2457f'; ctx.font = `900 ${Math.round(f.h * 0.4)}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('♥', FACADE - 10, f.y + f.h * 0.62); }
     ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(FACADE + 30, f.y, AW - FACADE - 30, f.h);
     if (lit) {
       const k = lit.t / lit.max;
@@ -469,7 +488,7 @@ function drawFrame() {
   for (const d of game.drones) { ctx.save(); ctx.translate(d.x, d.yy); ctx.fillStyle = '#2a2440'; ctx.fillRect(-14, -4, 28, 8); ctx.strokeStyle = '#2a2440'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-18, -8); ctx.lineTo(-6, -8); ctx.moveTo(6, -8); ctx.lineTo(18, -8); ctx.stroke(); ctx.fillStyle = '#ff3b5c'; ctx.beginPath(); ctx.arc(0, 4, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
   // the plane in flight
   const p = game.plane;
-  if (p) { ctx.strokeStyle = p.express ? 'rgba(255,226,122,0.6)' : 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2; ctx.setLineDash([5, 6]); ctx.beginPath(); p.trail.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.setLineDash([]); drawPlane(p.x, p.y, p.a, p.express); }
+  if (p) { ctx.strokeStyle = p.express ? 'rgba(255,226,122,0.6)' : 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2; ctx.setLineDash([5, 6]); ctx.beginPath(); p.trail.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.setLineDash([]); drawPlane(p.x, p.y, p.a, p); }
   for (const r of game.rings) { ctx.strokeStyle = r.c; ctx.globalAlpha = clamp(r.life * 3, 0, 1); ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke(); }
   ctx.globalAlpha = 1;
   for (const q of game.parts) { ctx.globalAlpha = clamp(q.life / q.max * 1.5, 0, 1); ctx.fillStyle = q.c; ctx.fillRect(q.x - q.r / 2, q.y - q.r / 2, q.r, q.r); }
@@ -490,9 +509,9 @@ function frame(now) {
   acc += dt; while (acc >= STEP) { update(STEP); acc -= STEP; }
   drawFrame();
 }
-function press() { Sound.init(); game.holding = true; if (!game.plane) throwPlane(); }
+function press(sy) { Sound.init(); game.holding = true; if (!game.plane) throwPlane(sy == null ? null : (sy - L.oy) / L.s); }
 function release() { game.holding = false; }
-cv.addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const r = cv.getBoundingClientRect(); press(e.clientY - r.top); });
 addEventListener('pointerup', release); addEventListener('pointercancel', release);
 addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); if (!e.repeat) press(); } if (e.key === 'p' || e.key === 'Escape') pause(!game.paused); });
 addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'ArrowUp') release(); });
@@ -501,7 +520,17 @@ $('btnResume').addEventListener('click', () => { pause(false); last = 0; });
 $('btnQuit').addEventListener('click', () => { $('screenPause').hidden = true; game.paused = false; endRun(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
-function showStart() { ['screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bestStart').textContent = profile.best ? `Best: ${fmt(profile.best)} · ${profile.bestLetters} letters · streak ${profile.bestStreak}` : ''; $('screenStart').hidden = false; renderLeaderboard(); layout(); }
+function renderSkins() {
+  const row = $('skinRow'); row.textContent = ''; $('skinLabel').textContent = `Plane · ${planeSkin().name}`;
+  for (const k of PLANES) {
+    const open = profile.best >= k.need, b = mk('button', 'skin'); b.setAttribute('aria-pressed', String(planeSkin().id === k.id)); b.setAttribute('aria-label', open ? k.name : `${k.name}: score ${fmt(k.need)} to unlock`); b.disabled = !open;
+    if (open) { b.innerHTML = `<svg viewBox="-16 -12 32 24" width="30" height="24"><path d="M14 0 L-14 -9 L-9 0 L-14 9 Z" fill="${k.fill}" stroke="#2a2440" stroke-width="2"/><path d="M14 0 L-9 0" stroke="${k.line}" stroke-width="1.5"/></svg>`; b.style.background = '#2a2f6a'; }
+    else { const t = mk('span'); t.textContent = k.need >= 1000 ? `${k.need / 1000}k` : String(k.need); b.appendChild(t); b.style.background = '#1b1f3a'; }
+    b.addEventListener('click', () => { profile.plane = k.id; saveProfile(); Sound.init(); Sound.ding(); renderSkins(); });
+    row.appendChild(b);
+  }
+}
+function showStart() { renderSkins(); ['screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bestStart').textContent = profile.best ? `Best: ${fmt(profile.best)} · ${profile.bestLetters} letters · streak ${profile.bestStreak}` : ''; $('screenStart').hidden = false; renderLeaderboard(); layout(); }
 $('btnPlay').addEventListener('click', startRun);
 $('btnAgain').addEventListener('click', startRun);
 $('btnMenu').addEventListener('click', showStart);
