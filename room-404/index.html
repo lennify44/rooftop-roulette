@@ -223,6 +223,7 @@ body {
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
+          <button class="link-btn" id="btnXp" type="button" aria-pressed="false"></button>
           <a class="link-btn" data-hub href="https://lennify44.github.io/rooftop-roulette/arcade/" target="_blank" rel="noopener" data-i18n="allGames">All games</a>
         </div>
       </div>
@@ -271,6 +272,8 @@ const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', mut
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
+// expert mode (player wish 2026-11-26 'longer and harder puzzles'): chapters 5-10 get 30 min, 4-min hints and bigger puzzles
+const XP = () => !!profile.expert, XP_TOTAL = 30 * 60;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const mmss = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, '0')}`;
 function mk(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; if (tag === 'button') e.type = 'button'; return e; }
@@ -357,6 +360,7 @@ const TXT = {
     panelTitle: 'Maintenance panel', panelBody: '<p>A dusty grey panel with old keyboard keys screwed onto it. A sticker: “STAFF ONLY. If guests get lost, the system needs a fresh start.”</p>',
     f5: 'The whole hallway flickers like a reloading web page… and at the end, an EXIT door appears.', f5Say: 'You pressed F5. The hallway refreshes, and the exit is found at last. Go!',
     fkeys: { F1: 'HELP: Help is not available on this floor.', F2: 'The lights flicker. Rename? Rename what?', F3: 'SEARCH: 1 result: “you, lost”.', F4: 'Nothing happens. Probably for the best.', F6: 'The hallway lights point at the ceiling. Very helpful.', F7: 'A faint carpet smell. Nothing else.', F8: 'The elevator music gets louder. There is no elevator.', F9: 'Something hums inside the wall, then stops.', F10: 'A menu appears in your mind. It is the soup menu again.', F11: 'Everything looks bigger for a second. Full screen hallway.', F12: 'Inspect element: the exit is set to display: none.' },
+    xpOn: 'Expert mode: ON', xpOff: 'Expert mode: off', xpHints: 'Expert mode: hints cost 4 minutes.', xpSay: 'Expert mode for chapters 5-10: 30 minutes, 4-minute hints, bigger and longer puzzles.',
     hintsTitle: 'Hints', hintsIntro: 'Each new hint puts <b>2 minutes</b> on the clock. Hints you have already seen are free.', hintFirst: 'Show a hint (−2 min)', hintMore: 'Another hint (−2 min)', hintLast: 'That was the last hint for this step.',
     hints: {
       remote: ['Hotels hide things in beds.', 'Look under the pillows.', 'Tap the left pillow on the bed: there is a remote under it.'],
@@ -466,6 +470,7 @@ const TXT = {
     panelTitle: 'Wartungstafel', panelBody: '<p>Eine staubige graue Tafel, auf die alte Tastaturtasten geschraubt sind. Ein Aufkleber: „NUR PERSONAL. Wenn Gäste sich verirren, braucht das System einen frischen Start.“</p>',
     f5: 'Der ganze Flur flackert wie eine Webseite, die neu lädt… und am Ende erscheint eine AUSGANG-Tür.', f5Say: 'Du hast F5 gedrückt. Der Flur lädt neu, und der Ausgang ist endlich gefunden. Los!',
     fkeys: { F1: 'HILFE: Auf dieser Etage ist keine Hilfe verfügbar.', F2: 'Das Licht flackert. Umbenennen? Was denn umbenennen?', F3: 'SUCHE: 1 Treffer: „du, verirrt“.', F4: 'Nichts passiert. Wahrscheinlich besser so.', F6: 'Die Flurlampen zeigen an die Decke. Sehr hilfreich.', F7: 'Ein leichter Teppichgeruch. Sonst nichts.', F8: 'Die Fahrstuhlmusik wird lauter. Es gibt keinen Fahrstuhl.', F9: 'Etwas brummt in der Wand und hört dann auf.', F10: 'Vor deinem inneren Auge erscheint ein Menü. Es ist wieder die Suppenkarte.', F11: 'Für eine Sekunde wirkt alles größer. Vollbild-Flur.', F12: 'Element untersuchen: Der Ausgang steht auf display: none.' },
+    xpOn: 'Profi-Modus: AN', xpOff: 'Profi-Modus: aus', xpHints: 'Profi-Modus: Tipps kosten 4 Minuten.', xpSay: 'Profi-Modus für Kapitel 5-10: 30 Minuten, Tipps für 4 Minuten, größere und längere Rätsel.',
     hintsTitle: 'Tipps', hintsIntro: 'Jeder neue Tipp kostet <b>2 Minuten</b>. Schon gesehene Tipps sind gratis.', hintFirst: 'Tipp zeigen (−2 Min.)', hintMore: 'Noch ein Tipp (−2 Min.)', hintLast: 'Das war der letzte Tipp für diesen Schritt.',
     hints: {
       remote: ['Hotels verstecken Dinge gern im Bett.', 'Schau unter die Kissen.', 'Tippe auf das linke Kissen im Bett: Darunter liegt eine Fernbedienung.'],
@@ -1092,7 +1097,7 @@ Object.assign(TXT.en, {
   win7Text: (left, h, n) => `The gate swings open. You climb down the rattling fire escape, jump the last two metres onto the street and walk round to the front of the hotel. Free! The doorman tips his hat: “Welcome to the Grand Paradox! You must be our new guest. Your room is 404.” Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
   roof7: 'The roof: chimneys, a water tank, an antenna with a blinking lamp, a toolbox, a pigeon coop and the fire-escape gate.', toSign7: 'Behind the sign: giant neon letters, back to front, and a grey junction box.', backRoof7: 'Back on the open roof. The pigeons watch you.',
   lampTitle7: 'Antenna lamp', lampBody7: 'The red lamp on the antenna blinks in groups, then pauses, then starts again. Count the flashes in each group.', lampAgain7: 'Watch again',
-  boxTitle7: 'Toolbox', boxBody7: '<p>A rusty toolbox with a three-digit lock. Scratched into the lid: “Same as the lamp. Roofers can’t remember numbers.”</p>', boxOpened7: 'The lock gives. Inside: a big wrench and a note.', boxEmpty7: 'Bent nails and a sandwich wrapper.',
+  boxTitle7: 'Toolbox', boxBody7: '<p>A rusty toolbox with a combination lock. Scratched into the lid: “Same as the lamp. Roofers can’t remember numbers.”</p>', boxOpened7: 'The lock gives. Inside: a big wrench and a note.', boxEmpty7: 'Bent nails and a sandwich wrapper.',
   jboxShut7: 'A grey junction box, screwed shut with four big bolts. You need a tool.', jboxOpen7: 'You crank the bolts loose. The lid falls open: a grid of wire tiles, all twisted the wrong way.',
   wiresTitle7: 'Junction box', wiresBody7: 'Tap a tile to turn it. Connect the power cable on the left to the sign cable on the right.', wiresDone7: 'Bzzzt! The sign roars to life: GRAND PARADOX in red neon. On the other side of the roof, a hundred pigeons explode into the air. Something small clinks onto the roof.', wiresOn7: 'The sign is buzzing happily.',
   gateBirds7: 'The fire-escape gate is locked, and covered in pigeons. They hiss at you. Pigeons should not hiss.', gateLocked7: 'The gate is locked. The pigeons are gone, at least.', gateOpen7: 'The key fits.',
@@ -1114,7 +1119,7 @@ Object.assign(TXT.en.notes, {
   hatch7n: ['Scratches on the hatch', 'Tally marks. Hundreds of them. Next to them: “Checked out 312 times. Checked in 313.”'],
 });
 Object.assign(TXT.en.hints, {
-  c7_box: ['The toolbox wants three digits. Something on the roof keeps blinking.', 'Look at the antenna lamp and count the flashes in each group.', (c) => `The toolbox code is ${c}.`],
+  c7_box: ['The toolbox wants a code. Something on the roof keeps blinking.', 'Look at the antenna lamp and count the flashes in each group.', (c) => `The toolbox code is ${c}.`],
   c7_open: ['The junction box behind the sign is bolted shut.', 'The toolbox had a wrench.', 'Select the wrench and tap the junction box.'],
   c7_wires: ['Turn the tiles until the wire runs from the left cable to the right cable.', 'Start at the left cable and follow the wire tile by tile. Tiles that are not on the path don’t matter.', (p) => `Tap these tiles (counted 1-9, left to right, top to bottom): ${p}.`],
   c7_key: ['The pigeons dropped something when the sign lit up.', 'Look on the roof near the gate.', 'Tap the small key on the roof.'],
@@ -1128,7 +1133,7 @@ Object.assign(TXT.de, {
   win7Text: (left, h, n) => `Das Tor schwingt auf. Du kletterst die klappernde Feuertreppe hinunter, springst die letzten zwei Meter auf die Straße und gehst um das Hotel herum nach vorn. Frei! Der Portier lüpft die Mütze: „Willkommen im Grand Paradox! Sie sind sicher unser neuer Gast. Ihr Zimmer ist die 404.“ Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
   roof7: 'Das Dach: Schornsteine, ein Wassertank, eine Antenne mit blinkender Lampe, ein Werkzeugkasten, ein Taubenschlag und das Tor zur Feuertreppe.', toSign7: 'Hinter dem Schild: riesige Neonbuchstaben, von hinten gesehen, und ein grauer Schaltkasten.', backRoof7: 'Zurück auf dem offenen Dach. Die Tauben beobachten dich.',
   lampTitle7: 'Antennenlampe', lampBody7: 'Die rote Lampe an der Antenne blinkt in Gruppen, macht Pause und fängt wieder an. Zähl die Blitze in jeder Gruppe.', lampAgain7: 'Nochmal ansehen',
-  boxTitle7: 'Werkzeugkasten', boxBody7: '<p>Ein rostiger Werkzeugkasten mit dreistelligem Zahlenschloss. In den Deckel gekratzt: „Wie die Lampe. Dachdecker können sich keine Zahlen merken.“</p>', boxOpened7: 'Das Schloss gibt nach. Drinnen: ein großer Schraubenschlüssel und ein Zettel.', boxEmpty7: 'Krumme Nägel und Butterbrotpapier.',
+  boxTitle7: 'Werkzeugkasten', boxBody7: '<p>Ein rostiger Werkzeugkasten mit Zahlenschloss. In den Deckel gekratzt: „Wie die Lampe. Dachdecker können sich keine Zahlen merken.“</p>', boxOpened7: 'Das Schloss gibt nach. Drinnen: ein großer Schraubenschlüssel und ein Zettel.', boxEmpty7: 'Krumme Nägel und Butterbrotpapier.',
   jboxShut7: 'Ein grauer Schaltkasten, mit vier dicken Schrauben zu. Du brauchst Werkzeug.', jboxOpen7: 'Du drehst die Schrauben los. Der Deckel klappt auf: ein Raster aus Kabelkacheln, alle falsch herum.',
   wiresTitle7: 'Schaltkasten', wiresBody7: 'Tippe eine Kachel an, um sie zu drehen. Verbinde das Stromkabel links mit dem Schildkabel rechts.', wiresDone7: 'Bzzzt! Das Schild erwacht: GRAND PARADOX in rotem Neon. Auf der anderen Seite des Dachs explodieren hundert Tauben in die Luft. Etwas Kleines klimpert aufs Dach.', wiresOn7: 'Das Schild summt zufrieden.',
   gateBirds7: 'Das Tor zur Feuertreppe ist abgeschlossen und voller Tauben. Sie fauchen dich an. Tauben sollten nicht fauchen.', gateLocked7: 'Das Tor ist abgeschlossen. Wenigstens sind die Tauben weg.', gateOpen7: 'Der Schlüssel passt.',
@@ -1150,7 +1155,7 @@ Object.assign(TXT.de.notes, {
   hatch7n: ['Kratzer an der Luke', 'Strichlisten. Hunderte. Daneben: „312-mal ausgecheckt. 313-mal eingecheckt.“'],
 });
 Object.assign(TXT.de.hints, {
-  c7_box: ['Der Werkzeugkasten will drei Ziffern. Irgendwas auf dem Dach blinkt die ganze Zeit.', 'Sieh dir die Antennenlampe an und zähl die Blitze in jeder Gruppe.', (c) => `Der Code für den Werkzeugkasten ist ${c}.`],
+  c7_box: ['Der Werkzeugkasten will einen Code. Irgendwas auf dem Dach blinkt die ganze Zeit.', 'Sieh dir die Antennenlampe an und zähl die Blitze in jeder Gruppe.', (c) => `Der Code für den Werkzeugkasten ist ${c}.`],
   c7_open: ['Der Schaltkasten hinter dem Schild ist zugeschraubt.', 'Im Werkzeugkasten war ein Schraubenschlüssel.', 'Wähl den Schraubenschlüssel und tippe auf den Schaltkasten.'],
   c7_wires: ['Dreh die Kacheln, bis das Kabel vom linken zum rechten Anschluss läuft.', 'Fang beim linken Kabel an und folge dem Draht Kachel für Kachel. Kacheln abseits des Weges sind egal.', (p) => `Tippe diese Kacheln an (gezählt 1-9, von links nach rechts, von oben nach unten): ${p}.`],
   c7_key: ['Die Tauben haben etwas fallen lassen, als das Schild anging.', 'Sieh auf dem Dach beim Tor nach.', 'Tippe auf den kleinen Schlüssel auf dem Dach.'],
@@ -1164,7 +1169,7 @@ Object.assign(TXT.en, {
   win8Text: (left, h, n) => `The brass button clicks into the panel. 13. You press it. As the doors slide shut, the day manager drops her coffee and shouts “Not thirteen! We don’t HAVE a thirteen!” The lift goes up, and up, and up. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
   lobby8: 'The lobby by day: the reception desk, a framed floor plan, the cloakroom and the lift.', toLounge8: 'The lounge: a player piano, a bar, and an armchair nobody sits in.', backLobby8: 'Back in the busy lobby.',
   desk8: 'The day manager beams at you: “Room 404, as always! Breakfast is until ten.” You smile and step away from the key.', door8: 'The revolving door. Outside is the street, and you just came from there.',
-  pianoTitle8: 'Player piano', pianoBody8: 'The piano plays a little tune all by itself, then waits. Play it back exactly.', listen8: 'Listen again', pianoWrong8: 'A sour note. The piano huffs and plays its tune again.', pianoDone8: 'The piano plays a happy chord, and the bench lid pops up. Inside: a cloakroom ticket.', pianoEmpty8: 'The piano hums its tune quietly to itself.', pianoProgress8: (n) => `${n} of 5 notes right`,
+  pianoTitle8: 'Player piano', pianoBody8: 'The piano plays a little tune all by itself, then waits. Play it back exactly.', listen8: 'Listen again', pianoWrong8: 'A sour note. The piano huffs and plays its tune again.', pianoDone8: 'The piano plays a happy chord, and the bench lid pops up. Inside: a cloakroom ticket.', pianoEmpty8: 'The piano hums its tune quietly to itself.', pianoProgress8: (n, m) => `${n} of ${m} notes right`,
   cloakNeed8: 'The cloakroom attendant smiles: “Ticket, please.”', cloakGive8: 'The attendant takes the ticket and hands you a long coat. Is it yours? It fits perfectly. In the pocket: a tiny key and a note.', cloakEmpty8: '“Have a lovely stay!”',
   frameLocked8: 'The floor plan of the hotel, behind locked glass. The floors look shuffled.', frameOpen8: 'The tiny key opens the glass. The floor plan is made of sliding tiles.',
   planTitle8: 'Floor plan', planBody8: 'Slide the floors back into order: 1 to 8, the gap at the bottom right. Tap a tile next to the gap.', planDone8: 'Click. The floors are in order, and the whole frame swings aside. Behind it, in a dusty niche: a brass lift button marked 13.', planEmpty8: 'An empty niche behind the floor plan.',
@@ -1201,7 +1206,7 @@ Object.assign(TXT.de, {
   win8Text: (left, h, n) => `Der Messingknopf rastet im Bedienfeld ein. 13. Du drückst ihn. Während die Türen zugleiten, lässt die Tagesmanagerin ihren Kaffee fallen und ruft: „Nicht die Dreizehn! Wir HABEN keine Dreizehn!“ Der Aufzug fährt nach oben, und weiter, und weiter. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
   lobby8: 'Die Lobby bei Tag: der Empfang, ein gerahmter Etagenplan, die Garderobe und der Aufzug.', toLounge8: 'Die Lounge: ein selbstspielendes Klavier, eine Bar und ein Sessel, in dem nie jemand sitzt.', backLobby8: 'Zurück in der vollen Lobby.',
   desk8: 'Die Tagesmanagerin strahlt dich an: „Zimmer 404, wie immer! Frühstück gibt es bis zehn.“ Du lächelst und gehst einen Schritt weg vom Schlüssel.', door8: 'Die Drehtür. Draußen ist die Straße, und von da kommst du gerade.',
-  pianoTitle8: 'Selbstspielendes Klavier', pianoBody8: 'Das Klavier spielt ganz von allein eine kleine Melodie und wartet dann. Spiel sie genau nach.', listen8: 'Nochmal anhören', pianoWrong8: 'Ein schiefer Ton. Das Klavier schnaubt und spielt seine Melodie noch einmal.', pianoDone8: 'Das Klavier spielt einen fröhlichen Akkord, und der Deckel der Klavierbank springt auf. Drinnen: eine Garderobenmarke.', pianoEmpty8: 'Das Klavier summt leise seine Melodie vor sich hin.', pianoProgress8: (n) => `${n} von 5 Tönen richtig`,
+  pianoTitle8: 'Selbstspielendes Klavier', pianoBody8: 'Das Klavier spielt ganz von allein eine kleine Melodie und wartet dann. Spiel sie genau nach.', listen8: 'Nochmal anhören', pianoWrong8: 'Ein schiefer Ton. Das Klavier schnaubt und spielt seine Melodie noch einmal.', pianoDone8: 'Das Klavier spielt einen fröhlichen Akkord, und der Deckel der Klavierbank springt auf. Drinnen: eine Garderobenmarke.', pianoEmpty8: 'Das Klavier summt leise seine Melodie vor sich hin.', pianoProgress8: (n, m) => `${n} von ${m} Tönen richtig`,
   cloakNeed8: 'Die Garderobiere lächelt: „Ihre Marke, bitte.“', cloakGive8: 'Die Garderobiere nimmt die Marke und reicht dir einen langen Mantel. Ist das deiner? Er passt perfekt. In der Tasche: ein winziger Schlüssel und ein Zettel.', cloakEmpty8: '„Einen schönen Aufenthalt!“',
   frameLocked8: 'Der Etagenplan des Hotels, hinter abgeschlossenem Glas. Die Stockwerke sehen durcheinander aus.', frameOpen8: 'Der winzige Schlüssel öffnet das Glas. Der Etagenplan besteht aus Schiebeplättchen.',
   planTitle8: 'Etagenplan', planBody8: 'Schieb die Stockwerke wieder in die richtige Reihenfolge: 1 bis 8, die Lücke unten rechts. Tippe ein Plättchen neben der Lücke an.', planDone8: 'Klick. Die Stockwerke sind in Ordnung, und der ganze Rahmen schwingt zur Seite. Dahinter, in einer staubigen Nische: ein Aufzugknopf aus Messing mit der Aufschrift 13.', planEmpty8: 'Eine leere Nische hinter dem Etagenplan.',
@@ -1238,10 +1243,10 @@ Object.assign(TXT.en, {
   win9Text: (left, h, n) => `The four dials click, and door 1313 swings open. A small room, a chair by the window, and in it the guest from 1912. They turn round. They have your face, only much, much older. “Finally,” they say. “Now we can both check out.” Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
   hall13: 'Floor 13: six doors, a luggage cart, a telegram on a little table. The gas lamps hiss.', toEnd13: 'The end of the corridor: a tall grandfather clock, faded wallpaper, a window full of fog.', backHall13: 'Back among the six doors.',
   doorLocked13: (n) => `Door ${n}. Locked. Behind it, someone snores in 1912.`, doorWrong13: 'The key doesn’t fit this door.', closetOpen13: (n) => `Door ${n} is not a room, it is a linen closet. Towels, candles, and on a hook: a brass winding key with a note.`, closetEmpty13: 'Towels from 1912. Very fluffy.',
-  cartTitle13: 'Luggage cart', cartBody13: 'Twelve luggage tags hang face down. Flip two at a time and find all six pairs.', cartPairs13: (n) => `${n} of 6 pairs`, cartDone13: (n) => `All pairs found! A key slides out of the last suitcase. Its wooden tag says ${n}.`, cartEmpty13: 'An empty luggage cart. The tags flutter.',
+  cartTitle13: 'Luggage cart', cartBody13: 'Luggage tags hang face down. Flip two at a time and find all the pairs.', cartPairs13: (n, m) => `${n} of ${m} pairs`, cartDone13: (n) => `All pairs found! A key slides out of the last suitcase. Its wooden tag says ${n}.`, cartEmpty13: 'An empty luggage cart. The tags flutter.',
   clockBack13: 'A grandfather clock. Its hands run backwards, tick by tick. The winding hole is empty.', clockWound13: 'You wind the clock. It stops, shivers, then runs forwards, faster and faster, and strikes: one, two… thirteen. In the wallpaper, a door draws itself: 1313.', clockOk13: 'The clock ticks forwards now, proud of itself.',
   wall13: 'Faded wallpaper with a pattern of tiny keys.',
-  lockTitle13: 'Door 1313', lockBody13: 'Four dials, five symbols, no symbol twice. Tap a dial to turn it, then try the handle. The door answers: ● right symbol in the right place, ○ right symbol in the wrong place.', lockTry13: 'Try the handle', lockNone13: 'nothing',
+  lockTitle13: 'Door 1313', lockBody13: 'Symbol dials, no symbol twice. Tap a dial to turn it, then try the handle. The door answers: ● right symbol in the right place, ○ right symbol in the wrong place.', lockTry13: 'Try the handle', lockNone13: 'nothing',
   telegram13: 'A telegram on a little table.', window13: 'Fog, and through the fog, the city in 1912: horse carts and a tram. A note is tucked into the window frame.',
 });
 Object.assign(TXT.en.views, { hall13: 'Floor 13', end13: 'End of the corridor' });
@@ -1272,10 +1277,10 @@ Object.assign(TXT.de, {
   win9Text: (left, h, n) => `Die vier Rädchen klicken, und Tür 1313 schwingt auf. Ein kleines Zimmer, ein Stuhl am Fenster, und darauf der Gast aus 1912. Er dreht sich um. Er hat dein Gesicht, nur viel, viel älter. „Endlich“, sagt er. „Jetzt können wir beide auschecken.“ Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
   hall13: 'Der 13. Stock: sechs Türen, ein Gepäckwagen, ein Telegramm auf einem Tischchen. Die Gaslampen zischen.', toEnd13: 'Das Ende des Flurs: eine hohe Standuhr, verblichene Tapete, ein Fenster voller Nebel.', backHall13: 'Zurück bei den sechs Türen.',
   doorLocked13: (n) => `Tür ${n}. Abgeschlossen. Dahinter schnarcht jemand im Jahr 1912.`, doorWrong13: 'Der Schlüssel passt nicht in diese Tür.', closetOpen13: (n) => `Hinter Tür ${n} ist kein Zimmer, sondern eine Wäschekammer. Handtücher, Kerzen und an einem Haken: ein Aufziehschlüssel aus Messing mit einem Zettel.`, closetEmpty13: 'Handtücher von 1912. Sehr flauschig.',
-  cartTitle13: 'Gepäckwagen', cartBody13: 'Zwölf Kofferanhänger hängen verdeckt. Dreh immer zwei um und finde alle sechs Paare.', cartPairs13: (n) => `${n} von 6 Paaren`, cartDone13: (n) => `Alle Paare gefunden! Aus dem letzten Koffer rutscht ein Schlüssel. Auf dem Holzanhänger steht ${n}.`, cartEmpty13: 'Ein leerer Gepäckwagen. Die Anhänger flattern.',
+  cartTitle13: 'Gepäckwagen', cartBody13: 'Kofferanhänger hängen verdeckt. Dreh immer zwei um und finde alle Paare.', cartPairs13: (n, m) => `${n} von ${m} Paaren`, cartDone13: (n) => `Alle Paare gefunden! Aus dem letzten Koffer rutscht ein Schlüssel. Auf dem Holzanhänger steht ${n}.`, cartEmpty13: 'Ein leerer Gepäckwagen. Die Anhänger flattern.',
   clockBack13: 'Eine Standuhr. Ihre Zeiger laufen rückwärts, Tick für Tick. Das Aufziehloch ist leer.', clockWound13: 'Du ziehst die Uhr auf. Sie bleibt stehen, zittert, läuft dann vorwärts, schneller und schneller, und schlägt: eins, zwei… dreizehn. In der Tapete zeichnet sich eine Tür: 1313.', clockOk13: 'Die Uhr tickt jetzt vorwärts und ist sehr stolz darauf.',
   wall13: 'Verblichene Tapete mit einem Muster aus winzigen Schlüsseln.',
-  lockTitle13: 'Tür 1313', lockBody13: 'Vier Rädchen, fünf Symbole, kein Symbol doppelt. Tippe ein Rädchen an, um es zu drehen, dann drück die Klinke. Die Tür antwortet: ● richtiges Symbol am richtigen Platz, ○ richtiges Symbol am falschen Platz.', lockTry13: 'Klinke drücken', lockNone13: 'nichts',
+  lockTitle13: 'Tür 1313', lockBody13: 'Symbol-Rädchen, kein Symbol doppelt. Tippe ein Rädchen an, um es zu drehen, dann drück die Klinke. Die Tür antwortet: ● richtiges Symbol am richtigen Platz, ○ richtiges Symbol am falschen Platz.', lockTry13: 'Klinke drücken', lockNone13: 'nichts',
   telegram13: 'Ein Telegramm auf einem Tischchen.', window13: 'Nebel, und durch den Nebel die Stadt im Jahr 1912: Pferdekutschen und eine Straßenbahn. Im Fensterrahmen steckt ein Zettel.',
 });
 Object.assign(TXT.de.views, { hall13: '13. Stock', end13: 'Ende des Flurs' });
@@ -2380,7 +2385,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (S && S.expert && ch >= 5 ? XP_TOTAL : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -2672,7 +2677,7 @@ function escape5() {
   $('lbPost').hidden = true; $('lbResult').textContent = '';
   showEnd(S.overtime ? t('win5EyebrowOver') : t('win5Eyebrow'), t('win5Title'), t('win5Text', mmss(left), S.hints, noteCount5()), left, false);
 }
-function newGame5() { S = freshState5(); save(); begin(); say(t('start5')); }
+function newGame5() { S = freshState5(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start5')); }
 // ---------- chapter 6: room 405 (mirror room, bathroom)
 const TOTAL6 = 40 * 60;
 Object.assign(ICONS, { batt6: '🔋', case6: '🧳', pass6: '💳' });
@@ -2680,7 +2685,7 @@ const noteIds6 = ['safe6n', 'case6n', 'radio6n', 'towel6n', 'mirror6n'];
 const NB6 = (i) => [i, i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter((j) => j >= 0 && j < 9);
 function freshState6() {
   let H, M;
-  do { H = 1 + Math.floor(Math.random() * 12); M = 5 * Math.floor(Math.random() * 12); } while ((((12 - H - (M ? 1 : 0)) + 11) % 12) + 1 === H && (60 - M) % 60 === M);
+  do { H = 1 + Math.floor(Math.random() * 12); M = XP() ? Math.floor(Math.random() * 60) : 5 * Math.floor(Math.random() * 12); } while ((((12 - H - (M ? 1 : 0)) + 11) % 12) + 1 === H && (60 - M) % 60 === M);
   const lit = Array(9).fill(true), presses = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8]).slice(0, 3 + Math.floor(Math.random() * 3));
   for (const p of presses) for (const j of NB6(p)) lit[j] = !lit[j];
   return { v: 1, ch: 6, started: Date.now(), left: TOTAL6, ot: 0, hints: 0, hintSeen: {}, view: 'room405', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
@@ -2766,7 +2771,7 @@ function escape6() {
   $('lbPost').hidden = true; $('lbResult').textContent = '';
   showEnd(S.overtime ? t('win6EyebrowOver') : t('win6Eyebrow'), t('win6Title'), t('win6Text', mmss(left), S.hints, noteCount6()), left, false);
 }
-function newGame6() { S = freshState6(); save(); begin(); say(t('start6')); }
+function newGame6() { S = freshState6(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start6')); }
 // ---------- chapter 7: the roof (antenna lamp, junction box, pigeons)
 const TOTAL7 = 40 * 60;
 Object.assign(ICONS, { wrench7: '🔧', gkey7: '🔑' });
@@ -2793,7 +2798,7 @@ function makeWires7() {
     const dfs = (r, c) => { path.push([r, c]); seen.add(r * 3 + c); if (c === 2 && r === wb) return true;
       for (const d of shuffle([0, 1, 2, 3])) { const nr = r + DR7[d], nc = c + DC7[d]; if (nr >= 0 && nr < 3 && nc >= 0 && nc < 3 && !seen.has(nr * 3 + nc) && dfs(nr, nc)) return true; }
       path.pop(); return false; };
-    if (!dfs(wa, 0) || path.length < 4) continue;
+    if (!dfs(wa, 0) || path.length < (XP() ? 6 : 4)) continue;
     const wt = Array.from({ length: 9 }, () => pick(['s', 'c'])), want = {};
     path.forEach(([r, c], k) => {
       const prev = k ? path[k - 1] : [r, -1], next = k < path.length - 1 ? path[k + 1] : [r, 3];
@@ -2807,7 +2812,7 @@ function makeWires7() {
   return { wa: 1, wb: 1, wt: ['c', 's', 'c', 's', 's', 's', 'c', 's', 'c'], wr: [0, 0, 0, 0, 0, 0, 0, 0, 0], want: { 3: [1, 3], 4: [1, 3], 5: [1, 3] } };
 }
 function freshState7() {
-  const blink = [0, 0, 0].map(() => 1 + Math.floor(Math.random() * 9));
+  const blink = Array(XP() ? 4 : 3).fill(0).map(() => 1 + Math.floor(Math.random() * 9));
   return Object.assign({ v: 1, ch: 7, started: Date.now(), left: TOTAL7, ot: 0, hints: 0, hintSeen: {}, view: 'roof7', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
     blink, bcode: blink.join('') }, makeWires7());
 }
@@ -2902,7 +2907,7 @@ function escape7() {
   $('lbPost').hidden = true; $('lbResult').textContent = '';
   showEnd(S.overtime ? t('win7EyebrowOver') : t('win7Eyebrow'), t('win7Title'), t('win7Text', mmss(left), S.hints, noteCount7()), left, false);
 }
-function newGame7() { S = freshState7(); save(); begin(); say(t('start7')); }
+function newGame7() { S = freshState7(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start7')); }
 // ---------- chapter 8: check-in (lobby by day, lounge)
 const TOTAL8 = 40 * 60;
 Object.assign(ICONS, { ticket8: '🎫', fkey8: '🗝️', button8: '🔘' });
@@ -2924,11 +2929,11 @@ function slide8(board) {
   return [];
 }
 function freshState8() {
-  let melody; do { melody = Array.from({ length: 5 }, () => Math.floor(Math.random() * 5)); } while (melody.some((m, i) => i > 1 && m === melody[i - 1] && m === melody[i - 2]) || new Set(melody).size < 3);
+  let melody; do { melody = Array.from({ length: XP() ? 7 : 5 }, () => Math.floor(Math.random() * 5)); } while (melody.some((m, i) => i > 1 && m === melody[i - 1] && m === melody[i - 2]) || new Set(melody).size < 3);
   let board, len; do { board = SOLVED8.split(''); let last = -1;
-    for (let n = 0; n < 18; n++) { const z = board.indexOf('0'), opts = slideNb8(z).filter((j) => j !== last), j = pick(opts); board[z] = board[j]; board[j] = '0'; last = z; }
+    for (let n = 0; n < (XP() ? 28 : 18); n++) { const z = board.indexOf('0'), opts = slideNb8(z).filter((j) => j !== last), j = pick(opts); board[z] = board[j]; board[j] = '0'; last = z; }
     len = slide8(board).length;
-  } while (len < 8 || len > 16);
+  } while (XP() ? len < 14 || len > 22 : len < 8 || len > 16);
   return { v: 1, ch: 8, started: Date.now(), left: TOTAL8, ot: 0, hints: 0, hintSeen: {}, view: 'lobby8', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false, melody, board };
 }
 const noteCount8 = () => noteIds8.filter((n) => S.f['note_' + n]).length;
@@ -2964,7 +2969,7 @@ function openPiano8() {
     const play = () => { got = 0; msg.textContent = ''; busy = Date.now() + 600 + S.melody.length * 560; S.melody.forEach((m, k) => setTimeout(() => { if (row.isConnected) flash(m); }, 600 + k * 560)); };
     NOTES8.forEach((n, i) => { const btn = mk('button', 'key', n); btn.setAttribute('data-act', 'pk' + i); btn.style.minHeight = '110px'; btn.style.width = '56px'; btn.style.fontSize = '22px'; btn.style.borderBottom = `8px solid ${KEYCOL8[i]}`;
       btn.addEventListener('click', () => { if (S.f.piano || Date.now() < busy) return; flash(i, 200);
-        if (S.melody[got] === i) { got++; msg.textContent = t('pianoProgress8', got);
+        if (S.melody[got] === i) { got++; msg.textContent = t('pianoProgress8', got, S.melody.length);
           if (got === S.melody.length) { S.f.piano = true; give('ticket8'); Sound.win(); msg.textContent = t('pianoDone8'); say(t('pianoDone8')); save(); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('piano8n'); } }, 1600); } }
         else { Sound.nope(); msg.textContent = t('pianoWrong8'); setTimeout(play, 700); } });
       keys.push(btn); row.appendChild(btn); });
@@ -3014,20 +3019,21 @@ function escape8() {
   $('lbPost').hidden = true; $('lbResult').textContent = '';
   showEnd(S.overtime ? t('win8EyebrowOver') : t('win8Eyebrow'), t('win8Title'), t('win8Text', mmss(left), S.hints, noteCount8()), left, false);
 }
-function newGame8() { S = freshState8(); save(); begin(); say(t('start8')); }
+function newGame8() { S = freshState8(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start8')); }
 // ---------- chapter 9: floor 13 (luggage pairs, backwards clock, code breaker)
 const TOTAL9 = 40 * 60;
 Object.assign(ICONS, { key13: '🗝️', wind13: '⚙️' });
 const noteIds9 = ['tel13n', 'cart13n', 'closet13n', 'clock13n', 'window13n'];
-const SYM9 = ['☀️', '🌙', '⭐', '❤️', '🔑'], CARD9 = ['🎩', '🧳', '🌂', '🎻', '🕰️', '🐦'], DOORS9 = [1301, 1302, 1303, 1304, 1305, 1306];
+const SYM9 = ['☀️', '🌙', '⭐', '❤️', '🔑', '🎩'], CARD9 = ['🎩', '🧳', '🌂', '🎻', '🕰️', '🐦', '🎈', '🦆'], DOORS9 = [1301, 1302, 1303, 1304, 1305, 1306];
 function freshState9() {
-  const code = shuffle([0, 1, 2, 3, 4]).slice(0, 4);
-  let dials; do { dials = shuffle([0, 1, 2, 3, 4]).slice(0, 4); } while (dials.join() === code.join());
+  const nsym = XP() ? 6 : 5, ndial = XP() ? 5 : 4, pairs = XP() ? 8 : 6, all = Array.from({ length: nsym }, (_, i) => i);
+  const code = shuffle(all).slice(0, ndial);
+  let dials; do { dials = shuffle(all).slice(0, ndial); } while (dials.join() === code.join());
   return { v: 1, ch: 9, started: Date.now(), left: TOTAL9, ot: 0, hints: 0, hintSeen: {}, view: 'hall13', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
-    cards: shuffle([0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]), found: Array(12).fill(false), door: pick(DOORS9), code, dials, tries: [] };
+    nsym, cards: shuffle(Array.from({ length: pairs * 2 }, (_, i) => i % pairs)), found: Array(pairs * 2).fill(false), door: pick(DOORS9), code, dials, tries: [] };
 }
 const noteCount9 = () => noteIds9.filter((n) => S.f['note_' + n]).length;
-const pairs9 = () => { const out = []; for (let i = 0; i < 12; i++) if (!S.found[i]) { const j = S.cards.findIndex((c, k) => k > i && c === S.cards[i]); if (j > 0 && !S.found[j]) out.push(`${i + 1}+${j + 1}`); } return out.join(', '); };
+const pairs9 = () => { const out = []; for (let i = 0; i < S.cards.length; i++) if (!S.found[i]) { const j = S.cards.findIndex((c, k) => k > i && c === S.cards[i]); if (j > 0 && !S.found[j]) out.push(`${i + 1}+${j + 1}`); } return out.join(', '); };
 const score9 = (g) => { const hit = g.filter((x, i) => x === S.code[i]).length, common = S.code.filter((x) => g.includes(x)).length; return { hit, near: common - hit }; };
 function sceneHall13() {
   const f = S.f;
@@ -3068,7 +3074,7 @@ function openCart9() {
             save(); renderScene(); draw(); }
           else { busy = true; draw(); setTimeout(() => { busy = false; first = -1; shown = []; if (grid.isConnected) draw(); }, 800); } });
         grid.appendChild(btn); });
-      msg.textContent = S.f.cart ? t('cartDone13', S.door) : t('cartPairs13', S.found.filter(Boolean).length / 2);
+      msg.textContent = S.f.cart ? t('cartDone13', S.door) : t('cartPairs13', S.found.filter(Boolean).length / 2, S.cards.length / 2);
     };
     draw();
   });
@@ -3079,12 +3085,12 @@ function openLock9() {
     const draw = () => {
       row.innerHTML = '';
       S.dials.forEach((d, i) => { const btn = mk('button', 'key', `<span style="font-size:30px">${SYM9[d]}</span>`); btn.setAttribute('data-act', 'dial' + i); btn.style.minHeight = '72px'; btn.style.width = '64px';
-        btn.addEventListener('click', () => { if (S.done) return; S.dials[i] = (S.dials[i] + 1) % 5; Sound.click(); save(); draw(); });
+        btn.addEventListener('click', () => { if (S.done) return; S.dials[i] = (S.dials[i] + 1) % (S.nsym || 5); Sound.click(); save(); draw(); });
         row.appendChild(btn); });
       hist.innerHTML = S.tries.slice(-6).map((tr) => `<div>${tr.g.map((x) => SYM9[x]).join(' ')} &nbsp; <b>${'●'.repeat(tr.hit) + '○'.repeat(tr.near) || t('lockNone13')}</b></div>`).join('');
     };
     b.querySelector('#lTry').addEventListener('click', () => { if (S.done) return; const g = S.dials.slice(), r = score9(g); S.tries.push({ g, hit: r.hit, near: r.near });
-      if (r.hit === 4) { Sound.unlock(); Sound.door(); save(); draw(); setTimeout(escape9, 1200); } else { Sound.nope(); save(); draw(); } });
+      if (r.hit === S.code.length) { Sound.unlock(); Sound.door(); save(); draw(); setTimeout(escape9, 1200); } else { Sound.nope(); save(); draw(); } });
     draw();
   });
 }
@@ -3115,7 +3121,7 @@ function escape9() {
   if (!$('modal').hidden) closeModal();
   showEnd(S.overtime ? t('win9EyebrowOver') : t('win9Eyebrow'), t('win9Title'), t('win9Text', mmss(left), S.hints, noteCount9()), left, false);
 }
-function newGame9() { S = freshState9(); save(); begin(); say(t('start9')); }
+function newGame9() { S = freshState9(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start9')); }
 // ---------- chapter 10 (finale): checkout (room 404 today and in 1912, the mirror between them)
 const TOTAL10 = 40 * 60;
 Object.assign(ICONS, { acorn10: '🌰', okey10: '🗝️' });
@@ -3174,7 +3180,7 @@ function escape10() {
   $('lbPost').hidden = true; $('lbResult').textContent = '';
   showEnd(S.overtime ? t('win10EyebrowOver') : t('win10Eyebrow'), t('win10Title'), t('win10Text', mmss(left), S.hints, noteCount10()), left, false);
 }
-function newGame10() { S = freshState10(); save(); begin(); say(t('start10')); }
+function newGame10() { S = freshState10(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start10')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -3219,9 +3225,9 @@ function openHints() {
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
-  openModal(t('hintsTitle'), `<p>${t('hintsIntro')}</p><ol class="hints" id="hl">${g.hints.slice(0, seen).map((h) => `<li>${esc(text(h))}</li>`).join('')}</ol><div class="row" id="hr"></div>`, (b) => {
+  openModal(t('hintsTitle'), `<p>${t('hintsIntro')}${S.expert ? ` <b>${t('xpHints')}</b>` : ''}</p><ol class="hints" id="hl">${g.hints.slice(0, seen).map((h) => `<li>${esc(text(h))}</li>`).join('')}</ol><div class="row" id="hr"></div>`, (b) => {
     const row = b.querySelector('#hr');
-    if (seen < g.hints.length) act(row, 'hint', seen ? t('hintMore') : t('hintFirst'), () => { S.hintSeen[g.id] = seen + 1; S.hints++; S.left -= HINT_COST; save(); tickClock(); openHints(); }, 'btn');
+    if (seen < g.hints.length) act(row, 'hint', seen ? t('hintMore') : t('hintFirst'), () => { S.hintSeen[g.id] = seen + 1; S.hints++; S.left -= HINT_COST * (S.expert ? 2 : 1); save(); tickClock(); openHints(); }, 'btn');
     else row.appendChild(mk('span', 'tip', esc(t('hintLast'))));
   });
 }
@@ -3359,7 +3365,10 @@ function applyLang() {
   renderMute(); renderScene(); renderInv(); tickClock();
 }
 $('btnLang').addEventListener('click', () => { lang = lang === 'de' ? 'en' : 'de'; profile.lang = lang; saveProfile(); applyLang(); showStart(); });
+function renderXp() { $('btnXp').textContent = t(XP() ? 'xpOn' : 'xpOff'); $('btnXp').setAttribute('aria-pressed', String(XP())); }
+$('btnXp').addEventListener('click', () => { profile.expert = !XP(); saveProfile(); renderXp(); if (XP()) { const h = $('btnXp'); h.title = t('xpSay'); } });
 function showStart() {
+  renderXp();
   const saved = store.get(SAVE_KEY, null);
   $('btnContinue').hidden = !saved || saved.done;
   $('btnNew').textContent = saved && !saved.done ? t('newGame') : t('checkIn'); armedNew = 0;
