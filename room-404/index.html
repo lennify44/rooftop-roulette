@@ -222,6 +222,7 @@ body {
           <button class="btn" id="btnCh9" type="button" data-i18n="ch9Btn" hidden>Chapter 9</button>
           <button class="btn" id="btnCh10" type="button" data-i18n="ch10Btn" hidden>Chapter 10</button>
           <button class="btn" id="btnCh11" type="button" data-i18n="ch11Btn" hidden>Chapter 11</button>
+          <button class="btn" id="btnCh12" type="button" data-i18n="ch12Btn" hidden>Chapter 12</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -270,7 +271,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, ch11done: false, best11: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, ch11done: false, best11: 0, ch12done: false, best12: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1465,6 +1466,90 @@ Object.assign(TXT.de.hints, {
   c11_case: ['Ein Koffer ist schwerer. Zwei Wägungen reichen für neun Koffer.', 'Teil in drei Dreiergruppen: Wieg Gruppe A gegen Gruppe B. Die schwerere Gruppe (oder C, wenn gleich) hat ihn; dann wieg einen Koffer gegen einen anderen aus dieser Gruppe.', (n) => `Es ist Koffer ${n}.`],
   c11_safe: ['Das alte Buch verrät, wie der Tresor aufgeht.', 'Wer will zuerst geweckt werden? In welchem Zimmer schläft dieser Gast?', (c) => `Der Tresorcode ist ${c}.`],
 });
+Object.assign(TXT.en, {
+  backOn: 'You pick up where you left off.',
+  ch12Btn: 'Chapter 12: Room 13', nextCh12: 'On to chapter 12',
+  start12: 'Midnight. The elevator stops at a floor that has no button: 13. A dark corridor, one door with a brass 13, a note pinned to it in letters that make no sense. The letter in the safe said room 13 needs you. Whoever wrote it wants you out by 01:15, through the attic. Every puzzle here hides the way to the next.',
+  up12Eyebrow: '01:15 · the lights go out', up12Title: 'Floor 13 keeps you', up12Text: 'At a quarter past one every lamp on the floor goes out at once. Somewhere a door that does not exist closes. (Or keep going in overtime.)',
+  win12Eyebrow: 'Chapter 12 complete', win12EyebrowOver: 'Chapter 12 complete, in overtime', win12Title: 'Out of room 13',
+  win12Text: (left, h, n) => `The round window swings open onto the old fire escape. Cold air, city lights. Down in the courtyard a man in a 1912 porter’s uniform raises his cap to you and points at the clock tower. Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  corr12: 'Floor 13 at midnight: a framed motto, door 13 with a note and a code lock, a dumbwaiter hatch in the wall.', toRoom12: 'Room 13. Dust, a lamp, mirrors set into the floor tiles, a wardrobe and the dumbwaiter.', toAttic12: 'The dumbwaiter creaks up into the attic: two old trunks, a chest, chalk marks on the boards, a round window.', backCorr12: 'Back in the corridor.', backRoom12: 'You ride the dumbwaiter back down to room 13.',
+  mottoTitle12: 'Framed motto', mottoBody12: (plain, enc) => `<div class="note">The hotel motto, embroidered twice. Once plainly:<br><br><b style="letter-spacing:.12em">${plain}</b><br><br>and below it, in the same thread, in a secret code:<br><br><b style="letter-spacing:.12em">${enc}</b></div>`,
+  noteTitle12: 'Note on door 13', noteBody12: (enc) => `<div class="note">Pinned to the door, in the same secret code as the motto:<br><br><b style="letter-spacing:.12em;font-size:1.15em">${enc}</b></div>`,
+  doorTitle12: 'Door 13', doorBody12: '<p>A brass lock with three number wheels.</p>', doorOpen12: 'Click. Door 13 opens inward on its own.',
+  hatch12: 'A dumbwaiter hatch. Stuck from the inside: the dumbwaiter must be somewhere behind door 13.',
+  lamp12: 'An old lamp on the floor, aimed at the mirror tiles. It burns without a cable.',
+  beamTitle12: 'Mirror tiles', beamBody12: 'The lamp shines in from the left. Tap a mirror to flip it. Guide the light onto the photo cell ◎.', beamDone12: 'The beam hits the photo cell. Somewhere in the wardrobe a lock snaps open.', beamOk12: 'The light already falls on the photo cell.',
+  wardrobeLocked12: 'The wardrobe is locked. On its door, a little glass eye points at the mirror tiles.', wardrobeOpen12: 'The wardrobe swings open: a heavy iron crank hangs inside.', wardrobeEmpty12: 'Empty, apart from moth balls.',
+  dumbLocked12: 'The dumbwaiter has a socket but no crank.', dumbCrank12: 'The crank fits the socket. You fold yourself into the dumbwaiter and wind yourself up.',
+  trunksTitle12: 'Attic floor', trunksBody12: 'Push both trunks onto the chalk marks ✕ to free the chest lid. Trunks can only be pushed, never pulled.', undo12: 'Undo', reset12: 'Reset', moves12: (n) => `Moves: ${n}`, trunksDone12: 'Both trunks sit on their marks. The chest lid is free.', trunksStuck12: 'A trunk is stuck in a corner. Undo or reset.',
+  chestLocked12: 'The trunks are in the way of the chest lid.', chestOpen12: 'Inside the chest: a diary with a cracked leather cover.', chestEmpty12: 'The chest is empty now.',
+  diaryTitle12: 'Diary, last page', diaryBody12: (seq) => `<div class="note">“The window only opens for those who know what comes next.”<br><br><b style="font-size:1.2em;letter-spacing:.06em">${seq}, ?</b></div>`,
+  windowTitle12: 'Round window', windowBody12: '<p>The latch has number wheels. Which number comes next?</p>', windowWrong12: 'The latch jams and the wheels spin back (−1 min).', windowNoDiary12: 'A latch with number wheels. Without a clue you would only be guessing.',
+});
+Object.assign(TXT.en.views, { corridor12: 'Floor 13', room12: 'Room 13', attic12: 'Attic' });
+Object.assign(TXT.en.svg, { motto12: 'MOTTO', door12: '13', hatch12: 'HATCH', wardrobe12: 'WARDROBE', dumb12: 'DUMBWAITER', toCorr12: '⟵ corridor', chest12: 'CHEST', window12: 'WINDOW', down12: '⟵ down', grid12: 'MIRRORS', trunks12: 'TRUNKS' });
+Object.assign(TXT.en.aria, { corrScene12: 'The corridor on floor 13', roomScene12: 'Room 13', atticScene12: 'The attic', motto12: 'Framed motto', note12: 'Note on door 13', door12: 'Door 13', hatch12: 'Dumbwaiter hatch', lamp12: 'Lamp', grid12: 'Mirror tiles', wardrobe12: 'Wardrobe', dumb12: 'Dumbwaiter', goCorr12: 'Back to the corridor', trunks12: 'Trunks on the attic floor', chest12: 'Chest', window12: 'Round window', down12: 'Ride back down' });
+Object.assign(TXT.en.items, {
+  crank12: ['Iron crank', '', 'Heavy. Fits a square socket.'],
+  diary12: ['Diary', '', 'The last page has a number sequence. Read it at the window.'],
+});
+Object.assign(TXT.en.notes, {
+  note12n: ['Back of the door note', 'Same code as the motto upstairs and downstairs. Every letter moved by the same number of places.'],
+  motto12n: ['Behind the frame', '“GRAND PARADOX” is the only phrase every porter knows by heart. That is why it is the key.'],
+  beam12n: ['Scratched into the wardrobe', 'Light goes straight until a mirror turns it. / and \\ turn it differently. Follow it with your finger.'],
+  attic12n: ['Chalk on a rafter', 'Push, never pull. A trunk in a corner stays in the corner forever.'],
+  diary12n: ['Inside cover of the diary', 'Every number tells you how to get the next one. Look at the gaps between them, then at the gaps between the gaps.'],
+});
+Object.assign(TXT.en.hints, {
+  c12_door: ['The note on door 13 is in code. The motto shows the same words in plain text and in code.', 'Compare G with its coded letter: count how far it moved. Move every letter of the note back by that much.', (s) => `Shift every letter back by ${s[0]}. The code is ${s[1]}.`],
+  c12_beam: ['Behind door 13 the lamp shines at the mirror tiles. Something must catch that light.', 'Start at the lamp and follow the beam tile by tile. Flip only the mirror where it goes wrong.', (s) => `Mirrors: ${s}.`],
+  c12_up: ['The wardrobe gave you something heavy.', 'Select the crank and tap the dumbwaiter.', 'Crank → dumbwaiter → attic.'],
+  c12_trunks: ['The chest lid is blocked. The trunks belong on the chalk marks.', 'Never push a trunk into a corner without a mark. Plan from the marks backwards. Undo is free.', (s) => `First moves: ${s}.`],
+  c12_window: ['The diary from the chest has the clue for the window.', 'Write down the differences between the numbers. If those are not equal, look at their differences, or try multiplying.', (n) => `The window opens with ${n}.`],
+});
+Object.assign(TXT.de, {
+  backOn: 'Du machst weiter, wo du aufgehört hast.',
+  ch12Btn: 'Kapitel 12: Zimmer 13', nextCh12: 'Weiter zu Kapitel 12',
+  start12: 'Mitternacht. Der Aufzug hält in einem Stockwerk ohne Knopf: 13. Ein dunkler Flur, eine Tür mit einer Messing-13, daran ein Zettel mit Buchstaben, die keinen Sinn ergeben. Der Brief im Tresor sagte: Zimmer 13 braucht dich. Wer auch immer ihn schrieb, will dich bis 01:15 draußen haben, über den Dachboden. Jedes Rätsel hier versteckt den Weg zum nächsten.',
+  up12Eyebrow: '01:15 · das Licht geht aus', up12Title: 'Der 13. Stock behält dich', up12Text: 'Um Viertel nach eins gehen alle Lampen im Stockwerk gleichzeitig aus. Irgendwo schließt sich eine Tür, die es nicht gibt. (Oder mach in der Verlängerung weiter.)',
+  win12Eyebrow: 'Kapitel 12 geschafft', win12EyebrowOver: 'Kapitel 12 geschafft, in der Verlängerung', win12Title: 'Raus aus Zimmer 13',
+  win12Text: (left, h, n) => `Das runde Fenster schwingt auf, hinaus auf die alte Feuertreppe. Kalte Luft, Lichter der Stadt. Unten im Hof zieht ein Mann in Portiersuniform von 1912 die Mütze vor dir und zeigt auf den Uhrturm. Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  corr12: 'Der 13. Stock um Mitternacht: ein gerahmtes Motto, Tür 13 mit Zettel und Zahlenschloss, eine Speiseaufzugsklappe in der Wand.', toRoom12: 'Zimmer 13. Staub, eine Lampe, Spiegel in den Bodenfliesen, ein Schrank und der Speiseaufzug.', toAttic12: 'Der Speiseaufzug knarzt hinauf auf den Dachboden: zwei alte Koffertruhen, eine Kiste, Kreidekreuze auf den Dielen, ein rundes Fenster.', backCorr12: 'Zurück im Flur.', backRoom12: 'Du fährst mit dem Speiseaufzug zurück nach Zimmer 13.',
+  mottoTitle12: 'Gerahmtes Motto', mottoBody12: (plain, enc) => `<div class="note">Das Hotelmotto, zweimal gestickt. Einmal im Klartext:<br><br><b style="letter-spacing:.12em">${plain}</b><br><br>und darunter, mit demselben Faden, in Geheimschrift:<br><br><b style="letter-spacing:.12em">${enc}</b></div>`,
+  noteTitle12: 'Zettel an Tür 13', noteBody12: (enc) => `<div class="note">An die Tür geheftet, in derselben Geheimschrift wie das Motto:<br><br><b style="letter-spacing:.12em;font-size:1.15em">${enc}</b></div>`,
+  doorTitle12: 'Tür 13', doorBody12: '<p>Ein Messingschloss mit drei Zahlenrädern.</p>', doorOpen12: 'Klick. Tür 13 schwingt von selbst nach innen auf.',
+  hatch12: 'Eine Speiseaufzugsklappe. Von innen verklemmt: Der Aufzug muss irgendwo hinter Tür 13 sein.',
+  lamp12: 'Eine alte Lampe auf dem Boden, auf die Spiegelfliesen gerichtet. Sie brennt ohne Kabel.',
+  beamTitle12: 'Spiegelfliesen', beamBody12: 'Die Lampe leuchtet von links herein. Tippe einen Spiegel an, um ihn zu drehen. Lenk das Licht auf die Fotozelle ◎.', beamDone12: 'Der Strahl trifft die Fotozelle. Irgendwo im Schrank springt ein Schloss auf.', beamOk12: 'Das Licht fällt schon auf die Fotozelle.',
+  wardrobeLocked12: 'Der Schrank ist verschlossen. An der Tür zeigt ein kleines Glasauge auf die Spiegelfliesen.', wardrobeOpen12: 'Der Schrank schwingt auf: Drinnen hängt eine schwere eiserne Kurbel.', wardrobeEmpty12: 'Leer, bis auf Mottenkugeln.',
+  dumbLocked12: 'Der Speiseaufzug hat eine Buchse, aber keine Kurbel.', dumbCrank12: 'Die Kurbel passt in die Buchse. Du faltest dich in den Speiseaufzug und kurbelst dich hoch.',
+  trunksTitle12: 'Dachboden', trunksBody12: 'Schieb beide Koffertruhen auf die Kreidekreuze ✕, damit der Kistendeckel frei wird. Truhen kann man nur schieben, nie ziehen.', undo12: 'Zurück', reset12: 'Neu', moves12: (n) => `Züge: ${n}`, trunksDone12: 'Beide Truhen stehen auf ihren Kreuzen. Der Kistendeckel ist frei.', trunksStuck12: 'Eine Truhe steckt in einer Ecke fest. Zurück oder neu.',
+  chestLocked12: 'Die Truhen blockieren den Kistendeckel.', chestOpen12: 'In der Kiste: ein Tagebuch mit rissigem Ledereinband.', chestEmpty12: 'Die Kiste ist jetzt leer.',
+  diaryTitle12: 'Tagebuch, letzte Seite', diaryBody12: (seq) => `<div class="note">„Das Fenster öffnet sich nur für den, der weiß, was als Nächstes kommt.“<br><br><b style="font-size:1.2em;letter-spacing:.06em">${seq}, ?</b></div>`,
+  windowTitle12: 'Rundes Fenster', windowBody12: '<p>Der Riegel hat Zahlenräder. Welche Zahl kommt als Nächstes?</p>', windowWrong12: 'Der Riegel klemmt und die Räder drehen zurück (−1 Min.).', windowNoDiary12: 'Ein Riegel mit Zahlenrädern. Ohne Hinweis wäre das nur Raten.',
+});
+Object.assign(TXT.de.views, { corridor12: '13. Stock', room12: 'Zimmer 13', attic12: 'Dachboden' });
+Object.assign(TXT.de.svg, { motto12: 'MOTTO', door12: '13', hatch12: 'KLAPPE', wardrobe12: 'SCHRANK', dumb12: 'AUFZUG', toCorr12: '⟵ Flur', chest12: 'KISTE', window12: 'FENSTER', down12: '⟵ runter', grid12: 'SPIEGEL', trunks12: 'TRUHEN' });
+Object.assign(TXT.de.aria, { corrScene12: 'Der Flur im 13. Stock', roomScene12: 'Zimmer 13', atticScene12: 'Der Dachboden', motto12: 'Gerahmtes Motto', note12: 'Zettel an Tür 13', door12: 'Tür 13', hatch12: 'Speiseaufzugsklappe', lamp12: 'Lampe', grid12: 'Spiegelfliesen', wardrobe12: 'Schrank', dumb12: 'Speiseaufzug', goCorr12: 'Zurück in den Flur', trunks12: 'Truhen auf dem Dachboden', chest12: 'Kiste', window12: 'Rundes Fenster', down12: 'Zurück nach unten fahren' });
+Object.assign(TXT.de.items, {
+  crank12: ['Eiserne Kurbel', '', 'Schwer. Passt in eine Vierkantbuchse.'],
+  diary12: ['Tagebuch', '', 'Auf der letzten Seite steht eine Zahlenfolge. Lies sie am Fenster.'],
+});
+Object.assign(TXT.de.notes, {
+  note12n: ['Rückseite des Türzettels', 'Dieselbe Geheimschrift wie das Motto. Jeder Buchstabe um gleich viele Stellen verschoben.'],
+  motto12n: ['Hinter dem Rahmen', '„GRAND PARADOX“ ist der einzige Satz, den jeder Portier auswendig kann. Darum ist er der Schlüssel.'],
+  beam12n: ['In den Schrank geritzt', 'Licht geht geradeaus, bis ein Spiegel es umlenkt. / und \\ lenken verschieden. Fahr ihm mit dem Finger nach.'],
+  attic12n: ['Kreide auf einem Balken', 'Schieben, nie ziehen. Eine Truhe in einer Ecke bleibt für immer in der Ecke.'],
+  diary12n: ['Innenseite des Tagebuchs', 'Jede Zahl verrät, wie man zur nächsten kommt. Schau auf die Abstände, dann auf die Abstände der Abstände.'],
+});
+Object.assign(TXT.de.hints, {
+  c12_door: ['Der Zettel an Tür 13 ist verschlüsselt. Das Motto zeigt dieselben Worte im Klartext und verschlüsselt.', 'Vergleich das G mit seinem Geheimbuchstaben: Zähl, wie weit es verschoben ist. Schieb jeden Buchstaben des Zettels um so viel zurück.', (s) => `Jeden Buchstaben um ${s[0]} zurückschieben. Der Code ist ${s[1]}.`],
+  c12_beam: ['Hinter Tür 13 leuchtet die Lampe auf die Spiegelfliesen. Etwas muss dieses Licht auffangen.', 'Fang bei der Lampe an und folge dem Strahl Fliese für Fliese. Dreh nur den Spiegel, an dem er falsch abbiegt.', (s) => `Spiegel: ${s}.`],
+  c12_up: ['Der Schrank hat dir etwas Schweres gegeben.', 'Wähl die Kurbel und tippe auf den Speiseaufzug.', 'Kurbel → Speiseaufzug → Dachboden.'],
+  c12_trunks: ['Der Kistendeckel ist blockiert. Die Truhen gehören auf die Kreidekreuze.', 'Schieb nie eine Truhe in eine Ecke ohne Kreuz. Plane von den Kreuzen rückwärts. Zurück kostet nichts.', (s) => `Erste Züge: ${s}.`],
+  c12_window: ['Das Tagebuch aus der Kiste hat den Hinweis fürs Fenster.', 'Schreib die Abstände zwischen den Zahlen auf. Sind die nicht gleich, schau auf deren Abstände oder probier Malnehmen.', (n) => `Das Fenster öffnet sich mit ${n}.`],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1525,7 +1610,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 11 ? 1380 : S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 12 ? 75 : S.ch === 11 ? 1380 : S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1749,6 +1834,7 @@ function useItem(id, h) {
   if (S.ch === 9) return useItem9(id, h);
   if (S.ch === 10) return useItem10(id, h);
   if (S.ch === 11) return useItem11(id, h);
+  if (S.ch === 12) return useItem12(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2472,7 +2558,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (S && S.expert && ch >= 5 ? (ch === 11 ? XP_TOTAL11 : XP_TOTAL) : ch === 11 ? TOTAL11 : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (S && S.expert && ch >= 5 ? (ch === 12 ? XP_TOTAL12 : ch === 11 ? XP_TOTAL11 : XP_TOTAL) : ch === 12 ? TOTAL12 : ch === 11 ? TOTAL11 : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -3426,6 +3512,212 @@ function escape11() {
   showEnd(S.overtime ? t('win11EyebrowOver') : t('win11Eyebrow'), t('win11Title'), t('win11Text', mmss(left), S.hints, noteCount11()), left, false);
 }
 function newGame11() { S = freshState11(); if (XP()) { S.expert = true; S.left = XP_TOTAL11; } save(); begin(); say(t('start11')); }
+// ---------- chapter 12: room 13 (cipher → mirror beam → dumbwaiter → trunk pushing → number sequence, each needs the one before)
+const TOTAL12 = 75 * 60, XP_TOTAL12 = 55 * 60;
+Object.assign(ICONS, { crank12: '🔧', diary12: '📔' });
+const noteIds12 = ['note12n', 'motto12n', 'beam12n', 'attic12n', 'diary12n'];
+const MOTTO12 = 'GRAND PARADOX', DIGITS12 = [0, 1, 2, 3, 4, 6, 7, 8, 9];
+const NUMW12 = { en: ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', '', 'SIX', 'SEVEN', 'EIGHT', 'NINE'], de: ['NULL', 'EINS', 'ZWEI', 'DREI', 'VIER', '', 'SECHS', 'SIEBEN', 'ACHT', 'NEUN'] };
+const caesar12 = (s, k) => s.replace(/[A-Z]/g, (c) => String.fromCharCode(65 + ((c.charCodeAt(0) - 65 + k + 26) % 26)));
+const message12 = () => 'CODE ' + S.dcode12.split('').map((d) => NUMW12[lang === 'de' ? 'de' : 'en'][+d]).join(' ');
+// beam: directions 0 up, 1 right, 2 down, 3 left; mirror 0 = '/', 1 = '\'
+const DX12 = [0, 1, 0, -1], DY12 = [-1, 0, 1, 0], TURN12 = [[1, 0, 3, 2], [3, 2, 1, 0]];
+function trace12(n, r0, mir) {
+  let x = 0, y = r0, d = 1; const cells = [];
+  for (let i = 0; i < 4 * n * n; i++) {
+    if (x < 0 || y < 0 || x >= n || y >= n) return { cells, out: x + ',' + y };
+    cells.push(x + ',' + y); const m = mir[x + ',' + y]; if (m !== undefined) d = TURN12[m][d];
+    x += DX12[d]; y += DY12[d];
+  }
+  return { cells, out: null };
+}
+function genBeam12(expert) {
+  const n = expert ? 6 : 5, minTurns = expert ? 5 : 4, decoys = expert ? 5 : 3;
+  for (let tries = 0; tries < 500; tries++) {
+    const r0 = Math.floor(Math.random() * n); let x = 0, y = r0, d = 1; const seen = new Set(), sol = {}; let turns = 0, ok = false;
+    for (let step = 0; step < 40; step++) {
+      seen.add(x + ',' + y);
+      if (Math.random() < 0.45 && step > 0 || step === 0 && Math.random() < 0.3) { const nd = pick([(d + 1) % 4, (d + 3) % 4]); const m = TURN12[0][d] === nd ? 0 : 1; sol[x + ',' + y] = m; d = nd; turns++; }
+      const nx = x + DX12[d], ny = y + DY12[d];
+      if (nx < 0 || ny < 0 || nx >= n || ny >= n) { ok = turns >= minTurns && !(nx === -1 && ny === r0); x = nx; y = ny; break; }
+      if (seen.has(nx + ',' + ny)) break;
+      x = nx; y = ny;
+    }
+    if (!ok) continue;
+    const out = x + ',' + y, free = [];
+    for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) if (!seen.has(a + ',' + b)) free.push(a + ',' + b);
+    const mir = {}; Object.keys(sol).forEach((k) => { mir[k] = Math.random() < 0.5 ? 0 : 1; });
+    shuffle(free).slice(0, decoys).forEach((k) => { mir[k] = Math.random() < 0.5 ? 0 : 1; });
+    if (trace12(n, r0, Object.assign({}, mir, sol)).out !== out) continue;
+    if (trace12(n, r0, mir).out === out) continue;
+    return { n, r0, out, sol, mir };
+  }
+  return { n: 5, r0: 0, out: '5,4', sol: { '4,0': 1 }, mir: { '4,0': 0, '2,2': 0 } };
+}
+const cellName12 = (k) => { const [x, y] = k.split(',').map(Number); return 'ABCDEF'[x] + (y + 1); };
+// attic: hand-made levels, all solved by BFS in room12_test.js (45, 45 and 35 moves)
+const LEVELS12 = [
+  ['#######', '#.    #', '# #.  #', '# @$# #', '##$   #', '#     #', '#######'],
+  ['#######', '##@#  #', '#  $$ #', '#  #  #', '#  .. #', '#   # #', '#######'],
+  ['#######', '##  . #', '# $@  #', '#  #$.#', '#  #  #', '##### #', '#######'],
+];
+function level12(i) {
+  const rows = LEVELS12[i], walls = new Set(), goals = []; let p = null; const b = [];
+  rows.forEach((r, y) => r.split('').forEach((c, x) => { if (c === '#') walls.add(x + ',' + y); if (c === '.') goals.push([x, y]); if (c === '$') b.push([x, y]); if (c === '@') p = [x, y]; }));
+  return { walls, goals, p, b };
+}
+const SKD12 = { U: [0, -1], R: [1, 0], D: [0, 1], L: [-1, 0] }, ARROW12 = { U: '↑', R: '→', D: '↓', L: '←' };
+function skStep12(walls, st, d) {
+  const [dx, dy] = SKD12[d], n = [st.p[0] + dx, st.p[1] + dy]; if (walls.has(n + '')) return null;
+  const bi = st.b.findIndex((q) => q[0] === n[0] && q[1] === n[1]); const b = st.b.map((q) => q.slice());
+  if (bi >= 0) { const n2 = [n[0] + dx, n[1] + dy]; if (walls.has(n2 + '') || b.some((q) => q[0] === n2[0] && q[1] === n2[1])) return null; b[bi] = n2; }
+  return { p: n, b };
+}
+const skDone12 = (goals, b) => goals.every((g) => b.some((q) => q[0] === g[0] && q[1] === g[1]));
+function skSolve12(lv, st) {
+  const key = (s) => s.p + '|' + s.b.map(String).sort().join(';'), prev = new Map([[key(st), null]]), q = [st];
+  for (let qi = 0; qi < q.length && qi < 200000; qi++) {
+    const s = q[qi]; if (skDone12(lv.goals, s.b)) { const path = []; let k = key(s); while (prev.get(k)) { const [pk, d] = prev.get(k); path.push(d); k = pk; } return path.reverse(); }
+    for (const d of 'URDL') { const ns = skStep12(lv.walls, s, d); if (!ns) continue; const nk = key(ns); if (!prev.has(nk)) { prev.set(nk, [key(s), d]); q.push(ns); } }
+  }
+  return null;
+}
+function genSeq12() {
+  for (;;) {
+    const kind = pick(['mul', 'alt', 'grow', 'sq']); let a = [];
+    if (kind === 'mul') { let x = 2 + Math.floor(Math.random() * 5); const m = 2 + Math.floor(Math.random() * 2), b = Math.floor(Math.random() * 6) - 2; for (let i = 0; i < 6; i++) { a.push(x); x = x * m + b; } }
+    if (kind === 'alt') { let x = 1 + Math.floor(Math.random() * 20); const p = 5 + Math.floor(Math.random() * 9), q = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < 6; i++) { a.push(x); x = i % 2 ? x - q : x + p; } }
+    if (kind === 'grow') { let x = 1 + Math.floor(Math.random() * 10), st = 1 + Math.floor(Math.random() * 5); const dd = 1 + Math.floor(Math.random() * 4); for (let i = 0; i < 6; i++) { a.push(x); x += st; st += dd; } }
+    if (kind === 'sq') { const s = 2 + Math.floor(Math.random() * 6), c = Math.floor(Math.random() * 13) - 3; for (let i = 0; i < 6; i++) a.push((s + i) * (s + i) + c); }
+    if (a.every((v) => v > 0) && a[5] < 10000 && new Set(a).size === 6) return { kind, shown: a.slice(0, 5), ans: String(a[5]) };
+  }
+}
+function freshState12() {
+  const xp = XP(), beam = genBeam12(xp), seq = genSeq12(), d = shuffle(DIGITS12.slice()).slice(0, 3).join(''), lv = xp ? pick([0, 1]) : Math.floor(Math.random() * 3), L = level12(lv);
+  return { v: 1, ch: 12, started: Date.now(), left: TOTAL12, ot: 0, hints: 0, hintSeen: {}, view: 'corridor12', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    shift12: 3 + Math.floor(Math.random() * 20), dcode12: d, beam, seq, lv, sk: { p: L.p, b: L.b, moves: 0, hist: [] } };
+}
+const noteCount12 = () => noteIds12.filter((n) => S.f['note_' + n]).length;
+function sceneCorr12() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('corrScene12')}">
+  <rect width="1000" height="470" fill="#1a1622"/><rect y="470" width="1000" height="130" fill="#2a0f14"/><path d="M0 470 L1000 470" stroke="#4a1a22" stroke-width="6"/><circle cx="500" cy="60" r="16" fill="#ffd58a" opacity="0.5"/><circle cx="500" cy="60" r="140" fill="#ffd58a" opacity="0.05"/>
+  ${hot('motto12', `<rect x="60" y="110" width="260" height="170" rx="6" fill="#3a2a1a" stroke="#d9a74a" stroke-width="6"/><rect x="78" y="128" width="224" height="134" fill="#efe6d2"/><path d="M98 170 h184 M98 196 h150 M98 222 h184 M98 244 h120" stroke="#7a2a2a" stroke-width="5" stroke-dasharray="10 6"/><text x="190" y="100" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('motto12')}</text>`)}
+  ${hot('door12', `<rect x="420" y="160" width="170" height="310" fill="#3a1a12" stroke="#120a08" stroke-width="6"/><circle cx="505" cy="215" r="30" fill="none" stroke="#d9a74a" stroke-width="4"/><text x="505" y="227" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="34" fill="#d9a74a">${W('door12')}</text><rect x="555" y="320" width="22" height="40" rx="4" fill="${f.door ? '#7dffb2' : '#8a949a'}"/>`)}
+  ${hot('note12', `<path d="M470 270 h70 v62 h-70z" fill="#ffe9a8" stroke="#6b5f4a" stroke-width="2" transform="rotate(-4 505 300)"/><path d="M480 290 h48 M480 304 h40 M480 318 h44" stroke="#4a3a2a" stroke-width="3"/>`)}
+  ${hot('hatch12', `<rect x="760" y="250" width="130" height="110" fill="#4a4048" stroke="#120a08" stroke-width="5"/><path d="M780 305 h90" stroke="#120a08" stroke-width="4"/><text x="825" y="240" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('hatch12')}</text>`)}
+  </svg>`;
+}
+function sceneRoom12() {
+  const f = S.f, B = S.beam, tr = trace12(B.n, B.r0, B.mir), lit = new Set(tr.cells), s = 260 / B.n;
+  const tiles = []; for (let y = 0; y < B.n; y++) for (let x = 0; x < B.n; x++) { const k = x + ',' + y, m = B.mir[k]; tiles.push(`<rect x="${370 + x * s}" y="${300 + y * s * 0.6}" width="${s - 3}" height="${s * 0.6 - 3}" fill="${lit.has(k) ? '#6b5a2a' : '#2a2430'}"/>${m === undefined ? '' : `<path d="${m === 0 ? `M${372 + x * s} ${297 + (y + 1) * s * 0.6} L${367 + (x + 1) * s} ${302 + y * s * 0.6}` : `M${372 + x * s} ${302 + y * s * 0.6} L${367 + (x + 1) * s} ${297 + (y + 1) * s * 0.6}`}" stroke="#c0e8ff" stroke-width="4"/>`}`); }
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('roomScene12')}">
+  <rect width="1000" height="470" fill="#221c28"/><rect y="290" width="1000" height="310" fill="#18141c"/>
+  ${hot('lamp12', `<path d="M290 ${300 + (B.r0 + 0.5) * s * 0.6} l60 -22 v44z" fill="#ffd58a" opacity="0.8"/><rect x="250" y="${280 + (B.r0 + 0.5) * s * 0.6}" width="44" height="40" rx="6" fill="#8a6a2a"/>`)}
+  ${hot('grid12', `<rect x="364" y="294" width="${B.n * s + 6}" height="${B.n * s * 0.6 + 6}" fill="#120e16"/>${tiles.join('')}<text x="${370 + B.n * s / 2}" y="285" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('grid12')}</text>`)}
+  ${hot('wardrobe12', `<rect x="60" y="60" width="170" height="230" fill="#4a2e1a" stroke="#120a08" stroke-width="5"/><path d="M145 60 v230" stroke="#120a08" stroke-width="4"/><circle cx="145" cy="120" r="10" fill="${f.beam ? '#7dffb2' : '#c0e8ff'}" stroke="#120a08" stroke-width="3"/><text x="145" y="50" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('wardrobe12')}</text>`)}
+  ${hot('dumb12', `<rect x="790" y="90" width="150" height="180" fill="#3a3440" stroke="#120a08" stroke-width="5"/><rect x="805" y="105" width="120" height="150" fill="#120e16"/><circle cx="905" cy="235" r="9" fill="${f.up ? '#7dffb2' : '#8a949a'}"/><text x="865" y="80" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('dumb12')}</text>`)}
+  ${hot('goCorr12', `<rect x="350" y="530" width="300" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toCorr12')}</text>`)}
+  </svg>`;
+}
+function sceneAttic12() {
+  const f = S.f, L = level12(S.lv), c = 34, ox = 380, oy = 250, cells = [];
+  for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) { const k = x + ',' + y; if (L.walls.has(k)) continue; cells.push(`<rect x="${ox + x * c}" y="${oy + y * c * 0.7}" width="${c - 2}" height="${c * 0.7 - 2}" fill="#5a4630"/>`); }
+  L.goals.forEach(([x, y]) => cells.push(`<text x="${ox + x * c + c / 2}" y="${oy + y * c * 0.7 + 19}" text-anchor="middle" font-size="18" fill="#efe6d2">✕</text>`));
+  S.sk.b.forEach(([x, y]) => cells.push(`<rect x="${ox + x * c + 3}" y="${oy + y * c * 0.7 + 1}" width="${c - 8}" height="${c * 0.7 - 4}" rx="3" fill="#8a3a2a" stroke="#120a08" stroke-width="2"/>`));
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('atticScene12')}">
+  <rect width="1000" height="600" fill="#2a2018"/><path d="M0 200 L500 20 L1000 200" stroke="#4a3624" stroke-width="22" fill="none"/><rect y="470" width="1000" height="130" fill="#1e1610"/>
+  ${hot('window12', `<circle cx="500" cy="130" r="62" fill="#0e1830" stroke="#8a6a3a" stroke-width="10"/><path d="M500 68 v124 M438 130 h124" stroke="#8a6a3a" stroke-width="6"/><circle cx="560" cy="160" r="6" fill="${S.done ? '#7dffb2' : '#d9a74a'}"/><text x="500" y="222" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('window12')}</text>`)}
+  ${hot('trunks12', `${cells.join('')}<text x="${ox + 3.5 * c}" y="${oy + 7 * c * 0.7 + 18}" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('trunks12')}</text>`)}
+  ${hot('chest12', `<rect x="740" y="330" width="190" height="110" rx="8" fill="#5a3a1a" stroke="#120a08" stroke-width="5"/><path d="M740 362 h190" stroke="#120a08" stroke-width="4"/><rect x="822" y="372" width="26" height="22" rx="3" fill="${f.chest ? '#7dffb2' : '#d9a74a'}"/><text x="835" y="320" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('chest12')}</text>`)}
+  ${hot('down12', `<rect x="60" y="360" width="200" height="90" fill="#3a3440" stroke="#120a08" stroke-width="5"/><text x="160" y="414" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="700" font-size="20" fill="#fff">${W('down12')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { corridor12: sceneCorr12, room12: sceneRoom12, attic12: sceneAttic12 });
+function openBeam12() {
+  openModal(t('beamTitle12'), `<p>${t('beamBody12')}</p><div id="bm"></div><p class="tip" id="bmMsg"></p>`, (b) => {
+    const box = b.querySelector('#bm'), msg = b.querySelector('#bmMsg'), B = S.beam, n = B.n;
+    const draw = () => {
+      const tr = trace12(n, B.r0, B.mir), lit = new Set(tr.cells), hit = tr.out === B.out;
+      box.innerHTML = ''; box.style.cssText = `display:grid;grid-template-columns:repeat(${n + 2},1fr);gap:3px;max-width:340px;margin:0 auto`;
+      for (let y = -1; y <= n; y++) for (let x = -1; x <= n; x++) {
+        const k = x + ',' + y, inside = x >= 0 && y >= 0 && x < n && y < n, m = B.mir[k];
+        let label = '', st = 'aspect-ratio:1;display:grid;place-items:center;border-radius:6px;font:700 20px var(--font-mono);';
+        if (!inside) { label = x === -1 && y === B.r0 ? '💡' : k === B.out ? (hit ? '🟢' : '◎') : (y === -1 && x >= 0 && x < n ? 'ABCDEF'[x] : x === -1 && y >= 0 && y < n ? String(y + 1) : ''); st += 'color:var(--haze);font-size:13px;'; }
+        else { label = m === undefined ? (lit.has(k) ? '·' : '') : m === 0 ? '╱' : '╲'; st += `background:${lit.has(k) ? 'rgba(255,213,138,0.45)' : 'rgba(255,255,255,0.06)'};color:#c0e8ff;`; }
+        const el = mk(inside && m !== undefined ? 'button' : 'div', '', label); el.style.cssText = st + (inside && m !== undefined ? 'border:1.5px solid rgba(192,232,255,0.5);cursor:pointer;' : '');
+        if (inside && m !== undefined) { el.setAttribute('data-act', 'mir' + cellName12(k)); el.addEventListener('click', () => { if (S.f.beam) return; B.mir[k] = 1 - B.mir[k]; Sound.click(); save(); draw(); }); }
+        box.appendChild(el);
+      }
+      if (hit && !S.f.beam) { S.f.beam = true; Sound.unlock(); Sound.win(); msg.textContent = t('beamDone12'); say(t('beamDone12')); save(); renderScene(); }
+      else if (hit) msg.textContent = t('beamOk12');
+    };
+    draw();
+  });
+}
+function openSoko12() {
+  const L = level12(S.lv);
+  openModal(t('trunksTitle12'), `<p>${t('trunksBody12')}</p><div id="sk"></div><p class="tip" id="skMsg"></p><div class="row" id="skPad"></div><div class="row" id="skTools"></div>`, (b) => {
+    const box = b.querySelector('#sk'), msg = b.querySelector('#skMsg');
+    const draw = () => {
+      box.innerHTML = ''; box.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;max-width:300px;margin:0 auto';
+      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
+        const k = x + ',' + y, wall = L.walls.has(k), goal = L.goals.some((g) => g[0] === x && g[1] === y), box2 = S.sk.b.some((q) => q[0] === x && q[1] === y), me = S.sk.p[0] === x && S.sk.p[1] === y;
+        const el = mk('div', '', me ? '🧍' : box2 ? (goal ? '🟩' : '🧳') : goal ? '✕' : '');
+        el.style.cssText = `aspect-ratio:1;display:grid;place-items:center;font-size:20px;border-radius:4px;color:#efe6d2;background:${wall ? '#120e16' : goal ? '#4a5a3a' : '#5a4630'}`; box.appendChild(el);
+      }
+      const corner = S.sk.b.some(([x, y]) => !L.goals.some((g) => g[0] === x && g[1] === y) && (L.walls.has([x, y - 1] + '') || L.walls.has([x, y + 1] + '')) && (L.walls.has([x - 1, y] + '') || L.walls.has([x + 1, y] + '')));
+      msg.textContent = S.f.trunks ? t('trunksDone12') : corner ? t('trunksStuck12') : t('moves12', S.sk.moves);
+    };
+    const move = (d) => {
+      if (S.f.trunks) return; const ns = skStep12(L.walls, S.sk, d); if (!ns) { Sound.nope(); return; }
+      S.sk.hist.push({ p: S.sk.p, b: S.sk.b }); S.sk.p = ns.p; S.sk.b = ns.b; S.sk.moves++; Sound.click();
+      if (skDone12(L.goals, S.sk.b)) { S.f.trunks = true; Sound.unlock(); Sound.win(); say(t('trunksDone12')); renderScene(); }
+      save(); draw();
+    };
+    const pad = b.querySelector('#skPad'), tools = b.querySelector('#skTools');
+    for (const d of 'LURD') { const btn = mk('button', 'key', ARROW12[d]); btn.style.cssText = 'min-width:64px;font-size:24px'; btn.setAttribute('data-act', 'go' + d); btn.addEventListener('click', () => move(d)); pad.appendChild(btn); }
+    act(tools, 'undo', t('undo12'), () => { if (S.f.trunks || !S.sk.hist.length) return; const h = S.sk.hist.pop(); S.sk.p = h.p; S.sk.b = h.b; S.sk.moves++; Sound.click(); save(); draw(); }, 'btn ghost');
+    act(tools, 'reset', t('reset12'), () => { if (S.f.trunks) return; const L0 = level12(S.lv); S.sk = { p: L0.p, b: L0.b, moves: 0, hist: [] }; Sound.click(); save(); draw(); }, 'btn ghost');
+    draw(); S.f.note_attic12n = true; save();
+  });
+}
+function openWindow12() {
+  openCodePad(t('windowTitle12'), t('windowBody12') + t('diaryBody12', S.seq.shown.join(', ')), { len: S.seq.ans.length, ok: (x) => x === S.seq.ans, why: () => { S.left -= 60; tickClock(); return t('windowWrong12'); } }, (msg) => {
+    take('diary12'); msg.textContent = t('win12Title'); setTimeout(escape12, 1400);
+  });
+}
+Object.assign(HOTS, {
+  motto12: () => { openModal(t('mottoTitle12'), t('mottoBody12', MOTTO12, caesar12(MOTTO12, S.shift12))); S.f.note_motto12n = true; save(); },
+  note12: () => { openModal(t('noteTitle12'), t('noteBody12', caesar12(message12(), S.shift12))); S.f.note_note12n = true; save(); },
+  door12: () => { if (S.f.door) { go('room12'); say(t('toRoom12')); return; } openCodePad(t('doorTitle12'), t('doorBody12'), S.dcode12, (msg) => { S.f.door = true; msg.textContent = t('doorOpen12'); say(t('doorOpen12')); Sound.door(); setTimeout(() => { if (!$('modal').hidden) closeModal(); go('room12'); say(t('toRoom12')); }, 1200); }); },
+  hatch12: () => { Sound.nope(); say(t('hatch12')); },
+  lamp12: () => say(t('lamp12')),
+  grid12: () => openBeam12(),
+  wardrobe12: () => { if (!S.f.beam) { Sound.nope(); say(t('wardrobeLocked12')); return; } if (S.f.crank) { say(t('wardrobeEmpty12')); return; } S.f.crank = true; give('crank12'); Sound.door(); say(t('wardrobeOpen12')); save(); renderScene(); setTimeout(() => openNote('beam12n'), 900); },
+  dumb12: () => { if (S.f.up) { go('attic12'); say(t('toAttic12')); return; } Sound.nope(); say(t('dumbLocked12')); },
+  goCorr12: () => { go('corridor12'); say(t('backCorr12')); },
+  trunks12: () => openSoko12(),
+  chest12: () => { if (!S.f.trunks) { Sound.nope(); say(t('chestLocked12')); return; } if (S.f.chest) { say(t('chestEmpty12')); return; } S.f.chest = true; give('diary12'); Sound.unlock(); say(t('chestOpen12')); save(); renderScene(); setTimeout(() => openNote('diary12n'), 900); },
+  window12: () => { if (!S.f.chest) { Sound.nope(); say(t('windowNoDiary12')); return; } openWindow12(); },
+  down12: () => { go('room12'); say(t('backRoom12')); },
+});
+function useItem12(id, h) {
+  if (id === 'crank12' && h === 'dumb12') { take('crank12'); S.f.up = true; Sound.door(); say(t('dumbCrank12')); renderScene(); setTimeout(() => { go('attic12'); say(t('toAttic12')); }, 900); return true; }
+  if (id === 'diary12') { if (h === 'window12') openWindow12(); else openModal(t('diaryTitle12'), t('diaryBody12', S.seq.shown.join(', '))); return true; }
+  return false;
+}
+function escape12() {
+  if (!S || S.done || S.ch !== 12) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best12 = Math.max(profile.best12 || 0, left);
+  profile.ch12done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  if (!$('modal').hidden) closeModal();
+  showEnd(S.overtime ? t('win12EyebrowOver') : t('win12Eyebrow'), t('win12Title'), t('win12Text', mmss(left), S.hints, noteCount12()), left, false);
+}
+function newGame12() { S = freshState12(); if (XP()) { S.expert = true; S.left = XP_TOTAL12; } save(); begin(); say(t('start12')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -3464,12 +3756,15 @@ const GOALS9 = [
 const GOALS10 = [
   ['c10_code', () => S.f.codeSet], ['c10_safe', () => S.f.safeOpen], ['c10_plant', () => S.f.planted], ['c10_key', () => S.f.keyTaken], ['c10_door', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const GOALS12 = [
+  ['c12_door', () => S.f.door], ['c12_beam', () => S.f.beam], ['c12_up', () => S.f.up], ['c12_trunks', () => S.f.trunks], ['c12_window', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
 const GOALS11 = [
   ['c11_rack', () => S.f.rack], ['c11_board', () => S.f.board], ['c11_door', () => S.f.lugOpen], ['c11_case', () => S.f.case], ['c11_safe', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c11_rack: () => S.names.map((n, g) => `${n} ${ROOMS11[S.sol[g]]}`).join(', '), c11_board: () => ROOMS11.map((R, r) => `${R} ${TIMES11[S.times[guestIn11(r)]]}`).join(', '), c11_case: () => S.heavy, c11_safe: () => S.code, c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const HINT_ARG = { c12_door: () => [S.shift12, S.dcode12], c12_beam: () => Object.keys(S.beam.sol).map((k) => cellName12(k) + ' ' + (S.beam.sol[k] ? '╲' : '╱')).join(', '), c12_trunks: () => { const L = level12(S.lv); const p = skSolve12(L, S.sk) || []; return p.slice(0, 8).map((d) => ARROW12[d]).join(' ') + (p.length > 8 ? ' …' : ''); }, c12_window: () => S.seq.ans, c11_rack: () => S.names.map((n, g) => `${n} ${ROOMS11[S.sol[g]]}`).join(', '), c11_board: () => ROOMS11.map((R, r) => `${R} ${TIMES11[S.times[guestIn11(r)]]}`).join(', '), c11_case: () => S.heavy, c11_safe: () => S.code, c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 11 ? GOALS11 : S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 12 ? GOALS12 : S.ch === 11 ? GOALS11 : S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -3505,8 +3800,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 11 ? profile.best11 : S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 11); $('btnNextCh').textContent = t(S.ch === 10 ? 'nextCh11' : S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 12 ? profile.best12 : S.ch === 11 ? profile.best11 : S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 12); $('btnNextCh').textContent = t(S.ch === 11 ? 'nextCh12' : S.ch === 10 ? 'nextCh11' : S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -3514,7 +3809,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 11 ? 'up11' : S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 12 ? 'up12' : S.ch === 11 ? 'up11' : S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -3527,8 +3822,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 11 ? newGame11() : S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 10 ? newGame11() : S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 12 ? newGame12() : S && S.ch === 11 ? newGame11() : S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 11 ? newGame12() : S && S.ch === 10 ? newGame11() : S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -3554,6 +3849,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh12 = 0;
+$('btnCh12').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh12 > 4000) { armedCh12 = Date.now(); $('btnCh12').textContent = t('confirmNew'); return; }
+  armedCh12 = 0; newGame12();
 });
 let armedCh11 = 0;
 $('btnCh11').addEventListener('click', () => {
@@ -3603,7 +3904,7 @@ $('btnCh4').addEventListener('click', () => {
   if (sv && !sv.done && Date.now() - armedCh4 > 4000) { armedCh4 = Date.now(); $('btnCh4').textContent = t('confirmNew'); return; }
   armedCh4 = 0; newGame4();
 });
-$('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say(t('back')); });
+$('btnContinue').addEventListener('click', () => { S = store.get(SAVE_KEY, null); if (!S || S.done) { newGame(); return; } begin(); say(t(S.ch >= 11 ? 'backOn' : 'back')); });
 $('btnMenu').addEventListener('click', () => { paused = true; save(); showStart(); });
 $('navL').addEventListener('click', () => go(S.view === 'bed' ? 'desk' : 'bed'));
 $('navR').addEventListener('click', () => go(S.view === 'bed' ? 'desk' : 'bed'));
@@ -3636,6 +3937,7 @@ function showStart() {
   $('btnCh9').hidden = false; $('btnCh9').textContent = t('ch9Btn') + (profile.ch9done ? ' ✓' : ''); armedCh9 = 0;
   $('btnCh10').hidden = false; $('btnCh10').textContent = t('ch10Btn') + (profile.ch10done ? ' ✓' : ''); armedCh10 = 0;
   $('btnCh11').hidden = false; $('btnCh11').textContent = t('ch11Btn') + (profile.ch11done ? ' ✓' : ''); armedCh11 = 0;
+  $('btnCh12').hidden = false; $('btnCh12').textContent = t('ch12Btn') + (profile.ch12done ? ' ✓' : ''); armedCh12 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
