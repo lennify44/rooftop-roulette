@@ -140,7 +140,7 @@ body {
         <h1 class="logo">Paper Plane<br><span>Post</span></h1>
         <svg viewBox="0 0 320 160" aria-hidden="true" class="hero-art"><defs><linearGradient id="ppsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2f6a"/><stop offset="0.7" stop-color="#ff9a6a"/><stop offset="1" stop-color="#ffd58a"/></linearGradient></defs><rect width="320" height="160" fill="url(#ppsky)"/><rect x="0" y="40" width="60" height="120" fill="#3a3550"/><rect x="40" y="92" width="20" height="22" fill="#ffd58a"/><rect x="236" y="10" width="84" height="150" fill="#4a3f66"/><g fill="#2a2440"><rect x="236" y="26" width="14" height="18"/><rect x="236" y="62" width="14" height="18"/><rect x="236" y="134" width="14" height="18"/></g><rect x="236" y="98" width="14" height="18" fill="#ffe27a"/><rect x="236" y="98" width="14" height="18" fill="none" stroke="#fff" stroke-width="2"/><circle cx="243" cy="107" r="22" fill="#ffe27a" opacity="0.25"/><path d="M62 98 Q120 40 170 70 T228 104" stroke="#fff" stroke-width="2.5" stroke-dasharray="6 6" fill="none" opacity="0.8"/><g transform="translate(206 92) rotate(18)"><path d="M0 0 L-26 -8 L-20 0 L-26 8 Z" fill="#fff" stroke="#2a2440" stroke-width="2"/><path d="M0 0 L-20 0" stroke="#9aa8d0" stroke-width="1.5"/></g><g fill="#2a2440"><path d="M150 36 q6 -6 12 0 q6 -6 12 0" stroke="#2a2440" stroke-width="2.5" fill="none"/></g><rect y="146" width="320" height="14" fill="#2a2440"/><g fill="#ffd23f"><circle cx="270" cy="96" r="4"/><circle cx="280" cy="112" r="3"/><circle cx="262" cy="120" r="3"/></g><text x="306" y="40" text-anchor="end" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="24" fill="#ffe27a">PERFECT!</text></svg>
         <p class="lede">Fly every letter into a lit window before the inbox overflows.</p>
-        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button></div>
+        <div class="cta-row"><button class="btn" id="btnPlay" type="button"><span>Play</span></button><button class="link-btn" id="btnDaily" type="button">📅 Daily challenge</button></div>
         <p class="best" id="bestStart"></p>
         <div class="skins"><p class="label" id="skinLabel">Plane</p><div class="skin-row" id="skinRow"></div></div>
         <details class="howto"><summary>How to play</summary><p>Letters pile up in your inbox. Windows in the building across the street light up for a few seconds: that's who is waiting for mail. Tap at the height of a lit window to throw a paper plane towards it. While it flies, hold your thumb down to pull its nose up (it climbs and slows down) and let go to dive (it speeds up). Fly it into a lit window. A hit dead in the middle is PERFECT and scores double, gold express letters score triple, pink love letters score ×5 and give a heart back if you fly them into a window with a heart, and every delivery in a row raises your streak multiplier. A plane that hits the wall, a dark window, a pigeon or the street is lost. If more than 6 letters pile up, you lose a heart. Every 10 deliveries the next block gets windier and busier. New plane designs unlock as your best score grows.</p></details>
@@ -148,7 +148,7 @@ body {
       </div>
       <div class="side">
         <h2 class="label">World leaderboard <span id="lbWho"></span></h2>
-        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button></div>
+        <div class="lb-tabs" id="lbTabs"><button type="button" data-lb="alltime" aria-pressed="true">All time</button><button type="button" data-lb="daily" aria-pressed="false">Today</button><button type="button" data-lb="challenge" aria-pressed="false">📅 Daily</button></div>
         <ol class="toplist" id="lbList"><li class="none">Loading…</li></ol>
       </div>
     </div>
@@ -193,6 +193,10 @@ const $ = (id) => document.getElementById(id);
 const cv = $('game'), ctx = cv.getContext('2d');
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+// the daily challenge: letters, lit windows and pigeons/drones come from seeds that are the same for everyone today
+let srandL = Math.random, srandW = Math.random, srandP = Math.random;
+function seeded(str) { let h = 1779033703; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } let a = h >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const sr = (f, a, b) => a + f() * (b - a);
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, k) => a + (b - a) * k;
 const fmt = (n) => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -290,15 +294,17 @@ const fresh = () => ({ running: false, paused: false, ended: false, dying: 0, t:
 const game = fresh();
 const mult = () => Math.min(8, 1 + Math.floor(game.streak / 3));
 // gold express letters (block 2+) score ×3; pink love letters score ×5 and give a heart back in a window with a heart
-const newLetter = () => { const r = Math.random(); return { express: game.block >= 2 && r < 0.15, love: r >= 0.88 }; };
-function startRun() {
+const newLetter = () => { const r = srandL(); return { express: game.block >= 2 && r < 0.15, love: r >= 0.88 }; };
+function startRun(daily) {
   Sound.init(); layout();
-  Object.assign(game, fresh(), { running: true });
+  daily = daily === true; const day = todayKey();
+  srandL = daily ? seeded(`plane-letters-${day}`) : Math.random; srandW = daily ? seeded(`plane-windows-${day}`) : Math.random; srandP = daily ? seeded(`plane-birds-${day}`) : Math.random;
+  Object.assign(game, fresh(), { running: true, daily });
   game.inbox = [newLetter(), newLetter(), newLetter(), newLetter()];
   ['screenStart', 'screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; });
   $('hud').hidden = false; $('hint').hidden = false; $('hint').classList.remove('fade');
   game.coach = profile.runs < 2 ? 0 : -1; $('hint').textContent = game.coach === 0 ? 'TAP level with a LIT window to throw!' : 'Tap at the height to throw · hold = nose up'; if (game.coach < 0) setTimeout(() => $('hint').classList.add('fade'), 4000);
-  game.call = { text: 'BLOCK 1', t: 0, big: true }; Sound.startBeat(); updateHud();
+  game.call = { text: daily ? 'DAILY · BLOCK 1' : 'BLOCK 1', t: 0, big: true }; Sound.startBeat(); updateHud();
 }
 function nextBlock() {
   game.block++; game.wave = game.block;
@@ -309,7 +315,7 @@ function nextBlock() {
   game.lit = []; game.litT = 1.2;
   if (game.block >= 4 && !game.cleaner) game.cleaner = { y: 120, dir: 1 };
 }
-function updateHud() { $('score').textContent = fmt(game.score); $('streak').textContent = `streak ${game.streak} · ×${mult()}`; $('hp').textContent = '♥'.repeat(Math.max(0, game.hp)) + '♡'.repeat(Math.max(0, 3 - game.hp)); }
+function updateHud() { $('score').textContent = fmt(game.score); $('streak').textContent = `${game.daily ? '📅 ' : ''}streak ${game.streak} · ×${mult()}`; $('hp').textContent = '♥'.repeat(Math.max(0, game.hp)) + '♡'.repeat(Math.max(0, 3 - game.hp)); }
 function pop(t, x, y, c, life = 0.8, size = 1) { game.pops.push({ t, x, y, c, life, max: life, size }); }
 function burst(x, y, c, n, sp = 300) { for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), v = rnd(sp * 0.3, sp); game.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(0.3, 0.8), max: 0.8, c, r: rnd(2, 5) }); } }
 function endRun() {
@@ -317,7 +323,8 @@ function endRun() {
   game.ended = true; game.running = false; Sound.stopBeat();
   const sc = Math.floor(game.score), isBest = sc > profile.best;
   profile.best = Math.max(profile.best, sc); profile.bestLetters = Math.max(profile.bestLetters, game.letters); profile.bestStreak = Math.max(profile.bestStreak, game.bestStreak); profile.runs++; saveProfile();
-  $('overEyebrow').textContent = isBest && sc > 0 ? 'New best score!' : 'The inbox won';
+  if (game.daily) { const k = todayKey(); profile.daily = profile.daily && profile.daily.day === k ? profile.daily : { day: k, best: 0 }; profile.daily.best = Math.max(profile.daily.best, sc); saveProfile(); }
+  $('overEyebrow').textContent = game.daily ? `Daily challenge · today's best ${fmt(profile.daily.best)}` : isBest && sc > 0 ? 'New best score!' : 'The inbox won';
   $('overTitle').textContent = fmt(sc);
   $('overLetters').textContent = game.letters; $('overStreak').textContent = game.bestStreak; $('overPerfect').textContent = game.perfects; $('overBest').textContent = fmt(profile.best);
   $('overTip').textContent = game.letters < 5 ? 'Tap level with a lit window to throw at it, then hold to climb and let go to dive. Aim a little high: planes sink.' : game.perfects < 3 ? 'Hit the middle of a window for PERFECT: double points.' : 'Keep the streak alive: every 3 deliveries in a row raise the multiplier, up to ×8.';
@@ -362,8 +369,8 @@ function update(dtReal) {
   game.litT -= dt;
   if (game.litT <= 0 && game.lit.length < maxLit) {
     const free = FL.filter((f) => !game.lit.some((l) => l.i === f.i) && !(game.cleaner && Math.abs(game.cleaner.y - (f.y + f.h / 2)) < 50));
-    if (free.length) { const f = pick(free), dur = Math.max(3.8, rnd(7, 9.5) - b * 0.5); game.lit.push({ i: f.i, t: dur, max: dur, heart: !game.lit.some((l) => l.heart) && Math.random() < 0.3 }); }
-    game.litT = rnd(0.8, 1.6);
+    if (free.length) { const f = free[Math.floor(srandW() * free.length)], dur = Math.max(3.8, sr(srandW, 7, 9.5) - b * 0.5); game.lit.push({ i: f.i, t: dur, max: dur, heart: !game.lit.some((l) => l.heart) && srandW() < 0.3 }); }
+    game.litT = sr(srandW, 0.8, 1.6);
   }
   for (const l of game.lit) { l.t -= dt; if (l.t <= 0) { l.dead = true; const f = FL[l.i]; if (f) pop('missed', FACADE + 20, f.y, '#ff9a8a', 0.8, 0.8); breakStreak(); } }
   game.lit = game.lit.filter((l) => !l.dead && FL[l.i]);
@@ -372,10 +379,10 @@ function update(dtReal) {
   game.wind.x = b >= 2 ? -25 - b * 6 + Math.sin(game.wind.ph * 0.7) * 20 : 0;
   game.wind.y = b >= 2 ? Math.sin(game.wind.ph) * (18 + b * 6) : 0;
   // pigeons from block 3, drones from block 5, the window cleaner from block 4
-  if (b >= 3) { game.pigeonT -= dt; if (game.pigeonT <= 0) { game.pigeonT = Math.max(1.6, 5 - b * 0.4) * rnd(0.7, 1.3); const dir = Math.random() < 0.5 ? 1 : -1; game.pigeons.push({ x: dir > 0 ? 90 : FACADE - 10, y: rnd(80, STREET() - 60), vx: dir * rnd(50, 90), flap: 0 }); } }
+  if (b >= 3) { game.pigeonT -= dt; if (game.pigeonT <= 0) { game.pigeonT = Math.max(1.6, 5 - b * 0.4) * sr(srandP, 0.7, 1.3); const dir = srandP() < 0.5 ? 1 : -1; game.pigeons.push({ x: dir > 0 ? 90 : FACADE - 10, y: sr(srandP, 80, STREET() - 60), vx: dir * sr(srandP, 50, 90), flap: 0 }); } }
   for (const p of game.pigeons) { p.x += p.vx * dt; p.flap += dt * 12; p.y += Math.sin(p.flap * 0.4) * 10 * dt; if (p.x < 80 || p.x > FACADE) p.dead = true; }
   game.pigeons = game.pigeons.filter((p) => !p.dead);
-  if (b >= 5 && game.drones.length < Math.min(3, b - 4)) game.drones.push({ x: rnd(150, 270), y: rnd(120, STREET() - 120), ph: rnd(0, 6), amp: rnd(60, 140) });
+  if (b >= 5 && game.drones.length < Math.min(3, b - 4)) game.drones.push({ x: sr(srandP, 150, 270), y: sr(srandP, 120, STREET() - 120), ph: sr(srandP, 0, 6), amp: sr(srandP, 60, 140) });
   for (const d of game.drones) { d.ph += dt * 1.3; d.yy = d.y + Math.sin(d.ph) * d.amp; }
   if (game.cleaner) { const c = game.cleaner; c.y += c.dir * (40 + b * 6) * dt; if (c.y < 70) c.dir = 1; if (c.y > STREET() - 80) c.dir = -1; }
   // the plane
@@ -531,8 +538,9 @@ function renderSkins() {
   }
 }
 function showStart() { renderSkins(); ['screenOver', 'screenPause'].forEach((id) => { $(id).hidden = true; }); $('bestStart').textContent = profile.best ? `Best: ${fmt(profile.best)} · ${profile.bestLetters} letters · streak ${profile.bestStreak}` : ''; $('screenStart').hidden = false; renderLeaderboard(); layout(); }
-$('btnPlay').addEventListener('click', startRun);
-$('btnAgain').addEventListener('click', startRun);
+$('btnPlay').addEventListener('click', () => startRun(false));
+$('btnDaily').addEventListener('click', () => startRun(true));
+$('btnAgain').addEventListener('click', () => startRun(game.daily));
 $('btnMenu').addEventListener('click', showStart);
 
 // ---------- world leaderboard (the shared Cloudflare Worker; only the public GitHub version can reach it)
