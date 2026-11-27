@@ -57,6 +57,7 @@ body {
 @keyframes blink { 50% { opacity: 0.35; } }
 .loc { flex: 1; min-width: 0; text-align: center; font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--brass); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .clock small { white-space: nowrap; }
+@media (max-width: 440px) { .clock { flex-direction: column; align-items: flex-start; gap: 0; line-height: 1.05; } .clock small { font-size: 11px; } .loc { font-size: 15px; white-space: normal; line-height: 1.1; } .bar { gap: 8px; } }
 .tools { display: flex; gap: 8px; }
 .tool { min-width: 40px; height: 40px; padding: 0 12px; display: grid; place-items: center; border: 1.5px solid rgba(243, 236, 224, 0.3); border-radius: 20px; background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 14px; }
 .tool svg { width: 18px; height: 18px; }
@@ -220,6 +221,7 @@ body {
           <button class="btn" id="btnCh8" type="button" data-i18n="ch8Btn" hidden>Chapter 8</button>
           <button class="btn" id="btnCh9" type="button" data-i18n="ch9Btn" hidden>Chapter 9</button>
           <button class="btn" id="btnCh10" type="button" data-i18n="ch10Btn" hidden>Chapter 10</button>
+          <button class="btn" id="btnCh11" type="button" data-i18n="ch11Btn" hidden>Chapter 11</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -268,7 +270,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, ch11done: false, best11: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1379,6 +1381,90 @@ Object.assign(TXT.de.hints, {
   c10_key: ['Der alte Gast wollte etwas neben der Eichel vergraben.', 'Sieh heute aus dem Fenster.', 'Heute: Tippe auf die große Eiche vor dem Fenster.'],
   c10_door: ['Die Tür von 404 hat doch ein Schlüsselloch.', 'Du hast den Originalschlüssel.', 'Heute: Wähl den Originalschlüssel und tippe auf die Tür.'],
 });
+Object.assign(TXT.en, {
+  ch11Btn: 'Chapter 11: Night Shift', nextCh11: 'On to chapter 11',
+  start11: 'A year later. Sam has retired, and the Grand Paradox needs a night porter who knows the hotel inside out: you. 22:00, your first night shift. The guest log is smudged, four keys hang in the wrong places, the wake-up calls are not set, and the manager wants the old night-porter book back in the safe by 23:00. Nothing here works on its own: one job leads to the next.',
+  up11Eyebrow: '23:00 · the manager', up11Title: 'Shift failed', up11Text: 'The manager walks in at eleven sharp, looks at the empty safe and sighs: “Tomorrow. Same time.” (Or keep working in overtime.)',
+  win11Eyebrow: 'Chapter 11 complete', win11EyebrowOver: 'Chapter 11 complete, in overtime', win11Title: 'A perfect night shift',
+  win11Text: (left, h, n) => `The safe clicks shut over the old book. The keys are right, the wake-up calls are set, the luggage room is tidy. On the inside of the safe door you find a letter that was not there before: “Night porter, room 13 needs you. Come up after midnight.” Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  rec11: 'The reception at night: the key rack, the smudged guest log, a spike with paper slips, an old switchboard, the safe and the door to the luggage room.', toLug11: 'The luggage room: nine identical suitcases and an old balance scale.', backRec11: 'Back at the reception desk.',
+  logTitle11: 'Guest log (smudged)', logBody11: (clues) => `<div class="note">Tonight’s guests: rooms 411 to 414.<br>The names are smudged, but some lines can still be read:<br><br>${clues}</div>`,
+  rackTitle11: 'Key rack', rackBody11: 'Hang each guest’s key on the right hook. Tap a guest to change their room.', rackCheck11: 'Check the keys', rackWrong11: 'The rack drawer stays locked. At least one key hangs wrong.', rackDone11: 'All four keys are right. The drawer under the rack slides open: a little brass key with a tag “switchboard” and a note.', rackOpen11: 'The keys are right. The drawer is empty now.',
+  spikeTitle11: 'Request slips', spike11: 'Paper slips on the spike: tonight’s wake-up requests.',
+  boardTitle11: 'Switchboard', boardBody11: 'One dial per room. Set each room to the time its guest asked for.', boardSet11: 'Set the wake-up calls', boardWrong11: 'The board buzzes angrily. At least one room is set wrong.', boardDone11: 'Every lamp turns green. The board prints a small paper ticket: LUGGAGE ROOM · NIGHT ACCESS.', boardLocked11: 'The switchboard is locked. Its key must be somewhere at the reception.', boardOk11: 'All wake-up calls are set. The lamps glow green.',
+  doorLocked11: 'The luggage room door has a slot: TICKET. No ticket, no entry.', doorOpen11: 'The ticket slides in, the door unlocks.',
+  scaleTitle11: 'Balance scale', scaleBody11: (left) => `Nine cases, one of them heavier. Put cases on the left or right pan and weigh. Weighings left: <b>${left}</b>. Then open the case you think it is.`,
+  pan11: { off: '–', l: 'left', r: 'right' }, weigh11: 'Weigh', open11: 'Open a case', openWhich11: 'Which case do you open?',
+  resLeft11: 'The LEFT pan goes down.', resRight11: 'The RIGHT pan goes down.', resEven11: 'The scale stays level.', noWeigh11: 'No weighings left. Open a case.',
+  wrongCase11: 'ALARM! Wrong case: it was full of towels, and opening it set off the alarm (−3 min). The night manager re-stacks everything, and the heavy case is somewhere else now.', rightCase11: 'Heavy indeed: inside lies a battered leather book, NIGHT PORTER 1912.', casesEmpty11: 'The cases are stacked neatly again.',
+  bookTitle11: 'Night-porter book 1912', bookBody11: '<div class="note">… and the last rule, for every night porter after me:<br><br><b>The safe opens with the room number of the guest who wants to be woken FIRST.</b><br><br>— Night porter, 1912</div>',
+  safeTitle11: 'Safe', safeBody11: '<p>A heavy safe under the desk. Three digits.</p>', safeOpened11: 'The safe swings open. You lay the old book inside.',
+  bell11: 'You ring the desk bell. Nobody comes. You are the one who comes.',
+});
+Object.assign(TXT.en.views, { reception11: 'Reception at night', luggage11: 'Luggage room' });
+Object.assign(TXT.en.svg, { rack11: 'KEYS', board11: 'SWITCHBOARD', lug11: 'LUGGAGE', toRec11: '⟵ reception', safe11: 'SAFE', log11: 'LOG' });
+Object.assign(TXT.en.aria, { recScene11: 'The reception at night', lugScene11: 'The luggage room', rack11: 'Key rack', log11: 'Guest log', spike11: 'Request slips', board11: 'Switchboard', safe11: 'Safe', door11: 'Luggage room door', cases11: 'Suitcases and balance scale', goRec11: 'Back to the reception', bell11: 'Desk bell' });
+Object.assign(TXT.en.items, {
+  bkey11: ['Switchboard key', '', 'A little brass key with a tag: switchboard.'],
+  ticket11: ['Luggage ticket', '', 'LUGGAGE ROOM · NIGHT ACCESS.'],
+  book11: ['Night-porter book', '', 'Leather, 1912. Read it at the desk.'],
+});
+Object.assign(TXT.en.notes, {
+  log11n: ['Margin of the guest log', 'Night porters before you always wrote the guests down in pencil. Somebody spilled coffee on it. Probably the manager.'],
+  spike11n: ['Bottom slip on the spike', '“Night porter: wake-up calls are by ROOM on the board, but guests ask by NAME. Know your guests.” — Sam'],
+  board11n: ['Sticker on the switchboard', 'Installed 1912. Wake-up calls before 5:30 are not allowed. Guests sleep. Night porters do not.'],
+  book11n: ['First page of the book', 'This book belongs in the safe at night and on the desk by day. Whoever keeps the book keeps the hotel.'],
+  cases11n: ['Label on the scale', 'One weighing finds one heavy case among three. Two weighings find it among nine. A third weighing wakes the manager.'],
+});
+Object.assign(TXT.en.hints, {
+  c11_rack: ['Who sleeps where? The smudged guest log has clues. Start with the clue that rules out the most.', 'Try each room for the guest with the most clues and check the others against it. Exactly one arrangement fits all clues.', (s) => `Keys: ${s}.`],
+  c11_board: ['The switchboard needs a key and the guests’ wishes. The key was in the rack drawer.', 'The slips name the guests, the board names the rooms: use your key-rack answer to translate.', (s) => `Set: ${s}.`],
+  c11_door: ['The luggage room wants a ticket.', 'The switchboard printed one.', 'Select the luggage ticket and tap the luggage room door.'],
+  c11_case: ['One case is heavier. Two weighings are enough for nine cases.', 'Split into three groups of three: weigh group A against group B. The heavier group (or C if level) has it; then weigh one case against another of that group.', (n) => `It is case ${n}.`],
+  c11_safe: ['The old book tells you how the safe opens.', 'Who wants to be woken first? Which room is that guest in?', (c) => `The safe code is ${c}.`],
+});
+Object.assign(TXT.de, {
+  ch11Btn: 'Kapitel 11: Nachtschicht', nextCh11: 'Weiter zu Kapitel 11',
+  start11: 'Ein Jahr später. Sam ist in Rente, und das Grand Paradox braucht einen Nachtportier, der das Hotel in- und auswendig kennt: dich. 22:00, deine erste Nachtschicht. Das Gästebuch ist verschmiert, vier Schlüssel hängen falsch, die Weckrufe sind nicht gestellt, und die Direktion will das alte Nachtportierbuch bis 23:00 zurück im Tresor. Nichts hier geht allein: Eine Aufgabe führt zur nächsten.',
+  up11Eyebrow: '23:00 · die Direktion', up11Title: 'Schicht vermasselt', up11Text: 'Punkt elf kommt die Direktion, sieht den leeren Tresor und seufzt: „Morgen. Gleiche Zeit.“ (Oder arbeite in der Verlängerung weiter.)',
+  win11Eyebrow: 'Kapitel 11 geschafft', win11EyebrowOver: 'Kapitel 11 geschafft, in der Verlängerung', win11Title: 'Eine perfekte Nachtschicht',
+  win11Text: (left, h, n) => `Der Tresor schließt sich über dem alten Buch. Die Schlüssel stimmen, die Weckrufe sind gestellt, der Gepäckraum ist aufgeräumt. Innen an der Tresortür klebt ein Brief, der vorhin nicht da war: „Nachtportier, Zimmer 13 braucht dich. Komm nach Mitternacht hoch.“ Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  rec11: 'Der Empfang bei Nacht: das Schlüsselbrett, das verschmierte Gästebuch, ein Spieß mit Zetteln, eine alte Telefonzentrale, der Tresor und die Tür zum Gepäckraum.', toLug11: 'Der Gepäckraum: neun gleiche Koffer und eine alte Balkenwaage.', backRec11: 'Zurück am Empfang.',
+  logTitle11: 'Gästebuch (verschmiert)', logBody11: (clues) => `<div class="note">Heutige Gäste: Zimmer 411 bis 414.<br>Die Namen sind verschmiert, aber ein paar Zeilen kann man noch lesen:<br><br>${clues}</div>`,
+  rackTitle11: 'Schlüsselbrett', rackBody11: 'Häng jeden Schlüssel an den richtigen Haken. Tippe einen Gast an, um sein Zimmer zu ändern.', rackCheck11: 'Schlüssel prüfen', rackWrong11: 'Die Schublade bleibt zu. Mindestens ein Schlüssel hängt falsch.', rackDone11: 'Alle vier Schlüssel stimmen. Die Schublade unter dem Brett gleitet auf: ein kleiner Messingschlüssel mit dem Anhänger „Zentrale“ und ein Zettel.', rackOpen11: 'Die Schlüssel stimmen. Die Schublade ist jetzt leer.',
+  spikeTitle11: 'Zettelspieß', spike11: 'Zettel auf dem Spieß: die Weckwünsche für heute Nacht.',
+  boardTitle11: 'Telefonzentrale', boardBody11: 'Ein Rad pro Zimmer. Stell jedes Zimmer auf die Zeit, die sein Gast wollte.', boardSet11: 'Weckrufe stellen', boardWrong11: 'Die Zentrale brummt böse. Mindestens ein Zimmer ist falsch gestellt.', boardDone11: 'Alle Lampen werden grün. Die Zentrale druckt einen kleinen Zettel: GEPÄCKRAUM · NACHTZUGANG.', boardLocked11: 'Die Telefonzentrale ist abgeschlossen. Der Schlüssel muss irgendwo am Empfang sein.', boardOk11: 'Alle Weckrufe sind gestellt. Die Lampen leuchten grün.',
+  doorLocked11: 'Die Tür zum Gepäckraum hat einen Schlitz: TICKET. Ohne Ticket kein Zutritt.', doorOpen11: 'Das Ticket gleitet hinein, die Tür entriegelt.',
+  scaleTitle11: 'Balkenwaage', scaleBody11: (left) => `Neun Koffer, einer davon ist schwerer. Leg Koffer links oder rechts auf und wiege. Übrige Wägungen: <b>${left}</b>. Dann öffne den Koffer, den du meinst.`,
+  pan11: { off: '–', l: 'links', r: 'rechts' }, weigh11: 'Wiegen', open11: 'Koffer öffnen', openWhich11: 'Welchen Koffer öffnest du?',
+  resLeft11: 'Die LINKE Schale sinkt.', resRight11: 'Die RECHTE Schale sinkt.', resEven11: 'Die Waage bleibt waagerecht.', noWeigh11: 'Keine Wägungen mehr. Öffne einen Koffer.',
+  wrongCase11: 'ALARM! Falscher Koffer: voller Handtücher, und beim Öffnen ging der Alarm los (−3 Min.). Die Nachtdirektion stapelt alles neu, und der schwere Koffer steht jetzt woanders.', rightCase11: 'Wirklich schwer: Darin liegt ein abgegriffenes Lederbuch, NACHTPORTIER 1912.', casesEmpty11: 'Die Koffer stehen wieder ordentlich gestapelt.',
+  bookTitle11: 'Nachtportierbuch 1912', bookBody11: '<div class="note">… und die letzte Regel, für jeden Nachtportier nach mir:<br><br><b>Der Tresor öffnet sich mit der Zimmernummer des Gastes, der ZUERST geweckt werden will.</b><br><br>— Der Nachtportier, 1912</div>',
+  safeTitle11: 'Tresor', safeBody11: '<p>Ein schwerer Tresor unter dem Tresen. Drei Ziffern.</p>', safeOpened11: 'Der Tresor schwingt auf. Du legst das alte Buch hinein.',
+  bell11: 'Du klingelst. Niemand kommt. Du bist ja der, der kommt.',
+});
+Object.assign(TXT.de.views, { reception11: 'Empfang bei Nacht', luggage11: 'Gepäckraum' });
+Object.assign(TXT.de.svg, { rack11: 'SCHLÜSSEL', board11: 'ZENTRALE', lug11: 'GEPÄCK', toRec11: '⟵ Empfang', safe11: 'TRESOR', log11: 'BUCH' });
+Object.assign(TXT.de.aria, { recScene11: 'Der Empfang bei Nacht', lugScene11: 'Der Gepäckraum', rack11: 'Schlüsselbrett', log11: 'Gästebuch', spike11: 'Zettelspieß', board11: 'Telefonzentrale', safe11: 'Tresor', door11: 'Tür zum Gepäckraum', cases11: 'Koffer und Balkenwaage', goRec11: 'Zurück zum Empfang', bell11: 'Klingel' });
+Object.assign(TXT.de.items, {
+  bkey11: ['Zentralenschlüssel', '', 'Ein kleiner Messingschlüssel mit Anhänger: Zentrale.'],
+  ticket11: ['Gepäckticket', '', 'GEPÄCKRAUM · NACHTZUGANG.'],
+  book11: ['Nachtportierbuch', '', 'Leder, 1912. Am Tresen lesen.'],
+});
+Object.assign(TXT.de.notes, {
+  log11n: ['Rand des Gästebuchs', 'Die Nachtportiers vor dir haben die Gäste immer mit Bleistift eingetragen. Jemand hat Kaffee drübergekippt. Wahrscheinlich die Direktion.'],
+  spike11n: ['Unterster Zettel am Spieß', '„Nachtportier: Weckrufe stellt man an der Zentrale nach ZIMMER, aber die Gäste wünschen nach NAMEN. Kenn deine Gäste.“ — Sam'],
+  board11n: ['Aufkleber an der Zentrale', 'Eingebaut 1912. Weckrufe vor 5:30 sind nicht erlaubt. Gäste schlafen. Nachtportiers nicht.'],
+  book11n: ['Erste Seite des Buchs', 'Dieses Buch gehört nachts in den Tresor und tagsüber auf den Tresen. Wer das Buch hat, hat das Hotel.'],
+  cases11n: ['Schild an der Waage', 'Eine Wägung findet einen schweren Koffer unter dreien. Zwei Wägungen finden ihn unter neun. Eine dritte Wägung weckt die Direktion.'],
+});
+Object.assign(TXT.de.hints, {
+  c11_rack: ['Wer schläft wo? Das verschmierte Gästebuch hat Hinweise. Fang mit dem Hinweis an, der am meisten ausschließt.', 'Probier für den Gast mit den meisten Hinweisen jedes Zimmer durch und prüf die anderen dagegen. Genau eine Verteilung passt zu allen Hinweisen.', (s) => `Schlüssel: ${s}.`],
+  c11_board: ['Die Zentrale braucht einen Schlüssel und die Wünsche der Gäste. Der Schlüssel lag in der Schublade am Schlüsselbrett.', 'Die Zettel nennen Namen, die Zentrale Zimmer: Übersetz mit deiner Lösung vom Schlüsselbrett.', (s) => `Stell ein: ${s}.`],
+  c11_door: ['Der Gepäckraum will ein Ticket.', 'Die Zentrale hat eins gedruckt.', 'Wähl das Gepäckticket und tippe auf die Tür zum Gepäckraum.'],
+  c11_case: ['Ein Koffer ist schwerer. Zwei Wägungen reichen für neun Koffer.', 'Teil in drei Dreiergruppen: Wieg Gruppe A gegen Gruppe B. Die schwerere Gruppe (oder C, wenn gleich) hat ihn; dann wieg einen Koffer gegen einen anderen aus dieser Gruppe.', (n) => `Es ist Koffer ${n}.`],
+  c11_safe: ['Das alte Buch verrät, wie der Tresor aufgeht.', 'Wer will zuerst geweckt werden? In welchem Zimmer schläft dieser Gast?', (c) => `Der Tresorcode ist ${c}.`],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1439,7 +1525,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 11 ? 1380 : S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1662,6 +1748,7 @@ function useItem(id, h) {
   if (S.ch === 8) return useItem8(id, h);
   if (S.ch === 9) return useItem9(id, h);
   if (S.ch === 10) return useItem10(id, h);
+  if (S.ch === 11) return useItem11(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2385,7 +2472,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (S && S.expert && ch >= 5 ? XP_TOTAL : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (S && S.expert && ch >= 5 ? (ch === 11 ? XP_TOTAL11 : XP_TOTAL) : ch === 11 ? TOTAL11 : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -3181,6 +3268,164 @@ function escape10() {
   showEnd(S.overtime ? t('win10EyebrowOver') : t('win10Eyebrow'), t('win10Title'), t('win10Text', mmss(left), S.hints, noteCount10()), left, false);
 }
 function newGame10() { S = freshState10(); if (XP()) { S.expert = true; S.left = XP_TOTAL; } save(); begin(); say(t('start10')); }
+// ---------- chapter 11: night shift (logic grid → switchboard → balance scale → safe, each step needs the one before)
+const TOTAL11 = 60 * 60, XP_TOTAL11 = 45 * 60;
+Object.assign(ICONS, { bkey11: '🗝️', ticket11: '🧾', book11: '📕' });
+const noteIds11 = ['log11n', 'spike11n', 'board11n', 'book11n', 'cases11n'];
+const NAMES11 = ['Mira', 'Ben', 'Ola', 'Kai', 'Lena', 'Tom', 'Ida', 'Noah', 'Emil', 'Zoe', 'Finn', 'Ava'];
+const ROOMS11 = [411, 412, 413, 414], TIMES11 = ['5:30', '6:00', '6:30', '7:00', '7:30', '8:00'];
+const PERMS11 = (() => { const out = []; const go = (p, rest) => { if (!rest.length) out.push(p); rest.forEach((x, i) => go([...p, x], rest.filter((_, j) => j !== i))); }; go([], [0, 1, 2, 3]); return out; })();
+// p[g] = index of guest g's room
+function fits11(c, p) {
+  switch (c.t) {
+    case 'not': return p[c.g] !== c.r; case 'is': return p[c.g] === c.r;
+    case 'higher': return p[c.a] > p[c.b]; case 'next': return Math.abs(p[c.a] - p[c.b]) === 1;
+    case 'end': return p[c.g] === 0 || p[c.g] === 3; case 'notend': return p[c.g] === 1 || p[c.g] === 2;
+  }
+  return false;
+}
+const count11 = (clues) => PERMS11.filter((p) => clues.every((c) => fits11(c, p))).length;
+function randomClue11(sol, allowIs) {
+  for (;;) {
+    const t = pick(['not', 'not', 'higher', 'higher', 'next', 'end', 'notend', ...(allowIs ? ['is'] : [])]), g = Math.floor(Math.random() * 4);
+    let a = Math.floor(Math.random() * 4), b = Math.floor(Math.random() * 4); if (a === b) continue;
+    const c = t === 'not' || t === 'is' ? { t, g, r: Math.floor(Math.random() * 4) } : t === 'higher' || t === 'next' ? { t, a, b } : { t, g };
+    if (fits11(c, sol)) return c;
+  }
+}
+// clues are drawn until exactly one assignment fits, then every clue that is not needed is dropped again
+function genLogic11(expert) {
+  for (let tries = 0; tries < 200; tries++) {
+    const sol = shuffle([0, 1, 2, 3]), clues = []; let usedIs = false;
+    while (count11(clues) > 1 && clues.length < 12) { const c = randomClue11(sol, !usedIs && !expert); if (c.t === 'is') usedIs = true; if (!clues.some((x) => JSON.stringify(x) === JSON.stringify(c))) clues.push(c); }
+    if (count11(clues) !== 1) continue;
+    for (const c of shuffle(clues.slice())) { const rest = clues.filter((x) => x !== c); if (count11(rest) === 1) clues.splice(clues.indexOf(c), 1); }
+    if (clues.length >= 3) return { sol, clues: shuffle(clues) };
+  }
+  return { sol: [0, 1, 2, 3], clues: [{ t: 'is', g: 0, r: 0 }, { t: 'higher', a: 3, b: 2 }, { t: 'next', a: 1, b: 0 }, { t: 'end', g: 3 }] };
+}
+Object.assign(TXT.en, { clue11: (c, n) => ({ not: `${n[c.g]} does not sleep in room ${ROOMS11[c.r]}.`, is: `${n[c.g]} sleeps in room ${ROOMS11[c.r]}.`, higher: `${n[c.a]}’s room number is higher than ${n[c.b]}’s.`, next: `${n[c.a]} and ${n[c.b]} sleep next door to each other.`, end: `${n[c.g]} sleeps at one end of the corridor (411 or 414).`, notend: `${n[c.g]} does not sleep at an end of the corridor.` })[c.t],
+  slip11: (time, name) => `Please wake me at ${time}. — ${name}` });
+Object.assign(TXT.de, { clue11: (c, n) => ({ not: `${n[c.g]} schläft nicht in Zimmer ${ROOMS11[c.r]}.`, is: `${n[c.g]} schläft in Zimmer ${ROOMS11[c.r]}.`, higher: `${n[c.a]} hat eine höhere Zimmernummer als ${n[c.b]}.`, next: `${n[c.a]} und ${n[c.b]} sind Zimmernachbarn.`, end: `${n[c.g]} schläft an einem Ende des Flurs (411 oder 414).`, notend: `${n[c.g]} schläft nicht an einem Ende des Flurs.` })[c.t],
+  slip11: (time, name) => `Bitte um ${time} wecken. — ${name}` });
+function freshState11() {
+  const names = shuffle(NAMES11.slice()).slice(0, 4), { sol, clues } = genLogic11(XP()), times = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4);
+  const first = times.indexOf(Math.min(...times));
+  let rack; do { rack = shuffle([0, 1, 2, 3]); } while (rack.join() === sol.join());
+  return { v: 1, ch: 11, started: Date.now(), left: TOTAL11, ot: 0, hints: 0, hintSeen: {}, view: 'reception11', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    names, sol, clues, times, rack, board: [0, 0, 0, 0], heavy: 1 + Math.floor(Math.random() * 9), weighs: 2, pan: Array(9).fill(0), code: String(ROOMS11[sol[first]]) };
+}
+const noteCount11 = () => noteIds11.filter((n) => S.f['note_' + n]).length;
+const guestIn11 = (r) => S.sol.indexOf(r);
+function sceneRec11() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('recScene11')}">
+  <rect width="1000" height="470" fill="#2a1f1a"/><rect y="470" width="1000" height="130" fill="#1a1210"/><circle cx="520" cy="120" r="200" fill="#ffd58a" opacity="0.07"/>
+  ${hot('rack11', `<rect x="40" y="70" width="230" height="170" rx="8" fill="#5a3a24" stroke="#d9a74a" stroke-width="5"/><text x="155" y="62" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('rack11')}</text>${[0, 1, 2, 3].map((i) => `<circle cx="${80 + i * 50}" cy="110" r="5" fill="#d9a74a"/><path d="M${80 + i * 50} 110 v18" stroke="#d9a74a" stroke-width="3"/><circle cx="${80 + i * 50}" cy="136" r="8" fill="none" stroke="${f.rack ? '#7dffb2' : '#d9a74a'}" stroke-width="3"/><text x="${80 + i * 50}" y="176" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="#efe6d2">${ROOMS11[i]}</text>`).join('')}<rect x="60" y="196" width="190" height="30" rx="4" fill="${f.rack ? '#2a1a10' : '#3a2a1a'}" stroke="#d9a74a" stroke-width="2"/>`)}
+  ${hot('board11', `<rect x="720" y="60" width="240" height="210" rx="10" fill="#4a3a2a" stroke="#1a1210" stroke-width="5"/><text x="840" y="52" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('board11')}</text>${[0, 1, 2, 3].map((i) => `<circle cx="${760 + i * 54}" cy="120" r="16" fill="${f.board ? '#7dffb2' : f.boardOpen ? '#ffd23f' : '#6b5a4a'}" stroke="#1a1210" stroke-width="3"/><text x="${760 + i * 54}" y="165" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="#efe6d2">${ROOMS11[i]}</text>`).join('')}<path d="M740 210 q100 40 200 0" stroke="#1a1210" stroke-width="4" fill="none"/>`)}
+  <rect x="240" y="330" width="520" height="140" fill="#6b4a2a" stroke="#1a1210" stroke-width="6"/><rect x="240" y="318" width="520" height="16" fill="#d9a74a"/>
+  ${hot('log11', `<path d="M300 318 l60 -14 l60 14 l-60 8z" fill="#efe6d2" stroke="#6b5f4a" stroke-width="3"/><circle cx="345" cy="312" r="9" fill="#6b4a2a" opacity="0.55"/><text x="360" y="300" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="13" fill="#d9a74a">${W('log11')}</text>`)}
+  ${hot('spike11', `<path d="M480 318 v-60" stroke="#c0c8cc" stroke-width="4"/>${[0, 1, 2, 3].map((i) => `<rect x="${462 + (i % 2) * 6}" y="${266 + i * 10}" width="36" height="12" fill="#ffe9a8" stroke="#6b5f4a" stroke-width="1.5" transform="rotate(${i % 2 ? 6 : -5} 480 ${272 + i * 10})"/>`).join('')}`)}
+  ${hot('bell11', `<path d="M560 318 a16 16 0 0 1 32 0z" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/><circle cx="576" cy="300" r="3" fill="#6b4a10"/>`)}
+  ${hot('safe11', `<rect x="620" y="360" width="110" height="100" rx="6" fill="#3a4148" stroke="#1a1210" stroke-width="4"/><circle cx="675" cy="410" r="20" fill="#8a949a" stroke="#1a1210" stroke-width="3"/><text x="675" y="455" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="12" fill="#efe6d2">${W('safe11')}</text>`)}
+  ${hot('door11', `<rect x="840" y="300" width="130" height="170" fill="#5a3a24" stroke="#1a1210" stroke-width="5"/><rect x="880" y="360" width="50" height="10" rx="3" fill="${f.lugOpen ? '#7dffb2' : '#1a1210'}"/><text x="905" y="292" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('lug11')}</text>`)}
+  </svg>`;
+}
+function sceneLug11() {
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('lugScene11')}">
+  <rect width="1000" height="470" fill="#3a3028"/><rect y="470" width="1000" height="130" fill="#241c16"/><path d="M0 200 H1000 M0 330 H1000" stroke="#5a4a3a" stroke-width="8"/>
+  ${hot('cases11', `${Array.from({ length: 9 }, (_, i) => `<g transform="translate(${70 + i * 100} 360)"><rect x="-38" y="0" width="76" height="90" rx="10" fill="${['#8a5a2a', '#6b3a2a', '#4a5a6a'][i % 3]}" stroke="#1a1210" stroke-width="4"/><path d="M-14 0 v-14 h28 v14" stroke="#1a1210" stroke-width="5" fill="none"/><text x="0" y="56" text-anchor="middle" font-family="Fraunces, serif" font-weight="800" font-size="28" fill="#efe6d2">${i + 1}</text></g>`).join('')}
+    <path d="M500 140 v80 M380 150 h240" stroke="#c0c8cc" stroke-width="7"/><path d="M380 150 l-40 50 h80z M620 150 l-40 50 h80z" fill="#d9a74a" stroke="#6b4a10" stroke-width="3"/><rect x="470" y="220" width="60" height="16" fill="#8a949a"/>`)}
+  ${hot('goRec11', `<rect x="350" y="530" width="300" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toRec11')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { reception11: sceneRec11, luggage11: sceneLug11 });
+function openRack11() {
+  openModal(t('rackTitle11'), `<p>${t('rackBody11')}</p><div id="rk" style="display:grid;gap:8px"></div><p class="tip" id="rkMsg"></p><button class="btn" id="rkGo" type="button" data-act="rackcheck">${t('rackCheck11')}</button>`, (b) => {
+    const box = b.querySelector('#rk'), msg = b.querySelector('#rkMsg');
+    const draw = () => { box.innerHTML = ''; S.names.forEach((n, g) => { const btn = mk('button', 'key wide', `${n} → ${ROOMS11[S.rack[g]]}`); btn.setAttribute('data-act', 'guest' + g); btn.addEventListener('click', () => { if (S.f.rack) return; S.rack[g] = (S.rack[g] + 1) % 4; Sound.click(); save(); draw(); }); box.appendChild(btn); }); };
+    b.querySelector('#rkGo').addEventListener('click', () => {
+      if (S.f.rack) return;
+      if (S.rack.every((r, g) => r === S.sol[g])) { S.f.rack = true; give('bkey11'); Sound.unlock(); msg.textContent = t('rackDone11'); say(t('rackDone11')); save(); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('log11n'); } }, 1500); }
+      else { Sound.nope(); msg.textContent = t('rackWrong11'); }
+    });
+    draw();
+  });
+}
+function openBoard11() {
+  openModal(t('boardTitle11'), `<p>${t('boardBody11')}</p><div id="bd" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div><p class="tip" id="bdMsg"></p><button class="btn" id="bdGo" type="button" data-act="boardset">${t('boardSet11')}</button>`, (b) => {
+    const box = b.querySelector('#bd'), msg = b.querySelector('#bdMsg');
+    const draw = () => { box.innerHTML = ''; ROOMS11.forEach((R, r) => { const btn = mk('button', 'key wide', `${R} ⏰ ${TIMES11[S.board[r]]}`); btn.setAttribute('data-act', 'room' + r); btn.addEventListener('click', () => { if (S.f.board) return; S.board[r] = (S.board[r] + 1) % TIMES11.length; Sound.click(); save(); draw(); }); box.appendChild(btn); }); };
+    b.querySelector('#bdGo').addEventListener('click', () => {
+      if (S.f.board) return;
+      if (ROOMS11.every((_, r) => S.board[r] === S.times[guestIn11(r)])) { S.f.board = true; give('ticket11'); Sound.unlock(); Sound.win(); msg.textContent = t('boardDone11'); say(t('boardDone11')); save(); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('board11n'); } }, 1500); }
+      else { Sound.nope(); msg.textContent = t('boardWrong11'); }
+    });
+    draw();
+  });
+}
+function openScale11() {
+  openModal(t('scaleTitle11'), `<p id="scHead"></p><div id="sc" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div><p class="tip" id="scMsg"></p><div class="row"><button class="btn" id="scW" type="button" data-act="weigh">${t('weigh11')}</button><button class="btn ghost" id="scO" type="button" data-act="openmode">${t('open11')}</button></div>`, (b) => {
+    const box = b.querySelector('#sc'), msg = b.querySelector('#scMsg'); let opening = false;
+    const draw = () => {
+      b.querySelector('#scHead').innerHTML = opening ? t('openWhich11') : t('scaleBody11', S.weighs); box.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const label = opening ? `🧳 ${i + 1}` : `${i + 1}: ${T().pan11[['off', 'l', 'r'][S.pan[i]]]}`, btn = mk('button', 'key wide', label);
+        btn.setAttribute('data-act', (opening ? 'open' : 'case') + i);
+        btn.addEventListener('click', () => {
+          if (S.f.case) return;
+          if (!opening) { S.pan[i] = (S.pan[i] + 1) % 3; Sound.click(); save(); draw(); return; }
+          if (i + 1 === S.heavy) { S.f.case = true; give('book11'); Sound.unlock(); Sound.win(); msg.textContent = t('rightCase11'); say(t('rightCase11')); save(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openModal(t('bookTitle11'), t('bookBody11')); S.f.note_book11n = true; save(); } }, 1500); return; }
+          S.left -= 180; Sound.nope(); let h; do { h = 1 + Math.floor(Math.random() * 9); } while (h === S.heavy); S.heavy = h; S.weighs = 2; S.pan = Array(9).fill(0); opening = false; msg.textContent = t('wrongCase11'); say(t('wrongCase11')); save(); tickClock(); draw();
+        });
+        box.appendChild(btn);
+      }
+      b.querySelector('#scW').hidden = opening;
+    };
+    b.querySelector('#scW').addEventListener('click', () => {
+      if (S.f.case) return;
+      if (S.weighs <= 0) { msg.textContent = t('noWeigh11'); Sound.nope(); return; }
+      const w = (side) => S.pan.reduce((a, p, i) => a + (p === side ? (i + 1 === S.heavy ? 2 : 1) : 0), 0), L = w(1), R = w(2), nl = S.pan.filter((p) => p === 1).length, nr = S.pan.filter((p) => p === 2).length;
+      S.weighs--; Sound.click();
+      // the heavy case decides only between equal counts; unequal counts tip by count, like a real scale with equal cases
+      const res = nl !== nr ? (nl > nr ? 'resLeft11' : 'resRight11') : L > R ? 'resLeft11' : R > L ? 'resRight11' : 'resEven11';
+      msg.textContent = t(res); save(); draw();
+    });
+    b.querySelector('#scO').addEventListener('click', () => { opening = !opening; draw(); });
+    draw(); S.f.note_cases11n = true; save();
+  });
+}
+Object.assign(HOTS, {
+  rack11: () => (S.f.rack ? say(t('rackOpen11')) : openRack11()),
+  log11: () => { openModal(t('logTitle11'), t('logBody11', S.clues.map((c) => '· ' + esc(t('clue11', c, S.names))).join('<br>'))); },
+  spike11: () => { openModal(t('spikeTitle11'), `<p>${t('spike11')}</p><div class="note">${S.names.map((n, g) => esc(t('slip11', TIMES11[S.times[g]], n))).join('<br>')}<br><br><i>${esc(T().notes.spike11n[1])}</i></div>`); S.f.note_spike11n = true; save(); },
+  board11: () => { if (!S.f.boardOpen) { Sound.nope(); say(t('boardLocked11')); return; } if (S.f.board) { say(t('boardOk11')); return; } openBoard11(); },
+  door11: () => { if (S.f.lugOpen) { go('luggage11'); say(t('toLug11')); } else { Sound.nope(); say(t('doorLocked11')); } },
+  goRec11: () => { go('reception11'); say(t('backRec11')); },
+  cases11: () => (S.f.case ? say(t('casesEmpty11')) : openScale11()),
+  safe11: () => openCodePad(t('safeTitle11'), t('safeBody11') + (S.inv.includes('book11') ? t('bookBody11') : ''), S.code, (msg) => {
+    if (!S.inv.includes('book11')) { msg.textContent = t('bookTitle11') + '?'; return; }
+    take('book11'); msg.textContent = t('safeOpened11'); say(t('safeOpened11')); setTimeout(escape11, 1400);
+  }),
+  bell11: () => { Sound.unlock(); say(t('bell11')); },
+});
+function useItem11(id, h) {
+  if (id === 'bkey11' && h === 'board11') { take('bkey11'); S.f.boardOpen = true; Sound.unlock(); renderScene(); setTimeout(openBoard11, 300); return true; }
+  if (id === 'ticket11' && h === 'door11') { take('ticket11'); S.f.lugOpen = true; Sound.door(); say(t('doorOpen11')); renderScene(); setTimeout(() => { go('luggage11'); say(t('toLug11')); }, 700); return true; }
+  if (id === 'book11' && (h === 'log11' || h === 'safe11')) { openModal(t('bookTitle11'), t('bookBody11')); S.f.note_book11n = true; save(); return true; }
+  return false;
+}
+function escape11() {
+  if (!S || S.done || S.ch !== 11) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best11 = Math.max(profile.best11 || 0, left);
+  profile.ch11done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  if (!$('modal').hidden) closeModal();
+  showEnd(S.overtime ? t('win11EyebrowOver') : t('win11Eyebrow'), t('win11Title'), t('win11Text', mmss(left), S.hints, noteCount11()), left, false);
+}
+function newGame11() { S = freshState11(); if (XP()) { S.expert = true; S.left = XP_TOTAL11; } save(); begin(); say(t('start11')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -3219,9 +3464,12 @@ const GOALS9 = [
 const GOALS10 = [
   ['c10_code', () => S.f.codeSet], ['c10_safe', () => S.f.safeOpen], ['c10_plant', () => S.f.planted], ['c10_key', () => S.f.keyTaken], ['c10_door', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const GOALS11 = [
+  ['c11_rack', () => S.f.rack], ['c11_board', () => S.f.board], ['c11_door', () => S.f.lugOpen], ['c11_case', () => S.f.case], ['c11_safe', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const HINT_ARG = { c11_rack: () => S.names.map((n, g) => `${n} ${ROOMS11[S.sol[g]]}`).join(', '), c11_board: () => ROOMS11.map((R, r) => `${R} ${TIMES11[S.times[guestIn11(r)]]}`).join(', '), c11_case: () => S.heavy, c11_safe: () => S.code, c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 11 ? GOALS11 : S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -3257,8 +3505,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 10); $('btnNextCh').textContent = t(S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 11 ? profile.best11 : S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 11); $('btnNextCh').textContent = t(S.ch === 10 ? 'nextCh11' : S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -3266,7 +3514,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 11 ? 'up11' : S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -3279,8 +3527,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 11 ? newGame11() : S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 10 ? newGame11() : S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -3306,6 +3554,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh11 = 0;
+$('btnCh11').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh11 > 4000) { armedCh11 = Date.now(); $('btnCh11').textContent = t('confirmNew'); return; }
+  armedCh11 = 0; newGame11();
 });
 let armedCh10 = 0;
 $('btnCh10').addEventListener('click', () => {
@@ -3381,6 +3635,7 @@ function showStart() {
   $('btnCh8').hidden = false; $('btnCh8').textContent = t('ch8Btn') + (profile.ch8done ? ' ✓' : ''); armedCh8 = 0;
   $('btnCh9').hidden = false; $('btnCh9').textContent = t('ch9Btn') + (profile.ch9done ? ' ✓' : ''); armedCh9 = 0;
   $('btnCh10').hidden = false; $('btnCh10').textContent = t('ch10Btn') + (profile.ch10done ? ' ✓' : ''); armedCh10 = 0;
+  $('btnCh11').hidden = false; $('btnCh11').textContent = t('ch11Btn') + (profile.ch11done ? ' ✓' : ''); armedCh11 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
