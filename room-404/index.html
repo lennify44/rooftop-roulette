@@ -61,7 +61,7 @@ body {
 .tools { display: flex; gap: 8px; }
 .tool { min-width: 40px; height: 40px; padding: 0 12px; display: grid; place-items: center; border: 1.5px solid rgba(243, 236, 224, 0.3); border-radius: 20px; background: transparent; color: var(--chalk); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 14px; }
 .tool svg { width: 18px; height: 18px; }
-.stage { position: relative; min-height: 0; display: grid; place-items: center; }
+.stage { position: relative; min-height: 0; display: grid; place-items: end center; }
 .scene { position: relative; width: 100%; max-height: 100%; aspect-ratio: 5 / 3; max-width: calc((100vh - 220px) * 5 / 3); }
 .scene svg { display: block; width: 100%; height: 100%; border-radius: 8px; }
 [data-hot] { cursor: pointer; }
@@ -132,7 +132,7 @@ body {
 @media (max-height: 520px) {
   #app { grid-template-columns: minmax(0, 1fr) minmax(200px, 34%); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 10px; }
   .bar { grid-column: 1 / -1; }
-  .stage { grid-row: 2 / 4; }
+  .stage { grid-row: 2 / 4; place-items: center; }
   .say { grid-column: 2; grid-row: 2; align-self: start; max-height: 100%; overflow-y: auto; font-size: 14px; }
   .inv { grid-column: 2; grid-row: 3; flex-wrap: wrap; overflow-y: auto; max-height: 150px; }
   .item { min-width: 56px; min-height: 56px; } .item span { font-size: 22px; }
@@ -1704,8 +1704,21 @@ function sceneHall() {
   </svg>`;
 }
 const SCENES = { bed: sceneBed, desk: sceneDesk, bath: sceneBath, hall: sceneHall };
+// scene labels are drawn for a 1000-unit-wide picture; on a phone that is ~3x smaller, so small labels grow to stay readable (>= 10 px on screen)
+function fitLabels() {
+  const svg = $('sceneSvg').querySelector('svg'), w = svg && svg.getBoundingClientRect().width; if (!w) return;
+  const min = 9 / (w / 1000);
+  for (const el of svg.querySelectorAll('text')) {
+    const fs = parseFloat(el.getAttribute('font-size')) || 16; if (fs >= min) continue;
+    el.setAttribute('font-size', Math.min(min, fs * 2, parseFloat(el.dataset.max) || Infinity).toFixed(1));   // data-max: labels packed tightly
+    // a grown label must stay inside the picture
+    const x = parseFloat(el.getAttribute('x')); if (Number.isNaN(x) || !el.getBBox || el.closest('[transform]')) continue;
+    const bb = el.getBBox(); if (bb.x < 6) el.setAttribute('x', (x + 6 - bb.x).toFixed(1)); else if (bb.x + bb.width > 994) el.setAttribute('x', (x - (bb.x + bb.width - 994)).toFixed(1));
+  }
+}
+addEventListener('resize', () => { if (S && SCENES[S.view] && !$('sceneSvg').closest('[hidden]')) { $('sceneSvg').innerHTML = SCENES[S.view](); fitLabels(); } });
 function renderScene() {
-  $('sceneSvg').innerHTML = SCENES[S.view]();
+  $('sceneSvg').innerHTML = SCENES[S.view](); fitLabels();
   $('loc').textContent = T().views[S.view];
   const turn = S.view === 'bed' || S.view === 'desk';
   $('navL').hidden = !turn; $('navR').hidden = !turn;
@@ -3407,8 +3420,8 @@ function sceneRec11() {
   const f = S.f;
   return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('recScene11')}">
   <rect width="1000" height="470" fill="#2a1f1a"/><rect y="470" width="1000" height="130" fill="#1a1210"/><circle cx="520" cy="120" r="200" fill="#ffd58a" opacity="0.07"/>
-  ${hot('rack11', `<rect x="40" y="70" width="230" height="170" rx="8" fill="#5a3a24" stroke="#d9a74a" stroke-width="5"/><text x="155" y="62" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('rack11')}</text>${[0, 1, 2, 3].map((i) => `<circle cx="${80 + i * 50}" cy="110" r="5" fill="#d9a74a"/><path d="M${80 + i * 50} 110 v18" stroke="#d9a74a" stroke-width="3"/><circle cx="${80 + i * 50}" cy="136" r="8" fill="none" stroke="${f.rack ? '#7dffb2' : '#d9a74a'}" stroke-width="3"/><text x="${80 + i * 50}" y="176" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="#efe6d2">${ROOMS11[i]}</text>`).join('')}<rect x="60" y="196" width="190" height="30" rx="4" fill="${f.rack ? '#2a1a10' : '#3a2a1a'}" stroke="#d9a74a" stroke-width="2"/>`)}
-  ${hot('board11', `<rect x="720" y="60" width="240" height="210" rx="10" fill="#4a3a2a" stroke="#1a1210" stroke-width="5"/><text x="840" y="52" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('board11')}</text>${[0, 1, 2, 3].map((i) => `<circle cx="${760 + i * 54}" cy="120" r="16" fill="${f.board ? '#7dffb2' : f.boardOpen ? '#ffd23f' : '#6b5a4a'}" stroke="#1a1210" stroke-width="3"/><text x="${760 + i * 54}" y="165" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="#efe6d2">${ROOMS11[i]}</text>`).join('')}<path d="M740 210 q100 40 200 0" stroke="#1a1210" stroke-width="4" fill="none"/>`)}
+  ${hot('rack11', `<rect x="40" y="70" width="230" height="170" rx="8" fill="#5a3a24" stroke="#d9a74a" stroke-width="5"/><text x="155" y="62" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('rack11')}</text>${[0, 1, 2, 3].map((i) => `<circle cx="${80 + i * 50}" cy="110" r="5" fill="#d9a74a"/><path d="M${80 + i * 50} 110 v18" stroke="#d9a74a" stroke-width="3"/><circle cx="${80 + i * 50}" cy="136" r="8" fill="none" stroke="${f.rack ? '#7dffb2' : '#d9a74a'}" stroke-width="3"/><text x="${80 + i * 50}" y="176" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" data-max="25" fill="#efe6d2">${ROOMS11[i]}</text>`).join('')}<rect x="60" y="196" width="190" height="30" rx="4" fill="${f.rack ? '#2a1a10' : '#3a2a1a'}" stroke="#d9a74a" stroke-width="2"/>`)}
+  ${hot('board11', `<rect x="720" y="60" width="240" height="210" rx="10" fill="#4a3a2a" stroke="#1a1210" stroke-width="5"/><text x="840" y="52" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="16" fill="#d9a74a">${W('board11')}</text>${[0, 1, 2, 3].map((i) => `<circle cx="${760 + i * 54}" cy="120" r="16" fill="${f.board ? '#7dffb2' : f.boardOpen ? '#ffd23f' : '#6b5a4a'}" stroke="#1a1210" stroke-width="3"/><text x="${760 + i * 54}" y="165" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" data-max="27" fill="#efe6d2">${ROOMS11[i]}</text>`).join('')}<path d="M740 210 q100 40 200 0" stroke="#1a1210" stroke-width="4" fill="none"/>`)}
   <rect x="240" y="330" width="520" height="140" fill="#6b4a2a" stroke="#1a1210" stroke-width="6"/><rect x="240" y="318" width="520" height="16" fill="#d9a74a"/>
   ${hot('log11', `<path d="M300 318 l60 -14 l60 14 l-60 8z" fill="#efe6d2" stroke="#6b5f4a" stroke-width="3"/><circle cx="345" cy="312" r="9" fill="#6b4a2a" opacity="0.55"/><text x="360" y="300" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="13" fill="#d9a74a">${W('log11')}</text>`)}
   ${hot('spike11', `<path d="M480 318 v-60" stroke="#c0c8cc" stroke-width="4"/>${[0, 1, 2, 3].map((i) => `<rect x="${462 + (i % 2) * 6}" y="${266 + i * 10}" width="36" height="12" fill="#ffe9a8" stroke="#6b5f4a" stroke-width="1.5" transform="rotate(${i % 2 ? 6 : -5} 480 ${272 + i * 10})"/>`).join('')}`)}
