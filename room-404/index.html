@@ -223,6 +223,7 @@ body {
           <button class="btn" id="btnCh10" type="button" data-i18n="ch10Btn" hidden>Chapter 10</button>
           <button class="btn" id="btnCh11" type="button" data-i18n="ch11Btn" hidden>Chapter 11</button>
           <button class="btn" id="btnCh12" type="button" data-i18n="ch12Btn" hidden>Chapter 12</button>
+          <button class="btn" id="btnCh13" type="button" data-i18n="ch13Btn" hidden>Chapter 13</button>
         </div>
         <div class="sub-row">
           <button class="link-btn" id="btnLang" type="button" lang="de">Deutsch</button>
@@ -271,7 +272,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } },
 };
 const SAVE_KEY = 'room-404-save', PROFILE_KEY = 'room-404-profile';
-const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, ch11done: false, best11: 0, ch12done: false, best12: 0, runs: {} }, store.get(PROFILE_KEY, {}));
+const profile = Object.assign({ best: 0, escapes: 0, name: '', deviceId: '', muted: false, lang: '', ch1done: false, ch2done: false, best2: 0, ch3done: false, best3: 0, ch4done: false, best4: 0, ch5done: false, best5: 0, ch6done: false, best6: 0, ch7done: false, best7: 0, ch8done: false, best8: 0, ch9done: false, best9: 0, ch10done: false, best10: 0, ch11done: false, best11: 0, ch12done: false, best12: 0, ch13done: false, best13: 0, runs: {} }, store.get(PROFILE_KEY, {}));
 if (!profile.name) profile.name = (store.get('rooftop-roulette-profile', {}) || {}).name || '';
 const saveProfile = () => store.set(PROFILE_KEY, profile);
 const TOTAL = 45 * 60, HINT_COST = 120;
@@ -1550,6 +1551,92 @@ Object.assign(TXT.de.hints, {
   c12_trunks: ['Der Kistendeckel ist blockiert. Die Truhen gehören auf die Kreidekreuze.', 'Schieb nie eine Truhe in eine Ecke ohne Kreuz. Plane von den Kreuzen rückwärts. Zurück kostet nichts.', (s) => `Erste Züge: ${s}.`],
   c12_window: ['Das Tagebuch aus der Kiste hat den Hinweis fürs Fenster.', 'Schreib die Abstände zwischen den Zahlen auf. Sind die nicht gleich, schau auf deren Abstände oder probier Malnehmen.', (n) => `Das Fenster öffnet sich mit ${n}.`],
 });
+Object.assign(TXT.en, {
+  ch13Btn: 'Chapter 13: The Clock Tower', nextCh13: 'On to chapter 13',
+  start13t: '01:15. You climb down the fire escape into the courtyard. The man in the 1912 uniform is gone; only wet footprints lead to the old clock tower. Its great clock has stood still for over a hundred years. A note in the fountain rim: “Make the tower tell the right time again, and I will meet you. Before 02:35, or not at all.”',
+  up13Eyebrow: '02:35 · the tower stays silent', up13Title: 'Missed him', up13Text: 'The courtyard clock strikes half past two and a little more. Somewhere above you a door closes. (Or keep going in overtime.)',
+  win13Eyebrow: 'Chapter 13 complete', win13EyebrowOver: 'Chapter 13 complete, in overtime', win13Title: 'The tower rings again',
+  win13Text: (left, h, n) => `The great bell booms over the rooftops for the first time since 1912. When the echo fades, the porter stands beside you, takes off his cap and hands you a ring of very old keys: “The cellar. Tomorrow night.” Time left: ${left}. Hints: ${h}. Notes found: ${n} of 5.`,
+  yard13t: 'The courtyard at night: a mosaic in the paving, the clock tower with its door, a station clock on a post, the fountain.', toGears13t: 'Inside the tower: a stopped clockwork, a box of brass gears, a ladder up to a hatch.', backYard13t: 'Back in the courtyard.', toFace13t: 'Behind the great dial: the hands’ shaft, three brass rings around a lock, a bell rope.', backGears13t: 'Back down at the clockwork.',
+  mosaicTitle13t: 'Mosaic', mosaicBody13t: 'The numbers tell you how many tiles in a row (left) or column (top) are dark, in that order, with gaps between the groups. Tap a tile: dark → ✕ → empty.', mosaicDone13t: (s) => `The mosaic shows a ${s}. The same symbol is carved on the tower door.`, mosaicOk13t: (s) => `The mosaic shows a ${s}.`,
+  doorTitle13t: 'Tower door', doorBody13t: 'Six carved symbols. Press one.', doorWrong13t: 'CLACK. Wrong symbol: the lock jams for a while (−3 min).', doorOpen13t: 'The door swings inward. Dust, oil and ticking silence.', doorFirst13t: 'Six carved symbols on the door. Which one? The mosaic on the ground might know.',
+  clocksTitle13t: 'Clocks', clocksBody13t: 'The tower clock above the door and the station clock on the post.', towerLbl13t: 'Tower', railLbl13t: 'Station clock', towerStopped13t: 'The tower clock stands still at twelve.',
+  fountain13t: 'Coins, leaves and a note in the fountain rim. You read it again: before 02:35.',
+  gearTitle13t: 'Clockwork', gearBody13t: (xp) => `The minute shaft drives A, A turns B, B shares an axle with C, C turns D, and D carries the hour hand. The hour hand must turn exactly 12 times slower than the minute shaft: (B ÷ A) × (D ÷ C) = 12.${xp ? ' And both pairs sit on the same bearing plate: A + B must equal C + D.' : ''} Tap a slot, then a gear.`,
+  gearRatio13t: (r) => `Now: the hour hand turns once every ${r} turns of the minute shaft.`, gearSpan13t: (a, b) => `Axle distance: A + B = ${a}, C + D = ${b}.`, gearStart13t: 'Start the clockwork', gearMissing13t: 'Four gears are needed.',
+  gearWrong13t: 'The clockwork runs for a moment, then stops: the hour hand would go wrong.', gearSpanWrong13t: 'The gears do not reach each other: A + B and C + D are not equal.', gearDone13t: 'The clockwork ticks! Above the door, the great hands start to move. Something falls out of the works: a card.',
+  gearRuns13t: 'The clockwork ticks steadily.', hatchLocked13t: 'The hatch is bolted to the clockwork. It only opens when the clock runs.',
+  cardTitle13t: 'Porter’s card', cardBody13t: (s) => `<div class="note">“My three signs, in order from the outer ring inward:”<br><br><b style="font-size:1.6em;letter-spacing:.2em">${s}</b></div>`,
+  ringsTitle13t: 'Brass rings', ringsBody13t: (n) => `Turn the rings until the marker ▼ shows the porter’s signs. Careful: ring 1 also turns ring 2, ring 2 also turns ring 3${n > 3 ? ', ring 3 also turns ring 4, and ring 1 turns ring 3 backwards' : ''}.`, ringsCard13t: (s) => `Porter’s card: ${s}`, ringsNoCard13t: 'Which signs? Nobody told you yet.', ringsDone13t: 'Click, click, click: the lock springs open. Inside: a pocket watch.', ringLbl13t: (i) => `Ring ${i}`,
+  watchTitle13t: 'Pocket watch', watchBody13t: (t) => `<div class="note">The watch stopped long ago. Its hands, engraved in old numerals: <b style="font-size:1.4em">${t}</b><br><br>On the lid: “My watch keeps the true time. The tower runs behind the station clock in the yard. Set the tower to my time, plus however far it is behind, and ring.”</div>`,
+  handsTitle13t: 'Great clock', handsBody13t: 'The shaft sets the great hands. Then pull the bell rope.', hourBtn13t: 'Hour', minBtn13t: 'Minute', ringBtn13t: 'Ring the bell', handsWrong13t: 'DONG… The bell rings out of time and the whole clockwork shudders (−2 min).', handsNoWatch13t: 'Set it to what? You need to know the time first.', handsLocked13t: 'The shaft is locked inside the brass rings.',
+  bell13t: 'The bell rope. Not yet: the clock has to be right first.',
+  sym13t: { bell: 'bell', key: 'key', heart: 'heart', star: 'star', moon: 'moon', crown: 'crown' },
+});
+Object.assign(TXT.en.views, { yard13t: 'Courtyard', gears13t: 'Inside the tower', face13t: 'Behind the dial' });
+Object.assign(TXT.en.svg, { mosaic13t: 'MOSAIC', door13t: 'TOWER', rail13t: 'STATION', clockwork13t: 'CLOCKWORK', hatch13t: 'HATCH ↑', toYard13t: '⟵ courtyard', rings13t: 'RINGS', hands13t: 'HANDS', bell13t: 'BELL', toGears13t: '⟵ down' });
+Object.assign(TXT.en.aria, { yardScene13t: 'The courtyard with the clock tower', gearsScene13t: 'Inside the clock tower', faceScene13t: 'Behind the great dial', mosaic13t: 'Mosaic in the paving', door13t: 'Tower door', rail13t: 'Station clock', tower13t: 'Tower clock', fountain13t: 'Fountain', clockwork13t: 'Clockwork and gear box', hatch13t: 'Hatch up', goYard13t: 'Back to the courtyard', rings13t: 'Brass rings', hands13t: 'Hand shaft', bell13t: 'Bell rope', goGears13t: 'Back down' });
+Object.assign(TXT.en.items, {
+  card13t: ['Porter’s card', '', 'Three signs, outer ring first. Look at it at the brass rings.'],
+  watch13t: ['Pocket watch', '', 'Stopped long ago. Read it at the great clock.'],
+});
+Object.assign(TXT.en.notes, {
+  mosaic13tn: ['Under the mosaic', 'Laid 1912 by the same hands that built the tower. The door listens to the picture.'],
+  gears13tn: ['Oil can label', 'Twelve turns of the minute hand for one turn of the hour hand. Every clockmaker knows it; every apprentice forgets it.'],
+  rings13tn: ['Scratched on the rings', 'Turn the inner rings last. The outer ones drag their neighbours along.'],
+  watch13tn: ['Inside the watch lid', 'Old numerals: I, V, X, L. IV is 4, IX is 9, XL is 40.'],
+  porter13tn: ['Footprints', 'Wet footprints from the fountain to the tower door, and none coming back.'],
+});
+Object.assign(TXT.en.hints, {
+  c13_mosaic: ['The mosaic in the paving is a picture puzzle. The numbers count the dark tiles in each row and column.', 'Start with rows or columns whose numbers almost fill the line (like 7, or 3 1 2). Mark tiles you are sure are empty with ✕.', (s) => `The picture is a ${s}.`],
+  c13_door: ['The tower door has six symbols.', 'Press the symbol the mosaic shows.', (s) => `Press the ${s}.`],
+  c13_gears: ['Inside the tower, the clockwork needs four gears.', 'You need B ÷ A times D ÷ C to be exactly 12, e.g. 3 × 4 or 2 × 6. Check the readout.', (s) => `For example: ${s}.`],
+  c13_rings: ['The porter’s card fell out of the clockwork. It belongs to the brass rings behind the dial.', 'Set ring 1 first (it drags ring 2), then ring 2 (it drags ring 3), then ring 3.', (s) => `Next moves: ${s}.`],
+  c13_clock: ['The pocket watch has the time, but the tower is behind the station clock.', 'Compare the tower clock and the station clock in the courtyard: the gap is the correction. Add it to the watch time.', (s) => `Set the great clock to ${s}, then ring.`],
+});
+Object.assign(TXT.de, {
+  ch13Btn: 'Kapitel 13: Der Uhrturm', nextCh13: 'Weiter zu Kapitel 13',
+  start13t: '01:15. Du kletterst die Feuertreppe hinunter in den Hof. Der Mann in der Uniform von 1912 ist weg; nur nasse Fußspuren führen zum alten Uhrturm. Seine große Uhr steht seit über hundert Jahren still. Ein Zettel am Brunnenrand: „Bring den Turm dazu, wieder die richtige Zeit zu sagen, dann treffen wir uns. Vor 02:35, oder gar nicht.“',
+  up13Eyebrow: '02:35 · der Turm bleibt stumm', up13Title: 'Verpasst', up13Text: 'Die Hofuhr zeigt halb drei und ein bisschen mehr. Irgendwo über dir schließt sich eine Tür. (Oder mach in der Verlängerung weiter.)',
+  win13Eyebrow: 'Kapitel 13 geschafft', win13EyebrowOver: 'Kapitel 13 geschafft, in der Verlängerung', win13Title: 'Der Turm läutet wieder',
+  win13Text: (left, h, n) => `Zum ersten Mal seit 1912 dröhnt die große Glocke über die Dächer. Als das Echo verklingt, steht der Portier neben dir, nimmt die Mütze ab und drückt dir einen Ring uralter Schlüssel in die Hand: „Der Keller. Morgen Nacht.“ Restzeit: ${left}. Tipps: ${h}. Gefundene Notizen: ${n} von 5.`,
+  yard13t: 'Der Hof bei Nacht: ein Mosaik im Pflaster, der Uhrturm mit seiner Tür, eine Bahnhofsuhr auf einem Pfahl, der Brunnen.', toGears13t: 'Im Turm: ein stehendes Uhrwerk, eine Kiste Messingzahnräder, eine Leiter hinauf zu einer Luke.', backYard13t: 'Zurück im Hof.', toFace13t: 'Hinter dem großen Zifferblatt: die Zeigerwelle, drei Messingringe um ein Schloss, ein Glockenseil.', backGears13t: 'Wieder unten am Uhrwerk.',
+  mosaicTitle13t: 'Mosaik', mosaicBody13t: 'Die Zahlen sagen, wie viele Steine in einer Zeile (links) oder Spalte (oben) dunkel sind, in dieser Reihenfolge, mit Lücken zwischen den Gruppen. Tippe einen Stein an: dunkel → ✕ → leer.', mosaicDone13t: (s) => `Das Mosaik zeigt: ${s}. Dasselbe Zeichen ist in die Turmtür geschnitzt.`, mosaicOk13t: (s) => `Das Mosaik zeigt: ${s}.`,
+  doorTitle13t: 'Turmtür', doorBody13t: 'Sechs geschnitzte Zeichen. Drück eins.', doorWrong13t: 'KLACK. Falsches Zeichen: Das Schloss klemmt eine Weile (−3 Min.).', doorOpen13t: 'Die Tür schwingt nach innen auf. Staub, Öl und tickende Stille.', doorFirst13t: 'Sechs geschnitzte Zeichen an der Tür. Welches? Vielleicht weiß es das Mosaik am Boden.',
+  clocksTitle13t: 'Uhren', clocksBody13t: 'Die Turmuhr über der Tür und die Bahnhofsuhr auf dem Pfahl.', towerLbl13t: 'Turm', railLbl13t: 'Bahnhofsuhr', towerStopped13t: 'Die Turmuhr steht still auf zwölf.',
+  fountain13t: 'Münzen, Laub und ein Zettel am Brunnenrand. Du liest ihn noch einmal: vor 02:35.',
+  gearTitle13t: 'Uhrwerk', gearBody13t: (xp) => `Die Minutenwelle treibt A, A dreht B, B sitzt auf einer Achse mit C, C dreht D, und D trägt den Stundenzeiger. Der Stundenzeiger muss sich genau 12-mal langsamer drehen als die Minutenwelle: (B ÷ A) × (D ÷ C) = 12.${xp ? ' Und beide Paare sitzen auf derselben Lagerplatte: A + B muss gleich C + D sein.' : ''} Tippe ein Feld an, dann ein Zahnrad.`,
+  gearRatio13t: (r) => `Jetzt: Der Stundenzeiger dreht sich einmal pro ${r} Umdrehungen der Minutenwelle.`, gearSpan13t: (a, b) => `Achsabstand: A + B = ${a}, C + D = ${b}.`, gearStart13t: 'Uhrwerk starten', gearMissing13t: 'Es braucht vier Zahnräder.',
+  gearWrong13t: 'Das Uhrwerk läuft kurz, dann bleibt es stehen: Der Stundenzeiger würde falsch gehen.', gearSpanWrong13t: 'Die Zahnräder greifen nicht ineinander: A + B und C + D sind nicht gleich.', gearDone13t: 'Das Uhrwerk tickt! Über der Tür setzen sich die großen Zeiger in Bewegung. Aus dem Werk fällt etwas: eine Karte.',
+  gearRuns13t: 'Das Uhrwerk tickt gleichmäßig.', hatchLocked13t: 'Die Luke ist mit dem Uhrwerk verriegelt. Sie geht erst auf, wenn die Uhr läuft.',
+  cardTitle13t: 'Karte des Portiers', cardBody13t: (s) => `<div class="note">„Meine drei Zeichen, vom äußeren Ring nach innen:“<br><br><b style="font-size:1.6em;letter-spacing:.2em">${s}</b></div>`,
+  ringsTitle13t: 'Messingringe', ringsBody13t: (n) => `Dreh die Ringe, bis die Markierung ▼ die Zeichen des Portiers zeigt. Achtung: Ring 1 dreht Ring 2 mit, Ring 2 dreht Ring 3 mit${n > 3 ? ', Ring 3 dreht Ring 4 mit, und Ring 1 dreht Ring 3 rückwärts' : ''}.`, ringsCard13t: (s) => `Karte des Portiers: ${s}`, ringsNoCard13t: 'Welche Zeichen? Das hat dir noch niemand verraten.', ringsDone13t: 'Klick, klick, klick: Das Schloss springt auf. Darin: eine Taschenuhr.', ringLbl13t: (i) => `Ring ${i}`,
+  watchTitle13t: 'Taschenuhr', watchBody13t: (t) => `<div class="note">Die Uhr ist lange stehen geblieben. Ihre Zeiger, in alten Zahlen eingraviert: <b style="font-size:1.4em">${t}</b><br><br>Im Deckel: „Meine Uhr geht richtig. Der Turm geht hinter der Bahnhofsuhr im Hof nach. Stell den Turm auf meine Zeit plus das, was er nachgeht, und läute.“</div>`,
+  handsTitle13t: 'Große Uhr', handsBody13t: 'Mit der Welle stellst du die großen Zeiger. Dann am Glockenseil ziehen.', hourBtn13t: 'Stunde', minBtn13t: 'Minute', ringBtn13t: 'Läuten', handsWrong13t: 'DONG… Die Glocke schlägt zur falschen Zeit, und das ganze Uhrwerk ruckelt (−2 Min.).', handsNoWatch13t: 'Auf welche Zeit? Die musst du erst wissen.', handsLocked13t: 'Die Welle ist in den Messingringen verriegelt.',
+  bell13t: 'Das Glockenseil. Noch nicht: Erst muss die Uhr stimmen.',
+  sym13t: { bell: 'Glocke', key: 'Schlüssel', heart: 'Herz', star: 'Stern', moon: 'Mond', crown: 'Krone' },
+});
+Object.assign(TXT.de.views, { yard13t: 'Hof', gears13t: 'Im Uhrturm', face13t: 'Hinter dem Zifferblatt' });
+Object.assign(TXT.de.svg, { mosaic13t: 'MOSAIK', door13t: 'TURM', rail13t: 'BAHNHOF', clockwork13t: 'UHRWERK', hatch13t: 'LUKE ↑', toYard13t: '⟵ Hof', rings13t: 'RINGE', hands13t: 'ZEIGER', bell13t: 'GLOCKE', toGears13t: '⟵ runter' });
+Object.assign(TXT.de.aria, { yardScene13t: 'Der Hof mit dem Uhrturm', gearsScene13t: 'Im Uhrturm', faceScene13t: 'Hinter dem großen Zifferblatt', mosaic13t: 'Mosaik im Pflaster', door13t: 'Turmtür', rail13t: 'Bahnhofsuhr', tower13t: 'Turmuhr', fountain13t: 'Brunnen', clockwork13t: 'Uhrwerk und Zahnradkiste', hatch13t: 'Luke nach oben', goYard13t: 'Zurück in den Hof', rings13t: 'Messingringe', hands13t: 'Zeigerwelle', bell13t: 'Glockenseil', goGears13t: 'Wieder runter' });
+Object.assign(TXT.de.items, {
+  card13t: ['Karte des Portiers', '', 'Drei Zeichen, äußerer Ring zuerst. Schau sie dir an den Messingringen an.'],
+  watch13t: ['Taschenuhr', '', 'Lange stehen geblieben. Lies sie an der großen Uhr.'],
+});
+Object.assign(TXT.de.notes, {
+  mosaic13tn: ['Unter dem Mosaik', 'Verlegt 1912 von denselben Händen, die den Turm gebaut haben. Die Tür hört auf das Bild.'],
+  gears13tn: ['Etikett der Ölkanne', 'Zwölf Umdrehungen des Minutenzeigers für eine des Stundenzeigers. Jeder Uhrmacher weiß es; jeder Lehrling vergisst es.'],
+  rings13tn: ['In die Ringe geritzt', 'Die inneren Ringe zuletzt. Die äußeren ziehen ihre Nachbarn mit.'],
+  watch13tn: ['Im Uhrdeckel', 'Alte Zahlen: I, V, X, L. IV ist 4, IX ist 9, XL ist 40.'],
+  porter13tn: ['Fußspuren', 'Nasse Fußspuren vom Brunnen zur Turmtür, und keine zurück.'],
+});
+Object.assign(TXT.de.hints, {
+  c13_mosaic: ['Das Mosaik im Pflaster ist ein Bilderrätsel. Die Zahlen zählen die dunklen Steine in jeder Zeile und Spalte.', 'Fang mit Zeilen oder Spalten an, deren Zahlen die Reihe fast füllen (wie 7 oder 3 1 2). Markier sichere leere Steine mit ✕.', (s) => `Das Bild ist: ${s}.`],
+  c13_door: ['Die Turmtür hat sechs Zeichen.', 'Drück das Zeichen, das das Mosaik zeigt.', (s) => `Drück: ${s}.`],
+  c13_gears: ['Im Turm braucht das Uhrwerk vier Zahnräder.', 'B ÷ A mal D ÷ C muss genau 12 sein, z. B. 3 × 4 oder 2 × 6. Schau auf die Anzeige.', (s) => `Zum Beispiel: ${s}.`],
+  c13_rings: ['Die Karte des Portiers fiel aus dem Uhrwerk. Sie gehört zu den Messingringen hinter dem Zifferblatt.', 'Stell zuerst Ring 1 (er zieht Ring 2 mit), dann Ring 2 (zieht Ring 3 mit), dann Ring 3.', (s) => `Nächste Züge: ${s}.`],
+  c13_clock: ['Die Taschenuhr kennt die Zeit, aber der Turm geht hinter der Bahnhofsuhr nach.', 'Vergleich Turmuhr und Bahnhofsuhr im Hof: Der Abstand ist die Korrektur. Zähl ihn zur Taschenuhr-Zeit dazu.', (s) => `Stell die große Uhr auf ${s} und läute.`],
+});
 // ---------- sound
 const Sound = {
   ctx: null, master: null,
@@ -1610,7 +1697,7 @@ const breakfastText = () => `${S.breakfast[0]}:${String(S.breakfast[1]).padStart
 
 function say(text) { $('say').innerHTML = text; }
 function hotel() {
-  if (S.ch >= 2) { const m2 = (S.ch === 12 ? 75 : S.ch === 11 ? 1380 : S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
+  if (S.ch >= 2) { const m2 = (S.ch === 13 ? 155 : S.ch === 12 ? 75 : S.ch === 11 ? 1380 : S.ch === 10 ? 720 : S.ch === 9 ? 600 : S.ch === 8 ? 555 : S.ch === 7 ? 510 : S.ch === 6 ? 465 : S.ch === 5 ? 420 : S.ch === 4 ? 360 : S.ch === 3 ? 240 : 180) - Math.ceil(S.left / 60); return `${String(Math.floor(m2 / 60)).padStart(2, '0')}:${String(m2 % 60).padStart(2, '0')}`; }
   const m = 12 * 60 - Math.ceil(S.left / 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
 
 // ---------- scenes (SVG, viewBox 1000 x 600); every tappable thing has data-hot
@@ -1848,6 +1935,7 @@ function useItem(id, h) {
   if (S.ch === 10) return useItem10(id, h);
   if (S.ch === 11) return useItem11(id, h);
   if (S.ch === 12) return useItem12(id, h);
+  if (S.ch === 13) return useItem13(id, h);
   const f = S.f;
   if (id === 'remote' && h === 'tv') { f.tvOn = true; S.sel = null; Sound.tv(); openTv(); say(t('tvOn')); return true; }
   if (id === 'remoteDead' && h === 'tv') { S.sel = null; Sound.nope(); say(t('tvNeedsPower')); return true; }
@@ -2571,7 +2659,7 @@ function useItem3(id, h) {
   if (VIEW[id] && h === 'adoor' && !f.archOpen) { S.sel = null; openADoor(); return true; }
   return false;
 }
-const runTotal = (ch) => (S && S.expert && ch >= 5 ? (ch === 12 ? XP_TOTAL12 : ch === 11 ? XP_TOTAL11 : XP_TOTAL) : ch === 12 ? TOTAL12 : ch === 11 ? TOTAL11 : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
+const runTotal = (ch) => (S && S.expert && ch >= 5 ? (ch === 13 ? XP_TOTAL13 : ch === 12 ? XP_TOTAL12 : ch === 11 ? XP_TOTAL11 : XP_TOTAL) : ch === 13 ? TOTAL13 : ch === 12 ? TOTAL12 : ch === 11 ? TOTAL11 : ch === 10 ? TOTAL10 : ch === 9 ? TOTAL9 : ch === 8 ? TOTAL8 : ch === 7 ? TOTAL7 : ch === 6 ? TOTAL6 : ch === 5 ? TOTAL5 : ch === 4 ? TOTAL4 : ch === 3 ? TOTAL3 : ch === 2 ? TOTAL2 : TOTAL);
 function recordRun() {
   profile.runs = Object.assign({}, profile.runs);
   profile.runs[S.ch || 1] = { used: Math.round(runTotal(S.ch || 1) - Math.max(0, S.left) + (S.ot || 0)), hints: S.hints };
@@ -3731,6 +3819,236 @@ function escape12() {
   showEnd(S.overtime ? t('win12EyebrowOver') : t('win12Eyebrow'), t('win12Title'), t('win12Text', mmss(left), S.hints, noteCount12()), left, false);
 }
 function newGame12() { S = freshState12(); if (XP()) { S.expert = true; S.left = XP_TOTAL12; } save(); begin(); say(t('start12')); }
+// ---------- chapter 13: the clock tower (mosaic → door symbol → gear train → coupled rings → set the great clock, each needs the one before)
+const TOTAL13 = 80 * 60, XP_TOTAL13 = 60 * 60;
+Object.assign(ICONS, { card13t: '🎴', watch13t: '⌚' });
+const noteIds13 = ['mosaic13tn', 'gears13tn', 'rings13tn', 'watch13tn', 'porter13tn'];
+// 7x7 pictures, every one solvable by row/column logic alone (checked in room13_test.js)
+const SYMS13 = {
+  bell: ['...#...', '..###..', '.#####.', '.#####.', '.#####.', '#######', '...#...'],
+  key: ['..###..', '.#...#.', '..###..', '...#...', '...##..', '...#...', '...##..'],
+  heart: ['.##.##.', '#######', '#######', '#######', '.#####.', '..###..', '...#...'],
+  star: ['...#...', '...#...', '#######', '.#####.', '..###..', '.##.##.', '##...##'],
+  moon: ['..###..', '.##....', '##.....', '##.....', '##.....', '.##....', '..###..'],
+  crown: ['.......', '#..#..#', '##.#.##', '#######', '#######', '#######', '.......'],
+};
+const SYMICON13 = { bell: '🔔', key: '🗝️', heart: '❤️', star: '⭐', moon: '🌙', crown: '👑' };
+const GEARS13 = [8, 10, 12, 15, 16, 20, 24, 30, 36, 40, 45, 48], RSYM13 = ['☀', '☾', '★', '♣', '♥', '♦', '♠', '✿'];
+const runs13 = (line) => { const out = []; let n = 0; for (const c of line) { if (c) n++; else if (n) { out.push(n); n = 0; } } if (n) out.push(n); return out.length ? out : [0]; };
+const bm13 = (k) => SYMS13[k].map((r) => r.split('').map((c) => c === '#'));
+const roman13 = (n) => { let s = ''; for (const [v, r] of [[50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]) while (n >= v) { s += r; n -= v; } return s; };
+const hm13 = (t) => { t = ((t % 720) + 720) % 720; return { h: Math.floor(t / 60) || 12, m: t % 60 }; };
+const fmt13 = (t) => { const { h, m } = hm13(t); return `${h}:${String(m).padStart(2, '0')}`; };
+// rings: turning ring k drags the next one along (expert: ring 1 also turns ring 3 backwards)
+function ringMove13(p, k, d) { const n = p.length, q = p.slice(); q[k] = (q[k] + d + 8) % 8; if (k < n - 1) q[k + 1] = (q[k + 1] + d + 8) % 8; if (n > 3 && k === 0) q[2] = (q[2] - d + 8) % 8; return q; }
+function ringSolve13(p, goal) {
+  const key = (q) => q.join(','), g = key(goal), prev = new Map([[key(p), null]]), q = [p];
+  for (let i = 0; i < q.length; i++) {
+    const s = q[i]; if (key(s) === g) { const path = []; let k = key(s); while (prev.get(k)) { const [pk, mv] = prev.get(k); path.push(mv); k = pk; } return path.reverse(); }
+    for (let k = 0; k < s.length; k++) for (const d of [1, -1]) { const ns = ringMove13(s, k, d), nk = key(ns); if (!prev.has(nk)) { prev.set(nk, [key(s), [k, d]]); q.push(ns); } }
+  }
+  return null;
+}
+function freshState13() {
+  const xp = XP(), sym = pick(Object.keys(SYMS13)), n = xp ? 4 : 3, B = bm13(sym);
+  const order = Array.from({ length: n }, () => shuffle(RSYM13.slice())), rt = Array.from({ length: n }, () => Math.floor(Math.random() * 8));
+  let rp; do { rp = rt.slice(); for (let i = 0, k = 8 + Math.floor(Math.random() * 8); i < k; i++) rp = ringMove13(rp, Math.floor(Math.random() * n), pick([1, -1])); } while (rp.join() === rt.join());
+  const filled = []; B.forEach((r, y) => r.forEach((c, x) => { if (c) filled.push(y * 7 + x); }));
+  const pre = xp ? [] : shuffle(filled).slice(0, 5), grid = Array(49).fill(0); pre.forEach((i) => { grid[i] = 1; });
+  const tower = Math.floor(Math.random() * 144) * 5, diff = (4 + Math.floor(Math.random() * 16)) * 5;
+  let watch; do { watch = Math.floor(Math.random() * 144) * 5; } while (watch % 60 === 0);
+  return { v: 1, ch: 13, started: Date.now(), left: TOTAL13, ot: 0, hints: 0, hintSeen: {}, view: 'yard13t', inv: [], sel: null, f: {}, steam: 0, overtime: false, done: false,
+    sym, grid, pre, gear: [0, 0, 0, 0], order, rt, rp, tower, diff, watch, set: 0, ans: (watch + diff) % 720 };
+}
+const noteCount13 = () => noteIds13.filter((n) => S.f['note_' + n]).length;
+const symName13 = () => T().sym13t[S.sym];
+const cardSyms13 = () => S.order.map((o, i) => o[S.rt[i]]).join(' ');
+const watchRoman13 = () => { const { h, m } = hm13(S.watch); return `${roman13(h)} : ${roman13(m)}`; };
+function dial13(t, cx, cy, r, face, rim, nums) {
+  const { h, m } = hm13(t), rad = (a) => (a * Math.PI) / 180;
+  const hand = (a, len, w) => `<path d="M${cx} ${cy} L${(cx + Math.sin(rad(a)) * len).toFixed(1)} ${(cy - Math.cos(rad(a)) * len).toFixed(1)}" stroke="#1a1210" stroke-width="${w}" stroke-linecap="round"/>`;
+  let s = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${face}" stroke="${rim}" stroke-width="${(r * 0.09).toFixed(1)}"/>`;
+  for (let i = 0; i < 12; i++) { const a = rad(i * 30), r1 = r * (i % 3 ? 0.84 : 0.76); s += `<path d="M${(cx + Math.sin(a) * r1).toFixed(1)} ${(cy - Math.cos(a) * r1).toFixed(1)} L${(cx + Math.sin(a) * r * 0.92).toFixed(1)} ${(cy - Math.cos(a) * r * 0.92).toFixed(1)}" stroke="#1a1210" stroke-width="${(r * 0.035).toFixed(1)}"/>`; if (nums) s += `<text x="${(cx + Math.sin(a) * r * 0.6).toFixed(1)}" y="${(cy - Math.cos(a) * r * 0.6 + r * 0.07).toFixed(1)}" text-anchor="middle" font-family="Fraunces, serif" font-weight="700" font-size="${(r * 0.19).toFixed(1)}" fill="#1a1210">${i || 12}</text>`; }
+  return s + hand(((h % 12) + m / 60) * 30, r * 0.5, r * 0.09) + hand(m * 6, r * 0.8, r * 0.055) + `<circle cx="${cx}" cy="${cy}" r="${(r * 0.07).toFixed(1)}" fill="#1a1210"/>`;
+}
+function sceneYard13() {
+  const f = S.f, c = 26;
+  const tiles = S.grid.map((v, i) => `<rect x="${130 + (i % 7) * c}" y="${478 + Math.floor(i / 7) * 15}" width="${c - 3}" height="12" fill="${v === 1 ? '#d9a74a' : '#4a4a55'}"/>`).join('');
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('yardScene13t')}">
+  <rect width="1000" height="600" fill="#0e1426"/><rect y="470" width="1000" height="130" fill="#2a2a33"/>${[[80, 60], [260, 120], [700, 50], [900, 140], [820, 90]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2" fill="#fff" opacity=".7"/>`).join('')}
+  <rect x="400" y="30" width="200" height="440" fill="#4a4048" stroke="#120a08" stroke-width="5"/><path d="M390 30 L500 -20 L610 30z" fill="#3a3038"/>
+  ${hot('tower13t', dial13(f.gears ? S.tower : 0, 500, 150, 72, '#efe6d2', '#d9a74a'))}
+  ${hot('door13t', `<rect x="455" y="330" width="90" height="140" rx="40" fill="#3a1a12" stroke="#120a08" stroke-width="5"/><circle cx="528" cy="405" r="6" fill="${f.door ? '#7dffb2' : '#d9a74a'}"/><text x="500" y="318" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="22" fill="#d9a74a">${W('door13t')}</text>`)}
+  ${hot('rail13t', `<path d="M840 300 V470" stroke="#8a949a" stroke-width="10"/>${dial13(S.tower + S.diff, 840, 250, 52, '#fff', '#2a2a33')}<text x="840" y="182" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="22" fill="#d9a74a">${W('rail13t')}</text>`)}
+  ${hot('fountain13t', `<ellipse cx="160" cy="395" rx="100" ry="26" fill="#3a4a5a" stroke="#120a08" stroke-width="4"/><path d="M160 395 V325" stroke="#8ac8ff" stroke-width="6" opacity=".7"/><circle cx="160" cy="320" r="10" fill="#8ac8ff" opacity=".6"/>`)}
+  ${hot('mosaic13t', `<rect x="120" y="470" width="${7 * c + 18}" height="120" fill="#1e1e26"/>${tiles}<text x="${125 + 3.5 * c}" y="465" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="22" fill="#d9a74a">${W('mosaic13t')}</text>`)}
+  </svg>`;
+}
+function gearSvg13(g, run) {
+  const r = (tt) => 8 + (tt || 12) * 0.75, [A, B, C, D] = g, ax = 8 + r(A), bx = ax + r(A) + r(B), dx = bx + r(C) + r(D), W2 = dx + r(D) + 8, cy = 80;
+  const wheel = (x, tt, lbl, dir, fill, ly) => `<g><circle cx="${x}" cy="${cy}" r="${r(tt)}" fill="${fill}" stroke="#6b4a10" stroke-width="5" stroke-dasharray="4 4" opacity="${tt ? 1 : 0.35}">${run ? `<animateTransform attributeName="transform" type="rotate" from="0 ${x} ${cy}" to="${dir * 360} ${x} ${cy}" dur="${(tt || 12) / 6}s" repeatCount="indefinite"/>` : ''}</circle><text x="${x}" y="${ly}" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="18" fill="${ly === cy + 6 ? '#1a1210' : '#efe6d2'}" stroke="${ly === cy + 6 ? '#efe6d2' : '#1a1210'}" stroke-width="3" paint-order="stroke">${lbl}${tt ? ' ' + tt : ''}</text></g>`;
+  return `<svg viewBox="0 0 ${W2.toFixed(0)} 160" width="100%" style="max-height:170px">${wheel(ax, A, 'A', 1, '#d9a74a', cy + 6)}${wheel(bx, B, 'B', -1, '#c89a40', cy - r(B) - 6)}${wheel(bx, C, 'C', -1, '#e8c070', cy + Math.max(r(B), r(C)) + 18)}${wheel(dx, D, 'D', 1, '#d9a74a', cy + 6)}</svg>`;
+}
+function sceneGears13() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('gearsScene13t')}">
+  <rect width="1000" height="600" fill="#2a2420"/><rect y="470" width="1000" height="130" fill="#1a1410"/>
+  ${[[110, 160, 70], [170, 330, 46], [70, 420, 34]].map(([x, y, rr]) => `<circle cx="${x}" cy="${y}" r="${rr}" fill="none" stroke="#5a4a30" stroke-width="14" stroke-dasharray="10 8"/>`).join('')}
+  ${hot('clockwork13t', `<rect x="260" y="150" width="440" height="300" rx="10" fill="#3a3028" stroke="#d9a74a" stroke-width="5"/>${gearSvg13(S.gear, f.gears).replace('<svg ', '<svg x="270" y="160" width="420" height="280" ').replace(' width="100%" style="max-height:170px"', '')}<text x="480" y="140" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="24" fill="#d9a74a">${W('clockwork13t')}</text>`)}
+  ${hot('hatch13t', `<path d="M800 470 V90 M880 470 V90" stroke="#8a6a3a" stroke-width="8"/>${[0, 1, 2, 3, 4, 5, 6].map((i) => `<path d="M800 ${120 + i * 50} H880" stroke="#8a6a3a" stroke-width="6"/>`).join('')}<rect x="770" y="40" width="140" height="50" fill="${f.gears ? '#5a4a30' : '#3a3028'}" stroke="#120a08" stroke-width="4"/><text x="840" y="74" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="22" fill="${f.gears ? '#7dffb2' : '#d9a74a'}">${W('hatch13t')}</text>`)}
+  ${hot('goYard13t', `<rect x="330" y="530" width="340" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="500" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toYard13t')}</text>`)}
+  </svg>`;
+}
+function sceneFace13() {
+  const f = S.f;
+  return `<svg viewBox="0 0 1000 600" role="img" aria-label="${A('faceScene13t')}">
+  <rect width="1000" height="600" fill="#1a1622"/><circle cx="560" cy="270" r="230" fill="#efe6d2" opacity="0.12" stroke="#d9a74a" stroke-width="6"/>
+  ${hot('hands13t', `${dial13(S.set, 560, 270, 120, '#efe6d2', '#d9a74a')}<text x="560" y="440" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="24" fill="#d9a74a">${W('hands13t')}</text>`)}
+  ${hot('rings13t', `${[100, 76, 52, 30].slice(0, S.rp.length).map((rr, i) => `<circle cx="170" cy="280" r="${rr}" fill="none" stroke="${f.rings ? '#7dffb2' : ['#d9a74a', '#c89a40', '#e8c070', '#b08030'][i]}" stroke-width="16"/>`).join('')}<path d="M160 160 L180 160 L170 176z" fill="#ff6b6b"/><text x="170" y="410" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="24" fill="#d9a74a">${W('rings13t')}</text>`)}
+  ${hot('bell13t', `<path d="M900 0 V380" stroke="#c8a060" stroke-width="8"/><rect x="884" y="380" width="32" height="56" rx="12" fill="#8a3a2a"/><text x="900" y="470" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="800" font-size="22" fill="#d9a74a">${W('bell13t')}</text>`)}
+  ${hot('goGears13t', `<rect x="380" y="530" width="300" height="52" rx="12" fill="#0b0910" opacity="0.72"/><text x="530" y="564" text-anchor="middle" font-family="Barlow, sans-serif" font-weight="600" font-size="22" fill="#fff">${W('toGears13t')}</text>`)}
+  </svg>`;
+}
+Object.assign(SCENES, { yard13t: sceneYard13, gears13t: sceneGears13, face13t: sceneFace13 });
+function openMosaic13() {
+  openModal(t('mosaicTitle13t'), `<p>${t('mosaicBody13t')}</p><div id="mo"></div><p class="tip" id="moMsg"></p>`, (b) => {
+    const box = b.querySelector('#mo'), msg = b.querySelector('#moMsg'), B = bm13(S.sym), n = 7;
+    const check = () => {
+      if (!B.every((r, y) => r.every((c, x) => c === (S.grid[y * n + x] === 1)))) return;
+      S.f.mosaic = true; Sound.unlock(); Sound.win(); say(t('mosaicDone13t', symName13())); renderScene();
+      setTimeout(() => { if (!$('modal').hidden) { closeModal(); openNote('mosaic13tn'); } }, 2000);
+    };
+    const draw = () => {
+      box.innerHTML = ''; box.style.cssText = 'display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr));gap:3px;width:100%;max-width:360px;margin:0 auto;align-items:end';
+      box.appendChild(mk('div', '', ''));
+      for (let x = 0; x < n; x++) { const c = mk('div', '', runs13(B.map((r) => r[x])).join('<br>')); c.style.cssText = 'text-align:center;font:700 14px/1.15 var(--font-mono);color:var(--chalk);padding-bottom:3px'; box.appendChild(c); }
+      for (let y = 0; y < n; y++) {
+        const rc = mk('div', '', runs13(B[y]).join(' ')); rc.style.cssText = 'font:700 14px var(--font-mono);color:var(--chalk);padding-right:6px;white-space:nowrap;align-self:center;text-align:right'; box.appendChild(rc);
+        for (let x = 0; x < n; x++) {
+          const i = y * n + x, v = S.grid[i], pre = S.pre.includes(i), el = mk('button', '', v === 2 ? '✕' : '');
+          el.setAttribute('data-act', 't' + i);
+          el.style.cssText = `display:block;width:100%;height:auto;aspect-ratio:1;min-width:0;padding:0;border:1px solid rgba(255,255,255,.28);border-radius:4px;background:${v === 1 ? (pre ? '#a07a2a' : '#d9a74a') : 'rgba(255,255,255,.06)'};color:var(--haze);font-size:15px;cursor:pointer`;
+          el.addEventListener('click', () => { if (S.f.mosaic || pre) return; S.grid[i] = (S.grid[i] + 1) % 3; Sound.click(); check(); save(); draw(); });
+          box.appendChild(el);
+        }
+      }
+      msg.textContent = S.f.mosaic ? t('mosaicOk13t', symName13()) : '';
+    };
+    draw();
+  });
+}
+function openDoor13() {
+  openModal(t('doorTitle13t'), `<p>${t('doorBody13t')}</p><div id="sy" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div><p class="tip" id="syMsg"></p>`, (b) => {
+    const box = b.querySelector('#sy'), msg = b.querySelector('#syMsg');
+    for (const k of Object.keys(SYMS13)) {
+      const btn = mk('button', 'key wide', SYMICON13[k]); btn.style.fontSize = '30px'; btn.setAttribute('data-act', 'sym-' + k); btn.setAttribute('aria-label', T().sym13t[k]);
+      btn.addEventListener('click', () => {
+        if (S.f.door) return;
+        if (k !== S.sym) { S.left -= 180; tickClock(); Sound.nope(); msg.textContent = t('doorWrong13t'); say(t('doorWrong13t')); save(); return; }
+        S.f.door = true; Sound.door(); msg.textContent = t('doorOpen13t'); save(); renderScene();
+        setTimeout(() => { if (!$('modal').hidden) closeModal(); go('gears13t'); say(t('toGears13t')); }, 1000);
+      });
+      box.appendChild(btn);
+    }
+  });
+}
+function openClocks13() {
+  const big = (tt, lbl) => `<div style="text-align:center"><svg viewBox="0 0 200 200" width="100%">${dial13(tt, 100, 100, 92, '#efe6d2', '#d9a74a', true)}</svg><b>${esc(lbl)}</b></div>`;
+  openModal(t('clocksTitle13t'), `<p>${t('clocksBody13t')}</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${big(S.f.gears ? S.tower : 0, t('towerLbl13t'))}${big(S.tower + S.diff, t('railLbl13t'))}</div>${S.f.gears ? '' : `<p class="tip">${t('towerStopped13t')}</p>`}`);
+}
+function openGears13() {
+  openModal(t('gearTitle13t'), `<p>${t('gearBody13t', !!S.expert)}</p><div id="gs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div><div id="gv" style="margin:8px 0"></div><p class="tip" id="gr"></p><div id="gb" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px"></div><p class="tip" id="gMsg"></p><button class="btn" id="gGo" type="button" data-act="gearstart">${t('gearStart13t')}</button>`, (b) => {
+    const slots = b.querySelector('#gs'), box = b.querySelector('#gb'), msg = b.querySelector('#gMsg'); let cur = Math.max(0, S.gear.indexOf(0));
+    const draw = () => {
+      slots.innerHTML = '';
+      'ABCD'.split('').forEach((L, i) => { const btn = mk('button', 'key wide', `${L}: ${S.gear[i] || '?'}`); btn.setAttribute('data-act', 'slot' + L); if (i === cur && !S.f.gears) btn.style.outline = '3px solid var(--brass)'; btn.addEventListener('click', () => { cur = i; Sound.click(); draw(); }); slots.appendChild(btn); });
+      box.innerHTML = '';
+      for (const g of GEARS13) { const btn = mk('button', 'key', String(g)); btn.setAttribute('data-act', 'g' + g); btn.style.opacity = S.gear.includes(g) ? '0.4' : '1'; btn.addEventListener('click', () => { if (S.f.gears) return; const j = S.gear.indexOf(g); if (j >= 0) S.gear[j] = 0; S.gear[cur] = g; cur = (cur + 1) % 4; Sound.click(); save(); draw(); }); box.appendChild(btn); }
+      const [A, B, C, D] = S.gear, r = (B * D) / (A * C);
+      b.querySelector('#gr').textContent = A && B && C && D ? t('gearRatio13t', Number.isInteger(r) ? r : r.toFixed(2)) + (S.expert ? ' ' + t('gearSpan13t', A + B, C + D) : '') : '';
+      b.querySelector('#gv').innerHTML = gearSvg13(S.gear, S.f.gears);
+      if (S.f.gears) msg.textContent = t('gearRuns13t');
+    };
+    b.querySelector('#gGo').addEventListener('click', () => {
+      if (S.f.gears) return;
+      const [A, B, C, D] = S.gear;
+      if (!(A && B && C && D)) { msg.textContent = t('gearMissing13t'); Sound.nope(); return; }
+      if (S.expert && A + B !== C + D) { msg.textContent = t('gearSpanWrong13t'); Sound.nope(); return; }
+      if (B * D !== 12 * A * C) { msg.textContent = t('gearWrong13t'); Sound.nope(); return; }
+      S.f.gears = true; S.f.note_gears13tn = true; give('card13t'); Sound.unlock(); Sound.win(); say(t('gearDone13t')); save(); draw(); msg.textContent = t('gearDone13t'); renderScene();
+      setTimeout(() => { if (!$('modal').hidden) { closeModal(); openModal(t('cardTitle13t'), t('cardBody13t', cardSyms13())); } }, 2000);
+    });
+    draw();
+  });
+}
+function openRings13() {
+  openModal(t('ringsTitle13t'), `<p>${t('ringsBody13t', S.rp.length)}</p><p class="tip" id="rc"></p><div style="text-align:center;color:#ff6b6b">▼</div><div id="rg" style="display:grid;gap:8px"></div><p class="tip" id="rMsg"></p>`, (b) => {
+    const box = b.querySelector('#rg'), msg = b.querySelector('#rMsg');
+    b.querySelector('#rc').textContent = S.inv.includes('card13t') || S.f.rings ? t('ringsCard13t', cardSyms13()) : t('ringsNoCard13t');
+    const turn = (i, d) => {
+      if (S.f.rings) return;
+      S.rp = ringMove13(S.rp, i, d); Sound.click(); S.f.note_rings13tn = true;
+      if (S.rp.join() === S.rt.join()) { S.f.rings = true; take('card13t'); give('watch13t'); Sound.unlock(); Sound.win(); msg.textContent = t('ringsDone13t'); say(t('ringsDone13t')); renderScene(); setTimeout(() => { if (!$('modal').hidden) { closeModal(); openWatch13(); } }, 1800); }
+      save(); draw();
+    };
+    const draw = () => {
+      box.innerHTML = '';
+      S.rp.forEach((p, i) => {
+        const row = mk('div', ''); row.style.cssText = 'display:grid;grid-template-columns:auto 48px 1fr 48px;gap:6px;align-items:center';
+        const lbl = mk('div', '', esc(t('ringLbl13t', i + 1))); lbl.style.cssText = 'font:600 13px var(--font-mono);color:var(--haze)';
+        const strip = mk('div', '', [-2, -1, 0, 1, 2].map((o) => `<span style="${o === 0 ? 'font-size:30px;color:var(--brass)' : 'font-size:18px;opacity:.45'}">${S.order[i][(p + o + 8) % 8]}</span>`).join(' ')); strip.style.cssText = 'text-align:center;white-space:nowrap';
+        const l = mk('button', 'key', '⟲'), r = mk('button', 'key', '⟳'); l.setAttribute('data-act', `r${i}l`); r.setAttribute('data-act', `r${i}r`);
+        l.addEventListener('click', () => turn(i, -1)); r.addEventListener('click', () => turn(i, 1));
+        row.append(lbl, l, strip, r); box.appendChild(row);
+      });
+    };
+    draw();
+  });
+}
+function openWatch13() { openModal(t('watchTitle13t'), t('watchBody13t', watchRoman13())); S.f.note_watch13tn = true; save(); }
+function openHands13() {
+  if (!S.f.rings) { Sound.nope(); say(t('handsLocked13t')); return; }
+  openModal(t('handsTitle13t'), `<p>${t('handsBody13t')}</p><div id="hv" style="max-width:220px;margin:0 auto"></div><div class="row" id="hb" style="justify-content:center"></div><p class="tip" id="hMsg"></p><button class="btn" id="hGo" type="button" data-act="ringbell">${t('ringBtn13t')}</button>`, (b) => {
+    const msg = b.querySelector('#hMsg'), hb = b.querySelector('#hb');
+    const draw = () => { b.querySelector('#hv').innerHTML = `<svg viewBox="0 0 200 200" width="100%">${dial13(S.set, 100, 100, 92, '#efe6d2', '#d9a74a', true)}</svg>`; };
+    [['hdown', -60, 'hourBtn13t', '−'], ['hup', 60, 'hourBtn13t', '+'], ['mdown', -5, 'minBtn13t', '−'], ['mup', 5, 'minBtn13t', '+']].forEach(([a, d, k, sg]) => act(hb, a, `${t(k)} ${sg}`, () => { if (S.done) return; S.set = (((S.set + d) % 720) + 720) % 720; Sound.click(); save(); draw(); }, 'btn ghost'));
+    b.querySelector('#hGo').addEventListener('click', () => {
+      if (S.done) return;
+      if (S.set === S.ans) { Sound.unlock(); msg.textContent = t('win13Title'); setTimeout(escape13, 1200); return; }
+      S.left -= 120; tickClock(); Sound.nope(); msg.textContent = t('handsWrong13t'); say(t('handsWrong13t')); save();
+    });
+    draw();
+  });
+}
+Object.assign(HOTS, {
+  mosaic13t: () => openMosaic13(),
+  door13t: () => { if (S.f.door) { go('gears13t'); say(t('toGears13t')); return; } if (!S.f.mosaic) say(t('doorFirst13t')); openDoor13(); },
+  tower13t: () => openClocks13(), rail13t: () => openClocks13(),
+  fountain13t: () => { say(t('fountain13t')); openNote('porter13tn'); },
+  clockwork13t: () => openGears13(),
+  hatch13t: () => { if (!S.f.gears) { Sound.nope(); say(t('hatchLocked13t')); return; } go('face13t'); say(t('toFace13t')); },
+  goYard13t: () => { go('yard13t'); say(t('backYard13t')); },
+  rings13t: () => openRings13(),
+  hands13t: () => openHands13(),
+  bell13t: () => (S.f.rings ? openHands13() : say(t('bell13t'))),
+  goGears13t: () => { go('gears13t'); say(t('backGears13t')); },
+});
+function useItem13(id, h) {
+  if (id === 'card13t') { if (h === 'rings13t') openRings13(); else openModal(t('cardTitle13t'), t('cardBody13t', cardSyms13())); return true; }
+  if (id === 'watch13t') { if (h === 'hands13t' || h === 'bell13t') openHands13(); else openWatch13(); return true; }
+  return false;
+}
+function escape13() {
+  if (!S || S.done || S.ch !== 13) return;
+  S.done = true; paused = true; Sound.win(); setTimeout(() => Sound.win(), 700);
+  const left = S.overtime ? 0 : Math.floor(S.left);
+  if (!S.overtime) profile.best13 = Math.max(profile.best13 || 0, left);
+  profile.ch13done = true; recordRun(); store.del(SAVE_KEY); saveProfile();
+  $('lbPost').hidden = true; $('lbResult').textContent = '';
+  if (!$('modal').hidden) closeModal();
+  showEnd(S.overtime ? t('win13EyebrowOver') : t('win13Eyebrow'), t('win13Title'), t('win13Text', mmss(left), S.hints, noteCount13()), left, false);
+}
+function newGame13() { S = freshState13(); if (XP()) { S.expert = true; S.left = XP_TOTAL13; } save(); begin(); say(t('start13t')); }
 
 // ---------- hints: the first unfinished goal decides which hints are offered
 const GOALS = [
@@ -3769,15 +4087,18 @@ const GOALS9 = [
 const GOALS10 = [
   ['c10_code', () => S.f.codeSet], ['c10_safe', () => S.f.safeOpen], ['c10_plant', () => S.f.planted], ['c10_key', () => S.f.keyTaken], ['c10_door', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
+const GOALS13 = [
+  ['c13_mosaic', () => S.f.mosaic], ['c13_door', () => S.f.door], ['c13_gears', () => S.f.gears], ['c13_rings', () => S.f.rings], ['c13_clock', () => S.done],
+].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
 const GOALS12 = [
   ['c12_door', () => S.f.door], ['c12_beam', () => S.f.beam], ['c12_up', () => S.f.up], ['c12_trunks', () => S.f.trunks], ['c12_window', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
 const GOALS11 = [
   ['c11_rack', () => S.f.rack], ['c11_board', () => S.f.board], ['c11_door', () => S.f.lugOpen], ['c11_case', () => S.f.case], ['c11_safe', () => S.done],
 ].map(([id, done]) => ({ id, done, get hints() { return T().hints[id]; } }));
-const HINT_ARG = { c12_door: () => [S.shift12, S.dcode12], c12_beam: () => Object.keys(S.beam.sol).map((k) => cellName12(k) + ' ' + (S.beam.sol[k] ? '╲' : '╱')).join(', '), c12_trunks: () => { const L = level12(S.lv); const p = skSolve12(L, S.sk) || []; return p.slice(0, 8).map((d) => ARROW12[d]).join(' ') + (p.length > 8 ? ' …' : ''); }, c12_window: () => S.seq.ans, c11_rack: () => S.names.map((n, g) => `${n} ${ROOMS11[S.sol[g]]}`).join(', '), c11_board: () => ROOMS11.map((R, r) => `${R} ${TIMES11[S.times[guestIn11(r)]]}`).join(', '), c11_case: () => S.heavy, c11_safe: () => S.code, c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
+const HINT_ARG = { c13_mosaic: () => symName13(), c13_door: () => symName13(), c13_gears: () => (S.expert ? 'A 10, B 45, C 15, D 40' : 'A 8, B 24, C 10, D 40'), c13_rings: () => (ringSolve13(S.rp, S.rt) || []).slice(0, 6).map(([k, d]) => `${t('ringLbl13t', k + 1)} ${d > 0 ? '⟳' : '⟲'}`).join(', '), c13_clock: () => fmt13(S.ans), c12_door: () => [S.shift12, S.dcode12], c12_beam: () => Object.keys(S.beam.sol).map((k) => cellName12(k) + ' ' + (S.beam.sol[k] ? '╲' : '╱')).join(', '), c12_trunks: () => { const L = level12(S.lv); const p = skSolve12(L, S.sk) || []; return p.slice(0, 8).map((d) => ARROW12[d]).join(' ') + (p.length > 8 ? ' …' : ''); }, c12_window: () => S.seq.ans, c11_rack: () => S.names.map((n, g) => `${n} ${ROOMS11[S.sol[g]]}`).join(', '), c11_board: () => ROOMS11.map((R, r) => `${R} ${TIMES11[S.times[guestIn11(r)]]}`).join(', '), c11_case: () => S.heavy, c11_safe: () => S.code, c10_code: () => S.example, c10_safe: () => S.myCode || S.example, c9_cart: () => pairs9(), c9_closet: () => S.door, c9_lock: () => S.code.map((x) => SYM9[x]).join(' '), c8_piano: () => S.melody.map((m) => NOTES8[m]).join(' '), c8_plan: () => slide8(S.board).slice(0, 4).join(', '), c7_box: () => S.bcode, c7_wires: () => wireTaps7(), c6_safe: () => S.code, c6_lights: () => S.sol, c6_case: () => S.w, c5_shed: () => S.scode, c5_oven: () => S.ocode, c5_scale: () => S.grams, c4_bin: () => S.bcode, c4_valves: () => S.target, c4_year: () => S.year, c4_book: () => S.year, c2_post: () => S.word, c2_bin: () => String(S.val), c3_door: () => S.dcode, c3_pass: () => S.pw, c3_arch: () => S.acode };
 function openHints() {
-  const g = (S.ch === 12 ? GOALS12 : S.ch === 11 ? GOALS11 : S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
+  const g = (S.ch === 13 ? GOALS13 : S.ch === 12 ? GOALS12 : S.ch === 11 ? GOALS11 : S.ch === 10 ? GOALS10 : S.ch === 9 ? GOALS9 : S.ch === 8 ? GOALS8 : S.ch === 7 ? GOALS7 : S.ch === 6 ? GOALS6 : S.ch === 5 ? GOALS5 : S.ch === 4 ? GOALS4 : S.ch === 3 ? GOALS3 : S.ch === 2 ? GOALS2 : GOALS).find((x) => !x.done());
   if (!g) return;
   const seen = S.hintSeen[g.id] || 0;
   const text = (h) => (typeof h === 'function' ? h(HINT_ARG[g.id] ? HINT_ARG[g.id]() : code().join('')) : h);
@@ -3813,8 +4134,8 @@ function frame(now) {
 }
 function showEnd(eyebrow, title, text, left, overtimeOffer) {
   $('endEyebrow').textContent = eyebrow; $('endTitle').textContent = title; $('endText').textContent = text;
-  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 12 ? profile.best12 : S.ch === 11 ? profile.best11 : S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
-  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 12); $('btnNextCh').textContent = t(S.ch === 11 ? 'nextCh12' : S.ch === 10 ? 'nextCh11' : S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
+  $('endLeft').textContent = mmss(left); $('endHints').textContent = S.hints; { const bt = S.ch === 13 ? profile.best13 : S.ch === 12 ? profile.best12 : S.ch === 11 ? profile.best11 : S.ch === 10 ? profile.best10 : S.ch === 9 ? profile.best9 : S.ch === 8 ? profile.best8 : S.ch === 7 ? profile.best7 : S.ch === 6 ? profile.best6 : S.ch === 5 ? profile.best5 : S.ch === 4 ? profile.best4 : S.ch === 3 ? profile.best3 : S.ch === 2 ? profile.best2 : profile.best; $('endBest').textContent = bt ? mmss(bt) : '–'; }
+  $('btnNextCh').hidden = !(S.done && (S.ch || 1) < 13); $('btnNextCh').textContent = t(S.ch === 12 ? 'nextCh13' : S.ch === 11 ? 'nextCh12' : S.ch === 10 ? 'nextCh11' : S.ch === 9 ? 'nextCh10' : S.ch === 8 ? 'nextCh9' : S.ch === 7 ? 'nextCh8' : S.ch === 6 ? 'nextCh7' : S.ch === 5 ? 'nextCh6' : S.ch === 4 ? 'nextCh5' : S.ch === 3 ? 'nextCh4' : S.ch === 2 ? 'nextCh3' : 'nextCh'); $('screenEnd').classList.remove('golden'); $('btnEndNew').textContent = t('playAgain');
   $('btnOvertime').hidden = !overtimeOffer; $('screenEnd').hidden = false;
 }
 function timeUp() {
@@ -3822,7 +4143,7 @@ function timeUp() {
   paused = true; Sound.lose();
   $('modal').hidden = true; $('lbPost').hidden = true; $('lbResult').textContent = '';
   save();
-  const u = S.ch === 12 ? 'up12' : S.ch === 11 ? 'up11' : S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
+  const u = S.ch === 13 ? 'up13' : S.ch === 12 ? 'up12' : S.ch === 11 ? 'up11' : S.ch === 10 ? 'up10' : S.ch === 9 ? 'up9' : S.ch === 8 ? 'up8' : S.ch === 7 ? 'up7' : S.ch === 6 ? 'up6' : S.ch === 5 ? 'up5' : S.ch === 4 ? 'up4' : S.ch === 3 ? 'up3' : S.ch === 2 ? 'up2' : 'up';
   showEnd(t(u + 'Eyebrow'), t(u + 'Title'), t(u + 'Text'), 0, true);
 }
 function escape() {
@@ -3835,8 +4156,8 @@ function escape() {
   lbAfter(S.overtime ? 0 : left, S.hints);
 }
 $('btnOvertime').addEventListener('click', () => { S.overtime = true; save(); $('screenEnd').hidden = true; paused = false; tickClock(); say(t('overtimeSay')); });
-$('btnEndNew').addEventListener('click', () => (S && S.ch === 12 ? newGame12() : S && S.ch === 11 ? newGame11() : S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
-$('btnNextCh').addEventListener('click', () => (S && S.ch === 11 ? newGame12() : S && S.ch === 10 ? newGame11() : S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
+$('btnEndNew').addEventListener('click', () => (S && S.ch === 13 ? newGame13() : S && S.ch === 12 ? newGame12() : S && S.ch === 11 ? newGame11() : S && S.ch === 10 ? newGame10() : S && S.ch === 9 ? newGame9() : S && S.ch === 8 ? newGame8() : S && S.ch === 7 ? newGame7() : S && S.ch === 6 ? newGame6() : S && S.ch === 5 ? newGame5() : S && S.ch === 4 ? newGame4() : S && S.ch === 3 ? newGame3() : S && S.ch === 2 ? newGame2() : newGame()));
+$('btnNextCh').addEventListener('click', () => (S && S.ch === 12 ? newGame13() : S && S.ch === 11 ? newGame12() : S && S.ch === 10 ? newGame11() : S && S.ch === 9 ? newGame10() : S && S.ch === 8 ? newGame9() : S && S.ch === 7 ? newGame8() : S && S.ch === 6 ? newGame7() : S && S.ch === 5 ? newGame6() : S && S.ch === 4 ? newGame5() : S && S.ch === 3 ? newGame4() : S && S.ch === 2 ? newGame3() : newGame2()));
 
 // ---------- start, menu, saving, language
 function begin() {
@@ -3862,6 +4183,12 @@ $('btnCh3').addEventListener('click', () => {
   const sv = store.get(SAVE_KEY, null);
   if (sv && !sv.done && Date.now() - armedCh3 > 4000) { armedCh3 = Date.now(); $('btnCh3').textContent = t('confirmNew'); return; }
   armedCh3 = 0; newGame3();
+});
+let armedCh13 = 0;
+$('btnCh13').addEventListener('click', () => {
+  const sv = store.get(SAVE_KEY, null);
+  if (sv && !sv.done && Date.now() - armedCh13 > 4000) { armedCh13 = Date.now(); $('btnCh13').textContent = t('confirmNew'); return; }
+  armedCh13 = 0; newGame13();
 });
 let armedCh12 = 0;
 $('btnCh12').addEventListener('click', () => {
@@ -3951,6 +4278,7 @@ function showStart() {
   $('btnCh10').hidden = false; $('btnCh10').textContent = t('ch10Btn') + (profile.ch10done ? ' ✓' : ''); armedCh10 = 0;
   $('btnCh11').hidden = false; $('btnCh11').textContent = t('ch11Btn') + (profile.ch11done ? ' ✓' : ''); armedCh11 = 0;
   $('btnCh12').hidden = false; $('btnCh12').textContent = t('ch12Btn') + (profile.ch12done ? ' ✓' : ''); armedCh12 = 0;
+  $('btnCh13').hidden = false; $('btnCh13').textContent = t('ch13Btn') + (profile.ch13done ? ' ✓' : ''); armedCh13 = 0;
   $('screenStart').hidden = false; $('screenEnd').hidden = true;
   renderLeaderboard();
 }
